@@ -22,7 +22,17 @@ public final class MobAbilityEventListener implements Listener {
         LivingEntity attacker = event.context().attacker();
         LivingEntity victim = event.context().victim();
         if (attacker != null) fire(attacker, victim, MobAbilityTrigger.OnHit.class);
-        if (victim != null) fire(victim, attacker, MobAbilityTrigger.OnHurt.class);
+        if (victim != null) {
+            fire(victim, attacker, MobAbilityTrigger.OnHurt.class);
+            // Defensive AI: re-target the attacker.
+            if (victim instanceof org.bukkit.entity.Mob mob && attacker != null) {
+                Optional<RpgMob> opt = RpgServices.mobs().from(victim);
+                if (opt.isPresent() && opt.get() instanceof CoreRpgMob coreMob
+                        && coreMob.aiProfile().kind() == MobAiProfile.Kind.DEFENSIVE) {
+                    mob.setTarget(attacker);
+                }
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

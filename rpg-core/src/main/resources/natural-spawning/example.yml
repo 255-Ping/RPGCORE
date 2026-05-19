@@ -1,0 +1,23 @@
+# Natural spawning rules. Globally toggleable via `natural-spawning.enabled` in core
+# config (default: false — admin-placed spawners are the only source unless this flips).
+#
+# Per-player-per-tick is the chance, per online player, that this rule attempts to
+# spawn on a single tick of the natural-spawn task. The task runs every 20 ticks by
+# default; the chance is multiplied by that cadence so the configured number is the
+# effective per-tick odds.
+
+night_zombies:
+  enabled: true
+  mobs:
+  - { mob: testmob, weight: 80 }
+  - { mob: mini_boss, weight: 2 }
+  conditions:
+    time-of-day: [night]
+    light-level: { min: 0, max: 7 }
+    weather: [any]
+    biomes: [any]
+    y-range: { min: 40, max: 100 }
+  rate:
+    per-player-per-tick: 0.005
+    min-distance-from-player: 24
+    max-distance-from-player: 64

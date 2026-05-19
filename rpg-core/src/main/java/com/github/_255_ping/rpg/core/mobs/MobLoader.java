@@ -135,10 +135,21 @@ public final class MobLoader {
         }
 
         CoreLootTable lootTable = parseLootTable(id, s.getConfigurationSection("LootTable"));
+        MobAiProfile aiProfile = parseAiProfile(s.getConfigurationSection("AI"));
 
         return new CoreRpgMob(id, displayName, type, health, damage, defense,
                 stats, helmet, chest, legs, boots, hand, off, null, bindings, lootTable,
-                mobIdKey, healthService);
+                aiProfile, mobIdKey, healthService);
+    }
+
+    private MobAiProfile parseAiProfile(ConfigurationSection s) {
+        if (s == null) return MobAiProfile.DEFAULT;
+        MobAiProfile.Kind kind = MobAiProfile.parseKind(s.getString("profile", "aggressive"));
+        double aggro = s.getDouble("aggression-range", 16);
+        double attack = s.getDouble("attack-range", 2);
+        double leash = s.getDouble("leash-range", 32);
+        boolean immune = s.getBoolean("immune-to-knockback", false);
+        return new MobAiProfile(kind, aggro, attack, leash, immune);
     }
 
     private static MobAbilityBinding parseAbilityBinding(String spec) {

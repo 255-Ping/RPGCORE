@@ -97,6 +97,17 @@ skills:
 status-effects:
   scheduler-interval-ticks: 1
 
+# Natural mob spawning rules under plugins/rpg-core/natural-spawning/*.yml.
+# Disabled by default — admin spawners are the canonical source until the world
+# is built out enough that natural waves make sense.
+natural-spawning:
+  enabled: false
+  interval-ticks: 20
+
+# Mob AI overrides — how often the AI tick task runs (10 ticks = twice/sec).
+mob-ai:
+  interval-ticks: 10
+
 # Combat tagging (see docs/core/damage.md).
 combat-tag:
   duration-seconds: 8

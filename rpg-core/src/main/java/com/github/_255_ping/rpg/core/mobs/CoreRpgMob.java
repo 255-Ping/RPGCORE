@@ -34,6 +34,7 @@ public final class CoreRpgMob implements RpgMob {
     private final String customHeadTexture;
     private final List<MobAbilityBinding> bindings;
     private final CoreLootTable lootTable;
+    private final MobAiProfile aiProfile;
 
     private final NamespacedKey mobIdKey;
     private final CoreHealthService healthService;
@@ -46,6 +47,7 @@ public final class CoreRpgMob implements RpgMob {
                       String customHeadTexture,
                       List<MobAbilityBinding> bindings,
                       CoreLootTable lootTable,
+                      MobAiProfile aiProfile,
                       NamespacedKey mobIdKey, CoreHealthService healthService) {
         this.id = id;
         this.displayName = displayName;
@@ -63,9 +65,12 @@ public final class CoreRpgMob implements RpgMob {
         this.customHeadTexture = customHeadTexture;
         this.bindings = List.copyOf(bindings);
         this.lootTable = lootTable;
+        this.aiProfile = aiProfile == null ? MobAiProfile.DEFAULT : aiProfile;
         this.mobIdKey = mobIdKey;
         this.healthService = healthService;
     }
+
+    public MobAiProfile aiProfile() { return aiProfile; }
 
     @Override public String id() { return id; }
     @Override public String displayName() { return displayName; }
@@ -123,9 +128,21 @@ public final class CoreRpgMob implements RpgMob {
 
         le.getPersistentDataContainer().set(mobIdKey, PersistentDataType.STRING, id);
 
+        applyAiProfile(le);
+
         // Fire OnSpawn ability bindings now that the entity is in-world and tagged.
         MobAbilityRuntime.fireTrigger(le, this, MobAbilityTrigger.OnSpawn.class);
 
         return le;
+    }
+
+    private void applyAiProfile(org.bukkit.entity.LivingEntity le) {
+        if (aiProfile.kind() == MobAiProfile.Kind.PASSIVE || aiProfile.kind() == MobAiProfile.Kind.STATIONARY) {
+            if (le instanceof org.bukkit.entity.Mob mob) mob.setAware(false);
+        }
+        if (aiProfile.immuneToKnockback()) {
+            var attr = le.getAttribute(org.bukkit.attribute.Attribute.KNOCKBACK_RESISTANCE);
+            if (attr != null) attr.setBaseValue(1.0);
+        }
     }
 }

@@ -1,6 +1,6 @@
 # Mobs
 
-> **Status:** In progress — Full YAML loader, registry, PDC tagging, equipment, AbilityRegistry-driven ability triggers (`~onTimer` / `~onHit` / `~onHurt` / `~onSpawn` / `~onDeath` all execute), and loot tables on death (with damager attribution + magic-find scaling) are all working. AI profiles (aggression range, leash, etc.) still parse but don't yet alter vanilla AI — that's the next polish slice.
+> **Status:** In progress — Full YAML loader, registry, PDC tagging, equipment, AbilityRegistry-driven ability triggers (`~onTimer` / `~onHit` / `~onHurt` / `~onSpawn` / `~onDeath` all execute), loot tables on death (with damager attribution + magic-find scaling), **and AI profiles (`aggressive`, `passive`, `defensive`, `stationary`)** are all working. Other profile kinds (`ranged_kiter`, `boss`, `swarming`, `pack-hunter`, `flying`) fall back to aggressive for v1 — refined behaviors come in a polish slice. Knockback-immunity flag is enforced via attribute on spawn.
 
 Custom mobs are defined in YAML under `plugins/rpg-core/mobs/`. Any number of files; many mobs per file.
 

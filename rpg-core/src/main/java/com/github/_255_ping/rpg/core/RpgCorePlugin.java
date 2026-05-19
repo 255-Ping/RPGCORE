@@ -26,6 +26,9 @@ import com.github._255_ping.rpg.core.items.CoreItemRegistry;
 import com.github._255_ping.rpg.core.loot.CoreLootTableRegistry;
 import com.github._255_ping.rpg.core.items.ItemLoader;
 import com.github._255_ping.rpg.core.mobs.CoreMobRegistry;
+import com.github._255_ping.rpg.core.mobs.MobAiTask;
+import com.github._255_ping.rpg.core.spawning.NaturalSpawnLoader;
+import com.github._255_ping.rpg.core.spawning.NaturalSpawnTask;
 import com.github._255_ping.rpg.core.mobs.DamagerTracker;
 import com.github._255_ping.rpg.core.mobs.MobAbilityEventListener;
 import com.github._255_ping.rpg.core.mobs.MobAbilityTimerTask;
@@ -217,6 +220,21 @@ public final class RpgCorePlugin extends JavaPlugin {
 
         getServer().getScheduler().runTaskTimer(
                 this, new MobAbilityTimerTask(mobRegistry, mobIdKey), 1L, 1L);
+
+        long mobAiInterval = Math.max(1, getConfig().getLong("mob-ai.interval-ticks", 10));
+        getServer().getScheduler().runTaskTimer(
+                this, new MobAiTask(mobRegistry, mobIdKey), mobAiInterval, mobAiInterval);
+
+        File naturalSpawnDir = new File(getDataFolder(), "natural-spawning");
+        if (!new File(naturalSpawnDir, "example.yml").exists()) {
+            saveResource("natural-spawning/example.yml", false);
+        }
+        NaturalSpawnLoader naturalLoader = new NaturalSpawnLoader(naturalSpawnDir, getLogger());
+        naturalLoader.loadAll();
+        long natInterval = Math.max(1, getConfig().getLong("natural-spawning.interval-ticks", 20));
+        getServer().getScheduler().runTaskTimer(
+                this, new NaturalSpawnTask(this, naturalLoader, (int) natInterval),
+                natInterval, natInterval);
 
         PluginCommand rpg = Objects.requireNonNull(getCommand("rpg"), "command 'rpg' missing from plugin.yml");
         RpgCommand handler = new RpgCommand(this);
