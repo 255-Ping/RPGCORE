@@ -23,3 +23,9 @@ permissions:
   rpg.core.mob.spawn:
     description: Spawn a custom mob at your location
     default: op
+  rpg.core.block.give:
+    description: Give a placeable custom block
+    default: op
+  rpg.core.block.convert:
+    description: Bulk-convert vanilla blocks to a custom block in a radius
+    default: op

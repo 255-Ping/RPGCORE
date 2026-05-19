@@ -1,6 +1,7 @@
 package com.github._255_ping.rpg.api;
 
 import com.github._255_ping.rpg.api.abilities.AbilityRegistry;
+import com.github._255_ping.rpg.api.blocks.BlockRegistry;
 import com.github._255_ping.rpg.api.cooldown.CooldownService;
 import com.github._255_ping.rpg.api.currency.CurrencyRegistry;
 import com.github._255_ping.rpg.api.formatting.MessageFormatter;
@@ -51,6 +52,7 @@ public final class RpgServices {
     private static ExpressionEvaluator expressions;
     private static CurrencyRegistry currencies;
     private static LootTableRegistry lootTables;
+    private static BlockRegistry blocks;
 
     private RpgServices() {}
 
@@ -76,6 +78,7 @@ public final class RpgServices {
     public static ExpressionEvaluator expressions() { return require(expressions, "ExpressionEvaluator"); }
     public static CurrencyRegistry currencies() { return require(currencies, "CurrencyRegistry"); }
     public static LootTableRegistry lootTables() { return require(lootTables, "LootTableRegistry"); }
+    public static BlockRegistry blocks() { return require(blocks, "BlockRegistry"); }
 
     // ----- Setters (rpg-core only) -----
 
@@ -98,6 +101,7 @@ public final class RpgServices {
     public static void setExpressions(ExpressionEvaluator svc) { expressions = svc; }
     public static void setCurrencies(CurrencyRegistry svc) { currencies = svc; }
     public static void setLootTables(LootTableRegistry svc) { lootTables = svc; }
+    public static void setBlocks(BlockRegistry svc) { blocks = svc; }
 
     private static <T> T require(T svc, String name) {
         if (svc == null) throw new IllegalStateException(name + " not bootstrapped — is rpg-core loaded?");

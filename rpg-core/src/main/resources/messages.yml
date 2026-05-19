@@ -30,5 +30,14 @@ mob:
 player:
   not-found: "&cPlayer &7{name} &cnot found."
 
+ability:
+  no-mana: "&cNot enough mana."
+
+block:
+  not-found: "&cNo block with id &7{id}&c."
+  power-too-low: "&cYou need Breaking Power &7{required} &cto mine this."
+  wrong-tool: "&cThis requires a {tool}."
+  converted: "&aConverted &e{count} &ablock(s) in radius &e{radius} &ato &7{id}&a."
+
 debug:
   ready: "Foundations loaded: data store, scheduler, name formatter, message formatter, expression evaluator, cooldown service."

@@ -2,7 +2,17 @@ plugins {
     `java-library`
 }
 
-version = "0.0.0-${project.property("suiteVersion")}"
+// Per-plugin version is stored as "<short-name>Version" in gradle.properties,
+// where short-name is the module name with the "rpg-" prefix stripped.
+// e.g., rpg-core reads coreVersion. Falls back to 0.0.0 if the property is absent.
+val moduleShortName = project.name.removePrefix("rpg-")
+val moduleVersionKey = "${moduleShortName}Version"
+val moduleVersion = if (project.hasProperty(moduleVersionKey)) {
+    project.property(moduleVersionKey).toString()
+} else {
+    "0.0.0"
+}
+version = "$moduleVersion-${project.property("suiteVersion")}"
 
 repositories {
     mavenCentral()

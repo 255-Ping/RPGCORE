@@ -1,6 +1,12 @@
 package com.github._255_ping.rpg.core;
 
 import com.github._255_ping.rpg.api.RpgServices;
+import com.github._255_ping.rpg.core.abilities.AbilityLoader;
+import com.github._255_ping.rpg.core.abilities.CoreAbilityRegistry;
+import com.github._255_ping.rpg.core.abilities.ItemAbilityListener;
+import com.github._255_ping.rpg.core.blocks.BlockBreakHandler;
+import com.github._255_ping.rpg.core.blocks.BlockLoader;
+import com.github._255_ping.rpg.core.blocks.CoreBlockRegistry;
 import com.github._255_ping.rpg.core.command.RpgCommand;
 import com.github._255_ping.rpg.core.cooldown.CoreCooldownService;
 import com.github._255_ping.rpg.core.damage.DamagePipelineListener;
@@ -57,6 +63,10 @@ public final class RpgCorePlugin extends JavaPlugin {
     private ItemLoader itemLoader;
     private CoreMobRegistry mobRegistry;
     private MobLoader mobLoader;
+    private CoreAbilityRegistry abilityRegistry;
+    private AbilityLoader abilityLoader;
+    private CoreBlockRegistry blockRegistry;
+    private BlockLoader blockLoader;
 
     public static RpgCorePlugin get() {
         return instance;
@@ -85,6 +95,16 @@ public final class RpgCorePlugin extends JavaPlugin {
             saveResource("mobs/example.yml", false);
         }
 
+        File abilitiesDir = new File(getDataFolder(), "abilities");
+        if (!new File(abilitiesDir, "example.yml").exists()) {
+            saveResource("abilities/example.yml", false);
+        }
+
+        File blocksDir = new File(getDataFolder(), "blocks");
+        if (!new File(blocksDir, "example.yml").exists()) {
+            saveResource("blocks/example.yml", false);
+        }
+
         File dataDir = new File(getDataFolder(), "data");
 
         NamespacedKey itemIdKey = new NamespacedKey(this, "item_id");
@@ -106,6 +126,8 @@ public final class RpgCorePlugin extends JavaPlugin {
         skillsService = new CoreSkillsService(this);
         itemRegistry = new CoreItemRegistry(itemIdKey);
         mobRegistry = new CoreMobRegistry(mobIdKey);
+        abilityRegistry = new CoreAbilityRegistry();
+        blockRegistry = new CoreBlockRegistry();
 
         RpgServices.setDataStore(dataStore);
         RpgServices.setMessageFormatter(messageFormatter);
@@ -123,6 +145,11 @@ public final class RpgCorePlugin extends JavaPlugin {
         RpgServices.setSkills(skillsService);
         RpgServices.setItems(itemRegistry);
         RpgServices.setMobs(mobRegistry);
+        RpgServices.setAbilities(abilityRegistry);
+        RpgServices.setBlocks(blockRegistry);
+
+        // Register built-in ability effects, then load admin-defined custom abilities on top.
+        ItemAbilityListener.registerBuiltins(abilityRegistry);
 
         statusEffectLoader = new StatusEffectLoader(statusEffectsDir, statusEffectRegistry, getLogger());
         statusEffectLoader.loadAll();
@@ -133,6 +160,12 @@ public final class RpgCorePlugin extends JavaPlugin {
         mobLoader = new MobLoader(mobsDir, mobRegistry, mobIdKey, healthService, getLogger());
         mobLoader.loadAll();
 
+        abilityLoader = new AbilityLoader(abilitiesDir, abilityRegistry, getLogger());
+        abilityLoader.loadAll();
+
+        blockLoader = new BlockLoader(blocksDir, blockRegistry, getLogger());
+        blockLoader.loadAll();
+
         getServer().getPluginManager().registerEvents(new VanillaSuppressionListener(this), this);
         getServer().getPluginManager().registerEvents(
                 new PlayerLifecycleListener(this, playerLookup, healthService, skillsService), this);
@@ -140,6 +173,10 @@ public final class RpgCorePlugin extends JavaPlugin {
                 new DamagePipelineListener(this, healthService), this);
         getServer().getPluginManager().registerEvents(
                 new EquipmentListener(this, healthService), this);
+        getServer().getPluginManager().registerEvents(
+                new ItemAbilityListener(this, abilityRegistry), this);
+        getServer().getPluginManager().registerEvents(
+                new BlockBreakHandler(this, blockRegistry), this);
 
         long regenInterval = getConfig().getLong("regen.interval-ticks", 20L);
         getServer().getScheduler().runTaskTimer(
@@ -161,7 +198,8 @@ public final class RpgCorePlugin extends JavaPlugin {
                 + statusEffectRegistry.all().size() + " status effects, "
                 + skillRegistry.all().size() + " skills, "
                 + itemRegistry.all().size() + " items, "
-                + mobRegistry.all().size() + " mobs.");
+                + mobRegistry.all().size() + " mobs, "
+                + blockRegistry.all().size() + " block defs.");
     }
 
     @Override
@@ -176,6 +214,8 @@ public final class RpgCorePlugin extends JavaPlugin {
         statusEffectLoader.loadAll();
         itemLoader.loadAll();
         mobLoader.loadAll();
+        abilityLoader.loadAll();
+        blockLoader.loadAll();
         skillsService.onReload();
     }
 

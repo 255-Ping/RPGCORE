@@ -1,9 +1,12 @@
 package com.github._255_ping.rpg.core.command;
 
 import com.github._255_ping.rpg.api.RpgServices;
+import com.github._255_ping.rpg.api.blocks.Block;
 import com.github._255_ping.rpg.api.items.RpgItem;
 import com.github._255_ping.rpg.api.mobs.RpgMob;
 import com.github._255_ping.rpg.core.RpgCorePlugin;
+import com.github._255_ping.rpg.core.blocks.CoreBlockRegistry;
+import org.bukkit.Material;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -32,7 +35,7 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
                              @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) {
             sender.sendMessage(plugin.messages().component("command.usage",
-                    Map.of("usage", "/rpg <version|reload|item|mob>")));
+                    Map.of("usage", "/rpg <version|reload|item|mob|block>")));
             return true;
         }
         switch (args[0].toLowerCase()) {
@@ -40,10 +43,112 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
             case "reload", "reloadall" -> handleReload(sender);
             case "item" -> handleItem(sender, args);
             case "mob" -> handleMob(sender, args);
+            case "block" -> handleBlock(sender, args);
             default -> sender.sendMessage(plugin.messages().component("command.unknown",
                     Map.of("sub", args[0])));
         }
         return true;
+    }
+
+    private void handleBlock(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            sender.sendMessage(plugin.messages().component("command.usage",
+                    Map.of("usage", "/rpg block <give|convert> ...")));
+            return;
+        }
+        switch (args[1].toLowerCase()) {
+            case "give" -> handleBlockGive(sender, args);
+            case "convert" -> handleBlockConvert(sender, args);
+            default -> sender.sendMessage(plugin.messages().component("command.unknown",
+                    Map.of("sub", "block " + args[1])));
+        }
+    }
+
+    private void handleBlockGive(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("rpg.core.block.give")) {
+            sender.sendMessage(plugin.messages().component("command.no-permission"));
+            return;
+        }
+        if (args.length < 3) {
+            sender.sendMessage(plugin.messages().component("command.usage",
+                    Map.of("usage", "/rpg block give <id> [amount]")));
+            return;
+        }
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(plugin.messages().component("command.player-only"));
+            return;
+        }
+        String id = args[2];
+        Optional<Block> opt = RpgServices.blocks().get(id);
+        if (opt.isEmpty()) {
+            sender.sendMessage(plugin.messages().component("block.not-found", Map.of("id", id)));
+            return;
+        }
+        int amount = 1;
+        if (args.length >= 4) {
+            try { amount = Math.max(1, Integer.parseInt(args[3])); }
+            catch (NumberFormatException ex) { amount = 1; }
+        }
+        // Placement registers the location via BlockPlacementListener (planned). For v1
+        // the giver hands you a raw vanilla material so you can place it; tagging at
+        // placement is wired in a follow-up. Use /rpg block convert for now to bulk-tag.
+        player.getInventory().addItem(new org.bukkit.inventory.ItemStack(opt.get().material(), amount));
+    }
+
+    private void handleBlockConvert(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("rpg.core.block.convert")) {
+            sender.sendMessage(plugin.messages().component("command.no-permission"));
+            return;
+        }
+        if (args.length < 5) {
+            sender.sendMessage(plugin.messages().component("command.usage",
+                    Map.of("usage", "/rpg block convert <radius> <fromMaterial> <toBlockId>")));
+            return;
+        }
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(plugin.messages().component("command.player-only"));
+            return;
+        }
+        int radius;
+        try { radius = Math.max(1, Math.min(64, Integer.parseInt(args[2]))); }
+        catch (NumberFormatException ex) {
+            sender.sendMessage(plugin.messages().component("command.usage",
+                    Map.of("usage", "/rpg block convert <radius> <fromMaterial> <toBlockId>")));
+            return;
+        }
+        Material from = Material.matchMaterial(args[3]);
+        if (from == null || !from.isBlock()) {
+            sender.sendMessage(plugin.messages().component("block.not-found", Map.of("id", args[3])));
+            return;
+        }
+        String toId = args[4];
+        Optional<Block> opt = RpgServices.blocks().get(toId);
+        if (opt.isEmpty()) {
+            sender.sendMessage(plugin.messages().component("block.not-found", Map.of("id", toId)));
+            return;
+        }
+        Block to = opt.get();
+        if (!(RpgServices.blocks() instanceof CoreBlockRegistry coreReg)) {
+            return;
+        }
+
+        org.bukkit.Location center = player.getLocation();
+        int count = 0;
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dy = -radius; dy <= radius; dy++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    org.bukkit.Location loc = center.clone().add(dx, dy, dz);
+                    if (loc.getBlock().getType() != from) continue;
+                    if (to.material() != from) {
+                        loc.getBlock().setType(to.material());
+                    }
+                    coreReg.tagLocation(loc, to.id());
+                    count++;
+                }
+            }
+        }
+        sender.sendMessage(plugin.messages().component("block.converted",
+                Map.of("count", count, "radius", radius, "id", toId)));
     }
 
     private void handleVersion(CommandSender sender) {
@@ -163,13 +268,17 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                       @NotNull String alias, @NotNull String[] args) {
         if (args.length == 1) {
-            return filtered(args[0], List.of("version", "reload", "item", "mob"));
+            return filtered(args[0], List.of("version", "reload", "item", "mob", "block"));
         }
         if (args.length == 2) {
             if (args[0].equalsIgnoreCase("item")) return filtered(args[1], List.of("give"));
             if (args[0].equalsIgnoreCase("mob")) return filtered(args[1], List.of("spawn"));
+            if (args[0].equalsIgnoreCase("block")) return filtered(args[1], List.of("give", "convert"));
         }
         if (args.length == 3) {
+            if (args[0].equalsIgnoreCase("block") && args[1].equalsIgnoreCase("give")) {
+                return filtered(args[2], RpgServices.blocks().all().stream().map(Block::id).toList());
+            }
             if (args[0].equalsIgnoreCase("item") && args[1].equalsIgnoreCase("give")) {
                 return filtered(args[2], RpgServices.items().all().stream().map(RpgItem::id).toList());
             }

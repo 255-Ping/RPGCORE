@@ -97,6 +97,7 @@ Public types live in:
 - `com.github._255_ping.rpg.api.currency` — `Currency`, `CurrencyRegistry`
 - `com.github._255_ping.rpg.api.spawning` — `SpawnConditions` (+ inner `Range`), `Spawner` (+ `Mode` enum)
 - `com.github._255_ping.rpg.api.regions` — `Region`
+- `com.github._255_ping.rpg.api.blocks` — `Block`, `BlockRegistry`, `RequiredToolType`
 
 Service types still planned (not yet in code; expected when their owning addon ships):
 

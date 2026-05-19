@@ -1,0 +1,37 @@
+# Sample custom abilities. Each top-level key is an ability id usable in any
+# item / mob Abilities list. Hard-floor Cooldown (ticks) cannot be overridden.
+#
+# Built-in effects:
+#   damage{amount=, damage_multiplier=, type=physical/true}
+#   heal{amount=, target=caster/target}
+#   beam{range=, damage_multiplier=, particle=}        sets target + point
+#   explode{radius=, damage=, damage_multiplier=, particle=}
+#   particles{type=, count=, offset=}
+#   sound{key=, volume=, pitch=}
+#   delay{ticks=}
+#   apply_status{id=, level=, duration=, target=caster/target}
+#   mana_cost{amount=}                                 throws on insufficient
+#   cooldown{ticks=, key=}
+
+testability:
+  AbilitySequence:
+  - mana_cost{amount=20}
+  - beam{range=8, damage_multiplier=1.5, particle=crit}
+  - explode{radius=3, damage_multiplier=0.5, particle=explosion}
+  - sound{key=entity.generic.explode, volume=1.0, pitch=1.2}
+  Cooldown: 40
+
+healing_pulse:
+  AbilitySequence:
+  - mana_cost{amount=30}
+  - heal{amount=20, target=caster}
+  - particles{type=heart, count=12, offset=0.4}
+  - sound{key=entity.player.levelup, volume=0.5, pitch=1.5}
+  Cooldown: 60
+
+poison_dart:
+  AbilitySequence:
+  - mana_cost{amount=10}
+  - beam{range=12, damage_multiplier=0.5, particle=witch}
+  - apply_status{id=poison, level=1, duration=200, target=target}
+  Cooldown: 20

@@ -1,0 +1,38 @@
+# Sample custom blocks. Each top-level key is a block ID. Reload with /rpg reloadall.
+#
+# Place by running:
+#   /rpg block convert <radius> <fromMaterial> <toBlockId>
+# which scans vanilla blocks of <fromMaterial> within <radius> of you and tags them
+# as the custom block. They look the same as the base Material until broken.
+#
+# Fields:
+#   MinecraftBlock   — base Material (block placed in world)
+#   Toughness        — block HP (mining-speed slice will tick this down; v1 = instant break)
+#   RequiredPower    — BREAKING_POWER stat must be >= this to break the block
+#   RequiredToolType — pickaxe | axe | shovel | hoe | any | none
+#   RespawnTicks     — ticks until the block regenerates (0 = no respawn)
+#   RespawnPlaceholder — what's shown at the location while respawning
+#   Interactable     — reserved for right-click handling (stations); v1 unused at runtime
+#   StationType      — crafting | cooking | brewing | enchanting | anvil
+#   Drops            — list of "[file] <itemId> <min>[-<max>]" — file token is optional/decorative
+
+red_gem_block:
+  MinecraftBlock: redstone_ore
+  Toughness: 1000
+  RequiredPower: 1
+  RequiredToolType: pickaxe
+  RespawnTicks: 600
+  RespawnPlaceholder: bedrock
+  Drops:
+  - gems red_gem 1-3
+  - vanilla:redstone 2-4
+
+iron_node:
+  MinecraftBlock: iron_ore
+  Toughness: 500
+  RequiredPower: 2
+  RequiredToolType: pickaxe
+  RespawnTicks: 400
+  RespawnPlaceholder: stone
+  Drops:
+  - vanilla:raw_iron 1-2

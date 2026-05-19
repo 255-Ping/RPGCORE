@@ -43,3 +43,36 @@ test_talisman:
     max_health: 10
     health_regen: 1
   Rarity: '&d&lRARE'
+
+beam_wand:
+  MinecraftItem: blaze_rod
+  Type: WAND
+  DisplayName: '&dBeam Wand'
+  Stats:
+    intelligence: 50
+    ability_damage: 20
+  Abilities:
+  - testability
+  Lore:
+  - '&7Right-click to fire a beam that explodes on contact.'
+  Rarity: '&d&lRARE'
+
+healing_staff:
+  MinecraftItem: stick
+  Type: WAND
+  DisplayName: '&aHealing Staff'
+  Stats:
+    intelligence: 30
+  Abilities:
+  - healing_pulse
+  Lore:
+  - '&7Restore HP with a wave of magic.'
+  Rarity: '&a&lUNCOMMON'
+
+red_gem:
+  MinecraftItem: redstone
+  Type: MATERIAL
+  DisplayName: '&cRed Gem'
+  Lore:
+  - '&7Refined from red gem ore.'
+  Rarity: '&c&lUNCOMMON'

@@ -1,6 +1,6 @@
 # Custom blocks
 
-> **Status:** Planned
+> **Status:** In progress — YAML loader, registry, `/rpg block convert`, and BlockBreakHandler all working. v1 is **instant break on click** (hold-to-break with the vanilla 0-9 progress packet arrives in a polish slice — `Toughness` and `MINING_SPEED` ticking are not yet wired). `BREAKING_POWER` and `RequiredToolType` gates are enforced. Drops + respawn timer working. Right-click `Interactable: true` / `StationType` handling not yet implemented. Per-location tagging is in-memory only for v1 (lost on restart) — `DataStore`-backed persistence comes later.
 
 Custom blocks are defined in YAML under `plugins/rpg-core/blocks/`. A custom block is a vanilla block tagged with PDC at its world location, with custom HP, drops, and break behavior.
 

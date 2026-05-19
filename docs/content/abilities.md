@@ -1,6 +1,6 @@
 # Abilities
 
-> **Status:** Planned
+> **Status:** In progress — Built-in effects library (damage, heal, beam, explode, particles, sound, delay, apply_status, mana_cost, cooldown), custom ability YAML loader, and item right-click cast all working. Item with `Abilities: [<id>]` fires on right-click; the chain runs through `AbilityPipeline.cast`. Custom abilities (`abilities/*.yml`) load as composite effects with hard-floor cooldowns. Mob ability triggers (`~onTimer` etc.) parse but don't execute yet — a future polish slice ties them to runtime tasks and damage events.
 
 The ability system has two layers:
 
