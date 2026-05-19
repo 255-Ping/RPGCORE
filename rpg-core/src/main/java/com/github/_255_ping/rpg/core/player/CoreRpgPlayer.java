@@ -1,13 +1,17 @@
 package com.github._255_ping.rpg.core.player;
 
+import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.player.RpgPlayer;
 import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import com.github._255_ping.rpg.api.stats.Stat;
 import com.github._255_ping.rpg.api.stats.StatRecalcEvent;
+import com.github._255_ping.rpg.core.status.CoreStatusEffectService;
+import com.github._255_ping.rpg.core.status.StatModifier;
 import com.github._255_ping.rpg.core.stats.MutableStatHolder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.List;
 import java.util.Map;
 
 public final class CoreRpgPlayer implements RpgPlayer {
@@ -43,11 +47,35 @@ public final class CoreRpgPlayer implements RpgPlayer {
     @Override
     public void recalculateStats() {
         effective.clear();
+
         for (Map.Entry<Stat, Double> e : base.snapshot().entrySet()) {
             effective.set(e.getKey(), e.getValue());
         }
-        // TODO: layer in equipment / accessories / status effects / milestones / guild perks
+
+        List<StatModifier> modifiers = collectStatusModifiers();
+        for (StatModifier m : modifiers) {
+            if (m.kind() != StatModifier.Kind.FLAT) continue;
+            double cur = effective.get(m.stat());
+            effective.set(m.stat(), cur + m.value());
+        }
+        for (StatModifier m : modifiers) {
+            if (m.kind() != StatModifier.Kind.PERCENT) continue;
+            double cur = effective.get(m.stat());
+            effective.set(m.stat(), cur * (1.0 + m.value() / 100.0));
+        }
+
         Bukkit.getPluginManager().callEvent(new StatRecalcEvent(bukkit, effective));
+    }
+
+    private List<StatModifier> collectStatusModifiers() {
+        try {
+            if (RpgServices.statusEffects() instanceof CoreStatusEffectService svc) {
+                return svc.modifiersFor(bukkit.getUniqueId());
+            }
+        } catch (IllegalStateException ignored) {
+            // status-effect service not registered yet — no modifiers
+        }
+        return List.of();
     }
 
     public void setBaseStat(Stat stat, double value) {

@@ -1,0 +1,56 @@
+# Sample status effects shipped with rpg-core. Add files in this folder; each
+# top-level key is an effect ID. Reload with /rpg reloadall.
+#
+# Fields:
+#   display         — colored display name (legacy &-codes)
+#   category        — buff | debuff | neutral
+#   stacking        — refresh | stack-power | take-max | independent
+#   hidden          — if true, doesn't show in the /effects GUI or HUD
+#   stat-modifiers  — map of stat-id -> { kind: flat | percent, value: <n> }
+#                     flat values add directly; percent values are applied as
+#                     percentage modifiers (-10 means -10%).
+#                     Effect level multiplies the modifier value.
+#   tick            — optional periodic action while active:
+#       interval-ticks: how often (20 = 1 sec)
+#       action:        damage | heal
+#       amount:        the damage / heal amount per tick (also scaled by level)
+#       source:        tag for the damage pipeline (only used for action: damage)
+
+poison:
+  display: "&2Poison"
+  category: debuff
+  stacking: refresh
+  hidden: false
+  stat-modifiers:
+    defense: { kind: percent, value: -10 }
+  tick:
+    interval-ticks: 20
+    action: damage
+    amount: 2
+    source: poison
+
+regen:
+  display: "&aRegeneration"
+  category: buff
+  stacking: refresh
+  hidden: false
+  tick:
+    interval-ticks: 10
+    action: heal
+    amount: 1
+
+strength_boost:
+  display: "&cStrength Boost"
+  category: buff
+  stacking: take-max
+  hidden: false
+  stat-modifiers:
+    strength: { kind: flat, value: 25 }
+
+slow:
+  display: "&7Slowness"
+  category: debuff
+  stacking: take-max
+  hidden: false
+  stat-modifiers:
+    speed: { kind: percent, value: -30 }

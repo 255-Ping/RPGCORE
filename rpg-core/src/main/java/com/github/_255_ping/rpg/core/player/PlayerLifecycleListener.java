@@ -6,6 +6,8 @@ import com.github._255_ping.rpg.api.player.RpgPlayer;
 import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import com.github._255_ping.rpg.api.stats.Stat;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
+import com.github._255_ping.rpg.core.skills.CoreSkillsService;
+import com.github._255_ping.rpg.core.skills.PlayerSkillState;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -20,13 +22,16 @@ import java.util.Optional;
 
 /**
  * Loads RpgPlayer state from DataStore on join and saves it on quit. Initializes the
- * heart-as-percent display via CoreHealthService.
+ * heart-as-percent display via CoreHealthService and seeds skill state via CoreSkillsService.
  *
  * <p>Player file schema (under {@code data/players/<uuid>.yml}):
  * <pre>
  * schema-version: 1
  * hp: 87.5
  * mana: 95.0
+ * skills:
+ *   combat: 1500
+ *   mining: 350
  * </pre>
  * Base stats come from {@code starting-state.base-stats} in core config, applied each
  * session — they're not stored per-player.
@@ -39,11 +44,14 @@ public final class PlayerLifecycleListener implements Listener {
     private final JavaPlugin plugin;
     private final CorePlayerLookup lookup;
     private final CoreHealthService health;
+    private final CoreSkillsService skills;
 
-    public PlayerLifecycleListener(JavaPlugin plugin, CorePlayerLookup lookup, CoreHealthService health) {
+    public PlayerLifecycleListener(JavaPlugin plugin, CorePlayerLookup lookup,
+                                   CoreHealthService health, CoreSkillsService skills) {
         this.plugin = plugin;
         this.lookup = lookup;
         this.health = health;
+        this.skills = skills;
     }
 
     @EventHandler
@@ -62,10 +70,20 @@ public final class PlayerLifecycleListener implements Listener {
         double hp = maxHp;
         double mana = maxMana;
 
+        PlayerSkillState skillState = skills.getOrCreate(player.getUniqueId());
+
         if (existing.isPresent()) {
             Map<String, Object> data = existing.get();
             hp = numberOr(data.get("hp"), maxHp);
             mana = numberOr(data.get("mana"), maxMana);
+            Object skillsRaw = data.get("skills");
+            if (skillsRaw instanceof Map<?, ?> skillMap) {
+                for (Map.Entry<?, ?> e : skillMap.entrySet()) {
+                    if (e.getKey() instanceof String sk && e.getValue() instanceof Number n) {
+                        skillState.setTotalXp(sk, n.longValue());
+                    }
+                }
+            }
         }
 
         rp.setMana(mana);
@@ -77,14 +95,18 @@ public final class PlayerLifecycleListener implements Listener {
         Player player = event.getPlayer();
         RpgPlayer rp = RpgServices.player(player);
 
+        PlayerSkillState skillState = skills.getOrCreate(player.getUniqueId());
+
         Map<String, Object> data = new HashMap<>();
         data.put("schema-version", CURRENT_SCHEMA);
         data.put("hp", health.currentHp(player));
         data.put("mana", rp.mana());
+        data.put("skills", new HashMap<>(skillState.raw()));
         RpgServices.dataStore().repository(REPO_NAME).save(player.getUniqueId().toString(), data);
 
         lookup.remove(player);
         health.removeEntity(player);
+        skills.remove(player.getUniqueId());
     }
 
     private void applyBaseStats(CoreRpgPlayer rp) {

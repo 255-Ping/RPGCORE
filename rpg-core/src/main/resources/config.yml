@@ -80,6 +80,20 @@ starting-state:
 regen:
   interval-ticks: 20             # 20 ticks = 1 second
 
+# Skill framework (per-skill addons layer their own configs on top).
+# Each skill uses the default curve unless overridden under its own key here.
+# Variables available in curves: level, prev_xp_total.
+# Functions: pow sqrt min max floor ceil round abs log ln.
+skills:
+  default-max-level: 50
+  default-curve: "100 * level ^ 1.5"
+  # combat: { max-level: 50, curve: "100 * level ^ 1.5" }
+  # mining: { max-level: 50, curve: "100 * level ^ 1.5" }
+
+# Status-effect tick scheduler. One task scans active effects every tick.
+status-effects:
+  scheduler-interval-ticks: 1
+
 # Combat tagging (see docs/core/damage.md).
 combat-tag:
   duration-seconds: 8
