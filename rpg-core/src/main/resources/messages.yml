@@ -1,0 +1,22 @@
+# Default English messages for rpg-core.
+# Placeholders use {name}-style tokens, substituted at format time.
+# Color codes use legacy ampersand format (&).
+
+prefix: "&8[&6RPG&8]&r "
+
+command:
+  no-permission: "&cYou don't have permission."
+  unknown: "&cUnknown subcommand: &7{sub}"
+  usage: "&7Usage: &e{usage}"
+  player-only: "&cThat command can only be used by a player."
+
+reload:
+  success: "&aReloaded core config and messages."
+  starting: "&7Reloading core..."
+
+version:
+  header: "&6&lRPG Suite"
+  entry: "&7- &e{module} &7v{version}"
+
+debug:
+  ready: "&7Foundations loaded: data store, scheduler, name formatter, message formatter, expression evaluator, cooldown service."

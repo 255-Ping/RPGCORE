@@ -1,6 +1,6 @@
 # Persistence
 
-> **Status:** Planned
+> **Status:** In progress — YAML backend works; MySQL backend not yet implemented (config key reserved, currently no-op)
 
 `rpg-core` provides a `DataStore` service that every addon must go through to read or write persistent data. The backend is selectable in core config: **YAML (default)** or **MySQL**.
 
@@ -54,20 +54,30 @@ When a server admin downgrades a plugin (rare), they must restore from backup �
 
 ## API surface (developer-facing)
 
+`DataStore` exposes named `Repository` instances. Records are stored as untyped `Map<String, Object>` — each addon is responsible for serializing its own types to/from maps. This avoids depending on a heavyweight ORM and matches Bukkit's YamlConfiguration shape natively.
+
 ```java
 DataStore store = RpgServices.dataStore();
+DataStore.Repository players = store.repository("players");
 
 // Read
-Optional<PlayerRecord> rec = store.players().get(uuid);
+Optional<Map<String, Object>> rec = players.get(uuid.toString());
 
-// Write
-store.players().save(uuid, record);
+// Write (async)
+players.save(uuid.toString(), Map.of(
+    "schema-version", 1,
+    "stats", Map.of("max_health", 100, "strength", 5),
+    "skills", Map.of("combat", Map.of("level", 1, "totalXp", 0L))
+)).join();
+
+// Delete
+players.delete(uuid.toString()).join();
 
 // Listing
-Collection<UUID> all = store.players().listIds();
+Collection<String> all = players.keys();
 ```
 
-Each addon registers its own record types with `DataStore` at plugin enable.
+Repository names map to a folder under the calling plugin's data folder (or a table in MySQL once that backend lands). Keys are sanitized (`[^a-zA-Z0-9_.-]` → `_`) to be filesystem-safe. Writes are queued on the common ForkJoinPool via `CompletableFuture.runAsync`; reads are synchronous.
 
 ## Concurrency
 

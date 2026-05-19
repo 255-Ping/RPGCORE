@@ -1,0 +1,83 @@
+# rpg-core main configuration.
+# Full documentation: docs/configuration.md and docs/core/vanilla-suppression.md
+
+persistence:
+  # backend: yaml (default) | mysql
+  # If 'mysql' fails to connect, rpg-core falls back to YAML with a warning.
+  backend: yaml
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    database: rpg
+    user: rpg
+    password: ""
+    pool-size: 8
+    use-ssl: false
+
+# Total-vanilla-replacement master toggles.
+# Defaults reflect project intent: every vanilla mechanic off, our own custom one on.
+# Listener wiring lands per-flag as each replacement system ships — flags without
+# wiring yet are harmless to set true.
+vanilla-suppression:
+  mob-spawning: true          # cancel natural mob spawns; admin spawners are the only source
+  mob-loot: true              # cancel vanilla drops; loot comes from mob YAML loot tables
+  mob-ai: true                # disable vanilla AI on tagged mobs
+  damage: true                # cancel vanilla damage, route through our pipeline
+  player-regen: true          # cancel vanilla HP regen; HEALTH_REGEN drives ours
+  hunger: true                # cancel vanilla hunger drain
+  xp-orbs: true               # cancel vanilla XP orb pickup
+  enchanting-table: true      # cancel vanilla enchant table
+  anvil: true                 # cancel vanilla anvil
+  brewing-stand: true         # cancel vanilla brewing
+  potions: true               # cancel vanilla potion effects on entities
+  smelting: true              # cancel vanilla furnace recipes
+  crafting: true              # cancel vanilla crafting recipes
+  fishing: true               # cancel vanilla fishing loot
+  villager-trading: true      # cancel vanilla villager trades
+  raids: true                 # disable pillager raids
+  pillager-patrols: true      # disable patrol spawning
+  beacons: true               # cancel beacon effects
+  death-drops: true           # cancel vanilla death drops
+  block-explosion-damage: true # cancel explosion damage to entities (region flag can override)
+  block-break-tagged: true    # cancel vanilla break for tagged custom blocks
+
+# Creative players bypass our custom systems (so admins can build freely).
+creative-mode-bypass:
+  break-time: true
+  damage: true
+  economy: true
+  region-flags: true
+
+# Repurposed vanilla bars.
+vanilla-xp-bar: most-recent   # most-recent | pinned | hidden
+hunger-bar: hidden            # hidden | frozen-visible
+armor-bar: hidden             # hidden | visible
+
+# Health display (see docs/core/health-display.md).
+health:
+  default-max: 100
+  bukkit-max-health: 40.0
+  resync-interval-ticks: 1
+
+# Combat tagging (see docs/core/damage.md).
+combat-tag:
+  duration-seconds: 8
+  vitality-reduction-percent-per-point: 1
+  vitality-reduction-cap-percent: 50
+
+# Chat name format defaults (used by NameFormatter — LuckPerms is a soft-dep).
+chat-name-format:
+  use-luckperms-prefix: true
+  use-luckperms-suffix: true
+  fallback-format: "{name}"
+
+# Locale for messages.yml selection (en is shipped; others come later).
+locale: en
+
+# Debug logging per-system. Verbose builds are noisy — leave off in prod.
+debug:
+  damage: false
+  spawning: false
+  skills: false
+  status-effects: false
+  persistence: false

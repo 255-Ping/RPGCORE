@@ -85,7 +85,7 @@ Public types live in:
 - `com.github._255_ping.rpg.api.abilities` — `AbilityEffect`, `AbilityRegistry`, `AbilityPipeline`, `AbilityDsl`, `AbilityContext`, `AbilityInvocation`
 - `com.github._255_ping.rpg.api.damage` — `DamageContext`, `PreDamageEvent`, `PostDamageEvent`
 - `com.github._255_ping.rpg.api.player` — `RpgPlayer`, `ManaService`
-- `com.github._255_ping.rpg.api.persistence` — `DataStore` (+ inner `Repository<V>`)
+- `com.github._255_ping.rpg.api.persistence` — `DataStore` (+ inner `Repository` — keys are strings, values are `Map<String, Object>`)
 - `com.github._255_ping.rpg.api.skills` — `Skill` (sealed), `BuiltinSkill`, `CustomSkill`, `SkillRegistry`, `SkillsService`, `SkillXpAwardEvent`
 - `com.github._255_ping.rpg.api.status` — `StatusEffect`, `StatusEffectRegistry`, `StatusEffectService`, `ActiveStatusEffect`, `StackingStrategy`
 - `com.github._255_ping.rpg.api.cooldown` — `CooldownService`

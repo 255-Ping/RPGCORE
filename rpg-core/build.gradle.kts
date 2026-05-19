@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     "implementation"(project(":rpg-api"))
+    "compileOnly"("net.luckperms:api:5.4")
 }
 
 tasks {
