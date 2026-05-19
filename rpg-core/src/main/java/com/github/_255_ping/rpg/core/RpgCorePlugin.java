@@ -16,6 +16,7 @@ import com.github._255_ping.rpg.core.mobs.MobLoader;
 import com.github._255_ping.rpg.core.persistence.YamlDataStore;
 import com.github._255_ping.rpg.core.player.CoreManaService;
 import com.github._255_ping.rpg.core.player.CorePlayerLookup;
+import com.github._255_ping.rpg.core.player.EquipmentListener;
 import com.github._255_ping.rpg.core.player.PlayerLifecycleListener;
 import com.github._255_ping.rpg.core.scheduler.CoreSchedulerService;
 import com.github._255_ping.rpg.core.skills.CoreSkillRegistry;
@@ -137,6 +138,8 @@ public final class RpgCorePlugin extends JavaPlugin {
                 new PlayerLifecycleListener(this, playerLookup, healthService, skillsService), this);
         getServer().getPluginManager().registerEvents(
                 new DamagePipelineListener(this, healthService), this);
+        getServer().getPluginManager().registerEvents(
+                new EquipmentListener(this, healthService), this);
 
         long regenInterval = getConfig().getLong("regen.interval-ticks", 20L);
         getServer().getScheduler().runTaskTimer(
