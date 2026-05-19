@@ -1,6 +1,6 @@
 # Health display (heart-as-percent)
 
-> **Status:** Planned
+> **Status:** In progress — heart-as-percent display, in-combat tagging, and out-of-combat HEALTH_REGEN tick all working. Stat aggregation from gear/effects layered on top is pending; for now `max_health` comes from `starting-state.base-stats`.
 
 The vanilla health bar shows **20 hearts max** (two rows of 10 hearts) regardless of the player's actual `max_health` stat.
 

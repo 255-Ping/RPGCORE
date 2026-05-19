@@ -1,6 +1,6 @@
 # Damage pipeline
 
-> **Status:** Planned
+> **Status:** In progress — basic pipeline working (vanilla damage cancelled, our pipeline applies). Stat aggregation from armor / accessories / status effects / milestones / guild perks is not yet wired, so attacker/victim stats currently come only from `starting-state.base-stats` for players and from 0 for mobs. Combat XP awards, damage indicators, and per-source damage tuning land in later slices.
 
 All damage flows through `rpg-core`. Vanilla `EntityDamageEvent` is cancelled at `LOWEST` priority and replaced with our pipeline.
 

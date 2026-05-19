@@ -59,6 +59,27 @@ health:
   bukkit-max-health: 40.0
   resync-interval-ticks: 1
 
+# Starting state for a freshly-joined player.
+# Stats here seed each player's base stats; armor / accessories / status
+# effects / skill milestones layer on top once those systems ship.
+starting-state:
+  hp: 100
+  mana: 100
+  base-stats:
+    max_health: 100
+    max_mana: 100
+    health_regen: 2
+    mana_regen: 5
+    damage: 1
+    defense: 0
+    speed: 0
+    crit_chance: 10
+    crit_damage: 50
+
+# Regen tick rate (HP and mana regen both run on this schedule).
+regen:
+  interval-ticks: 20             # 20 ticks = 1 second
+
 # Combat tagging (see docs/core/damage.md).
 combat-tag:
   duration-seconds: 8
