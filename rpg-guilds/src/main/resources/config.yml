@@ -1,0 +1,12 @@
+# rpg-guilds — persistent guilds.
+
+# v1: simple owner / officer / member ranks. Custom rank renaming arrives later.
+
+max-members: 50
+
+# Currency cost to create a guild (charged via rpg-economy if loaded; otherwise free).
+creation:
+  cost: 10000
+
+# Seconds before a pending invite expires.
+invite-timeout-seconds: 60

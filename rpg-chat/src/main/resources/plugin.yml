@@ -23,6 +23,9 @@ commands:
     description: Toggle global chat mute
     aliases: [mc]
     usage: /mutechat
+  chat:
+    description: Switch active chat channel
+    usage: /chat <global|party|guild>
 permissions:
   rpg.chat.msg:
     description: Send direct messages
@@ -39,3 +42,12 @@ permissions:
   rpg.chat.mute.bypass:
     description: Bypass mutechat
     default: op
+  rpg.chat.use.global:
+    description: Use the global chat channel
+    default: true
+  rpg.chat.use.party:
+    description: Use the party chat channel
+    default: true
+  rpg.chat.use.guild:
+    description: Use the guild chat channel
+    default: true

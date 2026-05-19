@@ -1,6 +1,6 @@
 # Chat (`rpg-chat`)
 
-> **Status:** In progress — Chat format with `{prefix}{name}{suffix}{message}` placeholders (LuckPerms prefix/suffix via core's `NameFormatter`), `/msg` + `/reply` direct messaging, `/mutechat` (with `rpg.chat.mute.bypass` perm), `/clearchat`. Per-channel routing (global/staff/party/guild) is deferred to a polish slice — for now everything is single-channel global.
+> **Status:** In progress — Chat format with `{prefix}{name}{suffix}{message}` placeholders (LuckPerms prefix/suffix via core's `NameFormatter`), `/msg` + `/reply` direct messaging, `/mutechat`, `/clearchat`, **and channel routing**. `/chat global|party|guild` switches your active channel; party/guild messages are filtered to only their respective members. Configurable per-channel prefixes (`channel-prefix-party`, etc.). Staff channel + custom server-defined channels come later.
 
 Replaces vanilla chat with a configurable format, channels, and moderation. Wraps `rpg-core`'s `NameFormatter` for LuckPerms prefix/suffix everywhere.
 

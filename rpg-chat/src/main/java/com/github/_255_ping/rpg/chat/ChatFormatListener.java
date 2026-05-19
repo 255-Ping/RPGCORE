@@ -1,14 +1,23 @@
 package com.github._255_ping.rpg.chat;
 
 import com.github._255_ping.rpg.api.RpgServices;
+import com.github._255_ping.rpg.api.guilds.Guild;
+import com.github._255_ping.rpg.api.parties.Party;
 import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 public final class ChatFormatListener implements Listener {
 
@@ -32,15 +41,24 @@ public final class ChatFormatListener implements Listener {
             return;
         }
 
-        String template = plugin.getConfig().getString("chat-format",
-                "{prefix}{name}{suffix} &7» &f{message}");
+        String channel = chatPlugin.activeChannel(p);
+        Set<Audience> recipients = pickRecipients(p, channel);
+        if (recipients != null) {
+            event.viewers().clear();
+            event.viewers().addAll(recipients);
+        }
+
+        String template = plugin.getConfig().getString("chat-format-" + channel,
+                plugin.getConfig().getString("chat-format",
+                        "{prefix}{name}{suffix} &7» &f{message}"));
+        String channelPrefix = plugin.getConfig().getString("channel-prefix-" + channel, "");
 
         String message = PlainTextComponentSerializer.plainText().serialize(event.message());
 
         String prefix = safe(() -> RpgServices.nameFormatter().prefix(p));
         String suffix = safe(() -> RpgServices.nameFormatter().suffix(p));
 
-        String rendered = template
+        String rendered = (channelPrefix.isEmpty() ? "" : channelPrefix) + template
                 .replace("{prefix}", prefix)
                 .replace("{name}", p.getName())
                 .replace("{suffix}", suffix)
@@ -51,9 +69,37 @@ public final class ChatFormatListener implements Listener {
                 LEGACY.deserialize(rendered));
     }
 
+    private Set<Audience> pickRecipients(Player sender, String channel) {
+        return switch (channel) {
+            case "party" -> {
+                Set<Audience> out = new HashSet<>();
+                out.add(sender);
+                try {
+                    Optional<Party> p = RpgServices.parties().partyOf(sender);
+                    p.ifPresent(party -> out.addAll(party.members()));
+                } catch (IllegalStateException ignored) {}
+                yield out;
+            }
+            case "guild" -> {
+                Set<Audience> out = new HashSet<>();
+                out.add(sender);
+                try {
+                    Optional<Guild> g = RpgServices.guilds().guildOf(sender);
+                    g.ifPresent(guild -> {
+                        for (UUID id : guild.memberIds()) {
+                            Player p = Bukkit.getPlayer(id);
+                            if (p != null) out.add(p);
+                        }
+                    });
+                } catch (IllegalStateException ignored) {}
+                yield out;
+            }
+            default -> null;  // global = use default broadcast
+        };
+    }
+
     private static String safe(java.util.function.Supplier<String> sup) {
         try { String s = sup.get(); return s == null ? "" : s; }
         catch (Exception ex) { return ""; }
     }
-
 }

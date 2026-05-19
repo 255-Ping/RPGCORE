@@ -1,6 +1,6 @@
 # Guilds (`rpg-guilds`)
 
-> **Status:** Planned
+> **Status:** In progress — Persistent guilds via DataStore. v1 ships fixed ranks (`owner` / `officer` / `member`). Commands: `/guild create <name>`, `/guild invite`, `/guild accept`, `/guild kick`, `/guild promote`, `/guild demote`, `/guild leave`, `/guild disband`, `/guild info [name]`, `/guild list`, `/guild deposit <amount>`, `/guild withdraw <amount>`. Officers can invite/kick/withdraw; owner alone can promote/demote/disband. Creation cost via `rpg-economy` (soft-depend; free if economy isn't loaded). Guild bank is currency-only for v1 — items bank and tier-upgrades come later. Server-admin-configurable rank slot list, per-rank perm flags, and guild XP from member skill XP arrive in a polish slice.
 
 Persistent player communities with bank, ranks, XP/level, and perks.
 

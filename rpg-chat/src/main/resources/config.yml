@@ -7,3 +7,8 @@ clearchat-lines: 100
 
 # When mutechat is on, only players with rpg.chat.mute.bypass can talk.
 mutechat-default: false
+
+# Per-channel prefix prepended to the rendered chat line. Empty = no prefix.
+channel-prefix-global: ""
+channel-prefix-party: "&8[&dParty&8] "
+channel-prefix-guild: "&8[&aGuild&8] "

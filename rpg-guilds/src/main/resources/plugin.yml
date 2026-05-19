@@ -1,0 +1,48 @@
+name: rpg-guilds
+version: '${version}'
+main: com.github._255_ping.rpg.guilds.RpgGuildsPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Persistent guilds with ranks and a currency bank.
+depend: [rpg-core]
+softdepend: [rpg-economy]
+commands:
+  guild:
+    description: Guild management
+    aliases: [g]
+    usage: /guild <create|invite|accept|kick|promote|demote|leave|disband|info|list|deposit|withdraw>
+permissions:
+  rpg.guilds.create:
+    description: Create a guild
+    default: true
+  rpg.guilds.invite:
+    description: Invite a player to the guild
+    default: true
+  rpg.guilds.accept:
+    description: Accept a guild invite
+    default: true
+  rpg.guilds.kick:
+    description: Kick a member
+    default: true
+  rpg.guilds.promote:
+    description: Promote a member
+    default: true
+  rpg.guilds.demote:
+    description: Demote an officer
+    default: true
+  rpg.guilds.leave:
+    description: Leave the guild
+    default: true
+  rpg.guilds.disband:
+    description: Disband the guild (owner only)
+    default: true
+  rpg.guilds.info:
+    description: Show guild info
+    default: true
+  rpg.guilds.list:
+    description: List all guilds
+    default: true
+  rpg.guilds.bank:
+    description: Deposit / withdraw from the guild bank
+    default: true

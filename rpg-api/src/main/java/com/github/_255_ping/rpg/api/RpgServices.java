@@ -7,6 +7,7 @@ import com.github._255_ping.rpg.api.cooldown.CooldownService;
 import com.github._255_ping.rpg.api.currency.CurrencyRegistry;
 import com.github._255_ping.rpg.api.economy.Economy;
 import com.github._255_ping.rpg.api.formatting.MessageFormatter;
+import com.github._255_ping.rpg.api.guilds.GuildService;
 import com.github._255_ping.rpg.api.formatting.NameFormatter;
 import com.github._255_ping.rpg.api.formula.ExpressionEvaluator;
 import com.github._255_ping.rpg.api.health.HealthService;
@@ -61,6 +62,7 @@ public final class RpgServices {
     private static AccessoryService accessories;
     private static PartyService parties;
     private static RegionService regionsSvc;
+    private static GuildService guilds;
 
     private RpgServices() {}
 
@@ -91,6 +93,7 @@ public final class RpgServices {
     public static AccessoryService accessories() { return require(accessories, "AccessoryService"); }
     public static PartyService parties() { return require(parties, "PartyService"); }
     public static RegionService regionService() { return require(regionsSvc, "RegionService"); }
+    public static GuildService guilds() { return require(guilds, "GuildService"); }
 
     // ----- Setters (rpg-core only) -----
 
@@ -118,6 +121,7 @@ public final class RpgServices {
     public static void setAccessories(AccessoryService svc) { accessories = svc; }
     public static void setParties(PartyService svc) { parties = svc; }
     public static void setRegionService(RegionService svc) { regionsSvc = svc; }
+    public static void setGuilds(GuildService svc) { guilds = svc; }
 
     private static <T> T require(T svc, String name) {
         if (svc == null) throw new IllegalStateException(name + " not bootstrapped — is rpg-core loaded?");

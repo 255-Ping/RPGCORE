@@ -19,6 +19,7 @@ public final class RpgChatPlugin extends JavaPlugin implements CommandExecutor {
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
     private final Map<UUID, UUID> lastDmFrom = new HashMap<>();
+    private final Map<UUID, String> activeChannel = new HashMap<>();
     private boolean muted;
 
     @Override
@@ -26,13 +27,17 @@ public final class RpgChatPlugin extends JavaPlugin implements CommandExecutor {
         saveDefaultConfig();
         muted = getConfig().getBoolean("mutechat-default", false);
         getServer().getPluginManager().registerEvents(new ChatFormatListener(this), this);
-        for (String c : new String[]{"msg", "reply", "clearchat", "mutechat"}) {
+        for (String c : new String[]{"msg", "reply", "clearchat", "mutechat", "chat"}) {
             Objects.requireNonNull(getCommand(c), "command '" + c + "' missing").setExecutor(this);
         }
         getLogger().info("rpg-chat v" + getPluginMeta().getVersion() + " enabled.");
     }
 
     public boolean isMuted() { return muted; }
+
+    public String activeChannel(Player p) {
+        return activeChannel.getOrDefault(p.getUniqueId(), "global");
+    }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -41,8 +46,32 @@ public final class RpgChatPlugin extends JavaPlugin implements CommandExecutor {
             case "reply", "r" -> handleReply(sender, args);
             case "clearchat", "cc" -> handleClearChat(sender);
             case "mutechat", "mc" -> handleMuteChat(sender);
+            case "chat" -> handleChatChannel(sender, args);
             default -> true;
         };
+    }
+
+    private boolean handleChatChannel(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player p)) {
+            sender.sendMessage(LEGACY.deserialize("&cPlayers only.")); return true;
+        }
+        if (args.length == 0) {
+            p.sendMessage(LEGACY.deserialize("&7Active channel: &e" + activeChannel(p)));
+            p.sendMessage(LEGACY.deserialize("&7Usage: &e/chat <global|party|guild>"));
+            return true;
+        }
+        String channel = args[0].toLowerCase();
+        if (!java.util.Set.of("global", "party", "guild").contains(channel)) {
+            p.sendMessage(LEGACY.deserialize("&cUnknown channel: " + channel)); return true;
+        }
+        String perm = "rpg.chat.use." + channel;
+        if (!p.hasPermission(perm)) {
+            p.sendMessage(LEGACY.deserialize("&cNo permission for channel: " + channel)); return true;
+        }
+        if (channel.equals("global")) activeChannel.remove(p.getUniqueId());
+        else activeChannel.put(p.getUniqueId(), channel);
+        p.sendMessage(LEGACY.deserialize("&7Channel set to &e" + channel + "&7."));
+        return true;
     }
 
     private boolean handleMsg(CommandSender sender, String[] args) {
