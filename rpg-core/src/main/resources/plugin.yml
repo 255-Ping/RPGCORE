@@ -17,6 +17,10 @@ commands:
     description: Show your skill levels and XP
     aliases: [skills]
     usage: /skill [player]
+  effects:
+    description: Show your active status effects
+    aliases: [potion, potions]
+    usage: /effects [player]
 permissions:
   rpg.core.version:
     description: View loaded modules and versions
@@ -47,4 +51,10 @@ permissions:
     default: true
   rpg.core.skill.other:
     description: Show another player's skill levels
+    default: op
+  rpg.core.effects:
+    description: Show your active status effects
+    default: true
+  rpg.core.effects.other:
+    description: Show another player's active status effects
     default: op

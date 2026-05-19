@@ -8,6 +8,7 @@ import com.github._255_ping.rpg.core.blocks.BlockBreakHandler;
 import com.github._255_ping.rpg.core.blocks.BlockLoader;
 import com.github._255_ping.rpg.core.blocks.BlockPersistence;
 import com.github._255_ping.rpg.core.blocks.CoreBlockRegistry;
+import com.github._255_ping.rpg.core.command.EffectsCommand;
 import com.github._255_ping.rpg.core.command.RpgCommand;
 import com.github._255_ping.rpg.core.command.SkillCommand;
 import com.github._255_ping.rpg.core.command.StatsCommand;
@@ -195,8 +196,9 @@ public final class RpgCorePlugin extends JavaPlugin {
                 new EquipmentListener(this, healthService), this);
         getServer().getPluginManager().registerEvents(
                 new ItemAbilityListener(this, abilityRegistry), this);
-        getServer().getPluginManager().registerEvents(
-                new BlockBreakHandler(this, blockRegistry), this);
+        BlockBreakHandler blockBreakHandler = new BlockBreakHandler(this, blockRegistry);
+        getServer().getPluginManager().registerEvents(blockBreakHandler, this);
+        blockBreakHandler.start();
         getServer().getPluginManager().registerEvents(damagerTracker, this);
         getServer().getPluginManager().registerEvents(new MobLootListener(damagerTracker), this);
         getServer().getPluginManager().registerEvents(new MobAbilityEventListener(), this);
@@ -219,6 +221,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         rpg.setTabCompleter(handler);
         Objects.requireNonNull(getCommand("stats")).setExecutor(new StatsCommand(this));
         Objects.requireNonNull(getCommand("skill")).setExecutor(new SkillCommand(this));
+        Objects.requireNonNull(getCommand("effects")).setExecutor(new EffectsCommand(this));
 
         getLogger().info("rpg-core v" + getPluginMeta().getVersion() + " enabled.");
         getLogger().info(messageFormatter.format("debug.ready"));

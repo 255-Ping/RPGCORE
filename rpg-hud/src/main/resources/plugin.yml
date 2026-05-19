@@ -1,0 +1,19 @@
+name: rpg-hud
+version: '${version}'
+main: com.github._255_ping.rpg.hud.RpgHudPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Scoreboard, tablist, action-bar HUD with configurable placeholders.
+depend: [rpg-core]
+commands:
+  hud:
+    description: HUD admin / toggle command
+    usage: /hud <toggle|reload>
+permissions:
+  rpg.hud.toggle:
+    description: Toggle HUD elements for yourself
+    default: true
+  rpg.hud.reload:
+    description: Reload HUD config
+    default: op

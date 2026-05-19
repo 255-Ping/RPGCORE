@@ -18,7 +18,7 @@
 
 red_gem_block:
   MinecraftBlock: redstone_ore
-  Toughness: 1000
+  Toughness: 50              # ~5s with mining_speed 10
   RequiredPower: 1
   RequiredToolType: pickaxe
   RespawnTicks: 600
@@ -29,7 +29,7 @@ red_gem_block:
 
 iron_node:
   MinecraftBlock: iron_ore
-  Toughness: 500
+  Toughness: 100             # ~10s with mining_speed 10
   RequiredPower: 2
   RequiredToolType: pickaxe
   RespawnTicks: 400

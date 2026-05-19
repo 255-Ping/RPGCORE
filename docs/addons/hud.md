@@ -1,6 +1,6 @@
 # HUD (`rpg-hud`)
 
-> **Status:** Planned
+> **Status:** In progress — Scoreboard (sidebar), tablist (header/footer), and action bar are all live with configurable templates. Placeholder resolution: `{name}`, `{prefix}`, `{suffix}`, `{health}`, `{max_health}`, `{mana}`, `{max_mana}`, `{coins}`, `{online}`, `{world}`, any stat by id (e.g. `{defense}`), and `{skill:<id>:level|total_xp|to_next}`. `/hud toggle <scoreboard|tablist|actionbar>` toggles per-element. Player nametags above the head aren't customized yet — that requires team scoreboards and is deferred to a polish slice.
 
 Configurable scoreboard, tablist, action bar, and player nametags. All formats are templates with placeholders resolved by core's `MessageFormatter`.
 

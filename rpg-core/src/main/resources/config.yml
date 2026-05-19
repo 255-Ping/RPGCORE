@@ -75,6 +75,9 @@ starting-state:
     speed: 0
     crit_chance: 10
     crit_damage: 50
+    mining_speed: 10
+    foraging_speed: 10
+    breaking_power: 1
 
 # Regen tick rate (HP and mana regen both run on this schedule).
 regen:

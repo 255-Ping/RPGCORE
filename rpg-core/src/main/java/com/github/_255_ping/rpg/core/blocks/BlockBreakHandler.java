@@ -6,6 +6,7 @@ import com.github._255_ping.rpg.api.blocks.RequiredToolType;
 import com.github._255_ping.rpg.api.items.RpgItem;
 import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import com.github._255_ping.rpg.core.RpgCorePlugin;
+import com.destroystokyo.paper.event.block.BlockDestroyEvent;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -14,78 +15,210 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockDamageAbortEvent;
+import org.bukkit.event.block.BlockDamageEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitTask;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * v1 block-break handler: instant break on click (no hold-to-break progress bar yet).
- * Checks BREAKING_POWER and RequiredToolType gates, rolls drops, schedules respawn.
- * Progress-bar UX arrives in a polish slice.
+ * Hold-to-break for custom blocks.
+ *
+ * <p>Vanilla break-time is replaced. When a player starts damaging a tagged block, we
+ * start a per-tick task that drains {@code MINING_SPEED} HP/sec from a per-block-instance
+ * counter initialized to {@code Toughness}. We push the {@link Player#sendBlockDamage}
+ * packet each tick to draw the 0-9 break stage. On 0, the break flow runs (drops + respawn).
+ *
+ * <p>BlockBreakEvent on a tagged block always cancels — only this handler can complete
+ * the break. PlayerInteractEvent left-click on air clears progress, as does
+ * {@code BlockDamageAbortEvent} and quitting / swapping items.
  */
 public final class BlockBreakHandler implements Listener {
 
     private final RpgCorePlugin plugin;
     private final CoreBlockRegistry registry;
+    private final Map<UUID, BlockBreakProgress> active = new HashMap<>();
+    private BukkitTask tickTask;
 
     public BlockBreakHandler(RpgCorePlugin plugin, CoreBlockRegistry registry) {
         this.plugin = plugin;
         this.registry = registry;
     }
 
+    public void start() {
+        tickTask = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tickAll, 1L, 1L);
+    }
+
+    public void stop() {
+        if (tickTask != null) tickTask.cancel();
+    }
+
+    // ----- Event entry points -----
+
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-    public void onBreak(BlockBreakEvent event) {
+    public void onDamage(BlockDamageEvent event) {
         Location loc = event.getBlock().getLocation();
         Optional<Block> opt = registry.at(loc);
         if (opt.isEmpty()) return;
         Block block = opt.get();
-
         Player player = event.getPlayer();
 
+        // Creative bypass: instant-break the tagged block, no progress.
         if (player.getGameMode() == GameMode.CREATIVE
                 && plugin.getConfig().getBoolean("creative-mode-bypass.break-time", true)) {
+            event.setInstaBreak(true);
+            return;
+        }
+
+        event.setCancelled(true);
+
+        if (!gatesPass(player, block)) return;
+
+        active.put(player.getUniqueId(), new BlockBreakProgress(loc, block));
+    }
+
+    @EventHandler
+    public void onAbort(BlockDamageAbortEvent event) {
+        clearProgress(event.getPlayer());
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onBreak(BlockBreakEvent event) {
+        Location loc = event.getBlock().getLocation();
+        if (!registry.hasTag(loc)) return;
+
+        // Creative bypass — let the break go through, but un-tag.
+        if (event.getPlayer().getGameMode() == GameMode.CREATIVE
+                && plugin.getConfig().getBoolean("creative-mode-bypass.break-time", true)) {
             registry.untagLocation(loc);
+            event.setDropItems(false);
             return;
         }
 
-        double breakingPower = RpgServices.player(player).get(BuiltinStat.BREAKING_POWER);
-        if (block.requiredPower() > breakingPower) {
-            event.setCancelled(true);
-            player.sendActionBar(plugin.messages().component("block.power-too-low",
-                    java.util.Map.of("required", block.requiredPower())));
-            return;
-        }
+        // Survival: cancel — only our tick can complete the break.
+        event.setCancelled(true);
+    }
 
-        if (!toolMatches(block.requiredToolType(), player.getInventory().getItemInMainHand())) {
-            event.setCancelled(true);
-            player.sendActionBar(plugin.messages().component("block.wrong-tool",
-                    java.util.Map.of("tool", block.requiredToolType().name().toLowerCase())));
-            return;
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        clearProgress(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onSlotSwitch(PlayerItemHeldEvent event) {
+        clearProgress(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onInteract(PlayerInteractEvent event) {
+        if (event.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_AIR) {
+            clearProgress(event.getPlayer());
         }
+    }
+
+    // Some setups use BlockDestroyEvent (e.g., piston pushes) — keep our state coherent.
+    @EventHandler
+    public void onDestroy(BlockDestroyEvent event) {
+        Location loc = event.getBlock().getLocation();
+        if (registry.hasTag(loc)) registry.untagLocation(loc);
+    }
+
+    // ----- Tick loop -----
+
+    private void tickAll() {
+        if (active.isEmpty()) return;
+        active.entrySet().removeIf(entry -> {
+            Player player = plugin.getServer().getPlayer(entry.getKey());
+            BlockBreakProgress progress = entry.getValue();
+            if (player == null || !player.isOnline()) return true;
+            if (!registry.hasTag(progress.location)) return true;
+
+            // Still aiming at the same block? If the player switched to another block,
+            // their next BlockDamageEvent starts fresh; we just drop this one.
+            org.bukkit.block.Block targeted = player.getTargetBlockExact(8);
+            if (targeted == null || !targeted.getLocation().equals(progress.location)) {
+                player.sendBlockDamage(progress.location, 0f);
+                return true;
+            }
+
+            double miningSpeed = RpgServices.player(player).get(BuiltinStat.MINING_SPEED);
+            if (miningSpeed <= 0) miningSpeed = 1.0;     // 1 HP/sec floor so plain hands still progress
+            double perTick = miningSpeed / 20.0;
+            progress.remainingHp -= perTick;
+
+            if (progress.remainingHp <= 0) {
+                completeBreak(player, progress);
+                return true;
+            }
+
+            // Update the 0-9 break stage packet.
+            double pct = 1.0 - (progress.remainingHp / progress.definition.toughness());
+            int stage = Math.max(0, Math.min(9, (int) Math.floor(pct * 10)));
+            if (stage != progress.lastStage) {
+                progress.lastStage = stage;
+                player.sendBlockDamage(progress.location, (float) Math.min(0.99, pct));
+            }
+            return false;
+        });
+    }
+
+    private void completeBreak(Player player, BlockBreakProgress progress) {
+        Block block = progress.definition;
+        Location loc = progress.location;
+        player.sendBlockDamage(loc, 0f);    // clear the break-stage overlay
 
         com.github._255_ping.rpg.api.blocks.RpgBlockBreakEvent rpgEvent =
                 new com.github._255_ping.rpg.api.blocks.RpgBlockBreakEvent(player, block, loc);
         plugin.getServer().getPluginManager().callEvent(rpgEvent);
-        if (rpgEvent.isCancelled()) {
-            event.setCancelled(true);
-            return;
-        }
+        if (rpgEvent.isCancelled()) return;
 
-        event.setDropItems(false);
-        event.setExpToDrop(0);
         registry.untagLocation(loc);
+
+        // Break the world block — set to air, then roll our drops.
+        if (loc.getWorld() != null) {
+            loc.getBlock().setType(Material.AIR);
+        }
 
         rollDrops(block, loc);
 
-        if (block.respawnTicks() > 0) {
-            event.getBlock().setType(block.respawnPlaceholder());
+        if (block.respawnTicks() > 0 && loc.getWorld() != null) {
+            loc.getBlock().setType(block.respawnPlaceholder());
             plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
                 if (loc.getWorld() == null) return;
                 loc.getBlock().setType(block.material());
                 registry.tagLocation(loc, block.id());
             }, block.respawnTicks());
         }
+    }
+
+    // ----- Helpers -----
+
+    private boolean gatesPass(Player player, Block block) {
+        double breakingPower = RpgServices.player(player).get(BuiltinStat.BREAKING_POWER);
+        if (block.requiredPower() > breakingPower) {
+            player.sendActionBar(plugin.messages().component("block.power-too-low",
+                    java.util.Map.of("required", block.requiredPower())));
+            return false;
+        }
+        if (!toolMatches(block.requiredToolType(), player.getInventory().getItemInMainHand())) {
+            player.sendActionBar(plugin.messages().component("block.wrong-tool",
+                    java.util.Map.of("tool", block.requiredToolType().name().toLowerCase())));
+            return false;
+        }
+        return true;
+    }
+
+    private void clearProgress(Player player) {
+        BlockBreakProgress progress = active.remove(player.getUniqueId());
+        if (progress != null) player.sendBlockDamage(progress.location, 0f);
     }
 
     private static boolean toolMatches(RequiredToolType required, ItemStack hand) {
@@ -107,21 +240,18 @@ public final class BlockBreakHandler implements Listener {
         for (String spec : block.dropSpecs()) {
             try {
                 ItemStack drop = parseDrop(spec);
-                if (drop != null) {
-                    loc.getWorld().dropItemNaturally(loc, drop);
-                }
+                if (drop != null) loc.getWorld().dropItemNaturally(loc, drop);
             } catch (Exception ex) {
                 plugin.getLogger().warning("Bad drop spec '" + spec + "' on block " + block.id() + ": " + ex.getMessage());
             }
         }
     }
 
-    /** Parses {@code "<itemId> <count>"} or {@code "<itemId> <min>-<max>"} (optional leading file token). */
+    /** Parses {@code "[file] <itemId> <min>[-<max>]"}. The file token is optional. */
     private static ItemStack parseDrop(String spec) {
         String[] parts = spec.trim().split("\\s+");
         if (parts.length < 2) throw new IllegalArgumentException("expected at least 2 tokens, got: " + spec);
 
-        // If we have 3 tokens, the first is the file/category and we drop it.
         int idIdx = parts.length >= 3 ? 1 : 0;
         int rangeIdx = idIdx + 1;
         String itemId = parts[idIdx];
