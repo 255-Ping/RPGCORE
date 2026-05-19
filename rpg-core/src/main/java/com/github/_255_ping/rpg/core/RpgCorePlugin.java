@@ -9,6 +9,10 @@ import com.github._255_ping.rpg.core.formatting.CoreNameFormatter;
 import com.github._255_ping.rpg.core.formula.CoreExpressionEvaluator;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
 import com.github._255_ping.rpg.core.health.RegenTask;
+import com.github._255_ping.rpg.core.items.CoreItemRegistry;
+import com.github._255_ping.rpg.core.items.ItemLoader;
+import com.github._255_ping.rpg.core.mobs.CoreMobRegistry;
+import com.github._255_ping.rpg.core.mobs.MobLoader;
 import com.github._255_ping.rpg.core.persistence.YamlDataStore;
 import com.github._255_ping.rpg.core.player.CoreManaService;
 import com.github._255_ping.rpg.core.player.CorePlayerLookup;
@@ -22,6 +26,7 @@ import com.github._255_ping.rpg.core.status.CoreStatusEffectService;
 import com.github._255_ping.rpg.core.status.StatusEffectLoader;
 import com.github._255_ping.rpg.core.status.StatusEffectTickTask;
 import com.github._255_ping.rpg.core.suppression.VanillaSuppressionListener;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -47,6 +52,10 @@ public final class RpgCorePlugin extends JavaPlugin {
     private StatusEffectLoader statusEffectLoader;
     private CoreSkillRegistry skillRegistry;
     private CoreSkillsService skillsService;
+    private CoreItemRegistry itemRegistry;
+    private ItemLoader itemLoader;
+    private CoreMobRegistry mobRegistry;
+    private MobLoader mobLoader;
 
     public static RpgCorePlugin get() {
         return instance;
@@ -61,10 +70,24 @@ public final class RpgCorePlugin extends JavaPlugin {
         if (!messagesFile.exists()) saveResource("messages.yml", false);
 
         File statusEffectsDir = new File(getDataFolder(), "status-effects");
-        File statusEffectExample = new File(statusEffectsDir, "example.yml");
-        if (!statusEffectExample.exists()) saveResource("status-effects/example.yml", false);
+        if (!new File(statusEffectsDir, "example.yml").exists()) {
+            saveResource("status-effects/example.yml", false);
+        }
+
+        File itemsDir = new File(getDataFolder(), "items");
+        if (!new File(itemsDir, "example.yml").exists()) {
+            saveResource("items/example.yml", false);
+        }
+
+        File mobsDir = new File(getDataFolder(), "mobs");
+        if (!new File(mobsDir, "example.yml").exists()) {
+            saveResource("mobs/example.yml", false);
+        }
 
         File dataDir = new File(getDataFolder(), "data");
+
+        NamespacedKey itemIdKey = new NamespacedKey(this, "item_id");
+        NamespacedKey mobIdKey = new NamespacedKey(this, "mob_id");
 
         dataStore = new YamlDataStore(dataDir);
         messageFormatter = new CoreMessageFormatter(messagesFile);
@@ -80,6 +103,8 @@ public final class RpgCorePlugin extends JavaPlugin {
         statusEffectService = new CoreStatusEffectService(statusEffectRegistry);
         skillRegistry = new CoreSkillRegistry();
         skillsService = new CoreSkillsService(this);
+        itemRegistry = new CoreItemRegistry(itemIdKey);
+        mobRegistry = new CoreMobRegistry(mobIdKey);
 
         RpgServices.setDataStore(dataStore);
         RpgServices.setMessageFormatter(messageFormatter);
@@ -95,9 +120,17 @@ public final class RpgCorePlugin extends JavaPlugin {
         RpgServices.setStatusEffects(statusEffectService);
         RpgServices.setSkillRegistry(skillRegistry);
         RpgServices.setSkills(skillsService);
+        RpgServices.setItems(itemRegistry);
+        RpgServices.setMobs(mobRegistry);
 
         statusEffectLoader = new StatusEffectLoader(statusEffectsDir, statusEffectRegistry, getLogger());
         statusEffectLoader.loadAll();
+
+        itemLoader = new ItemLoader(itemsDir, itemRegistry, itemIdKey, getLogger());
+        itemLoader.loadAll();
+
+        mobLoader = new MobLoader(mobsDir, mobRegistry, mobIdKey, healthService, getLogger());
+        mobLoader.loadAll();
 
         getServer().getPluginManager().registerEvents(new VanillaSuppressionListener(this), this);
         getServer().getPluginManager().registerEvents(
@@ -121,8 +154,11 @@ public final class RpgCorePlugin extends JavaPlugin {
 
         getLogger().info("rpg-core v" + getPluginMeta().getVersion() + " enabled.");
         getLogger().info(messageFormatter.format("debug.ready"));
-        getLogger().info("Loaded " + statusEffectRegistry.all().size() + " status effects, "
-                + skillRegistry.all().size() + " skills.");
+        getLogger().info("Loaded "
+                + statusEffectRegistry.all().size() + " status effects, "
+                + skillRegistry.all().size() + " skills, "
+                + itemRegistry.all().size() + " items, "
+                + mobRegistry.all().size() + " mobs.");
     }
 
     @Override
@@ -135,6 +171,8 @@ public final class RpgCorePlugin extends JavaPlugin {
         reloadConfig();
         messageFormatter.reload();
         statusEffectLoader.loadAll();
+        itemLoader.loadAll();
+        mobLoader.loadAll();
         skillsService.onReload();
     }
 

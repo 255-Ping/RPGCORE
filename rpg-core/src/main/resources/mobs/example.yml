@@ -1,0 +1,43 @@
+# Sample mobs shipped with rpg-core. Each top-level key is a mob ID.
+# Spawn via: /rpg mob spawn <id> [count]
+#
+# Fields:
+#   MinecraftMob — base EntityType (zombie, skeleton, blaze, ...)
+#   DisplayName  — optional, shown above the mob
+#   Health       — max HP (also sets MAX_HEALTH attribute)
+#   Damage       — base melee damage
+#   Armor        — armor value; mapped to the DEFENSE stat for our pipeline
+#   Stats        — bonus stat map (additive on top of damage/armor)
+#   Equipment    — list of "<SLOT> <itemId>" — HELMET / CHEST / LEGS /
+#                  BOOTS / HAND / OFFHAND. itemId resolves via item registry
+#                  first, falls back to a vanilla Material.
+#   Abilities    — list of ability invocations + trigger suffix
+#                  (e.g. ~onTimer:100). Stored on spawn; execution arrives
+#                  with the ability impl.
+
+testmob:
+  MinecraftMob: zombie
+  DisplayName: '&cTest Zombie'
+  Health: 50
+  Damage: 5
+  Armor: 1
+  Equipment:
+  - HELMET leather_helmet
+  - CHEST leather_chestplate
+  - LEGS leather_leggings
+  - BOOTS leather_boots
+  - HAND stone_sword
+  Abilities:
+  - explode{radius=5,damage_multiplier=0.5} ~onTimer:100
+
+mini_boss:
+  MinecraftMob: zombified_piglin
+  DisplayName: '&5Mini Boss'
+  Health: 500
+  Damage: 20
+  Armor: 30
+  Stats:
+    crit_chance: 25
+    crit_damage: 100
+  Equipment:
+  - HAND iron_sword

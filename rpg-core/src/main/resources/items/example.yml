@@ -1,0 +1,45 @@
+# Sample items shipped with rpg-core. Each top-level key is an item ID.
+# Reload with /rpg reloadall.
+#
+# Fields:
+#   MinecraftItem   — base Material (e.g. stone, iron_sword)
+#   Type            — SWORD | WAND | BOW | ARMOR | MATERIAL | QUEST |
+#                     CONSUMABLE | UPGRADE | ACCESSORY
+#   DisplayName     — optional; legacy &-codes
+#   Lore            — list of extra lore lines (after stats, before rarity)
+#   Rarity          — colored display string used as the bottom lore line
+#   CustomModelData — optional int, see docs/resource-pack.md ranges
+#   Stats           — map of stat-id -> number (rendered in lore;
+#                     equipment aggregation arrives in a future slice)
+#   Abilities       — list of ability DSL invocations (stored on the item;
+#                     execution arrives with the ability impl)
+#   ArmorSlot       — for Type: ARMOR — HELMET | CHEST | LEGS | BOOTS
+
+testitem:
+  MinecraftItem: stone
+  Type: MATERIAL
+  Lore:
+  - '&7This is some test lore for the first line'
+  - '&eThis is some test lore for the second line'
+  Rarity: '&7&lCOMMON'
+
+aspect_of_test:
+  MinecraftItem: iron_sword
+  Type: SWORD
+  DisplayName: '&aAspect of Test'
+  Stats:
+    damage: 25
+    strength: 5
+    crit_damage: 10
+  Lore:
+  - '&7A starter blade for verifying the suite.'
+  Rarity: '&a&lUNCOMMON'
+
+test_talisman:
+  MinecraftItem: zombie_head
+  Type: ACCESSORY
+  DisplayName: '&dTest Talisman'
+  Stats:
+    max_health: 10
+    health_regen: 1
+  Rarity: '&d&lRARE'

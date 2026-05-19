@@ -1,6 +1,6 @@
 # Mobs
 
-> **Status:** Planned
+> **Status:** In progress — YAML loader, registry, PDC tagging on spawn, equipment, custom display name, max-health attribute, and `MobRegistry.from(LivingEntity)` all working. `/rpg mob spawn <id> [count]` lights up. Abilities (`~onTimer`, `~onHit`, etc.) and AI profiles parse but don't execute yet — those arrive with the ability impl + mob AI override slice. Loot tables on death also pending.
 
 Custom mobs are defined in YAML under `plugins/rpg-core/mobs/`. Any number of files; many mobs per file.
 

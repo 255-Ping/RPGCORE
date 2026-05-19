@@ -18,5 +18,17 @@ version:
   header: "&6&lRPG Suite"
   entry: "&7- &e{module} &7v{version}"
 
+item:
+  not-found: "&cNo item with id &7{id}&c."
+  given: "&aGave &e{amount}x &7{id} &ato &e{player}&a."
+
+mob:
+  not-found: "&cNo mob with id &7{id}&c."
+  spawned: "&aSpawned &e{count}x &7{id}&a."
+  spawn-failed: "&cFailed to spawn &7{id}&c."
+
+player:
+  not-found: "&cPlayer &7{name} &cnot found."
+
 debug:
   ready: "Foundations loaded: data store, scheduler, name formatter, message formatter, expression evaluator, cooldown service."

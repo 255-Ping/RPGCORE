@@ -9,11 +9,17 @@ softdepend: [LuckPerms]
 commands:
   rpg:
     description: RPG suite admin / debug command
-    usage: /rpg <version|reload>
+    usage: /rpg <version|reload|item|mob>
 permissions:
   rpg.core.version:
     description: View loaded modules and versions
     default: true
   rpg.core.reload-all:
     description: Reload core config and messages
+    default: op
+  rpg.core.item.give:
+    description: Give a custom item to a player
+    default: op
+  rpg.core.mob.spawn:
+    description: Spawn a custom mob at your location
     default: op

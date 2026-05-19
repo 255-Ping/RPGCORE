@@ -1,0 +1,128 @@
+package com.github._255_ping.rpg.core.items;
+
+import com.github._255_ping.rpg.api.RpgServices;
+import com.github._255_ping.rpg.api.abilities.AbilityDsl;
+import com.github._255_ping.rpg.api.abilities.AbilityInvocation;
+import com.github._255_ping.rpg.api.items.BuiltinItemType;
+import com.github._255_ping.rpg.api.items.CustomItemType;
+import com.github._255_ping.rpg.api.items.ItemType;
+import com.github._255_ping.rpg.api.items.Rarity;
+import com.github._255_ping.rpg.api.stats.Stat;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.logging.Logger;
+
+/**
+ * Scans {@code plugins/rpg-core/items/} for *.yml files and registers each top-level
+ * key as an item. Bad entries log a warning and are skipped.
+ */
+public final class ItemLoader {
+
+    private final File folder;
+    private final CoreItemRegistry registry;
+    private final NamespacedKey itemIdKey;
+    private final Logger logger;
+
+    public ItemLoader(File folder, CoreItemRegistry registry, NamespacedKey itemIdKey, Logger logger) {
+        this.folder = folder;
+        this.registry = registry;
+        this.itemIdKey = itemIdKey;
+        this.logger = logger;
+    }
+
+    public void loadAll() {
+        registry.clear();
+        if (!folder.isDirectory()) return;
+        File[] files = folder.listFiles((d, name) -> name.endsWith(".yml"));
+        if (files == null) return;
+        for (File f : files) {
+            try {
+                loadFile(f);
+            } catch (Exception ex) {
+                logger.warning("Failed to parse items file " + f.getName() + ": " + ex.getMessage());
+            }
+        }
+    }
+
+    private void loadFile(File file) {
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        for (String id : yaml.getKeys(false)) {
+            ConfigurationSection section = yaml.getConfigurationSection(id);
+            if (section == null) {
+                logger.warning("item '" + id + "' in " + file.getName() + " is not a section, skipping");
+                continue;
+            }
+            try {
+                CoreRpgItem item = parse(id, section);
+                registry.register(item);
+            } catch (Exception ex) {
+                logger.warning("Skipping item '" + id + "' in " + file.getName() + ": " + ex.getMessage());
+            }
+        }
+    }
+
+    private CoreRpgItem parse(String id, ConfigurationSection s) {
+        String materialName = s.getString("MinecraftItem");
+        if (materialName == null) throw new IllegalArgumentException("missing MinecraftItem");
+        Material material = Material.matchMaterial(materialName);
+        if (material == null) throw new IllegalArgumentException("unknown MinecraftItem: " + materialName);
+
+        String typeName = s.getString("Type", "MATERIAL");
+        ItemType type = parseType(typeName);
+
+        String displayName = s.getString("DisplayName");
+        int customModelData = s.getInt("CustomModelData", 0);
+
+        List<String> lore = s.getStringList("Lore");
+
+        String rarityStr = s.getString("Rarity");
+        Rarity rarity = rarityStr == null ? null : new Rarity(stripColor(rarityStr).toLowerCase(Locale.ROOT), rarityStr);
+
+        Map<Stat, Double> stats = new HashMap<>();
+        ConfigurationSection statsSec = s.getConfigurationSection("Stats");
+        if (statsSec != null) {
+            for (String statId : statsSec.getKeys(false)) {
+                Optional<Stat> stat = RpgServices.stats().get(statId);
+                if (stat.isEmpty()) {
+                    logger.warning("item '" + id + "' references unknown stat '" + statId + "'");
+                    continue;
+                }
+                stats.put(stat.get(), statsSec.getDouble(statId));
+            }
+        }
+
+        List<AbilityInvocation> abilities = new ArrayList<>();
+        for (String inv : s.getStringList("Abilities")) {
+            try {
+                abilities.addAll(AbilityDsl.parse(inv));
+            } catch (Exception ex) {
+                logger.warning("item '" + id + "' has bad ability invocation '" + inv + "': " + ex.getMessage());
+            }
+        }
+
+        return new CoreRpgItem(id, displayName, type, rarity, material, customModelData,
+                stats, abilities, lore, itemIdKey);
+    }
+
+    private static ItemType parseType(String s) {
+        try {
+            return BuiltinItemType.valueOf(s.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return new CustomItemType(s.toLowerCase(Locale.ROOT));
+        }
+    }
+
+    private static String stripColor(String s) {
+        return s.replaceAll("&[0-9a-fA-Fk-orK-OR]", "");
+    }
+}
