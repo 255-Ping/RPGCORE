@@ -1,0 +1,8 @@
+name: rpg-holograms
+version: '${version}'
+main: com.github._255_ping.rpg.holograms.RpgHologramsPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Damage indicators (DisplayEntity-based). Holograms editor coming later.
+depend: [rpg-core]

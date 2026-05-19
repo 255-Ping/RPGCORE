@@ -1,6 +1,7 @@
 package com.github._255_ping.rpg.api;
 
 import com.github._255_ping.rpg.api.abilities.AbilityRegistry;
+import com.github._255_ping.rpg.api.accessories.AccessoryService;
 import com.github._255_ping.rpg.api.blocks.BlockRegistry;
 import com.github._255_ping.rpg.api.cooldown.CooldownService;
 import com.github._255_ping.rpg.api.currency.CurrencyRegistry;
@@ -55,6 +56,7 @@ public final class RpgServices {
     private static LootTableRegistry lootTables;
     private static BlockRegistry blocks;
     private static Economy economy;
+    private static AccessoryService accessories;
 
     private RpgServices() {}
 
@@ -82,6 +84,7 @@ public final class RpgServices {
     public static LootTableRegistry lootTables() { return require(lootTables, "LootTableRegistry"); }
     public static BlockRegistry blocks() { return require(blocks, "BlockRegistry"); }
     public static Economy economy() { return require(economy, "Economy"); }
+    public static AccessoryService accessories() { return require(accessories, "AccessoryService"); }
 
     // ----- Setters (rpg-core only) -----
 
@@ -106,6 +109,7 @@ public final class RpgServices {
     public static void setLootTables(LootTableRegistry svc) { lootTables = svc; }
     public static void setBlocks(BlockRegistry svc) { blocks = svc; }
     public static void setEconomy(Economy svc) { economy = svc; }
+    public static void setAccessories(AccessoryService svc) { accessories = svc; }
 
     private static <T> T require(T svc, String name) {
         if (svc == null) throw new IllegalStateException(name + " not bootstrapped — is rpg-core loaded?");

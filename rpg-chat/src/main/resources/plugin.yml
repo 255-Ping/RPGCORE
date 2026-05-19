@@ -1,0 +1,41 @@
+name: rpg-chat
+version: '${version}'
+main: com.github._255_ping.rpg.chat.RpgChatPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Chat format with LuckPerms prefix/suffix, /msg, mutechat, /clearchat.
+depend: [rpg-core]
+commands:
+  msg:
+    description: Send a direct message
+    aliases: [tell, w, whisper]
+    usage: /msg <player> <message>
+  reply:
+    description: Reply to the last DM sender
+    aliases: [r]
+    usage: /reply <message>
+  clearchat:
+    description: Clear chat for everyone
+    aliases: [cc]
+    usage: /clearchat
+  mutechat:
+    description: Toggle global chat mute
+    aliases: [mc]
+    usage: /mutechat
+permissions:
+  rpg.chat.msg:
+    description: Send direct messages
+    default: true
+  rpg.chat.reply:
+    description: Reply to a direct message
+    default: true
+  rpg.chat.clearchat:
+    description: Clear chat
+    default: op
+  rpg.chat.mutechat:
+    description: Toggle global chat mute
+    default: op
+  rpg.chat.mute.bypass:
+    description: Bypass mutechat
+    default: op

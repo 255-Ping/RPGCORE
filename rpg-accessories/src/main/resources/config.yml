@@ -1,0 +1,5 @@
+# rpg-accessories — accessory bag.
+
+bag:
+  rows: 3                  # 3 rows = 27 slots. Range 1-6.
+  title: "&5&lAccessory Bag"

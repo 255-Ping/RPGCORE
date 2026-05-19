@@ -1,0 +1,9 @@
+# rpg-chat — chat formatting + moderation.
+# Placeholders: {prefix} {name} {suffix} {message} {world}
+
+chat-format: "{prefix}{name}{suffix} &7» &f{message}"
+message-format: "&d{sender} &7-> &d{target}&7: &f{message}"
+clearchat-lines: 100
+
+# When mutechat is on, only players with rpg.chat.mute.bypass can talk.
+mutechat-default: false

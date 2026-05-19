@@ -1,6 +1,6 @@
 # Holograms (`rpg-holograms`)
 
-> **Status:** Planned
+> **Status:** In progress — **Damage indicators only** for v1. TextDisplay-based floating numbers spawn on `PostDamageEvent`, configured format per source kind (normal / crit / true / lifesteal / healed). Visibility filtered to attacker + victim-if-player by default; bystanders toggleable. Numbers rise upward and despawn after `duration-ticks`. Full hologram editor (multi-line, click actions, persistence, GUI) is the next polish slice.
 
 Two related features in one addon:
 

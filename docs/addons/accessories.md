@@ -1,6 +1,6 @@
 # Accessories (`rpg-accessories`)
 
-> **Status:** Planned
+> **Status:** In progress — Per-player accessory bag (27 slots default, configurable rows 1-6). `/accessories` (alias `/bag`) opens it. Only `ACCESSORY`-type items can be placed inside (cursor + shift-click both validated). Stats from accessories in the bag aggregate into `CoreRpgPlayer.recalculateStats` via the new `AccessoryService` API. Persistence via DataStore — bag contents save on close/quit, load on first open/join. Tier upgrades + Family-based stacking rules deferred to a follow-up.
 
 Adds the `ACCESSORY` item type and the **accessory bag** — a separate inventory GUI carrying accessories. Accessories contribute stats to the player while sitting in the bag.
 

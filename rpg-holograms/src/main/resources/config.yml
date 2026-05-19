@@ -1,0 +1,18 @@
+# rpg-holograms — damage indicators (v1).
+# Full hologram editor + click-actions land in a future slice.
+
+damage-indicators:
+  enabled: true
+  duration-ticks: 25            # how long the number floats before despawning
+  rise-blocks: 0.8              # how far it floats upward
+  random-offset: 0.4            # XZ scatter to avoid stacking
+  formats:
+    normal:    "&f{amount}"
+    crit:      "&e&l✧ {amount} ✧"
+    true:      "&f&l⚡ {amount} ⚡"
+    lifesteal: "&c+{amount}"
+    healed:    "&a+{amount} ❤"
+  show-to:
+    attacker: true
+    victim-if-player: true
+    bystanders: false

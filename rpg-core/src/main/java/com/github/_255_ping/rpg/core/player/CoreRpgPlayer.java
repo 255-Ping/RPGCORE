@@ -58,13 +58,19 @@ public final class CoreRpgPlayer implements RpgPlayer {
             effective.set(e.getKey(), e.getValue());
         }
 
-        // Layer 2: equipment (armor slots + main hand) — accessory bag arrives with rpg-accessories
+        // Layer 2: equipment (armor slots + main hand)
         for (Map.Entry<Stat, Double> e : collectEquipmentStats().entrySet()) {
             double cur = effective.get(e.getKey());
             effective.set(e.getKey(), cur + e.getValue());
         }
 
-        // Layer 3: status-effect modifiers (flat then percent)
+        // Layer 3: accessory bag (only counts when rpg-accessories is loaded)
+        for (Map.Entry<Stat, Double> e : collectAccessoryStats().entrySet()) {
+            double cur = effective.get(e.getKey());
+            effective.set(e.getKey(), cur + e.getValue());
+        }
+
+        // Layer 4: status-effect modifiers (flat then percent)
         List<StatModifier> modifiers = collectStatusModifiers();
         for (StatModifier m : modifiers) {
             if (m.kind() != StatModifier.Kind.FLAT) continue;
@@ -102,6 +108,14 @@ public final class CoreRpgPlayer implements RpgPlayer {
         if (item.isEmpty()) return;
         for (Map.Entry<Stat, Double> e : item.get().stats().entrySet()) {
             out.merge(e.getKey(), e.getValue(), Double::sum);
+        }
+    }
+
+    private Map<Stat, Double> collectAccessoryStats() {
+        try {
+            return RpgServices.accessories().aggregateStats(bukkit);
+        } catch (IllegalStateException ex) {
+            return Map.of();
         }
     }
 

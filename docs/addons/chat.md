@@ -1,6 +1,6 @@
 # Chat (`rpg-chat`)
 
-> **Status:** Planned
+> **Status:** In progress — Chat format with `{prefix}{name}{suffix}{message}` placeholders (LuckPerms prefix/suffix via core's `NameFormatter`), `/msg` + `/reply` direct messaging, `/mutechat` (with `rpg.chat.mute.bypass` perm), `/clearchat`. Per-channel routing (global/staff/party/guild) is deferred to a polish slice — for now everything is single-channel global.
 
 Replaces vanilla chat with a configurable format, channels, and moderation. Wraps `rpg-core`'s `NameFormatter` for LuckPerms prefix/suffix everywhere.
 
