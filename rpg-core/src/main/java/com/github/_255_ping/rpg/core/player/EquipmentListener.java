@@ -4,7 +4,7 @@ import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.player.RpgPlayer;
 import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
-import io.papermc.paper.event.player.PlayerArmorChangeEvent;
+import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
