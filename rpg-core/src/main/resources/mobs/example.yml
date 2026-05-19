@@ -12,8 +12,13 @@
 #                  BOOTS / HAND / OFFHAND. itemId resolves via item registry
 #                  first, falls back to a vanilla Material.
 #   Abilities    — list of ability invocations + trigger suffix
-#                  (e.g. ~onTimer:100). Stored on spawn; execution arrives
-#                  with the ability impl.
+#                  (~onTimer:N | ~onHit | ~onHurt | ~onSpawn | ~onDeath).
+#                  No trigger = ~onSpawn.
+#   LootTable    — inline drop table (optional):
+#                    attribution: last-hit | top-damager | split-equal | weighted-by-damage
+#                    roll-mode:   per-player | shared
+#                    rolls:       list of { item, chance (%), min, max, magic-find-affected }
+#                    guaranteed:  list of { item, min, max }
 
 testmob:
   MinecraftMob: zombie
@@ -28,7 +33,16 @@ testmob:
   - BOOTS leather_boots
   - HAND stone_sword
   Abilities:
-  - explode{radius=5,damage_multiplier=0.5} ~onTimer:100
+  - particles{type=flame,count=8} ~onSpawn
+  - explode{radius=5,damage_multiplier=0.5,particle=flame} ~onTimer:100
+  LootTable:
+    attribution: last-hit
+    roll-mode: per-player
+    rolls:
+    - { item: rotten_flesh, chance: 80.0, min: 1, max: 3 }
+    - { item: red_gem, chance: 5.0, min: 1, max: 1, magic-find-affected: true }
+    guaranteed:
+    - { item: bone, min: 1, max: 1 }
 
 mini_boss:
   MinecraftMob: zombified_piglin
@@ -41,3 +55,14 @@ mini_boss:
     crit_damage: 100
   Equipment:
   - HAND iron_sword
+  Abilities:
+  - sound{key=entity.wither.spawn,volume=1.0,pitch=0.5} ~onSpawn
+  - particles{type=large_smoke,count=15} ~onHurt
+  LootTable:
+    attribution: top-damager
+    roll-mode: per-player
+    rolls:
+    - { item: aspect_of_test, chance: 25.0, min: 1, max: 1, magic-find-affected: true }
+    - { item: gold_ingot, chance: 60.0, min: 2, max: 5 }
+    guaranteed:
+    - { item: emerald, min: 1, max: 2 }

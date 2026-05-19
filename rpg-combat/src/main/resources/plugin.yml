@@ -1,0 +1,12 @@
+name: rpg-combat
+version: '${version}'
+main: com.github._255_ping.rpg.combat.RpgCombatPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Combat skill — XP from damage dealt via the core damage pipeline.
+depend: [rpg-core]
+permissions:
+  rpg.combat.reload:
+    description: Reload combat config
+    default: op

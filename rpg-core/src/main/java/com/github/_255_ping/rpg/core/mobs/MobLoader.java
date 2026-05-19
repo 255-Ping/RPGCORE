@@ -3,6 +3,8 @@ package com.github._255_ping.rpg.core.mobs;
 import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.abilities.AbilityDsl;
 import com.github._255_ping.rpg.api.abilities.AbilityInvocation;
+import com.github._255_ping.rpg.api.loot.Attribution;
+import com.github._255_ping.rpg.api.loot.RollMode;
 import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import com.github._255_ping.rpg.api.stats.Stat;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
@@ -22,9 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 
-/**
- * Scans {@code plugins/rpg-core/mobs/} for *.yml files. Each top-level key is a mob ID.
- */
 public final class MobLoader {
 
     private final File folder;
@@ -126,21 +125,81 @@ public final class MobLoader {
             }
         }
 
-        List<AbilityInvocation> abilities = new ArrayList<>();
+        List<MobAbilityBinding> bindings = new ArrayList<>();
         for (String inv : s.getStringList("Abilities")) {
-            String invStripped = inv;
-            int triggerIdx = invStripped.indexOf('~');
-            if (triggerIdx >= 0) invStripped = invStripped.substring(0, triggerIdx).trim();
             try {
-                abilities.addAll(AbilityDsl.parse(invStripped));
+                bindings.add(parseAbilityBinding(inv));
             } catch (Exception ex) {
                 logger.warning("mob '" + id + "' has bad ability invocation '" + inv + "': " + ex.getMessage());
             }
         }
 
+        CoreLootTable lootTable = parseLootTable(id, s.getConfigurationSection("LootTable"));
+
         return new CoreRpgMob(id, displayName, type, health, damage, defense,
-                stats, helmet, chest, legs, boots, hand, off, null, abilities,
+                stats, helmet, chest, legs, boots, hand, off, null, bindings, lootTable,
                 mobIdKey, healthService);
+    }
+
+    private static MobAbilityBinding parseAbilityBinding(String spec) {
+        int triggerIdx = spec.indexOf('~');
+        String invStr = triggerIdx < 0 ? spec : spec.substring(0, triggerIdx).trim();
+        MobAbilityTrigger trigger;
+        if (triggerIdx < 0) {
+            trigger = new MobAbilityTrigger.OnSpawn();
+        } else {
+            trigger = MobAbilityTrigger.parse(spec.substring(triggerIdx + 1));
+        }
+        List<AbilityInvocation> invocations = AbilityDsl.parse(invStr);
+        return new MobAbilityBinding(invocations, trigger);
+    }
+
+    private CoreLootTable parseLootTable(String mobId, ConfigurationSection s) {
+        if (s == null) return null;
+        Attribution attribution = parseAttribution(s.getString("attribution", "weighted-by-damage"));
+        RollMode rollMode = parseRollMode(s.getString("roll-mode", "per-player"));
+
+        List<CoreLootTable.Roll> rolls = new ArrayList<>();
+        for (Map<?, ?> raw : s.getMapList("rolls")) {
+            try {
+                String item = String.valueOf(raw.get("item"));
+                double chance = raw.get("chance") instanceof Number n ? n.doubleValue() : 0;
+                int min = raw.get("min") instanceof Number n ? n.intValue() : 1;
+                int max = raw.get("max") instanceof Number n ? n.intValue() : min;
+                boolean mf = Boolean.TRUE.equals(raw.get("magic-find-affected"));
+                rolls.add(new CoreLootTable.Roll(item, chance, min, max, mf));
+            } catch (Exception ex) {
+                logger.warning("mob '" + mobId + "' loot roll bad: " + ex.getMessage());
+            }
+        }
+        List<CoreLootTable.Guaranteed> guaranteed = new ArrayList<>();
+        for (Map<?, ?> raw : s.getMapList("guaranteed")) {
+            try {
+                String item = String.valueOf(raw.get("item"));
+                int min = raw.get("min") instanceof Number n ? n.intValue() : 1;
+                int max = raw.get("max") instanceof Number n ? n.intValue() : min;
+                guaranteed.add(new CoreLootTable.Guaranteed(item, min, max));
+            } catch (Exception ex) {
+                logger.warning("mob '" + mobId + "' guaranteed bad: " + ex.getMessage());
+            }
+        }
+        return new CoreLootTable(mobId, attribution, rollMode, rolls, guaranteed);
+    }
+
+    private static Attribution parseAttribution(String s) {
+        return switch (s.toLowerCase(Locale.ROOT)) {
+            case "last-hit", "last_hit" -> Attribution.LAST_HIT;
+            case "top-damager", "top_damager" -> Attribution.TOP_DAMAGER;
+            case "split-equal", "split_equal" -> Attribution.SPLIT_EQUAL;
+            default -> Attribution.WEIGHTED_BY_DAMAGE;
+        };
+    }
+
+    private static RollMode parseRollMode(String s) {
+        return switch (s.toLowerCase(Locale.ROOT)) {
+            case "shared" -> RollMode.SHARED;
+            default -> RollMode.PER_PLAYER;
+        };
     }
 
     private static ItemStack resolveItem(String token) {

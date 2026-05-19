@@ -1,6 +1,5 @@
 package com.github._255_ping.rpg.core.mobs;
 
-import com.github._255_ping.rpg.api.abilities.AbilityInvocation;
 import com.github._255_ping.rpg.api.mobs.RpgMob;
 import com.github._255_ping.rpg.api.stats.Stat;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
@@ -33,7 +32,8 @@ public final class CoreRpgMob implements RpgMob {
     private final Map<Stat, Double> stats;
     private final ItemStack helmet, chestplate, leggings, boots, mainHand, offHand;
     private final String customHeadTexture;
-    private final List<AbilityInvocation> abilities;
+    private final List<MobAbilityBinding> bindings;
+    private final CoreLootTable lootTable;
 
     private final NamespacedKey mobIdKey;
     private final CoreHealthService healthService;
@@ -43,7 +43,9 @@ public final class CoreRpgMob implements RpgMob {
                       Map<Stat, Double> stats,
                       ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots,
                       ItemStack mainHand, ItemStack offHand,
-                      String customHeadTexture, List<AbilityInvocation> abilities,
+                      String customHeadTexture,
+                      List<MobAbilityBinding> bindings,
+                      CoreLootTable lootTable,
                       NamespacedKey mobIdKey, CoreHealthService healthService) {
         this.id = id;
         this.displayName = displayName;
@@ -59,7 +61,8 @@ public final class CoreRpgMob implements RpgMob {
         this.mainHand = mainHand;
         this.offHand = offHand;
         this.customHeadTexture = customHeadTexture;
-        this.abilities = List.copyOf(abilities);
+        this.bindings = List.copyOf(bindings);
+        this.lootTable = lootTable;
         this.mobIdKey = mobIdKey;
         this.healthService = healthService;
     }
@@ -79,13 +82,13 @@ public final class CoreRpgMob implements RpgMob {
     @Override public ItemStack offHand() { return offHand; }
     @Override public String customHeadTexture() { return customHeadTexture; }
 
-    public List<AbilityInvocation> abilities() { return abilities; }
+    public List<MobAbilityBinding> abilityBindings() { return bindings; }
+    public CoreLootTable lootTable() { return lootTable; }
 
     @Override
     public LivingEntity spawn(Location loc) {
         if (loc.getWorld() == null) throw new IllegalArgumentException("Location has no world");
 
-        // Custom spawn reason so our suppression listener lets it through.
         Entity entity = loc.getWorld().spawnEntity(loc, baseType, CreatureSpawnEvent.SpawnReason.CUSTOM);
         if (!(entity instanceof LivingEntity le)) {
             entity.remove();
@@ -110,7 +113,6 @@ public final class CoreRpgMob implements RpgMob {
             if (boots != null) eq.setBoots(boots);
             if (mainHand != null) eq.setItemInMainHand(mainHand);
             if (offHand != null) eq.setItemInOffHand(offHand);
-            // Don't let mobs drop their authored gear by default
             eq.setHelmetDropChance(0f);
             eq.setChestplateDropChance(0f);
             eq.setLeggingsDropChance(0f);
@@ -121,7 +123,9 @@ public final class CoreRpgMob implements RpgMob {
 
         le.getPersistentDataContainer().set(mobIdKey, PersistentDataType.STRING, id);
 
-        // Abilities are stored but not yet executed — execution arrives with the ability impl.
+        // Fire OnSpawn ability bindings now that the entity is in-world and tagged.
+        MobAbilityRuntime.fireTrigger(le, this, MobAbilityTrigger.OnSpawn.class);
+
         return le;
     }
 }

@@ -55,4 +55,15 @@ public final class CoreBlockRegistry implements BlockRegistry {
     public int trackedCount() {
         return byLocation.size();
     }
+
+    /** Snapshot of every tagged block location and its id. Used for persistence. */
+    public java.util.Map<BlockKey, String> snapshotLocations() {
+        return new java.util.HashMap<>(byLocation);
+    }
+
+    /** Re-populates the location map from a saved snapshot (used on enable). */
+    public void restoreLocations(java.util.Map<BlockKey, String> snapshot) {
+        byLocation.clear();
+        byLocation.putAll(snapshot);
+    }
 }

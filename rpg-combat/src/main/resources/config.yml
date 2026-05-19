@@ -1,0 +1,13 @@
+# rpg-combat config — XP from PostDamageEvent.
+# Combat XP awarded = dealtDamage * xp-per-damage * combat_wisdom_multiplier
+
+xp-per-damage: 1.0
+# When the damage source is an ability (source starts with "ability"), this multiplier
+# layers on top of any per-ability CombatXpMultiplier (currently not yet stored on
+# items — pending an item-side enrichment).
+combat-xp-multiplier-from-abilities: 1.0
+
+# Only award XP if the victim is a "real" combat target (avoids leveling on the test
+# zombie-rabbit). The base type must match one of these vanilla entity types, or set
+# to ["any"] to award for any LivingEntity damage.
+victim-whitelist: ["any"]

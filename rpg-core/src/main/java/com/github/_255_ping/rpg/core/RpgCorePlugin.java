@@ -6,6 +6,7 @@ import com.github._255_ping.rpg.core.abilities.CoreAbilityRegistry;
 import com.github._255_ping.rpg.core.abilities.ItemAbilityListener;
 import com.github._255_ping.rpg.core.blocks.BlockBreakHandler;
 import com.github._255_ping.rpg.core.blocks.BlockLoader;
+import com.github._255_ping.rpg.core.blocks.BlockPersistence;
 import com.github._255_ping.rpg.core.blocks.CoreBlockRegistry;
 import com.github._255_ping.rpg.core.command.RpgCommand;
 import com.github._255_ping.rpg.core.cooldown.CoreCooldownService;
@@ -18,7 +19,11 @@ import com.github._255_ping.rpg.core.health.RegenTask;
 import com.github._255_ping.rpg.core.items.CoreItemRegistry;
 import com.github._255_ping.rpg.core.items.ItemLoader;
 import com.github._255_ping.rpg.core.mobs.CoreMobRegistry;
+import com.github._255_ping.rpg.core.mobs.DamagerTracker;
+import com.github._255_ping.rpg.core.mobs.MobAbilityEventListener;
+import com.github._255_ping.rpg.core.mobs.MobAbilityTimerTask;
 import com.github._255_ping.rpg.core.mobs.MobLoader;
+import com.github._255_ping.rpg.core.mobs.MobLootListener;
 import com.github._255_ping.rpg.core.persistence.YamlDataStore;
 import com.github._255_ping.rpg.core.player.CoreManaService;
 import com.github._255_ping.rpg.core.player.CorePlayerLookup;
@@ -67,6 +72,8 @@ public final class RpgCorePlugin extends JavaPlugin {
     private AbilityLoader abilityLoader;
     private CoreBlockRegistry blockRegistry;
     private BlockLoader blockLoader;
+    private BlockPersistence blockPersistence;
+    private DamagerTracker damagerTracker;
 
     public static RpgCorePlugin get() {
         return instance;
@@ -128,6 +135,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         mobRegistry = new CoreMobRegistry(mobIdKey);
         abilityRegistry = new CoreAbilityRegistry();
         blockRegistry = new CoreBlockRegistry();
+        damagerTracker = new DamagerTracker();
 
         RpgServices.setDataStore(dataStore);
         RpgServices.setMessageFormatter(messageFormatter);
@@ -148,7 +156,6 @@ public final class RpgCorePlugin extends JavaPlugin {
         RpgServices.setAbilities(abilityRegistry);
         RpgServices.setBlocks(blockRegistry);
 
-        // Register built-in ability effects, then load admin-defined custom abilities on top.
         ItemAbilityListener.registerBuiltins(abilityRegistry);
 
         statusEffectLoader = new StatusEffectLoader(statusEffectsDir, statusEffectRegistry, getLogger());
@@ -166,6 +173,9 @@ public final class RpgCorePlugin extends JavaPlugin {
         blockLoader = new BlockLoader(blocksDir, blockRegistry, getLogger());
         blockLoader.loadAll();
 
+        blockPersistence = new BlockPersistence(dataStore, blockRegistry);
+        blockPersistence.load();
+
         getServer().getPluginManager().registerEvents(new VanillaSuppressionListener(this), this);
         getServer().getPluginManager().registerEvents(
                 new PlayerLifecycleListener(this, playerLookup, healthService, skillsService), this);
@@ -177,6 +187,9 @@ public final class RpgCorePlugin extends JavaPlugin {
                 new ItemAbilityListener(this, abilityRegistry), this);
         getServer().getPluginManager().registerEvents(
                 new BlockBreakHandler(this, blockRegistry), this);
+        getServer().getPluginManager().registerEvents(damagerTracker, this);
+        getServer().getPluginManager().registerEvents(new MobLootListener(damagerTracker), this);
+        getServer().getPluginManager().registerEvents(new MobAbilityEventListener(), this);
 
         long regenInterval = getConfig().getLong("regen.interval-ticks", 20L);
         getServer().getScheduler().runTaskTimer(
@@ -186,6 +199,9 @@ public final class RpgCorePlugin extends JavaPlugin {
         getServer().getScheduler().runTaskTimer(
                 this, new StatusEffectTickTask(statusEffectService, healthService),
                 statusInterval, statusInterval);
+
+        getServer().getScheduler().runTaskTimer(
+                this, new MobAbilityTimerTask(mobRegistry, mobIdKey), 1L, 1L);
 
         PluginCommand rpg = Objects.requireNonNull(getCommand("rpg"), "command 'rpg' missing from plugin.yml");
         RpgCommand handler = new RpgCommand(this);
@@ -199,11 +215,19 @@ public final class RpgCorePlugin extends JavaPlugin {
                 + skillRegistry.all().size() + " skills, "
                 + itemRegistry.all().size() + " items, "
                 + mobRegistry.all().size() + " mobs, "
-                + blockRegistry.all().size() + " block defs.");
+                + blockRegistry.all().size() + " block defs, "
+                + blockRegistry.trackedCount() + " tagged block locations.");
     }
 
     @Override
     public void onDisable() {
+        if (blockPersistence != null) {
+            try {
+                blockPersistence.save();
+            } catch (Exception ex) {
+                getLogger().warning("Failed to save block locations: " + ex.getMessage());
+            }
+        }
         getLogger().info("rpg-core disabled.");
         instance = null;
     }

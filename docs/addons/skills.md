@@ -22,6 +22,8 @@ Common commands:
 
 ## Combat (`rpg-combat`)
 
+> **Status:** In progress — `rpg-combat` module ships. Awards XP on `PostDamageEvent` proportional to dealt damage, scaled by `COMBAT_WISDOM`. Configurable `xp-per-damage` rate; ability-source damage gets an extra `combat-xp-multiplier-from-abilities` knob.
+
 ### XP source
 
 Listens to `PostDamageEvent`. XP awarded proportional to damage dealt (configurable per victim-type and per source).
