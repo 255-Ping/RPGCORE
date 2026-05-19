@@ -1,0 +1,16 @@
+# rpg-farming — XP from harvesting mature crops. Scaled by FARMING_WISDOM.
+
+default-xp: 3
+
+# Per-material XP. Only awarded when the crop is at maximum age.
+xp-per-block:
+  wheat: 3
+  carrots: 3
+  potatoes: 3
+  beetroots: 4
+  nether_wart: 5
+  cocoa: 4
+  pumpkin: 6
+  melon: 6
+  sugar_cane: 2
+  bamboo: 1

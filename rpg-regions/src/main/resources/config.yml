@@ -1,0 +1,12 @@
+# rpg-regions config.
+
+# Default flag values used when no region overrides them.
+default-flags:
+  pvp: true
+  no-break: false
+  no-place: false
+  no-ability-use: false
+  no-mob-spawning: false
+
+# Tick interval for player region-transition detection.
+move-poll-ticks: 5

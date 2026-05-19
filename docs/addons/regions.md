@@ -1,6 +1,6 @@
 # Regions (`rpg-regions`)
 
-> **Status:** Planned
+> **Status:** In progress — Cube-shaped regions placed via `/region define <id> <radius>`. Persistence via DataStore. `/region delete`, `/region list`, `/region info` (at your location), `/region flag <id> <flag> <value>` (boolean / int / string). Flag enforcement v1: `pvp` (cancels player-vs-player damage when false), `no-break`, `no-place`. `RegionEnterEvent` and `RegionLeaveEvent` fire from a periodic polling task (default every 5 ticks). Polygonal regions, region-bounds GUI editor, and the wand-based two-point definition come later — for v1, cube-around-player is the only definition mode.
 
 Admin-defined 3D box regions with flags. Built ourselves rather than depending on WorldGuard.
 

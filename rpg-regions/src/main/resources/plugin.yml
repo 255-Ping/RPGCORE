@@ -1,0 +1,29 @@
+name: rpg-regions
+version: '${version}'
+main: com.github._255_ping.rpg.regions.RpgRegionsPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: 3D box regions with flags — PvP, no-break, no-place, no-ability-use.
+depend: [rpg-core]
+commands:
+  region:
+    description: Region admin commands
+    aliases: [rg]
+    usage: /region <define|delete|list|info|flag>
+permissions:
+  rpg.regions.admin.define:
+    description: Define a region
+    default: op
+  rpg.regions.admin.delete:
+    description: Delete a region
+    default: op
+  rpg.regions.admin.list:
+    description: List all regions
+    default: op
+  rpg.regions.admin.info:
+    description: Show region info at a location
+    default: op
+  rpg.regions.admin.flag:
+    description: Set a region flag
+    default: op

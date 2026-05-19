@@ -78,6 +78,8 @@ Custom-block break for axe-target blocks.
 
 ## Farming (`rpg-farming`)
 
+> **Status:** In progress — Farming XP awarded on `BlockBreakEvent` when the broken block is a configured crop and (if Ageable) at maximum age. Default config covers wheat/carrots/potatoes/beetroots/nether_wart/cocoa/pumpkin/melon/sugar_cane/bamboo. Scaled by `FARMING_WISDOM`.
+
 ### Content
 
 - Custom crops as custom blocks (vanilla growth cancelled; we tick growth ourselves so we can apply boosts)

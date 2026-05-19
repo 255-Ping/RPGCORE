@@ -1,6 +1,6 @@
 # Spawning
 
-> **Status:** Planned
+> **Status:** In progress — Admin spawners working. `/spawner create <id> <mobId>` plants a spawner at the admin's location with default settings (radius 4, cooldown 100t, max-alive 5, continuous). `/spawner list`, `/spawner tp <id>`, `/spawner delete <id>`, `/spawner set <id> <field> <value>` (fields: max-alive, cooldown, spawn-radius, continuous). Spawners persist via DataStore. The tick task spawns new mobs (PDC-tagged for alive-count tracking) when cooldown elapsed and alive < max-alive. Spawn-condition gates (light, biome, time, etc.) and natural-spawning rules are deferred.
 
 Mob spawning is fully custom. Two independent mechanisms:
 

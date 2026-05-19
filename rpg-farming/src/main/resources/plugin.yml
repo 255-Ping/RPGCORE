@@ -1,0 +1,8 @@
+name: rpg-farming
+version: '${version}'
+main: com.github._255_ping.rpg.farming.RpgFarmingPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Farming skill — XP from harvesting mature crops.
+depend: [rpg-core]

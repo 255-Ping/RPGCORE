@@ -21,6 +21,9 @@ commands:
     description: Show your active status effects
     aliases: [potion, potions]
     usage: /effects [player]
+  spawner:
+    description: Admin spawner management
+    usage: /spawner <create|delete|list|tp|set>
 permissions:
   rpg.core.version:
     description: View loaded modules and versions
@@ -57,4 +60,19 @@ permissions:
     default: true
   rpg.core.effects.other:
     description: Show another player's active status effects
+    default: op
+  rpg.spawners.admin.create:
+    description: Create a spawner
+    default: op
+  rpg.spawners.admin.delete:
+    description: Delete a spawner
+    default: op
+  rpg.spawners.admin.list:
+    description: List spawners
+    default: op
+  rpg.spawners.admin.tp:
+    description: Teleport to a spawner
+    default: op
+  rpg.spawners.admin.edit:
+    description: Edit a spawner's settings
     default: op

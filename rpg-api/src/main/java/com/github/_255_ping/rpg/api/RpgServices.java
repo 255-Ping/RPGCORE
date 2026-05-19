@@ -14,6 +14,7 @@ import com.github._255_ping.rpg.api.items.ItemRegistry;
 import com.github._255_ping.rpg.api.loot.LootTableRegistry;
 import com.github._255_ping.rpg.api.mobs.MobRegistry;
 import com.github._255_ping.rpg.api.parties.PartyService;
+import com.github._255_ping.rpg.api.regions.RegionService;
 import com.github._255_ping.rpg.api.persistence.DataStore;
 import com.github._255_ping.rpg.api.player.ManaService;
 import com.github._255_ping.rpg.api.player.RpgPlayer;
@@ -59,6 +60,7 @@ public final class RpgServices {
     private static Economy economy;
     private static AccessoryService accessories;
     private static PartyService parties;
+    private static RegionService regionsSvc;
 
     private RpgServices() {}
 
@@ -88,6 +90,7 @@ public final class RpgServices {
     public static Economy economy() { return require(economy, "Economy"); }
     public static AccessoryService accessories() { return require(accessories, "AccessoryService"); }
     public static PartyService parties() { return require(parties, "PartyService"); }
+    public static RegionService regionService() { return require(regionsSvc, "RegionService"); }
 
     // ----- Setters (rpg-core only) -----
 
@@ -114,6 +117,7 @@ public final class RpgServices {
     public static void setEconomy(Economy svc) { economy = svc; }
     public static void setAccessories(AccessoryService svc) { accessories = svc; }
     public static void setParties(PartyService svc) { parties = svc; }
+    public static void setRegionService(RegionService svc) { regionsSvc = svc; }
 
     private static <T> T require(T svc, String name) {
         if (svc == null) throw new IllegalStateException(name + " not bootstrapped — is rpg-core loaded?");

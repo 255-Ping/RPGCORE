@@ -1,0 +1,152 @@
+package com.github._255_ping.rpg.core.spawners;
+
+import com.github._255_ping.rpg.api.RpgServices;
+import com.github._255_ping.rpg.api.mobs.RpgMob;
+import com.github._255_ping.rpg.api.persistence.DataStore;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
+import org.bukkit.World;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ThreadLocalRandom;
+
+/**
+ * Persistent admin-placed mob spawners. Spawners tick periodically: if alive count is
+ * below max and cooldown elapsed, spawn a new mob from the configured mob id at a random
+ * point within the spawn radius.
+ *
+ * <p>Spawned mobs are PDC-tagged with the spawner's id so we can track them for the
+ * alive-count cap.
+ */
+public final class SpawnerManager {
+
+    private static final String REPO = "spawners";
+
+    private final JavaPlugin plugin;
+    private final NamespacedKey spawnerKey;
+    private final ConcurrentMap<String, SpawnerDef> byId = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Long> lastSpawnTick = new ConcurrentHashMap<>();
+    private long currentTick = 0;
+
+    public SpawnerManager(JavaPlugin plugin) {
+        this.plugin = plugin;
+        this.spawnerKey = new NamespacedKey(plugin, "spawner_id");
+    }
+
+    public NamespacedKey spawnerKey() { return spawnerKey; }
+
+    public void loadAll() {
+        byId.clear();
+        DataStore.Repository repo = RpgServices.dataStore().repository(REPO);
+        for (String id : repo.keys()) {
+            repo.get(id).ifPresent(data -> {
+                try {
+                    SpawnerDef def = new SpawnerDef(
+                            id,
+                            str(data, "mob"),
+                            str(data, "world"),
+                            num(data, "x"), num(data, "y"), num(data, "z"),
+                            num(data, "spawn-radius"),
+                            num(data, "cooldown-ticks"),
+                            num(data, "max-alive"),
+                            data.get("continuous") instanceof Boolean b ? b : true
+                    );
+                    byId.put(id, def);
+                } catch (Exception ex) {
+                    plugin.getLogger().warning("Failed to load spawner " + id + ": " + ex.getMessage());
+                }
+            });
+        }
+    }
+
+    public void put(SpawnerDef def) {
+        byId.put(def.id(), def);
+        saveOne(def.id());
+    }
+
+    public boolean remove(String id) {
+        if (byId.remove(id) == null) return false;
+        RpgServices.dataStore().repository(REPO).delete(id);
+        lastSpawnTick.remove(id);
+        return true;
+    }
+
+    public Optional<SpawnerDef> get(String id) {
+        return Optional.ofNullable(byId.get(id));
+    }
+
+    public Collection<SpawnerDef> all() {
+        return byId.values();
+    }
+
+    public void saveOne(String id) {
+        SpawnerDef def = byId.get(id);
+        if (def == null) return;
+        Map<String, Object> data = new HashMap<>();
+        data.put("schema-version", 1);
+        data.put("mob", def.mobId());
+        data.put("world", def.worldName());
+        data.put("x", def.x());
+        data.put("y", def.y());
+        data.put("z", def.z());
+        data.put("spawn-radius", def.spawnRadius());
+        data.put("cooldown-ticks", def.cooldownTicks());
+        data.put("max-alive", def.maxAlive());
+        data.put("continuous", def.continuous());
+        RpgServices.dataStore().repository(REPO).save(id, data);
+    }
+
+    public void saveAll() {
+        for (String id : byId.keySet()) saveOne(id);
+    }
+
+    public void tick() {
+        currentTick++;
+        for (SpawnerDef def : byId.values()) {
+            if (!def.continuous()) continue;
+            long last = lastSpawnTick.getOrDefault(def.id(), 0L);
+            if (last != 0 && currentTick - last < def.cooldownTicks()) continue;
+            World world = Bukkit.getWorld(def.worldName());
+            if (world == null) continue;
+
+            // Count alive mobs tagged to this spawner.
+            int alive = 0;
+            for (Entity e : world.getEntities()) {
+                String tag = e.getPersistentDataContainer().get(spawnerKey, PersistentDataType.STRING);
+                if (def.id().equals(tag) && !e.isDead()) alive++;
+            }
+            if (alive >= def.maxAlive()) continue;
+
+            Optional<RpgMob> mob = RpgServices.mobs().get(def.mobId());
+            if (mob.isEmpty()) continue;
+
+            double dx = (ThreadLocalRandom.current().nextDouble() - 0.5) * 2 * def.spawnRadius();
+            double dz = (ThreadLocalRandom.current().nextDouble() - 0.5) * 2 * def.spawnRadius();
+            Location spawnLoc = new Location(world, def.x() + dx + 0.5, def.y(), def.z() + dz + 0.5);
+            LivingEntity spawned = mob.get().spawn(spawnLoc);
+            if (spawned != null) {
+                spawned.getPersistentDataContainer().set(spawnerKey, PersistentDataType.STRING, def.id());
+            }
+            lastSpawnTick.put(def.id(), currentTick);
+        }
+    }
+
+    private static String str(Map<String, Object> data, String key) {
+        Object v = data.get(key);
+        return v == null ? "" : v.toString();
+    }
+
+    private static int num(Map<String, Object> data, String key) {
+        return data.get(key) instanceof Number n ? n.intValue() : 0;
+    }
+}

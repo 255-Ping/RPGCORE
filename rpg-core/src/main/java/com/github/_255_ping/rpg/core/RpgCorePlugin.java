@@ -9,6 +9,8 @@ import com.github._255_ping.rpg.core.blocks.BlockLoader;
 import com.github._255_ping.rpg.core.blocks.BlockPersistence;
 import com.github._255_ping.rpg.core.blocks.CoreBlockRegistry;
 import com.github._255_ping.rpg.core.command.EffectsCommand;
+import com.github._255_ping.rpg.core.command.SpawnerCommand;
+import com.github._255_ping.rpg.core.spawners.SpawnerManager;
 import com.github._255_ping.rpg.core.command.RpgCommand;
 import com.github._255_ping.rpg.core.command.SkillCommand;
 import com.github._255_ping.rpg.core.command.StatsCommand;
@@ -81,6 +83,7 @@ public final class RpgCorePlugin extends JavaPlugin {
     private DamagerTracker damagerTracker;
     private CoreCurrencyRegistry currencyRegistry;
     private CoreLootTableRegistry lootTableRegistry;
+    private SpawnerManager spawnerManager;
 
     public static RpgCorePlugin get() {
         return instance;
@@ -223,6 +226,11 @@ public final class RpgCorePlugin extends JavaPlugin {
         Objects.requireNonNull(getCommand("skill")).setExecutor(new SkillCommand(this));
         Objects.requireNonNull(getCommand("effects")).setExecutor(new EffectsCommand(this));
 
+        spawnerManager = new SpawnerManager(this);
+        spawnerManager.loadAll();
+        Objects.requireNonNull(getCommand("spawner")).setExecutor(new SpawnerCommand(this, spawnerManager));
+        getServer().getScheduler().runTaskTimer(this, spawnerManager::tick, 20L, 20L);
+
         getLogger().info("rpg-core v" + getPluginMeta().getVersion() + " enabled.");
         getLogger().info(messageFormatter.format("debug.ready"));
         getLogger().info("Loaded "
@@ -241,6 +249,13 @@ public final class RpgCorePlugin extends JavaPlugin {
                 blockPersistence.save();
             } catch (Exception ex) {
                 getLogger().warning("Failed to save block locations: " + ex.getMessage());
+            }
+        }
+        if (spawnerManager != null) {
+            try {
+                spawnerManager.saveAll();
+            } catch (Exception ex) {
+                getLogger().warning("Failed to save spawners: " + ex.getMessage());
             }
         }
         getLogger().info("rpg-core disabled.");
