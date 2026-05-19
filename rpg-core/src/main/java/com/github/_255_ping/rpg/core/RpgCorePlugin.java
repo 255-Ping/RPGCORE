@@ -9,6 +9,8 @@ import com.github._255_ping.rpg.core.blocks.BlockLoader;
 import com.github._255_ping.rpg.core.blocks.BlockPersistence;
 import com.github._255_ping.rpg.core.blocks.CoreBlockRegistry;
 import com.github._255_ping.rpg.core.command.RpgCommand;
+import com.github._255_ping.rpg.core.command.SkillCommand;
+import com.github._255_ping.rpg.core.command.StatsCommand;
 import com.github._255_ping.rpg.core.cooldown.CoreCooldownService;
 import com.github._255_ping.rpg.core.damage.DamagePipelineListener;
 import com.github._255_ping.rpg.core.formatting.CoreMessageFormatter;
@@ -207,6 +209,8 @@ public final class RpgCorePlugin extends JavaPlugin {
         RpgCommand handler = new RpgCommand(this);
         rpg.setExecutor(handler);
         rpg.setTabCompleter(handler);
+        Objects.requireNonNull(getCommand("stats")).setExecutor(new StatsCommand(this));
+        Objects.requireNonNull(getCommand("skill")).setExecutor(new SkillCommand(this));
 
         getLogger().info("rpg-core v" + getPluginMeta().getVersion() + " enabled.");
         getLogger().info(messageFormatter.format("debug.ready"));

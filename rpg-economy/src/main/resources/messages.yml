@@ -1,0 +1,29 @@
+balance:
+  self: "&7Your balance: &e{amount}"
+  other: "&7{player}'s balance: &e{amount}"
+
+pay:
+  sent: "&aSent &e{amount} &ato &e{player}&a."
+  received: "&aReceived &e{amount} &afrom &e{player}&a."
+  insufficient: "&cYou can't afford that."
+  cap-reached: "&cTarget's balance would exceed the max."
+  cannot-self: "&cYou can't pay yourself."
+  amount-too-small: "&cAmount must be at least &e{min}&c."
+  cooldown: "&cYou're paying too fast — wait a moment."
+
+eco:
+  set: "&aSet &e{player}&a's balance to &e{amount}&a."
+  added: "&aAdded &e{amount} &ato &e{player}&a's balance."
+  removed: "&aRemoved &e{amount} &afrom &e{player}&a's balance."
+  reset: "&aReset &e{player}&a's balance to &e{amount}&a."
+
+baltop:
+  header: "&6&l=== Top {page}/{pages} ==="
+  entry: "&7{rank}. &e{player} &7- &e{amount}"
+  empty: "&7No balances yet."
+
+command:
+  no-permission: "&cYou don't have permission."
+  player-only: "&cThat command can only be used by a player."
+  player-not-found: "&cPlayer &7{name} &cnot found."
+  bad-amount: "&cAmount must be a positive number."

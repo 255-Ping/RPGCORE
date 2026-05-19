@@ -64,6 +64,14 @@ public final class BlockBreakHandler implements Listener {
             return;
         }
 
+        com.github._255_ping.rpg.api.blocks.RpgBlockBreakEvent rpgEvent =
+                new com.github._255_ping.rpg.api.blocks.RpgBlockBreakEvent(player, block, loc);
+        plugin.getServer().getPluginManager().callEvent(rpgEvent);
+        if (rpgEvent.isCancelled()) {
+            event.setCancelled(true);
+            return;
+        }
+
         event.setDropItems(false);
         event.setExpToDrop(0);
         registry.untagLocation(loc);

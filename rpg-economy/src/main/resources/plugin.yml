@@ -1,0 +1,47 @@
+name: rpg-economy
+version: '${version}'
+main: com.github._255_ping.rpg.economy.RpgEconomyPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Currency, balances, /pay, /balance, /eco admin commands.
+depend: [rpg-core]
+commands:
+  balance:
+    description: View your or another player's balance
+    aliases: [bal, money]
+    usage: /balance [player]
+  pay:
+    description: Send currency to another player
+    usage: /pay <player> <amount>
+  eco:
+    description: Economy admin commands
+    usage: /eco <set|add|remove|reset> <player> [amount]
+  baltop:
+    description: Top balances leaderboard
+    usage: /baltop [page]
+permissions:
+  rpg.economy.balance:
+    description: Check own balance
+    default: true
+  rpg.economy.balance.other:
+    description: Check another player's balance
+    default: op
+  rpg.economy.pay:
+    description: Send currency to another player
+    default: true
+  rpg.economy.baltop:
+    description: View the balance leaderboard
+    default: true
+  rpg.economy.admin.set:
+    description: Set a player's balance
+    default: op
+  rpg.economy.admin.add:
+    description: Add to a player's balance
+    default: op
+  rpg.economy.admin.remove:
+    description: Subtract from a player's balance
+    default: op
+  rpg.economy.admin.reset:
+    description: Reset a player's balance to the starting amount
+    default: op

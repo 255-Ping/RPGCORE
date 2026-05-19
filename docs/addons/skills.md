@@ -48,6 +48,8 @@ The per-ability `CombatXpMultiplier` (in ability YAML) layers on top.
 
 ## Mining (`rpg-mining`)
 
+> **Status:** In progress — Mining XP awarded on `RpgBlockBreakEvent` (fired by core's BlockBreakHandler when a tagged custom block breaks). XP per block-id configurable in `rpg-mining/config.yml`, with a `default-xp` fallback. `MINING_WISDOM` stat scales the award. `MINING_SPEED` HP-per-second ticking still pending the hold-to-break polish slice.
+
 ### Content
 
 - Custom ores defined as [custom blocks](../content/blocks.md) with `RequiredToolType: pickaxe`

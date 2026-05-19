@@ -4,6 +4,7 @@ import com.github._255_ping.rpg.api.abilities.AbilityRegistry;
 import com.github._255_ping.rpg.api.blocks.BlockRegistry;
 import com.github._255_ping.rpg.api.cooldown.CooldownService;
 import com.github._255_ping.rpg.api.currency.CurrencyRegistry;
+import com.github._255_ping.rpg.api.economy.Economy;
 import com.github._255_ping.rpg.api.formatting.MessageFormatter;
 import com.github._255_ping.rpg.api.formatting.NameFormatter;
 import com.github._255_ping.rpg.api.formula.ExpressionEvaluator;
@@ -53,6 +54,7 @@ public final class RpgServices {
     private static CurrencyRegistry currencies;
     private static LootTableRegistry lootTables;
     private static BlockRegistry blocks;
+    private static Economy economy;
 
     private RpgServices() {}
 
@@ -79,6 +81,7 @@ public final class RpgServices {
     public static CurrencyRegistry currencies() { return require(currencies, "CurrencyRegistry"); }
     public static LootTableRegistry lootTables() { return require(lootTables, "LootTableRegistry"); }
     public static BlockRegistry blocks() { return require(blocks, "BlockRegistry"); }
+    public static Economy economy() { return require(economy, "Economy"); }
 
     // ----- Setters (rpg-core only) -----
 
@@ -102,6 +105,7 @@ public final class RpgServices {
     public static void setCurrencies(CurrencyRegistry svc) { currencies = svc; }
     public static void setLootTables(LootTableRegistry svc) { lootTables = svc; }
     public static void setBlocks(BlockRegistry svc) { blocks = svc; }
+    public static void setEconomy(Economy svc) { economy = svc; }
 
     private static <T> T require(T svc, String name) {
         if (svc == null) throw new IllegalStateException(name + " not bootstrapped — is rpg-core loaded?");

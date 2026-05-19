@@ -3,6 +3,6 @@ version: '${version}'
 main: com.github._255_ping.rpg.mining.RpgMiningPlugin
 api-version: '26.1.2'
 load: POSTWORLD
-depend: [rpg-core]
 authors: [Ping]
-description: Mining addon for the RPG suite — ores, pickaxe stats, fortune scaling.
+description: Mining skill — XP from breaking custom RPG blocks (ores).
+depend: [rpg-core]

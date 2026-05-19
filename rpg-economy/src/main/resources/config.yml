@@ -1,0 +1,19 @@
+# rpg-economy config — currency & balance limits.
+
+currency:
+  id: coins
+  display-singular: "coin"
+  display-plural: "coins"
+  prefix: ""
+  suffix: " coins"
+  decimals: 0
+  starting-balance: 100
+  max-balance: 1000000000   # 1 billion default cap
+
+pay:
+  allow-self: false
+  min-amount: 1
+  cooldown-seconds: 5       # via core CooldownService
+
+baltop:
+  page-size: 10

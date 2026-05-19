@@ -9,7 +9,14 @@ softdepend: [LuckPerms]
 commands:
   rpg:
     description: RPG suite admin / debug command
-    usage: /rpg <version|reload|item|mob>
+    usage: /rpg <version|reload|item|mob|block>
+  stats:
+    description: Show your effective stats
+    usage: /stats [player]
+  skill:
+    description: Show your skill levels and XP
+    aliases: [skills]
+    usage: /skill [player]
 permissions:
   rpg.core.version:
     description: View loaded modules and versions
@@ -28,4 +35,16 @@ permissions:
     default: op
   rpg.core.block.convert:
     description: Bulk-convert vanilla blocks to a custom block in a radius
+    default: op
+  rpg.core.stats:
+    description: Show your effective stats
+    default: true
+  rpg.core.stats.other:
+    description: Show another player's effective stats
+    default: op
+  rpg.core.skill:
+    description: Show your skill levels
+    default: true
+  rpg.core.skill.other:
+    description: Show another player's skill levels
     default: op
