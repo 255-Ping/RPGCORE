@@ -1,0 +1,8 @@
+name: rpg-quests
+version: '${version}'
+main: com.github._255_ping.rpg.quests.RpgQuestsPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+depend: [rpg-core]
+authors: [Ping]
+description: Quest system addon for the RPG suite.

@@ -1,0 +1,7 @@
+name: rpg-core
+version: '${version}'
+main: com.github._255_ping.rpg.core.RpgCorePlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Core RPG framework — stats, items, abilities, mobs, damage pipeline.
