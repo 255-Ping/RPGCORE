@@ -25,14 +25,14 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(plugin.messages().format("command.usage",
+            sender.sendMessage(plugin.messages().component("command.usage",
                     Map.of("usage", "/rpg <version|reload>")));
             return true;
         }
         switch (args[0].toLowerCase()) {
             case "version" -> handleVersion(sender);
             case "reload", "reloadall" -> handleReload(sender);
-            default -> sender.sendMessage(plugin.messages().format("command.unknown",
+            default -> sender.sendMessage(plugin.messages().component("command.unknown",
                     Map.of("sub", args[0])));
         }
         return true;
@@ -40,13 +40,13 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
 
     private void handleVersion(CommandSender sender) {
         if (!sender.hasPermission("rpg.core.version")) {
-            sender.sendMessage(plugin.messages().format("command.no-permission"));
+            sender.sendMessage(plugin.messages().component("command.no-permission"));
             return;
         }
-        sender.sendMessage(plugin.messages().format("version.header"));
+        sender.sendMessage(plugin.messages().component("version.header"));
         for (Plugin p : Bukkit.getPluginManager().getPlugins()) {
             if (p.getName().startsWith("rpg-")) {
-                sender.sendMessage(plugin.messages().format("version.entry",
+                sender.sendMessage(plugin.messages().component("version.entry",
                         Map.of("module", p.getName(),
                                 "version", p.getPluginMeta().getVersion())));
             }
@@ -55,12 +55,12 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
 
     private void handleReload(CommandSender sender) {
         if (!sender.hasPermission("rpg.core.reload-all")) {
-            sender.sendMessage(plugin.messages().format("command.no-permission"));
+            sender.sendMessage(plugin.messages().component("command.no-permission"));
             return;
         }
-        sender.sendMessage(plugin.messages().format("reload.starting"));
+        sender.sendMessage(plugin.messages().component("reload.starting"));
         plugin.reloadAll();
-        sender.sendMessage(plugin.messages().format("reload.success"));
+        sender.sendMessage(plugin.messages().component("reload.success"));
     }
 
     @Override
