@@ -78,17 +78,39 @@ RPG-PLUGINS/
 
 Public types live in:
 
-- `com.github._255_ping.rpg.api.stats` — Stat, StatRegistry, StatHolder, StatRecalcEvent
-- `com.github._255_ping.rpg.api.items` — RpgItem, ItemRegistry, ItemType, Rarity
-- `com.github._255_ping.rpg.api.mobs` — RpgMob, MobRegistry, SpawnerDef
-- `com.github._255_ping.rpg.api.abilities` — AbilityEffect, AbilityRegistry, AbilityPipeline, AbilityDsl, AbilityContext, AbilityInvocation
-- `com.github._255_ping.rpg.api.damage` — DamageContext, PreDamageEvent, PostDamageEvent
-- `com.github._255_ping.rpg.api.player` — RpgPlayer, ManaService
-- `com.github._255_ping.rpg.api` — RpgServices (service locator)
+- `com.github._255_ping.rpg.api` — `RpgServices` (service locator with setters for rpg-core, getters for everyone)
+- `com.github._255_ping.rpg.api.stats` — `Stat` (sealed), `BuiltinStat` (~39 entries with groups), `CustomStat`, `StatRegistry`, `StatHolder`, `StatRecalcEvent`
+- `com.github._255_ping.rpg.api.items` — `RpgItem`, `ItemRegistry`, `ItemType` (sealed), `BuiltinItemType` (`SWORD, WAND, BOW, ARMOR, MATERIAL, QUEST, CONSUMABLE, UPGRADE, ACCESSORY`), `CustomItemType`, `Rarity`
+- `com.github._255_ping.rpg.api.mobs` — `RpgMob`, `MobRegistry`, `SpawnerDef`
+- `com.github._255_ping.rpg.api.abilities` — `AbilityEffect`, `AbilityRegistry`, `AbilityPipeline`, `AbilityDsl`, `AbilityContext`, `AbilityInvocation`
+- `com.github._255_ping.rpg.api.damage` — `DamageContext`, `PreDamageEvent`, `PostDamageEvent`
+- `com.github._255_ping.rpg.api.player` — `RpgPlayer`, `ManaService`
+- `com.github._255_ping.rpg.api.persistence` — `DataStore` (+ inner `Repository<V>`)
+- `com.github._255_ping.rpg.api.skills` — `Skill` (sealed), `BuiltinSkill`, `CustomSkill`, `SkillRegistry`, `SkillsService`, `SkillXpAwardEvent`
+- `com.github._255_ping.rpg.api.status` — `StatusEffect`, `StatusEffectRegistry`, `StatusEffectService`, `ActiveStatusEffect`, `StackingStrategy`
+- `com.github._255_ping.rpg.api.cooldown` — `CooldownService`
+- `com.github._255_ping.rpg.api.formatting` — `NameFormatter`, `MessageFormatter`
+- `com.github._255_ping.rpg.api.scheduler` — `SchedulerService` (Folia-compatible signatures)
+- `com.github._255_ping.rpg.api.loot` — `LootTable`, `LootTableRegistry`, `LootContext`, `Attribution`, `RollMode`
+- `com.github._255_ping.rpg.api.health` — `HealthService`
+- `com.github._255_ping.rpg.api.formula` — `ExpressionEvaluator` (+ inner `Compiled`)
+- `com.github._255_ping.rpg.api.currency` — `Currency`, `CurrencyRegistry`
+- `com.github._255_ping.rpg.api.spawning` — `SpawnConditions` (+ inner `Range`), `Spawner` (+ `Mode` enum)
+- `com.github._255_ping.rpg.api.regions` — `Region`
 
-New service types planned (not yet in code):
+Service types still planned (not yet in code; expected when their owning addon ships):
 
-- `DataStore`, `SkillsService`, `StatusEffectService`, `CooldownService`, `NameFormatter`, `MessageFormatter`, `SchedulerService`, `LootTable`, `Currency`, `Region`, `RegionService`, `Spawner`, `SpawnConditions`, `MobAi`, `ExpressionEvaluator`, `Hologram`, `Npc`, `Station`, `DamageIndicator`, `HealthService`, `Economy`, `PartyService`, `GuildService`, `DungeonService`, `HudService`, `SelectionWand`
+- `RegionService` (rpg-regions)
+- `MobAi` (rpg-core, when AI override system lands)
+- `Hologram`, `DamageIndicator` (rpg-holograms)
+- `Npc` (rpg-npcs)
+- `Station` (rpg-core, station block dispatch)
+- `Economy` (rpg-economy — `CurrencyRegistry` already in api)
+- `PartyService` (rpg-parties)
+- `GuildService` (rpg-guilds)
+- `DungeonService` (rpg-dungeons)
+- `HudService` (rpg-hud)
+- `SelectionWand` (rpg-core, planned)
 
 ## Versioning
 

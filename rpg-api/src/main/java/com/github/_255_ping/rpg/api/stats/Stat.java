@@ -5,4 +5,5 @@ public sealed interface Stat permits BuiltinStat, CustomStat {
     String displayName();
     String colorCode();
     boolean percent();
+    String group();
 }
