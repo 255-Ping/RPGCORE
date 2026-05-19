@@ -65,6 +65,8 @@ Per-level: `mining_speed +0.5`, `mining_fortune +0.1`. Tier breakpoints unlock r
 
 ## Foraging (`rpg-foraging`)
 
+> **Status:** In progress — Foraging XP awarded on `BlockBreakEvent` for log/stem materials. XP per material configurable; auto-fallback to `default-xp` for any unrecognized `*_log` or `*_stem` block. `FORAGING_WISDOM` stat scales the award. `FORAGING_SPEED` and custom tree content arrive with the foraging block content slice.
+
 ### Content
 
 - Custom logs / trees as custom blocks (`RequiredToolType: axe`)
@@ -90,6 +92,8 @@ Crop harvest (custom-block break of mature crops).
 No `FARMING_SPEED` stat by design — farming uses `FARMING_FORTUNE` only. Crop growth tick rate is set per-crop in YAML and globally scalable in `rpg-farming/config.yml`.
 
 ## Fishing (`rpg-fishing`)
+
+> **Status:** In progress — Fishing XP awarded on every successful `PlayerFishEvent` catch (state `CAUGHT_FISH`). Configurable `xp-per-catch`, scaled by `FISHING_WISDOM`. Custom fish content + sea-creature spawns + rod stat scaling come later.
 
 ### Content
 

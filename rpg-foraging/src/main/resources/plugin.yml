@@ -1,0 +1,8 @@
+name: rpg-foraging
+version: '${version}'
+main: com.github._255_ping.rpg.foraging.RpgForagingPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Foraging skill — XP from breaking log blocks.
+depend: [rpg-core]

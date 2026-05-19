@@ -1,0 +1,41 @@
+name: rpg-parties
+version: '${version}'
+main: com.github._255_ping.rpg.parties.RpgPartiesPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Session-only player parties — invites, kicks, leadership.
+depend: [rpg-core]
+commands:
+  party:
+    description: Party management
+    aliases: [p]
+    usage: /party <create|invite|accept|kick|promote|demote|leave|disband|list>
+permissions:
+  rpg.parties.create:
+    description: Create a party
+    default: true
+  rpg.parties.invite:
+    description: Invite a player to your party
+    default: true
+  rpg.parties.accept:
+    description: Accept a party invitation
+    default: true
+  rpg.parties.kick:
+    description: Kick a member (owner / mod only at runtime)
+    default: true
+  rpg.parties.promote:
+    description: Promote a member to moderator (owner only at runtime)
+    default: true
+  rpg.parties.demote:
+    description: Demote a moderator (owner only at runtime)
+    default: true
+  rpg.parties.leave:
+    description: Leave the party
+    default: true
+  rpg.parties.disband:
+    description: Disband the party (owner only at runtime)
+    default: true
+  rpg.parties.list:
+    description: Show party member list
+    default: true

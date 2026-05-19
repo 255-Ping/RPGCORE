@@ -1,0 +1,18 @@
+# rpg-foraging — XP from breaking log blocks.
+# Scaled by (1 + FORAGING_WISDOM / 100).
+
+default-xp: 3
+
+# Per-material XP. Match exact Material names (uppercase or lowercase both fine).
+xp-per-block:
+  oak_log: 3
+  spruce_log: 3
+  birch_log: 3
+  jungle_log: 4
+  acacia_log: 4
+  dark_oak_log: 4
+  mangrove_log: 5
+  cherry_log: 5
+  pale_oak_log: 5
+  crimson_stem: 8
+  warped_stem: 8

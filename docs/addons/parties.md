@@ -1,6 +1,6 @@
 # Parties (`rpg-parties`)
 
-> **Status:** Planned
+> **Status:** In progress — Session-only parties working. `/party create|invite|accept|kick|promote|demote|leave|disband|list` all wired. Owner/moderator/member ranks enforced. Invites time out (default 60s). On player quit, the leaver is removed; on owner quit, ownership transfers to the highest-rank remaining member (unless `disband-on-owner-leave: true`). New `PartyService` API exposed via `RpgServices.parties()` so chat/dungeons can query party membership. XP sharing config knobs are deferred to a polish slice.
 
 Session-only player groups. No persistence — parties dissolve on owner disconnect (configurable). For persistent groups, see [guilds](guilds.md).
 

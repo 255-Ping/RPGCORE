@@ -1,0 +1,3 @@
+# rpg-fishing — XP from catches. Scaled by (1 + FISHING_WISDOM / 100).
+
+xp-per-catch: 10

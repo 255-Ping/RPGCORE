@@ -1,0 +1,10 @@
+# rpg-parties.
+
+max-size: 5
+
+# True = disband the party automatically when the owner disconnects.
+# False = transfer ownership to the next-highest-rank member.
+disband-on-owner-leave: false
+
+# Seconds before a pending invite expires.
+invite-timeout-seconds: 60
