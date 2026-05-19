@@ -12,6 +12,7 @@ import com.github._255_ping.rpg.core.command.RpgCommand;
 import com.github._255_ping.rpg.core.command.SkillCommand;
 import com.github._255_ping.rpg.core.command.StatsCommand;
 import com.github._255_ping.rpg.core.cooldown.CoreCooldownService;
+import com.github._255_ping.rpg.core.currency.CoreCurrencyRegistry;
 import com.github._255_ping.rpg.core.damage.DamagePipelineListener;
 import com.github._255_ping.rpg.core.formatting.CoreMessageFormatter;
 import com.github._255_ping.rpg.core.formatting.CoreNameFormatter;
@@ -19,6 +20,7 @@ import com.github._255_ping.rpg.core.formula.CoreExpressionEvaluator;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
 import com.github._255_ping.rpg.core.health.RegenTask;
 import com.github._255_ping.rpg.core.items.CoreItemRegistry;
+import com.github._255_ping.rpg.core.loot.CoreLootTableRegistry;
 import com.github._255_ping.rpg.core.items.ItemLoader;
 import com.github._255_ping.rpg.core.mobs.CoreMobRegistry;
 import com.github._255_ping.rpg.core.mobs.DamagerTracker;
@@ -76,6 +78,8 @@ public final class RpgCorePlugin extends JavaPlugin {
     private BlockLoader blockLoader;
     private BlockPersistence blockPersistence;
     private DamagerTracker damagerTracker;
+    private CoreCurrencyRegistry currencyRegistry;
+    private CoreLootTableRegistry lootTableRegistry;
 
     public static RpgCorePlugin get() {
         return instance;
@@ -138,6 +142,8 @@ public final class RpgCorePlugin extends JavaPlugin {
         abilityRegistry = new CoreAbilityRegistry();
         blockRegistry = new CoreBlockRegistry();
         damagerTracker = new DamagerTracker();
+        currencyRegistry = new CoreCurrencyRegistry();
+        lootTableRegistry = new CoreLootTableRegistry();
 
         RpgServices.setDataStore(dataStore);
         RpgServices.setMessageFormatter(messageFormatter);
@@ -157,6 +163,8 @@ public final class RpgCorePlugin extends JavaPlugin {
         RpgServices.setMobs(mobRegistry);
         RpgServices.setAbilities(abilityRegistry);
         RpgServices.setBlocks(blockRegistry);
+        RpgServices.setCurrencies(currencyRegistry);
+        RpgServices.setLootTables(lootTableRegistry);
 
         ItemAbilityListener.registerBuiltins(abilityRegistry);
 
