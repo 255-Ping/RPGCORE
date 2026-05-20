@@ -87,11 +87,22 @@ regen:
 # Each skill uses the default curve unless overridden under its own key here.
 # Variables available in curves: level, prev_xp_total.
 # Functions: pow sqrt min max floor ceil round abs log ln.
+#
+# Per-skill overrides example:
+#
+#   combat:
+#     max-level: 50
+#     curve: "100 * level ^ 1.5"
+#     per-level-gains:     # added every level — base stats grow with the skill
+#       max_health: 2
+#       strength: 1
+#     milestones:          # one-off bonuses at specific levels
+#       5:  { crit_chance: 1 }
+#       10: { ferocity: 5, max_health: 10 }
+#       25: { ferocity: 10 }
 skills:
   default-max-level: 50
   default-curve: "100 * level ^ 1.5"
-  # combat: { max-level: 50, curve: "100 * level ^ 1.5" }
-  # mining: { max-level: 50, curve: "100 * level ^ 1.5" }
 
 # Status-effect tick scheduler. One task scans active effects every tick.
 status-effects:
@@ -113,6 +124,24 @@ combat-tag:
   duration-seconds: 8
   vitality-reduction-percent-per-point: 1
   vitality-reduction-cap-percent: 50
+
+# Death rules — ordered list, first permission held wins.
+# drop-coins-amount: a number, "all", or "<n>percent" (e.g. "50percent").
+# drop-items-percent: percentage of inventory to drop on death (rolled per slot).
+# keep-xp: keep skill XP since last level (true) or zero it (false).
+death-rules:
+  enabled: true
+  coin-pile-pickup-radius: 1.5
+  coin-pile-lifetime-seconds: 300
+  tiers:
+    - permission: rpg.death.vip
+      drop-items-percent: 0
+      drop-coins-amount: 0
+      keep-xp: true
+    - permission: rpg.death.default
+      drop-items-percent: 100
+      drop-coins-amount: "50percent"
+      keep-xp: false
 
 # Chat name format defaults (used by NameFormatter — LuckPerms is a soft-dep).
 chat-name-format:

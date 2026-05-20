@@ -1,0 +1,37 @@
+# reforges/<file>.yml — each top-level key is one reforge.
+# A reforge replaces any previous reforge on the item; it adds stats per item-Rarity tier.
+#
+#   <reforge_id>:
+#     DisplayName: "&dGiant"
+#     AppliesTo: [armor]
+#     CurrencyCost: 1000
+#     RequiredLevel: 1
+#     StatsByRarity:                  # rarity_id -> stat map
+#       common:    { max_health: 50 }
+#       uncommon:  { max_health: 100 }
+#       rare:      { max_health: 200 }
+#       epic:      { max_health: 400 }
+#       legendary: { max_health: 800 }
+giant:
+  DisplayName: "&dGiant"
+  AppliesTo: [armor]
+  CurrencyCost: 1000
+  RequiredLevel: 5
+  StatsByRarity:
+    common: { max_health: 50 }
+    uncommon: { max_health: 100 }
+    rare: { max_health: 200 }
+    epic: { max_health: 400 }
+    legendary: { max_health: 800 }
+
+fierce:
+  DisplayName: "&cFierce"
+  AppliesTo: [sword]
+  CurrencyCost: 1000
+  RequiredLevel: 5
+  StatsByRarity:
+    common: { strength: 10, crit_chance: 2 }
+    uncommon: { strength: 20, crit_chance: 4 }
+    rare: { strength: 35, crit_chance: 6 }
+    epic: { strength: 55, crit_chance: 8 }
+    legendary: { strength: 80, crit_chance: 10 }

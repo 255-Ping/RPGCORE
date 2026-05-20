@@ -1,0 +1,215 @@
+package com.github._255_ping.rpg.quests;
+
+import com.github._255_ping.rpg.api.RpgServices;
+import com.github._255_ping.rpg.api.economy.Economy;
+import com.github._255_ping.rpg.api.items.RpgItem;
+import com.github._255_ping.rpg.api.persistence.DataStore;
+import com.github._255_ping.rpg.api.skills.BuiltinSkill;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+/** Holds in-memory player quest state, persists it via core's DataStore, and applies rewards. */
+public final class QuestManager {
+
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
+
+    private final JavaPlugin plugin;
+    private final QuestRegistry registry;
+    private final Map<UUID, PlayerQuestState> cache = new ConcurrentHashMap<>();
+
+    public QuestManager(JavaPlugin plugin, QuestRegistry registry) {
+        this.plugin = plugin;
+        this.registry = registry;
+    }
+
+    public QuestRegistry registry() { return registry; }
+
+    public PlayerQuestState load(UUID id) {
+        return cache.computeIfAbsent(id, this::loadFromStore);
+    }
+
+    public void unload(UUID id) {
+        PlayerQuestState s = cache.remove(id);
+        if (s != null) save(s);
+    }
+
+    public void save(PlayerQuestState state) {
+        try {
+            DataStore.Repository repo = repo();
+            repo.save(state.playerId.toString(), state.toMap());
+        } catch (IllegalStateException ignored) {
+        }
+    }
+
+    private DataStore.Repository repo() {
+        String repoName = plugin.getConfig().getString("data-repository", "quests");
+        return RpgServices.dataStore().repository(repoName);
+    }
+
+    private PlayerQuestState loadFromStore(UUID id) {
+        try {
+            DataStore.Repository repo = repo();
+            return repo.get(id.toString())
+                    .map(map -> PlayerQuestState.fromMap(id, map))
+                    .orElseGet(() -> new PlayerQuestState(id));
+        } catch (IllegalStateException ex) {
+            return new PlayerQuestState(id);
+        }
+    }
+
+    // ----- Public ops -----
+
+    public boolean accept(Player p, String questId) {
+        PlayerQuestState s = load(p.getUniqueId());
+        Optional<QuestDef> opt = registry.get(questId);
+        if (opt.isEmpty()) {
+            msg(p, "&cUnknown quest: " + questId);
+            return false;
+        }
+        QuestDef def = opt.get();
+        if (s.active.stream().anyMatch(a -> a.questId.equals(def.id()))) {
+            msg(p, "&eAlready active.");
+            return false;
+        }
+        if (def.requiredLevel() > 0) {
+            int lvl = RpgServices.skills().level(p, BuiltinSkill.COMBAT.id());
+            if (lvl < def.requiredLevel()) {
+                msg(p, "&eRequires Combat level " + def.requiredLevel() + ".");
+                return false;
+            }
+        }
+        s.active.add(new PlayerQuestState.Active(def.id(), new int[def.objectives().size()]));
+        save(s);
+        msg(p, "&aAccepted: " + def.displayName());
+        return true;
+    }
+
+    public boolean abandon(Player p, String questId) {
+        PlayerQuestState s = load(p.getUniqueId());
+        boolean removed = s.active.removeIf(a -> a.questId.equalsIgnoreCase(questId));
+        if (removed) {
+            save(s);
+            msg(p, "&7Abandoned " + questId + ".");
+        } else {
+            msg(p, "&eNot active.");
+        }
+        return removed;
+    }
+
+    public void progressFor(Player p, QuestObjective.Type type, String target) {
+        PlayerQuestState s = load(p.getUniqueId());
+        if (s.active.isEmpty()) return;
+        boolean dirty = false;
+        boolean actionBar = plugin.getConfig().getBoolean("progress-action-bar", true);
+        for (PlayerQuestState.Active a : new ArrayList<>(s.active)) {
+            Optional<QuestDef> def = registry.get(a.questId);
+            if (def.isEmpty()) continue;
+            List<QuestObjective> objs = def.get().objectives();
+            for (int i = 0; i < objs.size(); i++) {
+                QuestObjective o = objs.get(i);
+                if (o.type() != type) continue;
+                if (!o.target().equalsIgnoreCase(target) && !o.target().equalsIgnoreCase("any")) continue;
+                if (a.progress[i] >= o.count()) continue;
+                a.progress[i]++;
+                dirty = true;
+                if (actionBar) {
+                    p.sendActionBar(LEGACY.deserialize("&7" + o.describe() + " &8(" + a.progress[i] + "/" + o.count() + ")"));
+                }
+                if (a.progress[i] >= o.count() && plugin.getConfig().getBoolean("auto-complete", true)
+                        && allComplete(a, def.get())) {
+                    complete(p, def.get(), a);
+                }
+            }
+        }
+        if (dirty) save(s);
+    }
+
+    public void completeByCommand(Player target, String questId) {
+        PlayerQuestState s = load(target.getUniqueId());
+        Optional<QuestDef> opt = registry.get(questId);
+        if (opt.isEmpty()) return;
+        PlayerQuestState.Active a = s.active.stream()
+                .filter(x -> x.questId.equals(opt.get().id()))
+                .findFirst().orElse(null);
+        if (a == null) return;
+        for (int i = 0; i < a.progress.length; i++) {
+            a.progress[i] = opt.get().objectives().get(i).count();
+        }
+        complete(target, opt.get(), a);
+        save(s);
+    }
+
+    public boolean isObjectiveActive(Player p, QuestObjective.Type type, String target) {
+        for (PlayerQuestState.Active a : load(p.getUniqueId()).active) {
+            Optional<QuestDef> def = registry.get(a.questId);
+            if (def.isEmpty()) continue;
+            for (QuestObjective o : def.get().objectives()) {
+                if (o.type() == type && o.target().equalsIgnoreCase(target)) return true;
+            }
+        }
+        return false;
+    }
+
+    private void complete(Player p, QuestDef def, PlayerQuestState.Active active) {
+        PlayerQuestState s = load(p.getUniqueId());
+        s.active.removeIf(a -> a == active || a.questId.equals(def.id()));
+        s.completed.add(def.id());
+        s.lastCompletionEpochSeconds.put(def.id(), System.currentTimeMillis() / 1000L);
+        // Award rewards
+        for (Map.Entry<String, Long> e : def.xpRewards().entrySet()) {
+            RpgServices.skills().awardXp(p, e.getKey(), e.getValue());
+        }
+        if (def.currencyReward() > 0) {
+            try {
+                Economy economy = RpgServices.economy();
+                economy.deposit(p, BigDecimal.valueOf(def.currencyReward()));
+            } catch (IllegalStateException ignored) {}
+        }
+        for (QuestDef.ItemReward ir : def.itemRewards()) {
+            ItemStack stack = buildReward(ir);
+            if (stack == null) continue;
+            HashMap<Integer, ItemStack> overflow = p.getInventory().addItem(stack);
+            for (ItemStack drop : overflow.values()) {
+                p.getWorld().dropItemNaturally(p.getLocation(), drop);
+            }
+        }
+        msg(p, "&6Quest complete: " + def.displayName());
+        save(s);
+    }
+
+    private ItemStack buildReward(QuestDef.ItemReward ir) {
+        Optional<RpgItem> custom = RpgServices.items().get(ir.itemId());
+        if (custom.isPresent()) {
+            ItemStack s = custom.get().toItemStack();
+            s.setAmount(ir.amount());
+            return s;
+        }
+        Material mat = Material.matchMaterial(ir.itemId());
+        return mat == null ? null : new ItemStack(mat, ir.amount());
+    }
+
+    private boolean allComplete(PlayerQuestState.Active a, QuestDef def) {
+        for (int i = 0; i < a.progress.length; i++) {
+            if (a.progress[i] < def.objectives().get(i).count()) return false;
+        }
+        return true;
+    }
+
+    private static void msg(Player p, String legacy) {
+        p.sendMessage(LEGACY.deserialize(legacy).colorIfAbsent(NamedTextColor.WHITE));
+    }
+}

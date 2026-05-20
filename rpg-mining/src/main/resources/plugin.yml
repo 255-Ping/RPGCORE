@@ -6,3 +6,11 @@ load: POSTWORLD
 authors: [Ping]
 description: Mining skill — XP from breaking custom RPG blocks (ores).
 depend: [rpg-core]
+commands:
+  mining:
+    description: Mining admin commands
+    usage: /mining reload
+permissions:
+  rpg.mining.admin.reload:
+    description: Reload rpg-mining config
+    default: op

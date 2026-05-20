@@ -39,3 +39,6 @@ permissions:
   rpg.parties.list:
     description: Show party member list
     default: true
+  rpg.parties.admin.reload:
+    description: Reload rpg-parties config
+    default: op

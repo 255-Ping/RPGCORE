@@ -1,6 +1,6 @@
 # Dungeons (`rpg-dungeons`)
 
-> **Status:** Planned
+> **Status:** v0.0.0-16 — shipped. Auto-bootstraps a void instance world (`rpg_dungeon_instances`); paste-copies a template area for each run; party-aware entry (soft-dep on rpg-parties); death handling per config (solo/spectator/wipe). `/dungeon create|delete|enter|leave|setentrance|setexit|setspawn|list|reload`.
 
 Admin-authored, instanced dungeons. Players (solo or as a party) teleport into a per-run copy of the dungeon volume. Multiple instances of the same dungeon run in parallel.
 

@@ -1,0 +1,36 @@
+name: rpg-dungeons
+version: '${version}'
+main: com.github._255_ping.rpg.dungeons.RpgDungeonsPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Instanced dungeons. Admins define a template area; players enter ephemeral instances.
+depend: [rpg-core]
+softdepend: [rpg-parties]
+commands:
+  dungeon:
+    description: Dungeon commands
+    aliases: [dgn]
+    usage: /dungeon <create|delete|list|enter|leave|setentrance|setexit|setspawn|reload>
+permissions:
+  rpg.dungeons.admin.create:
+    description: Create a dungeon
+    default: op
+  rpg.dungeons.admin.delete:
+    description: Delete a dungeon
+    default: op
+  rpg.dungeons.admin.set:
+    description: Set entrance/exit/spawn of a dungeon
+    default: op
+  rpg.dungeons.admin.list:
+    description: List dungeons
+    default: true
+  rpg.dungeons.admin.reload:
+    description: Reload dungeon YAMLs
+    default: op
+  rpg.dungeons.use.enter:
+    description: Enter a dungeon
+    default: true
+  rpg.dungeons.use.leave:
+    description: Leave a dungeon
+    default: true

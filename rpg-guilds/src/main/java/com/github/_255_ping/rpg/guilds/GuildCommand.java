@@ -31,6 +31,14 @@ public final class GuildCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
+            if (!sender.hasPermission("rpg.guilds.admin.reload")) {
+                sender.sendMessage(msg("&cNo permission.")); return true;
+            }
+            plugin.reloadConfig();
+            sender.sendMessage(msg("&arpg-guilds reloaded."));
+            return true;
+        }
         if (!(sender instanceof Player p)) {
             sender.sendMessage(msg("&cPlayers only.")); return true;
         }

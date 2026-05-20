@@ -52,6 +52,14 @@ public final class RpgChatPlugin extends JavaPlugin implements CommandExecutor {
     }
 
     private boolean handleChatChannel(CommandSender sender, String[] args) {
+        if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
+            if (!sender.hasPermission("rpg.chat.admin.reload")) {
+                sender.sendMessage(LEGACY.deserialize("&cNo permission.")); return true;
+            }
+            reloadConfig();
+            sender.sendMessage(LEGACY.deserialize("&arpg-chat reloaded."));
+            return true;
+        }
         if (!(sender instanceof Player p)) {
             sender.sendMessage(LEGACY.deserialize("&cPlayers only.")); return true;
         }

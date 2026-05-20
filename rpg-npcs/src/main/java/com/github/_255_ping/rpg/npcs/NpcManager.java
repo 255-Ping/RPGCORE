@@ -1,0 +1,243 @@
+package com.github._255_ping.rpg.npcs;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.TextDisplay;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.java.JavaPlugin;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+/** Loads, saves, and spawns NPCs. NPC ↔ entity correlation lives in PDC on the entity. */
+public final class NpcManager {
+
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
+
+    private final JavaPlugin plugin;
+    private final File npcsDir;
+    private final NamespacedKey npcIdKey;
+    private final Map<String, NpcDef> byId = new ConcurrentHashMap<>();
+    private final Map<UUID, String> entityToId = new ConcurrentHashMap<>();
+
+    public NpcManager(JavaPlugin plugin) {
+        this.plugin = plugin;
+        this.npcsDir = new File(plugin.getDataFolder(), "npcs");
+        this.npcIdKey = new NamespacedKey(plugin, "rpg_npc_id");
+    }
+
+    public NamespacedKey idKey() { return npcIdKey; }
+
+    public Collection<NpcDef> all() { return byId.values(); }
+
+    public Optional<NpcDef> get(String id) { return Optional.ofNullable(byId.get(id.toLowerCase(Locale.ROOT))); }
+
+    public Optional<NpcDef> fromEntity(Entity ent) {
+        String id = ent.getPersistentDataContainer().get(npcIdKey, PersistentDataType.STRING);
+        if (id == null) return Optional.empty();
+        return get(id);
+    }
+
+    public void loadAll() {
+        despawnAll();
+        byId.clear();
+        if (!npcsDir.isDirectory()) {
+            if (!npcsDir.mkdirs()) {
+                plugin.getLogger().warning("Could not create npcs/ directory.");
+                return;
+            }
+        }
+        File[] files = npcsDir.listFiles((d, n) -> n.endsWith(".yml"));
+        if (files == null) return;
+        for (File f : files) {
+            try {
+                YamlConfiguration y = YamlConfiguration.loadConfiguration(f);
+                for (String id : y.getKeys(false)) {
+                    ConfigurationSection s = y.getConfigurationSection(id);
+                    if (s == null) continue;
+                    try {
+                        byId.put(id.toLowerCase(Locale.ROOT), parse(id.toLowerCase(Locale.ROOT), s));
+                    } catch (Exception ex) {
+                        plugin.getLogger().warning("Skipping npc '" + id + "' in "
+                                + f.getName() + ": " + ex.getMessage());
+                    }
+                }
+            } catch (Exception ex) {
+                plugin.getLogger().warning("Failed to parse npcs file " + f.getName() + ": " + ex.getMessage());
+            }
+        }
+        spawnAll();
+    }
+
+    public void saveAll() {
+        if (!npcsDir.isDirectory()) npcsDir.mkdirs();
+        YamlConfiguration out = new YamlConfiguration();
+        for (NpcDef def : byId.values()) {
+            out.createSection(def.id(), def.toMap());
+        }
+        try {
+            out.save(new File(npcsDir, "all.yml"));
+        } catch (IOException ex) {
+            plugin.getLogger().warning("Failed to save npcs: " + ex.getMessage());
+        }
+    }
+
+    public NpcDef create(String id, Location loc, String displayName) {
+        String key = id.toLowerCase(Locale.ROOT);
+        NpcDef def = new NpcDef(key, displayName, loc.getWorld().getName(),
+                loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch(),
+                NpcDef.BehaviorType.DIALOGUE, new ArrayList<>(),
+                new ArrayList<>(List.of("&7Hello!")), null);
+        byId.put(key, def);
+        spawn(def);
+        autosave();
+        return def;
+    }
+
+    public boolean delete(String id) {
+        NpcDef def = byId.remove(id.toLowerCase(Locale.ROOT));
+        if (def == null) return false;
+        despawn(def);
+        autosave();
+        return true;
+    }
+
+    public void move(NpcDef def, Location loc) {
+        despawn(def);
+        def.moveTo(loc);
+        spawn(def);
+        autosave();
+    }
+
+    public void rebuild(NpcDef def) {
+        despawn(def);
+        spawn(def);
+        autosave();
+    }
+
+    private void autosave() {
+        if (plugin.getConfig().getBoolean("autosave", true)) saveAll();
+    }
+
+    public void despawnAll() {
+        for (UUID uuid : new ArrayList<>(entityToId.keySet())) {
+            Entity ent = Bukkit.getEntity(uuid);
+            if (ent != null) ent.remove();
+        }
+        entityToId.clear();
+    }
+
+    public void despawn(NpcDef def) {
+        // Find and remove all entities tagged with this NPC id, regardless of cache state.
+        Location loc = def.location();
+        if (loc == null || loc.getWorld() == null) return;
+        for (Entity ent : loc.getWorld().getEntities()) {
+            String id = ent.getPersistentDataContainer().get(npcIdKey, PersistentDataType.STRING);
+            if (def.id().equals(id)) {
+                entityToId.remove(ent.getUniqueId());
+                ent.remove();
+            }
+        }
+    }
+
+    public void spawnAll() {
+        for (NpcDef def : byId.values()) spawn(def);
+    }
+
+    public void spawn(NpcDef def) {
+        Location loc = def.location();
+        if (loc == null || loc.getWorld() == null) {
+            plugin.getLogger().warning("NPC '" + def.id() + "' world not loaded; skip spawn.");
+            return;
+        }
+        String entType = plugin.getConfig().getString("display.body-entity", "VILLAGER");
+        EntityType type;
+        try {
+            type = EntityType.valueOf(entType.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            type = EntityType.VILLAGER;
+        }
+        Entity ent = loc.getWorld().spawnEntity(loc, type);
+        ent.setPersistent(true);
+        ent.getPersistentDataContainer().set(npcIdKey, PersistentDataType.STRING, def.id());
+        if (ent instanceof LivingEntity le) {
+            le.setAI(false);
+            le.setCollidable(false);
+            le.setInvulnerable(true);
+            le.setSilent(true);
+            le.setRemoveWhenFarAway(false);
+            le.customName(LEGACY.deserialize(def.displayName()));
+            le.setCustomNameVisible(true);
+        }
+        entityToId.put(ent.getUniqueId(), def.id());
+
+        if (plugin.getConfig().getBoolean("display.use-text-display-for-name", true)) {
+            Location above = loc.clone().add(0, 2.0, 0);
+            TextDisplay text = (TextDisplay) loc.getWorld().spawnEntity(above, EntityType.TEXT_DISPLAY);
+            text.text(Component.text("").append(LEGACY.deserialize(def.displayName())));
+            text.setBillboard(org.bukkit.entity.Display.Billboard.CENTER);
+            text.getPersistentDataContainer().set(npcIdKey, PersistentDataType.STRING, def.id());
+            text.setPersistent(true);
+            entityToId.put(text.getUniqueId(), def.id());
+        }
+    }
+
+    private NpcDef parse(String id, ConfigurationSection s) {
+        String name = s.getString("DisplayName", id);
+        String world = s.getString("World", "world");
+        double x = s.getDouble("X");
+        double y = s.getDouble("Y");
+        double z = s.getDouble("Z");
+        float yaw = (float) s.getDouble("Yaw", 0);
+        float pitch = (float) s.getDouble("Pitch", 0);
+        ConfigurationSection beh = s.getConfigurationSection("Behavior");
+        NpcDef.BehaviorType type = NpcDef.BehaviorType.DIALOGUE;
+        List<NpcDef.ShopEntry> shop = new ArrayList<>();
+        List<String> lines = new ArrayList<>();
+        String quest = null;
+        if (beh != null) {
+            type = parseBehavior(beh.getString("Type", "dialogue"));
+            for (Object o : beh.getList("Items", List.of())) {
+                if (o instanceof Map<?, ?> m) {
+                    Object buy = m.get("Buy");
+                    Object sell = m.get("Sell");
+                    shop.add(new NpcDef.ShopEntry(
+                            String.valueOf(m.get("Item")),
+                            buy instanceof Number n ? n.doubleValue() : 0.0,
+                            sell instanceof Number n ? n.doubleValue() : 0.0));
+                }
+            }
+            lines.addAll(beh.getStringList("Lines"));
+            quest = beh.getString("Quest");
+        }
+        return new NpcDef(id, name, world, x, y, z, yaw, pitch, type, shop, lines, quest);
+    }
+
+    private static NpcDef.BehaviorType parseBehavior(String s) {
+        try {
+            return NpcDef.BehaviorType.valueOf(s.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return NpcDef.BehaviorType.DIALOGUE;
+        }
+    }
+
+    @SuppressWarnings("unused")
+    Map<UUID, String> entityIndex() { return new HashMap<>(entityToId); }
+}

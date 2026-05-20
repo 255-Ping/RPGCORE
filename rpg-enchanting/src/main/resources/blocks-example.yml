@@ -1,0 +1,22 @@
+# Copy these entries into rpg-core's blocks/ folder to enable the enchanting + anvil stations.
+# (rpg-core owns the BlockRegistry, so admin-defined custom blocks live in its data folder.)
+
+rpg_enchanting_table:
+  MinecraftBlock: ENCHANTING_TABLE
+  Toughness: 9999          # not breakable by normal mining
+  RequiredPower: 9999
+  RequiredToolType: any
+  RespawnTicks: 0
+  Interactable: true
+  StationType: enchanting
+  Drops: []
+
+rpg_custom_anvil:
+  MinecraftBlock: ANVIL
+  Toughness: 9999
+  RequiredPower: 9999
+  RequiredToolType: any
+  RespawnTicks: 0
+  Interactable: true
+  StationType: anvil
+  Drops: []

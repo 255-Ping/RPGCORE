@@ -51,3 +51,6 @@ permissions:
   rpg.chat.use.guild:
     description: Use the guild chat channel
     default: true
+  rpg.chat.admin.reload:
+    description: Reload rpg-chat config
+    default: op

@@ -17,7 +17,7 @@ public final class RpgRegionsPlugin extends JavaPlugin {
         RpgServices.setRegionService(regions);
 
         Objects.requireNonNull(getCommand("region"), "command 'region' missing")
-                .setExecutor(new RegionCommand(regions));
+                .setExecutor(new RegionCommand(regions, this));
         getServer().getPluginManager().registerEvents(new RegionEnforcer(regions), this);
 
         long pollTicks = Math.max(1, getConfig().getLong("move-poll-ticks", 5));

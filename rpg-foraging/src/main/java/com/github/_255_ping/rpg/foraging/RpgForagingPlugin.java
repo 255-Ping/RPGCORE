@@ -11,13 +11,29 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Locale;
 
-public final class RpgForagingPlugin extends JavaPlugin implements Listener {
+public final class RpgForagingPlugin extends JavaPlugin implements Listener, org.bukkit.command.CommandExecutor {
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         getServer().getPluginManager().registerEvents(this, this);
+        java.util.Objects.requireNonNull(getCommand("foraging"), "command 'foraging' missing").setExecutor(this);
         getLogger().info("rpg-foraging v" + getPluginMeta().getVersion() + " enabled.");
+    }
+
+    @Override
+    public boolean onCommand(org.bukkit.command.CommandSender sender, org.bukkit.command.Command command,
+                             String label, String[] args) {
+        if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
+            if (!sender.hasPermission("rpg.foraging.admin.reload")) {
+                sender.sendMessage("§cNo permission."); return true;
+            }
+            reloadConfig();
+            sender.sendMessage("§arpg-foraging reloaded.");
+            return true;
+        }
+        sender.sendMessage("§7Usage: §e/foraging reload");
+        return true;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

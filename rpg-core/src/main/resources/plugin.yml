@@ -6,6 +6,10 @@ load: POSTWORLD
 authors: [Ping]
 description: Core RPG framework — stats, items, abilities, mobs, damage pipeline.
 softdepend: [LuckPerms]
+# Paper resolves these from Maven Central at runtime, so we don't need to shade them.
+libraries:
+  - com.mysql:mysql-connector-j:9.0.0
+  - com.zaxxer:HikariCP:6.0.0
 commands:
   rpg:
     description: RPG suite admin / debug command
@@ -42,6 +46,9 @@ permissions:
     default: op
   rpg.core.block.convert:
     description: Bulk-convert vanilla blocks to a custom block in a radius
+    default: op
+  rpg.core.wand:
+    description: Use the selection wand subcommand
     default: op
   rpg.core.stats:
     description: Show your effective stats

@@ -1,0 +1,34 @@
+# npcs/<file>.yml — each top-level key is one NPC.
+#
+#   <npc_id>:
+#     DisplayName: "&aShopkeeper"
+#     World: world
+#     X: 100.5
+#     Y: 65.0
+#     Z: 100.5
+#     Yaw: 0.0
+#     Pitch: 0.0
+#     Behavior:
+#       Type: shop                  # shop | dialogue | quest
+#       # for shop:
+#       Items:
+#         - { Item: strength_potion, Buy: 500, Sell: 250 }
+#       # for dialogue:
+#       Lines:
+#         - "&7Welcome, traveler."
+#       # for quest:
+#       Quest: forest_intro
+
+example_shop:
+  DisplayName: "&aShopkeeper"
+  World: world
+  X: 0.5
+  Y: 65.0
+  Z: 0.5
+  Yaw: 0.0
+  Pitch: 0.0
+  Behavior:
+    Type: dialogue
+    Lines:
+      - "&7Welcome, traveler."
+      - "&7Come back when you have more coin."

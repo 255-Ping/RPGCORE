@@ -115,6 +115,12 @@ public final class EconomyCommands implements CommandExecutor {
     }
 
     private void handleEcoAdmin(CommandSender sender, String[] args) {
+        if (args.length >= 1 && args[0].equalsIgnoreCase("reload")) {
+            if (!sender.hasPermission("rpg.economy.admin.reload")) { sender.sendMessage(msg("command.no-permission")); return; }
+            plugin.reloadConfig();
+            sender.sendMessage(msg("eco.reloaded", Map.of()));
+            return;
+        }
         if (args.length < 2) return;
         String sub = args[0].toLowerCase();
         OfflinePlayer target = resolveOfflinePlayer(args[1]);

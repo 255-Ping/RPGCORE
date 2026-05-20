@@ -1,0 +1,35 @@
+name: rpg-npcs
+version: '${version}'
+main: com.github._255_ping.rpg.npcs.RpgNpcsPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Display-entity-based NPCs with shop, dialogue, and quest hand-off behaviour.
+depend: [rpg-core]
+softdepend: [rpg-economy, rpg-quests]
+commands:
+  npc:
+    description: NPC admin commands
+    usage: /npc <create|delete|move|list|reload|setbehavior>
+permissions:
+  rpg.npcs.admin.create:
+    description: Create an NPC
+    default: op
+  rpg.npcs.admin.delete:
+    description: Delete an NPC
+    default: op
+  rpg.npcs.admin.move:
+    description: Move an NPC
+    default: op
+  rpg.npcs.admin.list:
+    description: List NPCs
+    default: op
+  rpg.npcs.admin.reload:
+    description: Reload NPC YAMLs
+    default: op
+  rpg.npcs.admin.setbehavior:
+    description: Set an NPC's behavior
+    default: op
+  rpg.npcs.use:
+    description: Click NPCs to interact
+    default: true

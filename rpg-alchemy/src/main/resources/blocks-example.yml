@@ -1,0 +1,11 @@
+# Copy into rpg-core's blocks/ folder to enable the brewing station.
+
+rpg_brewing_stand:
+  MinecraftBlock: BREWING_STAND
+  Toughness: 9999
+  RequiredPower: 9999
+  RequiredToolType: any
+  RespawnTicks: 0
+  Interactable: true
+  StationType: brewing
+  Drops: []

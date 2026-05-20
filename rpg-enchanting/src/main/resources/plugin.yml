@@ -1,0 +1,29 @@
+name: rpg-enchanting
+version: '${version}'
+main: com.github._255_ping.rpg.enchanting.RpgEnchantingPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Enchanting skill + custom enchanting/anvil blocks. Custom enchants, reforges, item upgrades.
+depend: [rpg-core]
+commands:
+  enchanting:
+    description: Enchanting admin commands
+    aliases: [ench]
+    usage: /enchanting <reload|list|give>
+permissions:
+  rpg.enchanting.admin.reload:
+    description: Reload enchant/reforge/upgrade YAMLs
+    default: op
+  rpg.enchanting.admin.list:
+    description: List loaded enchants/reforges/upgrades
+    default: op
+  rpg.enchanting.admin.give:
+    description: Give an enchant/reforge/upgrade material item
+    default: op
+  rpg.enchanting.use.enchant:
+    description: Use the enchanting table block
+    default: true
+  rpg.enchanting.use.anvil:
+    description: Use the anvil block
+    default: true

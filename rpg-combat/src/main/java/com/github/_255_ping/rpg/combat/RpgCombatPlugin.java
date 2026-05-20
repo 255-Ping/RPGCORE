@@ -18,6 +18,7 @@ public final class RpgCombatPlugin extends JavaPlugin implements Listener {
     public void onEnable() {
         saveDefaultConfig();
         getServer().getPluginManager().registerEvents(this, this);
+        java.util.Objects.requireNonNull(getCommand("combat"), "command 'combat' missing").setExecutor(this);
         getLogger().info("rpg-combat v" + getPluginMeta().getVersion() + " enabled.");
     }
 
@@ -53,7 +54,15 @@ public final class RpgCombatPlugin extends JavaPlugin implements Listener {
     @Override
     public boolean onCommand(org.bukkit.command.CommandSender sender, org.bukkit.command.Command command,
                              String label, String[] args) {
-        // No commands yet; future: /combat reload, /combat give <item>
-        return false;
+        if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
+            if (!sender.hasPermission("rpg.combat.admin.reload")) {
+                sender.sendMessage("§cNo permission."); return true;
+            }
+            reloadConfig();
+            sender.sendMessage("§arpg-combat reloaded.");
+            return true;
+        }
+        sender.sendMessage("§7Usage: §e/combat reload");
+        return true;
     }
 }

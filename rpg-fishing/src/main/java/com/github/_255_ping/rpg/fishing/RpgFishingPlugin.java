@@ -9,13 +9,29 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public final class RpgFishingPlugin extends JavaPlugin implements Listener {
+public final class RpgFishingPlugin extends JavaPlugin implements Listener, org.bukkit.command.CommandExecutor {
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         getServer().getPluginManager().registerEvents(this, this);
+        java.util.Objects.requireNonNull(getCommand("fishing"), "command 'fishing' missing").setExecutor(this);
         getLogger().info("rpg-fishing v" + getPluginMeta().getVersion() + " enabled.");
+    }
+
+    @Override
+    public boolean onCommand(org.bukkit.command.CommandSender sender, org.bukkit.command.Command command,
+                             String label, String[] args) {
+        if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
+            if (!sender.hasPermission("rpg.fishing.admin.reload")) {
+                sender.sendMessage("§cNo permission."); return true;
+            }
+            reloadConfig();
+            sender.sendMessage("§arpg-fishing reloaded.");
+            return true;
+        }
+        sender.sendMessage("§7Usage: §e/fishing reload");
+        return true;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

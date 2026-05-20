@@ -1,6 +1,6 @@
 # NPCs (`rpg-npcs`)
 
-> **Status:** Planned
+> **Status:** v0.0.0-16 — shipped. Villager-based clickable NPCs with three behaviors (dialogue / shop / quest hand-off). `/npc create|delete|move|list|setbehavior|reload`. Quest hand-off bridges to rpg-quests via Bukkit ServicesManager.
 
 Custom shop / dialogue / quest NPCs. Replaces vanilla villager trading.
 

@@ -6,3 +6,12 @@ load: POSTWORLD
 authors: [Ping]
 description: Damage indicators (DisplayEntity-based). Holograms editor coming later.
 depend: [rpg-core]
+commands:
+  holograms:
+    description: Holograms admin commands
+    aliases: [holo]
+    usage: /holograms reload
+permissions:
+  rpg.holograms.admin.reload:
+    description: Reload rpg-holograms config
+    default: op

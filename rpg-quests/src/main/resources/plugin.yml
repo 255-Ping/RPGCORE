@@ -3,6 +3,31 @@ version: '${version}'
 main: com.github._255_ping.rpg.quests.RpgQuestsPlugin
 api-version: '26.1.2'
 load: POSTWORLD
-depend: [rpg-core]
 authors: [Ping]
-description: Quest system addon for the RPG suite.
+description: Quest system with kill/mine/collect/talk objectives, persistent per-player state, NPC hand-off.
+depend: [rpg-core]
+softdepend: [rpg-npcs, rpg-economy]
+commands:
+  quest:
+    description: Quest commands
+    aliases: [q, quests]
+    usage: /quest <list|accept|abandon|progress|complete|reload>
+permissions:
+  rpg.quests.use.list:
+    description: List available + active quests
+    default: true
+  rpg.quests.use.accept:
+    description: Accept a quest
+    default: true
+  rpg.quests.use.abandon:
+    description: Abandon an active quest
+    default: true
+  rpg.quests.use.progress:
+    description: Show progress on active quests
+    default: true
+  rpg.quests.admin.complete:
+    description: Force-complete a quest for a player
+    default: op
+  rpg.quests.admin.reload:
+    description: Reload quest YAMLs
+    default: op

@@ -1,0 +1,36 @@
+# dungeons/<file>.yml — each top-level key is one dungeon.
+#
+#   <dungeon_id>:
+#     DisplayName: "&cThe Crypt"
+#     Template:
+#       World: dungeons        # the world where the template lives
+#       Min: { X: 0, Y: 60, Z: 0 }
+#       Max: { X: 32, Y: 80, Z: 32 }
+#     Spawn:                   # where players are placed inside the instance, relative to Min
+#       X: 16
+#       Y: 61
+#       Z: 16
+#     Entrance:                # the trigger block in the overworld; entering the dungeon teleports
+#       World: world
+#       X: 0
+#       Y: 64
+#       Z: 0
+#     Exit:                    # where players go when they leave or die
+#       World: world
+#       X: 0
+#       Y: 64
+#       Z: 5
+#     MaxPlayers: 4
+#     RequiredLevel: 0
+
+example_crypt:
+  DisplayName: "&cThe Crypt"
+  Template:
+    World: world
+    Min: { X: 0, Y: 60, Z: 0 }
+    Max: { X: 16, Y: 75, Z: 16 }
+  Spawn: { X: 8, Y: 61, Z: 8 }
+  Entrance: { World: world, X: 100, Y: 64, Z: 100 }
+  Exit: { World: world, X: 95, Y: 64, Z: 100 }
+  MaxPlayers: 4
+  RequiredLevel: 0

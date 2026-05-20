@@ -1,0 +1,24 @@
+# potions/<file>.yml — each top-level key is one drinkable potion item.
+# Drinking applies the listed status effects to the drinker. Status effect ids must
+# be defined in rpg-core's status-effects/ folder.
+#
+#   <potion_id>:
+#     DisplayName: "&6Potion of Strength"
+#     CustomModelData: 1001
+#     Effects:
+#       - { Id: strength_buff, Level: 1, DurationSeconds: 60 }
+#       - { Id: speed_buff,    Level: 2, DurationSeconds: 30 }
+#     ConsumeOnDrink: true
+strength_potion:
+  DisplayName: "&6Potion of Strength"
+  CustomModelData: 0
+  Effects:
+    - { Id: strength_buff, Level: 1, DurationSeconds: 60 }
+  ConsumeOnDrink: true
+
+healing_potion:
+  DisplayName: "&dPotion of Healing"
+  CustomModelData: 0
+  Effects:
+    - { Id: heal_over_time, Level: 1, DurationSeconds: 10 }
+  ConsumeOnDrink: true

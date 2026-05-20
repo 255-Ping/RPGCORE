@@ -1,0 +1,25 @@
+# recipes/<file>.yml — each top-level key is one brewing recipe.
+# Inputs are rpg-core item ids (or vanilla material ids).
+#
+#   <recipe_id>:
+#     Inputs:
+#       - { Item: redstone,   Amount: 1 }
+#       - { Item: glass_bottle, Amount: 1 }
+#     Output: { Item: strength_potion, Amount: 1 }
+#     BrewTicks: 200
+#     RequiredLevel: 1
+basic_strength:
+  Inputs:
+    - { Item: redstone, Amount: 1 }
+    - { Item: glass_bottle, Amount: 1 }
+  Output: { Item: strength_potion, Amount: 1 }
+  BrewTicks: 200
+  RequiredLevel: 1
+
+basic_healing:
+  Inputs:
+    - { Item: glistering_melon_slice, Amount: 1 }
+    - { Item: glass_bottle, Amount: 1 }
+  Output: { Item: healing_potion, Amount: 1 }
+  BrewTicks: 200
+  RequiredLevel: 1

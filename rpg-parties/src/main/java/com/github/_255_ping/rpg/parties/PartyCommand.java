@@ -16,13 +16,28 @@ public final class PartyCommand implements CommandExecutor {
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
     private final PartyManager manager;
+    private final RpgPartiesPlugin plugin;
 
     public PartyCommand(PartyManager manager) {
+        this(manager, null);
+    }
+
+    public PartyCommand(PartyManager manager, RpgPartiesPlugin plugin) {
         this.manager = manager;
+        this.plugin = plugin;
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
+            if (!sender.hasPermission("rpg.parties.admin.reload")) {
+                sender.sendMessage(msg("&cNo permission."));
+                return true;
+            }
+            if (plugin != null) plugin.reloadConfig();
+            sender.sendMessage(msg("&arpg-parties reloaded."));
+            return true;
+        }
         if (!(sender instanceof Player p)) {
             sender.sendMessage(msg("&cPlayers only.")); return true;
         }

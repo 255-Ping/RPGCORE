@@ -1,8 +1,6 @@
 # Quests (`rpg-quests`)
 
-> **Status:** Planned (full design deferred)
-
-Quest system. Skeleton plugin exists; full design is deferred until earlier systems are implemented. Documented here as a placeholder so the rest of the docs can link to it.
+> **Status:** v0.0.1-16 — shipped. Four objective types (kill_mob, mine_block, collect_item, talk_npc), per-player state via core DataStore, rewards (skill XP, currency, items), `/quest list|accept|abandon|progress|complete|reload`. NPC turn-in via rpg-npcs bridge.
 
 ## Intended shape
 

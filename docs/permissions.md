@@ -1,6 +1,6 @@
 # Master permission reference
 
-> **Status:** Planned
+> **Status:** Stable (synced with shipped plugin.ymls as of suite-16)
 
 Permission nodes follow `rpg.<module>.<command>[.<sub>]`. Self-use defaults to true; admin defaults to op; moderator-tier nodes are noted explicitly.
 
@@ -60,6 +60,7 @@ These names are illustrative — actual node names come from your `core/config.y
 | `rpg.economy.admin.add` | op | Add balance |
 | `rpg.economy.admin.remove` | op | Remove balance |
 | `rpg.economy.admin.reset` | op | Reset balance |
+| `rpg.economy.admin.reload` | op | Reload rpg-economy config |
 
 ## Chat
 
@@ -99,6 +100,7 @@ These names are illustrative — actual node names come from your `core/config.y
 | `rpg.parties.leave` | true | Leave |
 | `rpg.parties.disband` | true | Disband (owner only at runtime) |
 | `rpg.parties.list` | true | List members |
+| `rpg.parties.admin.reload` | op | Reload rpg-parties config |
 
 ## Guilds
 
@@ -116,6 +118,7 @@ These names are illustrative — actual node names come from your `core/config.y
 | `rpg.guilds.bank` | true | Open bank (rank-gated for deposit/withdraw at runtime) |
 | `rpg.guilds.bank.upgrade` | true | Upgrade bank tier (rank-gated) |
 | `rpg.guilds.ranks` | true | Rename rank slots (owner only) |
+| `rpg.guilds.admin.reload` | op | Reload rpg-guilds config |
 
 ## Regions
 
@@ -127,6 +130,7 @@ These names are illustrative — actual node names come from your `core/config.y
 | `rpg.regions.admin.list` | op | List regions |
 | `rpg.regions.admin.flag` | op | Set region flag |
 | `rpg.regions.admin.info` | op | Region info |
+| `rpg.regions.admin.reload` | op | Reload rpg-regions config |
 
 ## Dungeons
 
@@ -158,6 +162,7 @@ These names are illustrative — actual node names come from your `core/config.y
 |---|---|---|
 | `rpg.accessories.open` | true | Open bag |
 | `rpg.accessories.upgrade` | true | Upgrade tier |
+| `rpg.accessories.admin.reload` | op | Reload rpg-accessories config |
 
 ## Enchanting
 
@@ -187,6 +192,7 @@ These names are illustrative — actual node names come from your `core/config.y
 | `rpg.holograms.admin.delete` | op | Delete |
 | `rpg.holograms.admin.list` | op | List |
 | `rpg.holograms.admin.tp` | op | TP |
+| `rpg.holograms.admin.reload` | op | Reload rpg-holograms config |
 
 ## Quests
 

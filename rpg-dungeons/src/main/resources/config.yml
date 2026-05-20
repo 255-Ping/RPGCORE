@@ -1,0 +1,27 @@
+# rpg-dungeons config.
+
+# Auto-bootstrap a void world for instances on first enable.
+instance-world:
+  name: rpg_dungeon_instances
+  auto-create: true
+
+# Instance placement strategy. Each instance takes a (width, depth) block reservation; we lay
+# them out on a grid in the instance world with this spacing.
+instance:
+  grid-spacing-blocks: 256
+  y-base: 64
+  # Block-copy throughput when starting a run. Lower to reduce per-tick lag on huge templates.
+  paste-blocks-per-tick: 4096
+
+# Default behavior when entering with a party (requires rpg-parties).
+party-enter:
+  enabled: true
+  whole-party-required: false   # if true, players not in a party get rejected
+
+# Death handling:
+#   solo:        kick player + normal death (drops + respawn)
+#   party-some:  spectator-leashed to a remaining party member
+#   party-all:   kick everyone + normal death
+death:
+  solo: true
+  party-spectator: true

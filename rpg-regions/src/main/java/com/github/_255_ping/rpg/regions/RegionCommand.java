@@ -19,9 +19,16 @@ public final class RegionCommand implements CommandExecutor {
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
     private final CoreRegionService regions;
+    private final RpgRegionsPlugin plugin;
 
     public RegionCommand(CoreRegionService regions) {
         this.regions = regions;
+        this.plugin = null;
+    }
+
+    public RegionCommand(CoreRegionService regions, RpgRegionsPlugin plugin) {
+        this.regions = regions;
+        this.plugin = plugin;
     }
 
     @Override
@@ -36,9 +43,24 @@ public final class RegionCommand implements CommandExecutor {
             case "list" -> handleList(sender);
             case "info" -> handleInfo(sender);
             case "flag" -> handleFlag(sender, args);
+            case "reload" -> handleReload(sender);
             default -> sender.sendMessage(msg("&cUnknown subcommand: " + args[0]));
         }
         return true;
+    }
+
+    private void handleReload(CommandSender sender) {
+        if (!sender.hasPermission("rpg.regions.admin.reload")) {
+            sender.sendMessage(msg("&cNo permission."));
+            return;
+        }
+        if (plugin == null) {
+            sender.sendMessage(msg("&cReload not wired."));
+            return;
+        }
+        plugin.reloadConfig();
+        regions.loadAll();
+        sender.sendMessage(msg("&arpg-regions reloaded."));
     }
 
     private void handleDefine(CommandSender sender, String[] args) {

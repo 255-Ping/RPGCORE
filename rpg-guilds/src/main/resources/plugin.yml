@@ -46,3 +46,6 @@ permissions:
   rpg.guilds.bank:
     description: Deposit / withdraw from the guild bank
     default: true
+  rpg.guilds.admin.reload:
+    description: Reload rpg-guilds config
+    default: op

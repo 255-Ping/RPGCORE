@@ -6,3 +6,11 @@ load: POSTWORLD
 authors: [Ping]
 description: Fishing skill — XP from successful catches.
 depend: [rpg-core]
+commands:
+  fishing:
+    description: Fishing admin commands
+    usage: /fishing reload
+permissions:
+  rpg.fishing.admin.reload:
+    description: Reload rpg-fishing config
+    default: op

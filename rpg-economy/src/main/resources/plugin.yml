@@ -45,3 +45,6 @@ permissions:
   rpg.economy.admin.reset:
     description: Reset a player's balance to the starting amount
     default: op
+  rpg.economy.admin.reload:
+    description: Reload rpg-economy config
+    default: op

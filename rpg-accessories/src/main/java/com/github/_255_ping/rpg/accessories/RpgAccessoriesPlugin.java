@@ -39,6 +39,14 @@ public final class RpgAccessoriesPlugin extends JavaPlugin implements Listener, 
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
+            if (!sender.hasPermission("rpg.accessories.admin.reload")) {
+                sender.sendMessage("§cNo permission."); return true;
+            }
+            reloadConfig();
+            sender.sendMessage("§arpg-accessories reloaded.");
+            return true;
+        }
         if (!(sender instanceof Player p)) {
             sender.sendMessage("§cPlayers only."); return true;
         }

@@ -1,0 +1,33 @@
+# enchants/<file>.yml — each top-level key is one custom enchant.
+#
+#   <enchant_id>:
+#     DisplayName: "&7Sharpness"
+#     MaxLevel: 5
+#     AppliesTo: [SWORD, BOW]          # ItemType ids; or [any]
+#     Stats:                           # per-level stats added when applied
+#       STRENGTH: 5                    # value at level 1
+#     ScalePerLevel: 1.0               # linear multiplier per level (1 -> v, 2 -> 2v, etc.)
+#     XpCost: 100                      # enchanting skill XP cost (separate from XP awarded)
+#     CurrencyCost: 500                # rpg-economy cost (0 = free)
+#     RequiredLevel: 1                 # min Enchanting skill level
+sharpness:
+  DisplayName: "&7Sharpness"
+  MaxLevel: 5
+  AppliesTo: [sword]
+  Stats:
+    strength: 5
+  ScalePerLevel: 1.0
+  XpCost: 0
+  CurrencyCost: 250
+  RequiredLevel: 1
+
+protection:
+  DisplayName: "&aProtection"
+  MaxLevel: 5
+  AppliesTo: [armor]
+  Stats:
+    defense: 10
+  ScalePerLevel: 1.0
+  XpCost: 0
+  CurrencyCost: 250
+  RequiredLevel: 1

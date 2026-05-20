@@ -2,6 +2,7 @@ package com.github._255_ping.rpg.core.skills;
 
 import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.formula.ExpressionEvaluator;
+import com.github._255_ping.rpg.api.skills.SkillLevelUpEvent;
 import com.github._255_ping.rpg.api.skills.SkillXpAwardEvent;
 import com.github._255_ping.rpg.api.skills.SkillsService;
 import org.bukkit.Bukkit;
@@ -85,9 +86,9 @@ public final class CoreSkillsService implements SkillsService {
         int afterLevel = levelForTotal(skillId, after);
 
         if (afterLevel > beforeLevel) {
-            // TODO: fire a SkillLevelUpEvent + grant milestone rewards once the milestones
-            // system lands. For now we just log it through the message formatter.
-            plugin.getLogger().info(player.getName() + " " + skillId + " " + beforeLevel + " -> " + afterLevel);
+            Bukkit.getPluginManager().callEvent(
+                    new SkillLevelUpEvent(player, skillId, beforeLevel, afterLevel));
+            applyMilestones(player, skillId, beforeLevel, afterLevel);
         }
 
         pinned.put(player.getUniqueId(), skillId);
@@ -173,5 +174,50 @@ public final class CoreSkillsService implements SkillsService {
         String defaultCurve = plugin.getConfig().getString("skills.default-curve", "100 * level ^ 1.5");
         if (sec == null) return defaultCurve;
         return sec.getString("curve", defaultCurve);
+    }
+
+    /**
+     * Applies per-level passive stat gains and any milestone-specific rewards configured in
+     * {@code skills.<id>.per-level-gains} (always-on) and {@code skills.<id>.milestones} (sparse
+     * by level). Both layer on top of the player's base stats via the rpg-api {@code StatHolder}
+     * additions, recalculated immediately so the player feels the change.
+     */
+    private void applyMilestones(Player player, String skillId, int beforeLevel, int afterLevel) {
+        ConfigurationSection skill = plugin.getConfig().getConfigurationSection("skills." + skillId);
+        if (skill == null) return;
+        ConfigurationSection perLevel = skill.getConfigurationSection("per-level-gains");
+        ConfigurationSection milestones = skill.getConfigurationSection("milestones");
+        if (perLevel == null && milestones == null) return;
+
+        com.github._255_ping.rpg.api.player.RpgPlayer rp = RpgServices.player(player);
+        rp.recalculateStats(); // forces base recompute; we read post-recalc, then add deltas.
+
+        for (int lvl = beforeLevel + 1; lvl <= afterLevel; lvl++) {
+            if (perLevel != null) {
+                addStats(player, perLevel);
+            }
+            if (milestones != null) {
+                ConfigurationSection ms = milestones.getConfigurationSection(String.valueOf(lvl));
+                if (ms != null) addStats(player, ms);
+            }
+            // Announce only the latest milestone the player crossed (avoids spam on multi-level).
+            if (lvl == afterLevel) {
+                player.sendMessage(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+                        .legacyAmpersand().deserialize("&6&l" + skillId.toUpperCase() + " &r&7level &e" + lvl + "&7 reached!"));
+            }
+        }
+    }
+
+    private void addStats(Player player, ConfigurationSection statsSec) {
+        com.github._255_ping.rpg.api.player.RpgPlayer rp = RpgServices.player(player);
+        for (String statId : statsSec.getKeys(false)) {
+            double value = statsSec.getDouble(statId, 0);
+            if (value == 0) continue;
+            com.github._255_ping.rpg.api.stats.Stat stat = RpgServices.stats().get(statId).orElse(null);
+            if (stat == null) continue;
+            try {
+                rp.add(stat, value);
+            } catch (UnsupportedOperationException ignored) {}
+        }
     }
 }

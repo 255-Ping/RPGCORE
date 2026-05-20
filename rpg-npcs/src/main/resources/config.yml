@@ -1,0 +1,10 @@
+# rpg-npcs config.
+
+# How NPCs render in-world.
+display:
+  use-text-display-for-name: true   # floating name tag above the body
+  body-entity: VILLAGER             # vanilla type used as the clickable body. Disabled AI.
+  click-range-blocks: 4.5
+
+# Whether new NPCs auto-save to YAML the moment they're created/moved.
+autosave: true

@@ -15,3 +15,6 @@ permissions:
   rpg.accessories.open:
     description: Open your accessory bag
     default: true
+  rpg.accessories.admin.reload:
+    description: Reload rpg-accessories config
+    default: op

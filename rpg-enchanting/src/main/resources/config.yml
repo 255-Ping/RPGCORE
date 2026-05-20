@@ -1,0 +1,29 @@
+# rpg-enchanting config.
+
+# Per-feature toggles. Set false to fully disable that sub-feature.
+features:
+  enchanting: true   # custom enchants applied at the enchanting station block
+  reforges: true     # reforges applied at the anvil block
+  upgrades: true     # tier-upgrades applied at the anvil block
+
+# Station block IDs to listen on. Both must also be defined in rpg-core's blocks/ folder
+# with a matching StationType. The defaults below pair with the example files we ship.
+stations:
+  enchanting-block: rpg_enchanting_table
+  anvil-block: rpg_custom_anvil
+
+# Skill XP awarded on successful operation. Set 0 to disable.
+xp:
+  per-enchant: 25
+  per-reforge: 15
+  per-upgrade: 40
+
+# Whether enchants/reforges/upgrades require currency (rpg-economy) in addition to materials.
+# Each YAML entry can specify its own cost; this is the global on/off switch.
+charge-currency: true
+
+# Vanilla suppression mirror. Set false here to allow the vanilla mechanic (rpg-core's
+# vanilla-suppression block holds the canonical flags; these are convenience overrides).
+suppress:
+  enchanting-table: true
+  anvil: true

@@ -16,6 +16,7 @@ eco:
   added: "&aAdded &e{amount} &ato &e{player}&a's balance."
   removed: "&aRemoved &e{amount} &afrom &e{player}&a's balance."
   reset: "&aReset &e{player}&a's balance to &e{amount}&a."
+  reloaded: "&arpg-economy reloaded."
 
 baltop:
   header: "&6&l=== Top {page}/{pages} ==="

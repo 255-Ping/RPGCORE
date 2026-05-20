@@ -6,3 +6,11 @@ load: POSTWORLD
 authors: [Ping]
 description: Foraging skill — XP from breaking log blocks.
 depend: [rpg-core]
+commands:
+  foraging:
+    description: Foraging admin commands
+    usage: /foraging reload
+permissions:
+  rpg.foraging.admin.reload:
+    description: Reload rpg-foraging config
+    default: op

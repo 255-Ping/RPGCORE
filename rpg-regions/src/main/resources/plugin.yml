@@ -27,3 +27,6 @@ permissions:
   rpg.regions.admin.flag:
     description: Set a region flag
     default: op
+  rpg.regions.admin.reload:
+    description: Reload rpg-regions config
+    default: op

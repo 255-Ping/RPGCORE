@@ -7,6 +7,9 @@ plugins {
 dependencies {
     "implementation"(project(":rpg-api"))
     "compileOnly"("net.luckperms:api:5.4")
+    // Paper resolves these at runtime via plugin.yml `libraries`. compileOnly here for sources.
+    "compileOnly"("com.mysql:mysql-connector-j:9.0.0")
+    "compileOnly"("com.zaxxer:HikariCP:6.0.0")
 }
 
 tasks {

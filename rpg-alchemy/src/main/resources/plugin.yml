@@ -1,0 +1,26 @@
+name: rpg-alchemy
+version: '${version}'
+main: com.github._255_ping.rpg.alchemy.RpgAlchemyPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Alchemy skill + custom brewing block + custom potion items that apply status effects on use.
+depend: [rpg-core]
+commands:
+  alchemy:
+    description: Alchemy admin commands
+    aliases: [alch]
+    usage: /alchemy <reload|list>
+permissions:
+  rpg.alchemy.admin.reload:
+    description: Reload potion + recipe YAMLs
+    default: op
+  rpg.alchemy.admin.list:
+    description: List loaded potions
+    default: op
+  rpg.alchemy.use.brew:
+    description: Use the brewing station block
+    default: true
+  rpg.alchemy.use.drink:
+    description: Drink custom potions
+    default: true

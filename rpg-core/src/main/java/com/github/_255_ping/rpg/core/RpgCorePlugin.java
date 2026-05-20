@@ -16,6 +16,7 @@ import com.github._255_ping.rpg.core.command.SkillCommand;
 import com.github._255_ping.rpg.core.command.StatsCommand;
 import com.github._255_ping.rpg.core.cooldown.CoreCooldownService;
 import com.github._255_ping.rpg.core.currency.CoreCurrencyRegistry;
+import com.github._255_ping.rpg.core.death.DeathRulesListener;
 import com.github._255_ping.rpg.core.damage.DamagePipelineListener;
 import com.github._255_ping.rpg.core.formatting.CoreMessageFormatter;
 import com.github._255_ping.rpg.core.formatting.CoreNameFormatter;
@@ -34,7 +35,12 @@ import com.github._255_ping.rpg.core.mobs.MobAbilityEventListener;
 import com.github._255_ping.rpg.core.mobs.MobAbilityTimerTask;
 import com.github._255_ping.rpg.core.mobs.MobLoader;
 import com.github._255_ping.rpg.core.mobs.MobLootListener;
+import com.github._255_ping.rpg.core.persistence.MysqlDataStore;
 import com.github._255_ping.rpg.core.persistence.YamlDataStore;
+import com.github._255_ping.rpg.api.persistence.DataStore;
+import com.github._255_ping.rpg.core.recipes.RecipeLoader;
+import com.github._255_ping.rpg.core.wand.CoreWandService;
+import com.github._255_ping.rpg.core.wand.WandListener;
 import com.github._255_ping.rpg.core.player.CoreManaService;
 import com.github._255_ping.rpg.core.player.CorePlayerLookup;
 import com.github._255_ping.rpg.core.player.EquipmentListener;
@@ -61,7 +67,7 @@ public final class RpgCorePlugin extends JavaPlugin {
 
     private CoreMessageFormatter messageFormatter;
     private CoreNameFormatter nameFormatter;
-    private YamlDataStore dataStore;
+    private DataStore dataStore;
     private CoreSchedulerService scheduler;
     private CoreCooldownService cooldowns;
     private CoreExpressionEvaluator expressions;
@@ -87,6 +93,9 @@ public final class RpgCorePlugin extends JavaPlugin {
     private CoreCurrencyRegistry currencyRegistry;
     private CoreLootTableRegistry lootTableRegistry;
     private SpawnerManager spawnerManager;
+    private RecipeLoader recipeLoader;
+    private CoreWandService wandService;
+    private WandListener wandListener;
 
     public static RpgCorePlugin get() {
         return instance;
@@ -130,7 +139,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         NamespacedKey itemIdKey = new NamespacedKey(this, "item_id");
         NamespacedKey mobIdKey = new NamespacedKey(this, "mob_id");
 
-        dataStore = new YamlDataStore(dataDir);
+        dataStore = openDataStore(dataDir);
         messageFormatter = new CoreMessageFormatter(messagesFile);
         nameFormatter = new CoreNameFormatter();
         scheduler = new CoreSchedulerService();
@@ -208,6 +217,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(damagerTracker, this);
         getServer().getPluginManager().registerEvents(new MobLootListener(damagerTracker), this);
         getServer().getPluginManager().registerEvents(new MobAbilityEventListener(), this);
+        getServer().getPluginManager().registerEvents(new DeathRulesListener(this), this);
 
         long regenInterval = getConfig().getLong("regen.interval-ticks", 20L);
         getServer().getScheduler().runTaskTimer(
@@ -249,6 +259,16 @@ public final class RpgCorePlugin extends JavaPlugin {
         Objects.requireNonNull(getCommand("spawner")).setExecutor(new SpawnerCommand(this, spawnerManager));
         getServer().getScheduler().runTaskTimer(this, spawnerManager::tick, 20L, 20L);
 
+        File craftingDir = new File(getDataFolder(), "recipes/crafting");
+        if (!craftingDir.isDirectory()) craftingDir.mkdirs();
+        recipeLoader = new RecipeLoader(this, craftingDir);
+        recipeLoader.reload();
+
+        wandService = new CoreWandService();
+        wandListener = new WandListener(this, wandService);
+        getServer().getPluginManager().registerEvents(wandListener, this);
+        RpgServices.setWands(wandService);
+
         getLogger().info("rpg-core v" + getPluginMeta().getVersion() + " enabled.");
         getLogger().info(messageFormatter.format("debug.ready"));
         getLogger().info("Loaded "
@@ -276,6 +296,9 @@ public final class RpgCorePlugin extends JavaPlugin {
                 getLogger().warning("Failed to save spawners: " + ex.getMessage());
             }
         }
+        if (dataStore instanceof AutoCloseable closeable) {
+            try { closeable.close(); } catch (Exception ignored) {}
+        }
         getLogger().info("rpg-core disabled.");
         instance = null;
     }
@@ -289,9 +312,28 @@ public final class RpgCorePlugin extends JavaPlugin {
         abilityLoader.loadAll();
         blockLoader.loadAll();
         skillsService.onReload();
+        if (recipeLoader != null) recipeLoader.reload();
     }
 
     public CoreMessageFormatter messages() {
         return messageFormatter;
+    }
+
+    public WandListener wandListener() { return wandListener; }
+    public CoreWandService wandService() { return wandService; }
+
+    private DataStore openDataStore(File dataDir) {
+        String backend = getConfig().getString("persistence.backend", "yaml").toLowerCase();
+        if ("mysql".equals(backend)) {
+            try {
+                var cfg = getConfig().getConfigurationSection("persistence.mysql");
+                if (cfg == null) throw new IllegalStateException("persistence.mysql missing");
+                return new MysqlDataStore(cfg, getLogger());
+            } catch (Throwable t) {
+                getLogger().warning("MySQL datastore failed to initialize ("
+                        + t.getMessage() + "); falling back to YAML.");
+            }
+        }
+        return new YamlDataStore(dataDir);
     }
 }

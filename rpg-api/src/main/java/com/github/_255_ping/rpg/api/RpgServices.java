@@ -25,6 +25,7 @@ import com.github._255_ping.rpg.api.skills.SkillsService;
 import com.github._255_ping.rpg.api.stats.StatRegistry;
 import com.github._255_ping.rpg.api.status.StatusEffectRegistry;
 import com.github._255_ping.rpg.api.status.StatusEffectService;
+import com.github._255_ping.rpg.api.wand.WandService;
 import org.bukkit.entity.Player;
 
 /**
@@ -63,6 +64,7 @@ public final class RpgServices {
     private static PartyService parties;
     private static RegionService regionsSvc;
     private static GuildService guilds;
+    private static WandService wands;
 
     private RpgServices() {}
 
@@ -94,6 +96,7 @@ public final class RpgServices {
     public static PartyService parties() { return require(parties, "PartyService"); }
     public static RegionService regionService() { return require(regionsSvc, "RegionService"); }
     public static GuildService guilds() { return require(guilds, "GuildService"); }
+    public static WandService wands() { return require(wands, "WandService"); }
 
     // ----- Setters (rpg-core only) -----
 
@@ -122,6 +125,7 @@ public final class RpgServices {
     public static void setParties(PartyService svc) { parties = svc; }
     public static void setRegionService(RegionService svc) { regionsSvc = svc; }
     public static void setGuilds(GuildService svc) { guilds = svc; }
+    public static void setWands(WandService svc) { wands = svc; }
 
     private static <T> T require(T svc, String name) {
         if (svc == null) throw new IllegalStateException(name + " not bootstrapped — is rpg-core loaded?");

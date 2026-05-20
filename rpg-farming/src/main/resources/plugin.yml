@@ -6,3 +6,11 @@ load: POSTWORLD
 authors: [Ping]
 description: Farming skill — XP from harvesting mature crops.
 depend: [rpg-core]
+commands:
+  farming:
+    description: Farming admin commands
+    usage: /farming reload
+permissions:
+  rpg.farming.admin.reload:
+    description: Reload rpg-farming config
+    default: op

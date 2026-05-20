@@ -1,0 +1,14 @@
+# rpg-quests config.
+
+# Persistence repository name used in core's DataStore. Quest state is per-player.
+data-repository: quests
+
+# Display the "Quest progressed" action bar on objective ticks.
+progress-action-bar: true
+
+# Auto-complete quests when all objectives finish (vs. requiring /quest complete).
+auto-complete: true
+
+# When auto-completing a quest hand-off (e.g., NPC turn-in), allow it to be repeated this many
+# times per real-world day. -1 = unlimited.
+repeat-limit-per-day: -1

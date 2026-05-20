@@ -93,7 +93,27 @@ public final class CoreHealthService implements HealthService {
     @Override
     public void markInCombat(Player player) {
         long durationSec = plugin.getConfig().getLong("combat-tag.duration-seconds", 8);
-        combatExpiry.put(player.getUniqueId(), System.currentTimeMillis() + durationSec * 1000L);
+        // VITALITY reduces combat-tag duration: 1%/point capped at the config cap (default 50%).
+        try {
+            double vitality = com.github._255_ping.rpg.api.RpgServices.player(player)
+                    .get(com.github._255_ping.rpg.api.stats.BuiltinStat.VITALITY);
+            double perPoint = plugin.getConfig().getDouble("combat-tag.vitality-reduction-percent-per-point", 1.0);
+            double cap = plugin.getConfig().getDouble("combat-tag.vitality-reduction-cap-percent", 50.0);
+            double reductionPct = Math.min(cap, Math.max(0, vitality * perPoint));
+            durationSec = Math.round(durationSec * (1.0 - reductionPct / 100.0));
+            durationSec = Math.max(0, durationSec);
+        } catch (IllegalStateException ignored) {
+            // playerLookup not yet bootstrapped — just use base duration.
+        }
+        if (durationSec <= 0) return;
+        long now = System.currentTimeMillis();
+        long newExpiry = now + durationSec * 1000L;
+        Long previous = combatExpiry.put(player.getUniqueId(), newExpiry);
+        // Fire CombatTagEvent only when transitioning from out-of-combat -> in-combat.
+        if (previous == null || previous < now) {
+            org.bukkit.Bukkit.getPluginManager().callEvent(
+                    new com.github._255_ping.rpg.api.combat.CombatTagEvent(player, durationSec));
+        }
     }
 
     public void setMaxHp(LivingEntity entity, double max) {

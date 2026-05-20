@@ -25,6 +25,17 @@ public class MutableStatHolder implements StatHolder {
         values.put(stat, value);
     }
 
+    @Override
+    public void add(Stat stat, double amount) {
+        values.merge(stat, amount, Double::sum);
+    }
+
+    @Override
+    public void multiply(Stat stat, double percent) {
+        double cur = values.getOrDefault(stat, 0.0);
+        values.put(stat, cur * (1.0 + percent / 100.0));
+    }
+
     public void clear() {
         values.clear();
     }

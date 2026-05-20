@@ -1,0 +1,21 @@
+# upgrades/<file>.yml — each top-level key is one item upgrade tier.
+# Upgrades stack additively on the item; max tier is enforced per upgrade.
+#
+#   <upgrade_id>:
+#     DisplayName: "&6Hot Potato Book"
+#     AppliesTo: [sword, armor]
+#     MaxTier: 10                     # how many times this upgrade can be applied
+#     CurrencyCost: 2000              # per tier
+#     RequiredLevel: 3
+#     StatsPerTier:
+#       strength: 2
+#       max_health: 4
+hot_potato_book:
+  DisplayName: "&6Hot Potato Book"
+  AppliesTo: [sword, armor]
+  MaxTier: 10
+  CurrencyCost: 2000
+  RequiredLevel: 3
+  StatsPerTier:
+    strength: 2
+    max_health: 4

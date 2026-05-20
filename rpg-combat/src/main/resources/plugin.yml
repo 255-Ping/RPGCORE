@@ -6,7 +6,11 @@ load: POSTWORLD
 authors: [Ping]
 description: Combat skill — XP from damage dealt via the core damage pipeline.
 depend: [rpg-core]
+commands:
+  combat:
+    description: Combat admin commands
+    usage: /combat reload
 permissions:
-  rpg.combat.reload:
-    description: Reload combat config
+  rpg.combat.admin.reload:
+    description: Reload rpg-combat config
     default: op

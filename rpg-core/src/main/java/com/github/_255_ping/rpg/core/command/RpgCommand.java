@@ -44,10 +44,49 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
             case "item" -> handleItem(sender, args);
             case "mob" -> handleMob(sender, args);
             case "block" -> handleBlock(sender, args);
+            case "wand" -> handleWand(sender, args);
             default -> sender.sendMessage(plugin.messages().component("command.unknown",
                     Map.of("sub", args[0])));
         }
         return true;
+    }
+
+    private void handleWand(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(plugin.messages().component("command.player-only"));
+            return;
+        }
+        if (!sender.hasPermission("rpg.core.wand")) {
+            sender.sendMessage(plugin.messages().component("command.no-permission"));
+            return;
+        }
+        if (args.length < 2) {
+            sender.sendMessage(net.kyori.adventure.text.Component.text(
+                    "/rpg wand <give|mode> [region|loot-chest|dungeon|spawner|entrance]"));
+            return;
+        }
+        String sub = args[1].toLowerCase();
+        if (sub.equals("give")) {
+            player.getInventory().addItem(plugin.wandListener().newWand());
+            player.sendMessage(net.kyori.adventure.text.Component.text("Selection wand granted."));
+            return;
+        }
+        if (sub.equals("mode")) {
+            if (args.length < 3) {
+                player.sendMessage(net.kyori.adventure.text.Component.text(
+                        "Current mode: " + plugin.wandService().modeOf(player)));
+                return;
+            }
+            String mode = args[2].toLowerCase();
+            if (!java.util.Set.of("region", "loot-chest", "dungeon", "spawner", "entrance").contains(mode)) {
+                player.sendMessage(net.kyori.adventure.text.Component.text("Unknown mode: " + mode));
+                return;
+            }
+            plugin.wandService().setMode(player, mode);
+            player.sendMessage(net.kyori.adventure.text.Component.text("Wand mode: " + mode));
+            return;
+        }
+        sender.sendMessage(net.kyori.adventure.text.Component.text("Unknown wand subcommand."));
     }
 
     private void handleBlock(CommandSender sender, String[] args) {

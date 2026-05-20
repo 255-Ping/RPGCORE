@@ -1,0 +1,39 @@
+# quests/<file>.yml — each top-level key is one quest. Objectives are evaluated in parallel;
+# the quest completes when every objective hits its target.
+#
+#   <quest_id>:
+#     DisplayName: "&aThe Goblin Menace"
+#     Description:
+#       - "&7Slay the goblins infesting the forest."
+#     RequiredLevel: 0                # min Combat level to accept (0 = none)
+#     Objectives:
+#       - { Type: kill_mob,    Target: goblin,        Count: 10 }
+#       - { Type: mine_block,  Target: rpg_iron_ore,  Count: 16 }
+#       - { Type: collect_item, Target: hide,         Count: 5 }
+#       - { Type: talk_npc,    Target: forest_elder }
+#     Rewards:
+#       Xp: { Combat: 500 }            # skill -> xp
+#       Currency: 250                  # primary currency
+#       Items:
+#         - { Item: strength_potion, Amount: 2 }
+
+forest_intro:
+  DisplayName: "&aTrouble in the Forest"
+  Description:
+    - "&7Find the elder and learn what's wrong."
+  RequiredLevel: 0
+  Objectives:
+    - { Type: talk_npc, Target: forest_elder }
+  Rewards:
+    Currency: 100
+
+goblin_menace:
+  DisplayName: "&cThe Goblin Menace"
+  Description:
+    - "&7Slay 10 goblins."
+  RequiredLevel: 1
+  Objectives:
+    - { Type: kill_mob, Target: goblin, Count: 10 }
+  Rewards:
+    Xp: { combat: 500 }
+    Currency: 250
