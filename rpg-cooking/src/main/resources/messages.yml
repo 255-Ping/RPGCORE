@@ -1,0 +1,5 @@
+cook:
+  success: "&aCooked {item}."
+  missing-ingredients: "&cMissing ingredients."
+  requires-level: "&eRequires Cooking level {level}."
+  unknown-output: "&cRecipe output is unknown."

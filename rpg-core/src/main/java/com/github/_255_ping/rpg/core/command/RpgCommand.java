@@ -45,10 +45,85 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
             case "mob" -> handleMob(sender, args);
             case "block" -> handleBlock(sender, args);
             case "wand" -> handleWand(sender, args);
+            case "loot-chest", "lootchest" -> handleLootChest(sender, args);
             default -> sender.sendMessage(plugin.messages().component("command.unknown",
                     Map.of("sub", args[0])));
         }
         return true;
+    }
+
+    private void handleLootChest(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(plugin.messages().component("command.player-only"));
+            return;
+        }
+        if (!sender.hasPermission("rpg.core.loot-chest")) {
+            sender.sendMessage(plugin.messages().component("command.no-permission"));
+            return;
+        }
+        if (args.length < 2) {
+            sender.sendMessage(net.kyori.adventure.text.Component.text(
+                    "/rpg loot-chest <define|delete|count> [args]"));
+            return;
+        }
+        String sub = args[1].toLowerCase();
+        if (sub.equals("define")) {
+            if (args.length < 3) {
+                sender.sendMessage(net.kyori.adventure.text.Component.text(
+                        "/rpg loot-chest define <lootTableId>  (uses your wand selection)"));
+                return;
+            }
+            String tableId = args[2];
+            if (RpgServices.lootTables().get(tableId).isEmpty()) {
+                sender.sendMessage(net.kyori.adventure.text.Component.text(
+                        "Unknown loot table: " + tableId));
+                return;
+            }
+            java.util.Optional<com.github._255_ping.rpg.api.wand.WandSelection> sel;
+            try { sel = RpgServices.wands().selectionOf(player); }
+            catch (IllegalStateException ex) { sel = java.util.Optional.empty(); }
+            if (sel.isEmpty()) {
+                sender.sendMessage(net.kyori.adventure.text.Component.text(
+                        "No wand selection — set both corners first."));
+                return;
+            }
+            int bound = bindChestsIn(sel.get(), tableId);
+            sender.sendMessage(net.kyori.adventure.text.Component.text(
+                    "Bound " + bound + " chest(s) to loot table '" + tableId + "'."));
+        } else if (sub.equals("delete")) {
+            org.bukkit.block.Block targeted = player.getTargetBlockExact(8);
+            if (targeted == null) {
+                sender.sendMessage(net.kyori.adventure.text.Component.text("No targeted block."));
+                return;
+            }
+            boolean removed = plugin.lootChestRegistry().unbind(targeted.getLocation());
+            sender.sendMessage(net.kyori.adventure.text.Component.text(
+                    removed ? "Loot-chest binding removed." : "No binding at that block."));
+        } else if (sub.equals("count")) {
+            sender.sendMessage(net.kyori.adventure.text.Component.text(
+                    "Tracked loot chests: " + plugin.lootChestRegistry().count()));
+        } else {
+            sender.sendMessage(net.kyori.adventure.text.Component.text("Unknown sub: " + sub));
+        }
+    }
+
+    private int bindChestsIn(com.github._255_ping.rpg.api.wand.WandSelection sel, String tableId) {
+        org.bukkit.util.Vector min = sel.min();
+        org.bukkit.util.Vector max = sel.max();
+        org.bukkit.World world = sel.corner1().getWorld();
+        int count = 0;
+        for (int y = (int) min.getY(); y <= (int) max.getY(); y++) {
+            for (int z = (int) min.getZ(); z <= (int) max.getZ(); z++) {
+                for (int x = (int) min.getX(); x <= (int) max.getX(); x++) {
+                    org.bukkit.block.Block b = world.getBlockAt(x, y, z);
+                    if (b.getState() instanceof org.bukkit.block.Container) {
+                        plugin.lootChestRegistry().bind(b.getLocation(), tableId);
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
     }
 
     private void handleWand(CommandSender sender, String[] args) {

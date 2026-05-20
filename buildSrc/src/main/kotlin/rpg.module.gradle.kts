@@ -40,4 +40,15 @@ tasks.withType<ProcessResources>().configureEach {
 
 dependencies {
     "compileOnly"("io.papermc.paper:paper-api:${project.property("paperApiVersion")}")
+    // Tests need paper-api on the runtime classpath because many classes touch Adventure types
+    // (Component, etc.) at static-init time. testImplementation puts it on compile + runtime.
+    "testImplementation"("io.papermc.paper:paper-api:${project.property("paperApiVersion")}")
+    "testImplementation"("org.junit.jupiter:junit-jupiter:5.11.3")
+    "testImplementation"("org.mockito:mockito-core:5.14.2")
+    "testImplementation"("org.mockito:mockito-junit-jupiter:5.14.2")
+    "testRuntimeOnly"("org.junit.platform:junit-platform-launcher:1.11.3")
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }

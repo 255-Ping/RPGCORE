@@ -9,11 +9,13 @@ public final class RpgQuestsPlugin extends JavaPlugin {
 
     private QuestRegistry registry;
     private QuestManager manager;
+    private Messages messages;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         ensureExample("quests/example.yml");
+        messages = new Messages(this);
 
         File questsDir = new File(getDataFolder(), "quests");
         registry = new QuestRegistry(questsDir, getLogger());
@@ -45,10 +47,12 @@ public final class RpgQuestsPlugin extends JavaPlugin {
     public void reloadAll() {
         reloadConfig();
         registry.reload();
+        messages = new Messages(this);
     }
 
     public QuestRegistry registry() { return registry; }
     public QuestManager manager() { return manager; }
+    public Messages messages() { return messages; }
 
     private void ensureExample(String resourcePath) {
         File target = new File(getDataFolder(), resourcePath);

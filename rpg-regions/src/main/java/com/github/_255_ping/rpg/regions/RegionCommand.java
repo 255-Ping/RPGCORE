@@ -66,10 +66,31 @@ public final class RegionCommand implements CommandExecutor {
     private void handleDefine(CommandSender sender, String[] args) {
         if (!sender.hasPermission("rpg.regions.admin.define")) { sender.sendMessage(msg("&cNo permission.")); return; }
         if (!(sender instanceof Player p)) { sender.sendMessage(msg("&cPlayers only.")); return; }
-        if (args.length < 3) {
-            sender.sendMessage(msg("&7Usage: &e/region define <id> <radius>")); return;
+        if (args.length < 2) {
+            sender.sendMessage(msg("&7Usage: &e/region define <id> [radius]  &7(omit radius to use wand selection)"));
+            return;
         }
         String id = args[1];
+
+        // If the player has a wand selection (and no explicit radius given), use the cuboid.
+        if (args.length < 3) {
+            var sel = tryGetSelection(p);
+            if (sel.isEmpty()) {
+                sender.sendMessage(msg("&7Usage: &e/region define <id> [radius]  &7(no wand selection found)"));
+                return;
+            }
+            org.bukkit.util.Vector min = sel.get().min();
+            org.bukkit.util.Vector max = sel.get().max();
+            CoreRegion region = new CoreRegion(id, sel.get().corner1().getWorld().getName(),
+                    (int) min.getX(), (int) min.getY(), (int) min.getZ(),
+                    (int) max.getX(), (int) max.getY(), (int) max.getZ(),
+                    0, new HashMap<>());
+            regions.put(region);
+            sender.sendMessage(msg("&aDefined region &e" + id + " &afrom wand selection."));
+            try { com.github._255_ping.rpg.api.RpgServices.wands().clearSelection(p); } catch (IllegalStateException ignored) {}
+            return;
+        }
+
         int radius;
         try { radius = Math.max(1, Math.min(256, Integer.parseInt(args[2]))); }
         catch (NumberFormatException ex) { sender.sendMessage(msg("&cBad radius.")); return; }
@@ -81,6 +102,11 @@ public final class RegionCommand implements CommandExecutor {
                 0, new HashMap<>());
         regions.put(region);
         sender.sendMessage(msg("&aDefined region &e" + id + " &awith radius &e" + radius + "&a."));
+    }
+
+    private static java.util.Optional<com.github._255_ping.rpg.api.wand.WandSelection> tryGetSelection(Player p) {
+        try { return com.github._255_ping.rpg.api.RpgServices.wands().selectionOf(p); }
+        catch (IllegalStateException ex) { return java.util.Optional.empty(); }
     }
 
     private void handleDelete(CommandSender sender, String[] args) {

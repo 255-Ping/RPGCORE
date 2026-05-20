@@ -68,7 +68,7 @@ public final class EconomyCommands implements CommandExecutor {
             return;
         }
         sender.sendMessage(msg("balance.other",
-                Map.of("player", String.valueOf(target.getName()),
+                Map.of("player", fmt(target),
                         "amount", economy.currency().format(economy.balance(target)))));
     }
 
@@ -110,8 +110,8 @@ public final class EconomyCommands implements CommandExecutor {
             RpgServices.cooldowns().set(payer.getUniqueId(), "economy.pay", cooldownSec * 20L);
         }
         String formatted = economy.currency().format(amount);
-        sender.sendMessage(msg("pay.sent", Map.of("amount", formatted, "player", target.getName())));
-        target.sendMessage(msg("pay.received", Map.of("amount", formatted, "player", payer.getName())));
+        sender.sendMessage(msg("pay.sent", Map.of("amount", formatted, "player", fmt(target))));
+        target.sendMessage(msg("pay.received", Map.of("amount", formatted, "player", fmt(payer))));
     }
 
     private void handleEcoAdmin(CommandSender sender, String[] args) {
@@ -133,25 +133,25 @@ public final class EconomyCommands implements CommandExecutor {
                 if (!sender.hasPermission("rpg.economy.admin.set")) { sender.sendMessage(msg("command.no-permission")); return; }
                 BigDecimal amount = parseAmountOrReject(sender, args, 2); if (amount == null) return;
                 economy.set(target, amount);
-                sender.sendMessage(msg("eco.set", Map.of("player", target.getName(), "amount", economy.currency().format(amount))));
+                sender.sendMessage(msg("eco.set", Map.of("player", fmt(target), "amount", economy.currency().format(amount))));
             }
             case "add" -> {
                 if (!sender.hasPermission("rpg.economy.admin.add")) { sender.sendMessage(msg("command.no-permission")); return; }
                 BigDecimal amount = parseAmountOrReject(sender, args, 2); if (amount == null) return;
                 economy.deposit(target, amount);
-                sender.sendMessage(msg("eco.added", Map.of("player", target.getName(), "amount", economy.currency().format(amount))));
+                sender.sendMessage(msg("eco.added", Map.of("player", fmt(target), "amount", economy.currency().format(amount))));
             }
             case "remove" -> {
                 if (!sender.hasPermission("rpg.economy.admin.remove")) { sender.sendMessage(msg("command.no-permission")); return; }
                 BigDecimal amount = parseAmountOrReject(sender, args, 2); if (amount == null) return;
                 economy.withdraw(target, amount);
-                sender.sendMessage(msg("eco.removed", Map.of("player", target.getName(), "amount", economy.currency().format(amount))));
+                sender.sendMessage(msg("eco.removed", Map.of("player", fmt(target), "amount", economy.currency().format(amount))));
             }
             case "reset" -> {
                 if (!sender.hasPermission("rpg.economy.admin.reset")) { sender.sendMessage(msg("command.no-permission")); return; }
                 BigDecimal start = BigDecimal.valueOf(plugin.getConfig().getLong("currency.starting-balance", 100));
                 economy.set(target, start);
-                sender.sendMessage(msg("eco.reset", Map.of("player", target.getName(), "amount", economy.currency().format(start))));
+                sender.sendMessage(msg("eco.reset", Map.of("player", fmt(target), "amount", economy.currency().format(start))));
             }
         }
     }
@@ -205,5 +205,10 @@ public final class EconomyCommands implements CommandExecutor {
             raw = raw.replace("{" + e.getKey() + "}", String.valueOf(e.getValue()));
         }
         return LEGACY.deserialize(raw);
+    }
+
+    private static String fmt(OfflinePlayer p) {
+        try { return RpgServices.nameFormatter().format(p); }
+        catch (IllegalStateException ex) { return p.getName() == null ? "unknown" : p.getName(); }
     }
 }

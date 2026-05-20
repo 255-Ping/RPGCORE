@@ -4,14 +4,32 @@ main: com.github._255_ping.rpg.holograms.RpgHologramsPlugin
 api-version: '26.1.2'
 load: POSTWORLD
 authors: [Ping]
-description: Damage indicators (DisplayEntity-based). Holograms editor coming later.
+description: Damage indicators + admin-defined DisplayEntity holograms.
 depend: [rpg-core]
 commands:
   holograms:
     description: Holograms admin commands
     aliases: [holo]
-    usage: /holograms reload
+    usage: /holograms <create|delete|list|tp|move|line|reload>
 permissions:
   rpg.holograms.admin.reload:
     description: Reload rpg-holograms config
+    default: op
+  rpg.holograms.admin.create:
+    description: Create a hologram
+    default: op
+  rpg.holograms.admin.delete:
+    description: Delete a hologram
+    default: op
+  rpg.holograms.admin.list:
+    description: List holograms
+    default: op
+  rpg.holograms.admin.tp:
+    description: Teleport to a hologram
+    default: op
+  rpg.holograms.admin.move:
+    description: Move a hologram
+    default: op
+  rpg.holograms.admin.edit:
+    description: Edit hologram lines
     default: op

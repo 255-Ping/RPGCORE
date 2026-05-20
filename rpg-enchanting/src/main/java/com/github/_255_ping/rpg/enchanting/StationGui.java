@@ -40,12 +40,12 @@ public final class StationGui implements Listener {
     private static final int INPUT_SLOT = 11;
     private static final int RESULT_SLOT = 15;
 
-    private final org.bukkit.plugin.java.JavaPlugin plugin;
+    private final RpgEnchantingPlugin plugin;
     private final EnchantRegistry registry;
     private final ItemModifier modifier;
     private final Map<UUID, Mode> open = new HashMap<>();
 
-    public StationGui(org.bukkit.plugin.java.JavaPlugin plugin, EnchantRegistry registry, ItemModifier modifier) {
+    public StationGui(RpgEnchantingPlugin plugin, EnchantRegistry registry, ItemModifier modifier) {
         this.plugin = plugin;
         this.registry = registry;
         this.modifier = modifier;
@@ -169,7 +169,7 @@ public final class StationGui implements Listener {
 
     private void tryApplyEnchant(Player p) {
         if (!p.hasPermission("rpg.enchanting.use.enchant")) {
-            p.sendMessage(Component.text("No permission.").color(NamedTextColor.RED));
+            p.sendMessage(plugin.messages().get("no-permission"));
             return;
         }
         Inventory inv = p.getOpenInventory().getTopInventory();
@@ -179,7 +179,7 @@ public final class StationGui implements Listener {
         if (def == null) return;
         int curLevel = modifier.enchants(target).getOrDefault(def.id(), 0);
         if (curLevel >= def.maxLevel()) {
-            p.sendMessage(Component.text("Enchant is already at max level.").color(NamedTextColor.YELLOW));
+            p.sendMessage(plugin.messages().get("enchant.at-max"));
             return;
         }
         if (!checkAndCharge(p, def.currencyCost(), def.requiredSkillLevel())) return;
@@ -189,7 +189,7 @@ public final class StationGui implements Listener {
 
         long xp = plugin.getConfig().getLong("xp.per-enchant", 25);
         if (xp > 0) RpgServices.skills().awardXp(p, BuiltinSkill.ENCHANTING.id(), xp);
-        p.sendMessage(Component.text("Enchant applied.").color(NamedTextColor.GREEN));
+        p.sendMessage(plugin.messages().get("enchant.applied"));
     }
 
     private void tryApplyReforge(Player p, int idx) {
@@ -209,7 +209,7 @@ public final class StationGui implements Listener {
                 modifier.rewriteLore(target, registry);
                 long xp = plugin.getConfig().getLong("xp.per-reforge", 15);
                 if (xp > 0) RpgServices.skills().awardXp(p, BuiltinSkill.ENCHANTING.id(), xp);
-                p.sendMessage(Component.text("Reforge applied.").color(NamedTextColor.GREEN));
+                p.sendMessage(plugin.messages().get("reforge.applied"));
                 return;
             }
             j++;
@@ -230,7 +230,7 @@ public final class StationGui implements Listener {
             if (j == idx) {
                 int cur = modifier.upgrades(target).getOrDefault(def.id(), 0);
                 if (cur >= def.maxTier()) {
-                    p.sendMessage(Component.text("Already at max tier.").color(NamedTextColor.YELLOW));
+                    p.sendMessage(plugin.messages().get("upgrade.at-max"));
                     return;
                 }
                 if (!checkAndCharge(p, def.currencyCost(), def.requiredSkillLevel())) return;
@@ -238,7 +238,7 @@ public final class StationGui implements Listener {
                 modifier.rewriteLore(target, registry);
                 long xp = plugin.getConfig().getLong("xp.per-upgrade", 40);
                 if (xp > 0) RpgServices.skills().awardXp(p, BuiltinSkill.ENCHANTING.id(), xp);
-                p.sendMessage(Component.text("Upgrade applied.").color(NamedTextColor.GREEN));
+                p.sendMessage(plugin.messages().get("upgrade.applied"));
                 return;
             }
             j++;
@@ -248,8 +248,8 @@ public final class StationGui implements Listener {
     private boolean checkAndCharge(Player p, double currencyCost, int requiredLevel) {
         int skillLevel = RpgServices.skills().level(p, BuiltinSkill.ENCHANTING.id());
         if (skillLevel < requiredLevel) {
-            p.sendMessage(Component.text("Requires Enchanting level " + requiredLevel + ".")
-                    .color(NamedTextColor.YELLOW));
+            p.sendMessage(plugin.messages().get("requires-level",
+                    java.util.Map.of("level", requiredLevel)));
             return false;
         }
         if (!plugin.getConfig().getBoolean("charge-currency", true) || currencyCost <= 0) {
@@ -259,11 +259,11 @@ public final class StationGui implements Listener {
             Economy economy = RpgServices.economy();
             BigDecimal cost = BigDecimal.valueOf(currencyCost);
             if (economy.balance(p).compareTo(cost) < 0) {
-                p.sendMessage(Component.text("Not enough currency.").color(NamedTextColor.RED));
+                p.sendMessage(plugin.messages().get("not-enough-currency"));
                 return false;
             }
             if (!economy.withdraw(p, cost)) {
-                p.sendMessage(Component.text("Not enough currency.").color(NamedTextColor.RED));
+                p.sendMessage(plugin.messages().get("not-enough-currency"));
                 return false;
             }
             return true;

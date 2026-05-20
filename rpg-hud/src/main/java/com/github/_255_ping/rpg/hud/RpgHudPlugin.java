@@ -15,11 +15,14 @@ import java.util.Objects;
 public final class RpgHudPlugin extends JavaPlugin implements Listener, CommandExecutor {
 
     private HudTask hudTask;
+    private NametagManager nametagManager;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         hudTask = new HudTask(this);
+        nametagManager = new NametagManager(this);
+        hudTask.setNametagManager(nametagManager);
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getScheduler().runTaskTimer(this, hudTask, 20L, 1L);
         Objects.requireNonNull(getCommand("hud"), "command 'hud' missing").setExecutor(this);
@@ -29,11 +32,13 @@ public final class RpgHudPlugin extends JavaPlugin implements Listener, CommandE
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
         hudTask.onJoin(e.getPlayer());
+        nametagManager.onJoin(e.getPlayer());
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         hudTask.onQuit(e.getPlayer());
+        nametagManager.onQuit(e.getPlayer());
     }
 
     @Override

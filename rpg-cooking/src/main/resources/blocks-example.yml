@@ -1,0 +1,11 @@
+# Copied into rpg-core's blocks/ folder on first enable.
+
+rpg_cooking_station:
+  MinecraftBlock: SMOKER
+  Toughness: 9999
+  RequiredPower: 9999
+  RequiredToolType: any
+  RespawnTicks: 0
+  Interactable: true
+  StationType: cooking
+  Drops: []

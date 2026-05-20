@@ -1,0 +1,12 @@
+no-permission: "&cNo permission."
+enchant:
+  applied: "&aEnchant applied."
+  no-enchant: "&cNo enchant available"
+  at-max: "&eEnchant is already at max level."
+reforge:
+  applied: "&aReforge applied."
+upgrade:
+  applied: "&aUpgrade applied."
+  at-max: "&eAlready at max tier."
+requires-level: "&eRequires Enchanting level {level}."
+not-enough-currency: "&cNot enough currency."

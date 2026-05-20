@@ -38,18 +38,22 @@ public final class DamageMath {
                 ? statOf(ctx.victim(), BuiltinStat.TRUE_DEFENSE)
                 : statOf(ctx.victim(), BuiltinStat.DEFENSE);
 
+        boolean isCrit = critChance > 0
+                && ThreadLocalRandom.current().nextDouble(100.0) < Math.min(critChance, 100.0);
+        double result = computePure(base, strength, defenseStat, isCrit ? critDamage : 0);
+        if (isCrit) ctx.setCritMultiplier(1.0 + critDamage / 100.0);
+        return result;
+    }
+
+    /**
+     * Pure-math version of {@link #compute(DamageContext)} for unit testing. The {@code critDamage}
+     * argument is treated as already-rolled — pass 0 for a non-crit, the raw stat value for a crit.
+     */
+    public static double computePure(double base, double strength, double defenseStat, double critDamage) {
         double after = base * (1.0 + strength / 100.0);
-
-        if (critChance > 0 && ThreadLocalRandom.current().nextDouble(100.0) < Math.min(critChance, 100.0)) {
-            double mult = 1.0 + critDamage / 100.0;
-            after *= mult;
-            ctx.setCritMultiplier(mult);
-        }
-
+        if (critDamage > 0) after *= 1.0 + critDamage / 100.0;
         double defenseFactor = 1.0 - defenseStat / (defenseStat + 100.0);
-        after *= defenseFactor;
-
-        return Math.max(0.0, after);
+        return Math.max(0.0, after * defenseFactor);
     }
 
     private static double statOf(LivingEntity entity, Stat stat) {

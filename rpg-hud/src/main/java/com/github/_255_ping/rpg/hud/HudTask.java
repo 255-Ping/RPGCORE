@@ -33,11 +33,16 @@ public final class HudTask implements Runnable {
     private final Set<UUID> disabledScoreboard = new HashSet<>();
     private final Set<UUID> disabledTablist = new HashSet<>();
     private final Set<UUID> disabledActionBar = new HashSet<>();
+    private NametagManager nametagManager;
 
     private long tickCounter = 0;
 
     public HudTask(JavaPlugin plugin) {
         this.plugin = plugin;
+    }
+
+    public void setNametagManager(NametagManager mgr) {
+        this.nametagManager = mgr;
     }
 
     @Override
@@ -50,12 +55,15 @@ public final class HudTask implements Runnable {
         boolean sbOn = plugin.getConfig().getBoolean("scoreboard.enabled", true);
         boolean tlOn = plugin.getConfig().getBoolean("tablist.enabled", true);
         boolean abOn = plugin.getConfig().getBoolean("action-bar.enabled", true);
+        boolean ntOn = plugin.getConfig().getBoolean("nametag.enabled", true);
+        long ntEvery = Math.max(1, plugin.getConfig().getLong("nametag.update-ticks", 10));
 
         for (Player p : Bukkit.getOnlinePlayers()) {
             UUID id = p.getUniqueId();
             if (sbOn && !disabledScoreboard.contains(id) && tickCounter % sbEvery == 0) updateScoreboard(p);
             if (tlOn && !disabledTablist.contains(id) && tickCounter % tlEvery == 0) updateTablist(p);
             if (abOn && !disabledActionBar.contains(id) && tickCounter % abEvery == 0) updateActionBar(p);
+            if (ntOn && nametagManager != null && tickCounter % ntEvery == 0) nametagManager.tick(p);
         }
     }
 

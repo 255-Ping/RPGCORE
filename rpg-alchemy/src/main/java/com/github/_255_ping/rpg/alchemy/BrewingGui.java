@@ -33,12 +33,12 @@ public final class BrewingGui implements Listener {
 
     private static final int[] INPUT_SLOTS = {10, 11, 12};
 
-    private final org.bukkit.plugin.java.JavaPlugin plugin;
+    private final RpgAlchemyPlugin plugin;
     private final AlchemyRegistry registry;
     private final PotionItemFactory potionItems;
     private final Map<UUID, Boolean> open = new HashMap<>();
 
-    public BrewingGui(org.bukkit.plugin.java.JavaPlugin plugin, AlchemyRegistry registry, PotionItemFactory potionItems) {
+    public BrewingGui(RpgAlchemyPlugin plugin, AlchemyRegistry registry, PotionItemFactory potionItems) {
         this.plugin = plugin;
         this.registry = registry;
         this.potionItems = potionItems;
@@ -137,18 +137,18 @@ public final class BrewingGui implements Listener {
         BrewRecipeDef r = recipes.get(recipeIdx);
         int level = RpgServices.skills().level(p, BuiltinSkill.ALCHEMY.id());
         if (level < r.requiredLevel()) {
-            p.sendMessage(Component.text("Requires Alchemy level " + r.requiredLevel() + ".")
-                    .color(NamedTextColor.YELLOW));
+            p.sendMessage(plugin.messages().get("brew.requires-level",
+                    java.util.Map.of("level", r.requiredLevel())));
             return;
         }
         if (!slotsSatisfy(inv, r.inputs())) {
-            p.sendMessage(Component.text("Missing ingredients.").color(NamedTextColor.RED));
+            p.sendMessage(plugin.messages().get("brew.missing-ingredients"));
             return;
         }
         consume(inv, r.inputs());
         ItemStack output = buildOutput(r.output());
         if (output == null) {
-            p.sendMessage(Component.text("Recipe output is unknown.").color(NamedTextColor.RED));
+            p.sendMessage(plugin.messages().get("brew.unknown-recipe"));
             return;
         }
         HashMap<Integer, ItemStack> overflow = p.getInventory().addItem(output);
@@ -157,7 +157,8 @@ public final class BrewingGui implements Listener {
         }
         long xp = plugin.getConfig().getLong("xp.per-brew", 30);
         if (xp > 0) RpgServices.skills().awardXp(p, BuiltinSkill.ALCHEMY.id(), xp);
-        p.sendMessage(Component.text("Brewed " + r.output().itemId() + ".").color(NamedTextColor.GREEN));
+        p.sendMessage(plugin.messages().get("brew.success",
+                java.util.Map.of("item", r.output().itemId())));
         refreshRecipes(inv);
     }
 

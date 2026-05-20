@@ -16,3 +16,7 @@ damage-indicators:
     attacker: true
     victim-if-player: true
     bystanders: false
+
+# Admin holograms (TextDisplay-based; one entity per line).
+hologram:
+  line-spacing: 0.3              # vertical block spacing between lines

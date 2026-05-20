@@ -169,6 +169,19 @@ public final class VanillaSuppressionListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onSmelt(FurnaceSmeltEvent e) {
         if (!flag("smelting")) return;
+        // FurnaceSmeltEvent doesn't expose the recipe key directly; consult the iterator and
+        // match the source/result. If the running recipe is in our namespace, let it through.
+        java.util.Iterator<org.bukkit.inventory.Recipe> it = org.bukkit.Bukkit.recipeIterator();
+        while (it.hasNext()) {
+            org.bukkit.inventory.Recipe r = it.next();
+            if (!(r instanceof org.bukkit.Keyed keyed)) continue;
+            if (!plugin.getName().toLowerCase().equals(keyed.getKey().getNamespace())) continue;
+            if (!(r instanceof org.bukkit.inventory.CookingRecipe<?> cr)) continue;
+            if (cr.getResult().isSimilar(e.getResult())
+                    && cr.getInputChoice().test(e.getSource())) {
+                return; // ours — allow
+            }
+        }
         e.setCancelled(true);
     }
 

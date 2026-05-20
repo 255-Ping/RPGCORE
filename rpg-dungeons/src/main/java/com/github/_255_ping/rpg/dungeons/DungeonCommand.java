@@ -56,34 +56,70 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
     private void handleCreate(CommandSender sender, String[] args) {
         if (!sender.hasPermission("rpg.dungeons.admin.create")) return;
         if (!(sender instanceof Player p)) return;
-        if (args.length < 5) {
-            sender.sendMessage(Component.text("/dungeon create <id> <minX,Y,Z> <maxX,Y,Z> <displayName>")
+        if (args.length < 3) {
+            sender.sendMessage(Component.text(
+                    "/dungeon create <id> <displayName> [minX,Y,Z maxX,Y,Z]  "
+                            + "(omit coords to use wand selection)")
                     .color(NamedTextColor.YELLOW));
             return;
         }
         String id = args[1];
-        Vector min = parseVec(args[2]);
-        Vector max = parseVec(args[3]);
-        if (min == null || max == null) {
-            sender.sendMessage(Component.text("Bad coordinates.").color(NamedTextColor.RED));
-            return;
-        }
-        String displayName = String.join(" ", java.util.Arrays.copyOfRange(args, 4, args.length));
         if (plugin.registry().get(id).isPresent()) {
             sender.sendMessage(Component.text("Already exists.").color(NamedTextColor.RED));
             return;
         }
-        String world = p.getWorld().getName();
+
+        Vector min;
+        Vector max;
+        String templateWorld;
+        // If coords supplied: /dungeon create <id> <displayName> <minXYZ> <maxXYZ>
+        if (args.length >= 5) {
+            String displayName = args[2];
+            min = parseVec(args[3]);
+            max = parseVec(args[4]);
+            if (min == null || max == null) {
+                sender.sendMessage(Component.text("Bad coordinates.").color(NamedTextColor.RED));
+                return;
+            }
+            templateWorld = p.getWorld().getName();
+            saveDungeon(id, displayName, templateWorld, min, max, p);
+            sender.sendMessage(Component.text("Created dungeon '" + id + "' from coords.").color(NamedTextColor.GREEN));
+            return;
+        }
+
+        // Wand selection path: /dungeon create <id> <displayName>
+        var sel = tryGetSelection(p);
+        if (sel.isEmpty()) {
+            sender.sendMessage(Component.text("No wand selection. Set corners with the wand or pass coords.")
+                    .color(NamedTextColor.RED));
+            return;
+        }
+        String displayName = String.join(" ", java.util.Arrays.copyOfRange(args, 2, args.length));
+        min = sel.get().min();
+        max = sel.get().max();
+        templateWorld = sel.get().corner1().getWorld().getName();
+        saveDungeon(id, displayName, templateWorld, min, max, p);
+        sender.sendMessage(Component.text("Created dungeon '" + id + "' from wand selection.").color(NamedTextColor.GREEN));
+        try { com.github._255_ping.rpg.api.RpgServices.wands().clearSelection(p); } catch (IllegalStateException ignored) {}
+    }
+
+    private void saveDungeon(String id, String displayName, String world, Vector min, Vector max, Player p) {
         Vector spawn = new Vector(
                 (max.getX() - min.getX()) / 2,
                 1,
                 (max.getZ() - min.getZ()) / 2);
         Vector ent = p.getLocation().toVector();
         DungeonDef def = new DungeonDef(id.toLowerCase(Locale.ROOT), displayName,
-                world, min, max, spawn, world, ent, world, ent, 4, 0);
+                world, min, max, spawn, p.getWorld().getName(), ent, p.getWorld().getName(), ent, 4, 0,
+                new java.util.ArrayList<>(), new java.util.ArrayList<>(),
+                DungeonDef.WinCondition.ADMIN_END, null);
         plugin.registry().put(def);
         plugin.registry().saveAll();
-        sender.sendMessage(Component.text("Created dungeon '" + id + "'.").color(NamedTextColor.GREEN));
+    }
+
+    private static java.util.Optional<com.github._255_ping.rpg.api.wand.WandSelection> tryGetSelection(Player p) {
+        try { return com.github._255_ping.rpg.api.RpgServices.wands().selectionOf(p); }
+        catch (IllegalStateException ex) { return java.util.Optional.empty(); }
     }
 
     private void handleDelete(CommandSender sender, String[] args) {
@@ -131,12 +167,17 @@ public final class DungeonCommand implements CommandExecutor, TabCompleter {
         String world = p.getWorld().getName();
         DungeonDef updated = switch (target) {
             case ENTRANCE -> new DungeonDef(d.id(), d.displayName(), d.templateWorld(), d.min(), d.max(),
-                    d.spawnOffset(), world, at, d.exitWorld(), d.exit(), d.maxPlayers(), d.requiredLevel());
+                    d.spawnOffset(), world, at, d.exitWorld(), d.exit(),
+                    d.maxPlayers(), d.requiredLevel(),
+                    d.mobSpawns(), d.lootChests(), d.winCondition(), d.exitBlockOffset());
             case EXIT -> new DungeonDef(d.id(), d.displayName(), d.templateWorld(), d.min(), d.max(),
-                    d.spawnOffset(), d.entranceWorld(), d.entrance(), world, at, d.maxPlayers(), d.requiredLevel());
+                    d.spawnOffset(), d.entranceWorld(), d.entrance(), world, at,
+                    d.maxPlayers(), d.requiredLevel(),
+                    d.mobSpawns(), d.lootChests(), d.winCondition(), d.exitBlockOffset());
             case SPAWN -> new DungeonDef(d.id(), d.displayName(), d.templateWorld(), d.min(), d.max(),
                     at.clone().subtract(d.min()), d.entranceWorld(), d.entrance(), d.exitWorld(), d.exit(),
-                    d.maxPlayers(), d.requiredLevel());
+                    d.maxPlayers(), d.requiredLevel(),
+                    d.mobSpawns(), d.lootChests(), d.winCondition(), d.exitBlockOffset());
         };
         plugin.registry().put(updated);
         plugin.registry().saveAll();

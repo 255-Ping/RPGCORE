@@ -3,25 +3,24 @@
 #   <dungeon_id>:
 #     DisplayName: "&cThe Crypt"
 #     Template:
-#       World: dungeons        # the world where the template lives
+#       World: dungeons
 #       Min: { X: 0, Y: 60, Z: 0 }
 #       Max: { X: 32, Y: 80, Z: 32 }
-#     Spawn:                   # where players are placed inside the instance, relative to Min
+#     Spawn:                   # player spawn point, relative to Min
 #       X: 16
 #       Y: 61
 #       Z: 16
-#     Entrance:                # the trigger block in the overworld; entering the dungeon teleports
-#       World: world
-#       X: 0
-#       Y: 64
-#       Z: 0
-#     Exit:                    # where players go when they leave or die
-#       World: world
-#       X: 0
-#       Y: 64
-#       Z: 5
+#     Entrance: { World: world, X: 0, Y: 64, Z: 0 }   # overworld trigger
+#     Exit:     { World: world, X: 0, Y: 64, Z: 5 }   # post-run teleport
 #     MaxPlayers: 4
 #     RequiredLevel: 0
+#     WinCondition: kill_all_mobs   # kill_all_mobs | reach_exit_block | admin_end
+#     ExitBlock: { X: 16, Y: 61, Z: 30 }  # only used for reach_exit_block; relative to Min
+#     MobSpawns:               # spawned when the instance is built
+#       - { MobId: goblin,        X: 5,  Y: 61, Z: 5 }
+#       - { MobId: goblin_chief,  X: 16, Y: 61, Z: 16 }
+#     LootChests:              # admin-placed chests in the template, bound to a loot table at instance time
+#       - { LootTable: crypt_chest, X: 3, Y: 61, Z: 3 }
 
 example_crypt:
   DisplayName: "&cThe Crypt"
@@ -34,3 +33,6 @@ example_crypt:
   Exit: { World: world, X: 95, Y: 64, Z: 100 }
   MaxPlayers: 4
   RequiredLevel: 0
+  WinCondition: kill_all_mobs
+  MobSpawns: []
+  LootChests: []

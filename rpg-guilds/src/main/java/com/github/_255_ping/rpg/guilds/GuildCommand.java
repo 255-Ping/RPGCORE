@@ -104,8 +104,8 @@ public final class GuildCommand implements CommandExecutor {
         if (!manager.invite(guild, target)) {
             p.sendMessage(msg("&cCan't invite — already in a guild, full, or already a member.")); return;
         }
-        p.sendMessage(msg("&aInvited &e" + target.getName() + "&a."));
-        target.sendMessage(msg("&e" + p.getName() + " &7invited you to &e" + guild.name() + "&7. &e/guild accept&7 to join."));
+        p.sendMessage(msg("&aInvited &e" + fmt(target) + "&a."));
+        target.sendMessage(msg("&e" + fmt(p) + " &7invited you to &e" + guild.name() + "&7. &e/guild accept&7 to join."));
     }
 
     private void handleAccept(Player p) {
@@ -113,7 +113,7 @@ public final class GuildCommand implements CommandExecutor {
         Optional<CoreGuild> joined = manager.acceptInvite(p);
         if (joined.isEmpty()) { p.sendMessage(msg("&cNo valid pending invite.")); return; }
         Guild guild = joined.get();
-        broadcast(joined.get(), msg("&e" + p.getName() + " &7joined &e" + guild.name() + "&7."));
+        broadcast(joined.get(), msg("&e" + fmt(p) + " &7joined &e" + guild.name() + "&7."));
     }
 
     private void handleKick(Player p, String[] args) {
@@ -130,7 +130,7 @@ public final class GuildCommand implements CommandExecutor {
             p.sendMessage(msg("&cYou can't kick the owner.")); return;
         }
         manager.removeMember(guild, target.getUniqueId());
-        broadcast(guild, msg("&e" + target.getName() + " &7was kicked from the guild."));
+        broadcast(guild, msg("&e" + fmt(target) + " &7was kicked from the guild."));
     }
 
     private void handlePromote(Player p, String[] args) {
@@ -144,7 +144,7 @@ public final class GuildCommand implements CommandExecutor {
             p.sendMessage(msg("&cThat player isn't in your guild.")); return;
         }
         if (manager.promote(guild, target.getUniqueId())) {
-            broadcast(guild, msg("&e" + target.getName() + " &7is now an Officer."));
+            broadcast(guild, msg("&e" + fmt(target) + " &7is now an Officer."));
         } else {
             p.sendMessage(msg("&7They're already an officer / owner."));
         }
@@ -161,7 +161,7 @@ public final class GuildCommand implements CommandExecutor {
             p.sendMessage(msg("&cThat player isn't in your guild.")); return;
         }
         if (manager.demote(guild, target.getUniqueId())) {
-            broadcast(guild, msg("&e" + target.getName() + " &7is no longer an Officer."));
+            broadcast(guild, msg("&e" + fmt(target) + " &7is no longer an Officer."));
         } else {
             p.sendMessage(msg("&7They weren't an officer."));
         }
@@ -173,7 +173,7 @@ public final class GuildCommand implements CommandExecutor {
         if (guild == null) return;
         manager.removeMember(guild, p.getUniqueId());
         p.sendMessage(msg("&7You left the guild."));
-        broadcast(guild, msg("&e" + p.getName() + " &7left the guild."));
+        broadcast(guild, msg("&e" + fmt(p) + " &7left the guild."));
     }
 
     private void handleDisband(Player p) {
@@ -197,7 +197,7 @@ public final class GuildCommand implements CommandExecutor {
             if (guild == null) return;
         }
         p.sendMessage(msg("&6&l=== &e" + guild.name() + " &6&l==="));
-        p.sendMessage(msg("&7Owner: &e" + Bukkit.getOfflinePlayer(guild.ownerId()).getName()));
+        p.sendMessage(msg("&7Owner: &e" + fmt(Bukkit.getOfflinePlayer(guild.ownerId()))));
         p.sendMessage(msg("&7Members: &e" + guild.memberIds().size() + "&7/&e" + manager.maxMembers()));
         p.sendMessage(msg("&7Bank: &e" + guild.bankBalance().toPlainString() + " coins"));
         p.sendMessage(msg("&7Total XP: &e" + guild.totalXp()));
@@ -227,7 +227,7 @@ public final class GuildCommand implements CommandExecutor {
             p.sendMessage(msg("&cEconomy not loaded.")); return;
         }
         manager.deposit(guild, amount);
-        broadcast(guild, msg("&e" + p.getName() + " &7deposited &e" + amount + " &7into the bank."));
+        broadcast(guild, msg("&e" + fmt(p) + " &7deposited &e" + amount + " &7into the bank."));
     }
 
     private void handleWithdraw(Player p, String[] args) {
@@ -246,7 +246,7 @@ public final class GuildCommand implements CommandExecutor {
         try {
             RpgServices.economy().deposit(p, amount);
         } catch (IllegalStateException ignored) {}
-        broadcast(guild, msg("&e" + p.getName() + " &7withdrew &e" + amount + " &7from the bank."));
+        broadcast(guild, msg("&e" + fmt(p) + " &7withdrew &e" + amount + " &7from the bank."));
     }
 
     // ---- Helpers ----
@@ -297,4 +297,10 @@ public final class GuildCommand implements CommandExecutor {
     }
 
     private static Component msg(String legacy) { return LEGACY.deserialize(legacy); }
+
+    /** Player name via NameFormatter (LuckPerms prefix/suffix). Falls back to raw. */
+    private static String fmt(OfflinePlayer p) {
+        try { return com.github._255_ping.rpg.api.RpgServices.nameFormatter().format(p); }
+        catch (IllegalStateException ex) { return fmt(p) == null ? "unknown" : fmt(p); }
+    }
 }

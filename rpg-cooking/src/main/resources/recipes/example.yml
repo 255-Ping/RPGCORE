@@ -1,0 +1,21 @@
+# recipes/<file>.yml — each top-level key is one cooking recipe.
+#
+#   <recipe_id>:
+#     Inputs:
+#       - { Item: raw_beef, Amount: 1 }
+#     Output: { Item: cooked_beef, Amount: 1 }
+#     CookTicks: 200
+#     RequiredLevel: 1
+basic_steak:
+  Inputs:
+    - { Item: beef, Amount: 1 }
+  Output: { Item: cooked_beef, Amount: 1 }
+  CookTicks: 200
+  RequiredLevel: 1
+
+quick_bread:
+  Inputs:
+    - { Item: wheat, Amount: 3 }
+  Output: { Item: bread, Amount: 1 }
+  CookTicks: 100
+  RequiredLevel: 1

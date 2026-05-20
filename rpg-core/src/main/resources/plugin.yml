@@ -50,6 +50,9 @@ permissions:
   rpg.core.wand:
     description: Use the selection wand subcommand
     default: op
+  rpg.core.loot-chest:
+    description: Manage loot chest bindings
+    default: op
   rpg.core.stats:
     description: Show your effective stats
     default: true

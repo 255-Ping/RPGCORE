@@ -127,7 +127,54 @@ When changing multiple plugins as one logical change, batch their version bumps 
 
 ## Tests
 
-Planned: JUnit 5 + Mockito for pure-logic units (stat math, damage formula, expression evaluator, level curve, YAML loader validation). Bukkit integration tests deferred — no MockBukkit yet.
+JUnit 5 + Mockito for pure-logic units. Bukkit integration tests are deferred — anything that
+needs a live server gets exercised via the test-server symlinks instead.
+
+```bash
+./gradlew test                     # runs every module's tests
+./gradlew :rpg-core:test           # one module
+```
+
+Each module has `src/test/java/...` mirroring its main sources. The `rpg.module` build
+convention wires JUnit + Mockito and puts Paper-API on the test runtime classpath (most of
+our classes touch Adventure types at static-init time, so they need it to load).
+
+### What's covered today (~36 tests)
+
+| Module | Class | What it asserts |
+|---|---|---|
+| `rpg-core` | `DamageMath.computePure` | strength/crit/defense math and clamping |
+| `rpg-core` | `CoreExpressionEvaluator` | arithmetic, precedence, builtins, variable substitution, error paths |
+| `rpg-core` | `MutableStatHolder` | `set`/`add`/`multiply`/`clear`/`snapshot` semantics |
+| `rpg-enchanting` | `EnchantDef.statsAtLevel` | linear per-level scaling math |
+| `rpg-enchanting` | `ItemModifier.{parse,encode}LevelMap` | PDC level-map round-trip |
+| `rpg-quests` | `QuestObjective.Type.fromString` | objective-type parsing + error path |
+
+### Future test sites worth covering
+
+Pure-logic surfaces that would benefit from tests but aren't covered yet:
+
+- `AbilityDsl` parser (`rpg-api`) — the `name{k=v,k=v} next{...}` DSL + trigger suffixes
+- `CoreSkillsService` threshold-builder (`rpg-core`) — verify `levelForTotal` against known
+  curve points
+- `CoreLootTable.roll` (`rpg-core`) — weighted-roll math + attribution
+- `RecipeLoader` / `SmeltingLoader` shape and ingredient parsers (`rpg-core`)
+- `MigrationRunner` (`rpg-core`) — version split logic + `${prefix}` substitution (H2 in-memory
+  DB would let this run without a real MySQL)
+- `BrewRecipeDef` / `CookRecipeDef` / `DungeonRegistry` YAML parsers — happy path + missing-
+  field handling
+- `LootChestRegistry.{serialize,parse}Key` (`rpg-core`)
+- `Messages.get` placeholder expansion (per-addon `Messages` helpers)
+- `ItemModifier.contributedStats` (`rpg-enchanting`) — needs `RpgServices` mocked
+
+### Testing principles
+
+- Pure functions first. If a method reads through `RpgServices`, extract a `computePure`
+  variant that takes the inputs explicitly (as we did for `DamageMath`).
+- Mocking Bukkit's static surface (`Bukkit.getServer()`, `RpgServices.*`) via Mockito's
+  `mockStatic` is possible but brittle — prefer the refactor.
+- A failing test should explain the math, not just print the value. A short comment with the
+  expected formula above each assertion saves future maintainers an hour.
 
 ## Folia readiness
 

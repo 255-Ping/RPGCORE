@@ -10,12 +10,14 @@ public final class RpgAlchemyPlugin extends JavaPlugin {
 
     private AlchemyRegistry registry;
     private PotionItemFactory potionItems;
+    private Messages messages;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         ensureExample("potions/example.yml");
         ensureExample("recipes/example.yml");
+        messages = new Messages(this);
 
         File potionsDir = new File(getDataFolder(), "potions");
         File recipesDir = new File(getDataFolder(), "recipes");
@@ -47,10 +49,12 @@ public final class RpgAlchemyPlugin extends JavaPlugin {
     public void reloadAll() {
         reloadConfig();
         registry.reload();
+        messages = new Messages(this);
     }
 
     public AlchemyRegistry registry() { return registry; }
     public PotionItemFactory potionItems() { return potionItems; }
+    public Messages messages() { return messages; }
 
     private void ensureExample(String resourcePath) {
         File target = new File(getDataFolder(), resourcePath);

@@ -1,0 +1,22 @@
+name: rpg-cooking
+version: '${version}'
+main: com.github._255_ping.rpg.cooking.RpgCookingPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Cooking skill + custom cooking-station block + recipe-driven custom consumables.
+depend: [rpg-core]
+commands:
+  cooking:
+    description: Cooking admin commands
+    usage: /cooking <reload|list>
+permissions:
+  rpg.cooking.use:
+    description: Use the cooking station
+    default: true
+  rpg.cooking.admin.reload:
+    description: Reload rpg-cooking config
+    default: op
+  rpg.cooking.admin.list:
+    description: List loaded recipes
+    default: op

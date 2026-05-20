@@ -1,0 +1,5 @@
+brew:
+  success: "&aBrewed {item}."
+  missing-ingredients: "&cMissing ingredients."
+  requires-level: "&eRequires Alchemy level {level}."
+  unknown-recipe: "&cRecipe output is unknown."

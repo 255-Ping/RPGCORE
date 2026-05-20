@@ -50,11 +50,46 @@ public final class RpgAccessoriesPlugin extends JavaPlugin implements Listener, 
         if (!(sender instanceof Player p)) {
             sender.sendMessage("§cPlayers only."); return true;
         }
+        if (args.length > 0 && args[0].equalsIgnoreCase("upgrade")) {
+            if (!p.hasPermission("rpg.accessories.upgrade")) {
+                p.sendMessage("§cNo permission."); return true;
+            }
+            handleUpgrade(p);
+            return true;
+        }
         if (!sender.hasPermission("rpg.accessories.open")) {
             sender.sendMessage("§cNo permission."); return true;
         }
         p.openInventory(bagService.openBag(p));
         return true;
+    }
+
+    private void handleUpgrade(Player p) {
+        int current = bagService.currentTier(p.getUniqueId());
+        double cost = bagService.upgradeCost(current);
+        if (cost < 0) {
+            p.sendMessage("§eAlready at the max tier.");
+            return;
+        }
+        try {
+            com.github._255_ping.rpg.api.economy.Economy economy = RpgServices.economy();
+            java.math.BigDecimal amount = java.math.BigDecimal.valueOf(cost);
+            if (economy.balance(p).compareTo(amount) < 0) {
+                p.sendMessage("§cYou need " + (long) cost + " coins to upgrade.");
+                return;
+            }
+            if (!economy.withdraw(p, amount)) {
+                p.sendMessage("§cYou can't afford that.");
+                return;
+            }
+            // Persist contents at current size, then resize on next open.
+            bagService.release(p.getUniqueId());
+            bagService.setTier(p.getUniqueId(), current + 1);
+            bagService.save(p.getUniqueId());
+            p.sendMessage("§aBag upgraded to tier " + (current + 1) + ".");
+        } catch (IllegalStateException ex) {
+            p.sendMessage("§cEconomy not loaded.");
+        }
     }
 
     @EventHandler

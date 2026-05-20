@@ -84,6 +84,7 @@ public final class DungeonManager {
         }
         paster.pasteAsync(Bukkit.getWorld(def.templateWorld()), def.min(), def.max(),
                 instanceWorld, inst.originInInstanceWorld, copied -> {
+            populateContent(def, inst);
             Location spawn = computeInstanceSpawn(def, inst);
             for (Player member : party) {
                 if (!member.isOnline()) continue;
@@ -96,6 +97,109 @@ public final class DungeonManager {
             }
         });
         return true;
+    }
+
+    /** Spawn mobs + bind chest loot tables at instance-relative offsets after the paste lands. */
+    private void populateContent(DungeonDef def, DungeonInstance inst) {
+        if (instanceWorld == null) return;
+        org.bukkit.util.Vector origin = inst.originInInstanceWorld;
+        org.bukkit.util.Vector minTemplate = def.min();
+
+        // Spawn mobs.
+        if (def.mobSpawns() != null) {
+            for (DungeonDef.MobSpawn spawn : def.mobSpawns()) {
+                Location loc = new Location(instanceWorld,
+                        origin.getX() + (spawn.offset().getX() - minTemplate.getX()),
+                        origin.getY() + (spawn.offset().getY() - minTemplate.getY()),
+                        origin.getZ() + (spawn.offset().getZ() - minTemplate.getZ()));
+                try {
+                    var rpgMob = com.github._255_ping.rpg.api.RpgServices.mobs().get(spawn.mobId()).orElse(null);
+                    if (rpgMob == null) continue;
+                    org.bukkit.entity.LivingEntity entity = rpgMob.spawn(loc);
+                    if (entity != null) inst.aliveMobs.add(entity.getUniqueId());
+                } catch (Exception ex) {
+                    plugin.getLogger().warning("Failed to spawn mob " + spawn.mobId() + ": " + ex.getMessage());
+                }
+            }
+        }
+
+        // Bind loot chests at offset locations to the loot table.
+        if (def.lootChests() != null) {
+            for (DungeonDef.LootChest chest : def.lootChests()) {
+                Location loc = new Location(instanceWorld,
+                        origin.getX() + (chest.offset().getX() - minTemplate.getX()),
+                        origin.getY() + (chest.offset().getY() - minTemplate.getY()),
+                        origin.getZ() + (chest.offset().getZ() - minTemplate.getZ()));
+                try {
+                    Object coreInstance = Bukkit.getPluginManager().getPlugin("rpg-core");
+                    if (coreInstance == null) continue;
+                    var method = coreInstance.getClass().getMethod("lootChestRegistry");
+                    Object reg = method.invoke(coreInstance);
+                    reg.getClass().getMethod("bind", Location.class, String.class)
+                            .invoke(reg, loc, chest.lootTableId());
+                    inst.boundChests.add(loc);
+                } catch (Exception ex) {
+                    plugin.getLogger().fine("Loot chest bind failed: " + ex.getMessage());
+                }
+            }
+        }
+    }
+
+    /** Called by listener when an instance-tracked mob dies. */
+    public void mobKilled(DungeonInstance inst, UUID mobUuid) {
+        inst.aliveMobs.remove(mobUuid);
+        if (!inst.aliveMobs.isEmpty()) return;
+        DungeonDef def = registry.get(inst.dungeonId).orElse(null);
+        if (def == null) return;
+        if (def.winCondition() != DungeonDef.WinCondition.KILL_ALL_MOBS) return;
+        announce(inst, "&aDungeon cleared!");
+        finishInstance(inst);
+    }
+
+    /** Called when a player steps on the exit block for REACH_EXIT_BLOCK dungeons. */
+    public void onPlayerMoveCheck(Player p) {
+        UUID instId = playerToInstance.get(p.getUniqueId());
+        if (instId == null) return;
+        DungeonInstance inst = instances.get(instId);
+        if (inst == null || inst.finished) return;
+        DungeonDef def = registry.get(inst.dungeonId).orElse(null);
+        if (def == null || def.winCondition() != DungeonDef.WinCondition.REACH_EXIT_BLOCK) return;
+        if (def.exitBlockOffset() == null) return;
+        org.bukkit.util.Vector minTemplate = def.min();
+        Location target = new Location(instanceWorld,
+                inst.originInInstanceWorld.getX() + (def.exitBlockOffset().getX() - minTemplate.getX()),
+                inst.originInInstanceWorld.getY() + (def.exitBlockOffset().getY() - minTemplate.getY()),
+                inst.originInInstanceWorld.getZ() + (def.exitBlockOffset().getZ() - minTemplate.getZ()));
+        Location pl = p.getLocation();
+        if (pl.getBlockX() == target.getBlockX()
+                && pl.getBlockY() == target.getBlockY()
+                && pl.getBlockZ() == target.getBlockZ()) {
+            announce(inst, "&aDungeon cleared!");
+            finishInstance(inst);
+        }
+    }
+
+    public Optional<DungeonInstance> instanceContainingMob(UUID mobUuid) {
+        for (DungeonInstance i : instances.values()) {
+            if (i.aliveMobs.contains(mobUuid)) return Optional.of(i);
+        }
+        return Optional.empty();
+    }
+
+    private void finishInstance(DungeonInstance inst) {
+        if (inst.finished) return;
+        inst.finished = true;
+        evict(inst);
+    }
+
+    private void announce(DungeonInstance inst, String legacy) {
+        for (UUID id : inst.players) {
+            Player member = Bukkit.getPlayer(id);
+            if (member != null) {
+                member.sendMessage(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+                        .legacyAmpersand().deserialize(legacy));
+            }
+        }
     }
 
     public boolean leave(Player p) {
@@ -171,6 +275,25 @@ public final class DungeonManager {
 
     private void destroy(DungeonInstance inst) {
         DungeonDef def = registry.get(inst.dungeonId).orElse(null);
+        // Despawn any surviving mobs.
+        for (UUID mobId : new ArrayList<>(inst.aliveMobs)) {
+            org.bukkit.entity.Entity ent = Bukkit.getEntity(mobId);
+            if (ent != null) ent.remove();
+        }
+        inst.aliveMobs.clear();
+
+        // Unbind any chest loot-table bindings created for this instance.
+        try {
+            org.bukkit.plugin.Plugin core = Bukkit.getPluginManager().getPlugin("rpg-core");
+            if (core != null) {
+                Object reg = core.getClass().getMethod("lootChestRegistry").invoke(core);
+                for (Location loc : inst.boundChests) {
+                    reg.getClass().getMethod("unbind", Location.class).invoke(reg, loc);
+                }
+            }
+        } catch (Exception ignored) {}
+        inst.boundChests.clear();
+
         if (def != null && instanceWorld != null && paster != null) {
             paster.clear(instanceWorld, inst.originInInstanceWorld, def.min(), def.max());
         }

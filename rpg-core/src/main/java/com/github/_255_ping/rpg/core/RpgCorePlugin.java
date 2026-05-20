@@ -25,6 +25,7 @@ import com.github._255_ping.rpg.core.health.CoreHealthService;
 import com.github._255_ping.rpg.core.health.RegenTask;
 import com.github._255_ping.rpg.core.items.CoreItemRegistry;
 import com.github._255_ping.rpg.core.loot.CoreLootTableRegistry;
+import com.github._255_ping.rpg.core.loot.LootChestRegistry;
 import com.github._255_ping.rpg.core.items.ItemLoader;
 import com.github._255_ping.rpg.core.mobs.CoreMobRegistry;
 import com.github._255_ping.rpg.core.mobs.MobAiTask;
@@ -39,6 +40,7 @@ import com.github._255_ping.rpg.core.persistence.MysqlDataStore;
 import com.github._255_ping.rpg.core.persistence.YamlDataStore;
 import com.github._255_ping.rpg.api.persistence.DataStore;
 import com.github._255_ping.rpg.core.recipes.RecipeLoader;
+import com.github._255_ping.rpg.core.recipes.SmeltingLoader;
 import com.github._255_ping.rpg.core.wand.CoreWandService;
 import com.github._255_ping.rpg.core.wand.WandListener;
 import com.github._255_ping.rpg.core.player.CoreManaService;
@@ -94,8 +96,10 @@ public final class RpgCorePlugin extends JavaPlugin {
     private CoreLootTableRegistry lootTableRegistry;
     private SpawnerManager spawnerManager;
     private RecipeLoader recipeLoader;
+    private SmeltingLoader smeltingLoader;
     private CoreWandService wandService;
     private WandListener wandListener;
+    private LootChestRegistry lootChestRegistry;
 
     public static RpgCorePlugin get() {
         return instance;
@@ -264,10 +268,19 @@ public final class RpgCorePlugin extends JavaPlugin {
         recipeLoader = new RecipeLoader(this, craftingDir);
         recipeLoader.reload();
 
+        File smeltingDir = new File(getDataFolder(), "recipes/smelting");
+        if (!smeltingDir.isDirectory()) smeltingDir.mkdirs();
+        smeltingLoader = new SmeltingLoader(this, smeltingDir);
+        smeltingLoader.reload();
+
         wandService = new CoreWandService();
         wandListener = new WandListener(this, wandService);
         getServer().getPluginManager().registerEvents(wandListener, this);
         RpgServices.setWands(wandService);
+
+        lootChestRegistry = new LootChestRegistry(this);
+        lootChestRegistry.load();
+        getServer().getPluginManager().registerEvents(lootChestRegistry, this);
 
         getLogger().info("rpg-core v" + getPluginMeta().getVersion() + " enabled.");
         getLogger().info(messageFormatter.format("debug.ready"));
@@ -313,6 +326,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         blockLoader.loadAll();
         skillsService.onReload();
         if (recipeLoader != null) recipeLoader.reload();
+        if (smeltingLoader != null) smeltingLoader.reload();
     }
 
     public CoreMessageFormatter messages() {
@@ -321,6 +335,7 @@ public final class RpgCorePlugin extends JavaPlugin {
 
     public WandListener wandListener() { return wandListener; }
     public CoreWandService wandService() { return wandService; }
+    public LootChestRegistry lootChestRegistry() { return lootChestRegistry; }
 
     private DataStore openDataStore(File dataDir) {
         String backend = getConfig().getString("persistence.backend", "yaml").toLowerCase();

@@ -27,11 +27,11 @@ public final class QuestManager {
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
-    private final JavaPlugin plugin;
+    private final RpgQuestsPlugin plugin;
     private final QuestRegistry registry;
     private final Map<UUID, PlayerQuestState> cache = new ConcurrentHashMap<>();
 
-    public QuestManager(JavaPlugin plugin, QuestRegistry registry) {
+    public QuestManager(RpgQuestsPlugin plugin, QuestRegistry registry) {
         this.plugin = plugin;
         this.registry = registry;
     }
@@ -77,24 +77,25 @@ public final class QuestManager {
         PlayerQuestState s = load(p.getUniqueId());
         Optional<QuestDef> opt = registry.get(questId);
         if (opt.isEmpty()) {
-            msg(p, "&cUnknown quest: " + questId);
+            p.sendMessage(plugin.messages().get("quest.unknown", Map.of("id", questId)));
             return false;
         }
         QuestDef def = opt.get();
         if (s.active.stream().anyMatch(a -> a.questId.equals(def.id()))) {
-            msg(p, "&eAlready active.");
+            p.sendMessage(plugin.messages().get("quest.already-active"));
             return false;
         }
         if (def.requiredLevel() > 0) {
             int lvl = RpgServices.skills().level(p, BuiltinSkill.COMBAT.id());
             if (lvl < def.requiredLevel()) {
-                msg(p, "&eRequires Combat level " + def.requiredLevel() + ".");
+                p.sendMessage(plugin.messages().get("quest.requires-level",
+                        Map.of("level", def.requiredLevel())));
                 return false;
             }
         }
         s.active.add(new PlayerQuestState.Active(def.id(), new int[def.objectives().size()]));
         save(s);
-        msg(p, "&aAccepted: " + def.displayName());
+        p.sendMessage(plugin.messages().get("quest.accepted", Map.of("name", def.displayName())));
         return true;
     }
 
@@ -103,14 +104,20 @@ public final class QuestManager {
         boolean removed = s.active.removeIf(a -> a.questId.equalsIgnoreCase(questId));
         if (removed) {
             save(s);
-            msg(p, "&7Abandoned " + questId + ".");
+            p.sendMessage(plugin.messages().get("quest.abandoned",
+                    Map.of("name", questId)));
         } else {
-            msg(p, "&eNot active.");
+            p.sendMessage(plugin.messages().get("quest.not-active"));
         }
         return removed;
     }
 
     public void progressFor(Player p, QuestObjective.Type type, String target) {
+        progressFor(p, type, target, 1);
+    }
+
+    public void progressFor(Player p, QuestObjective.Type type, String target, int amount) {
+        if (amount <= 0) return;
         PlayerQuestState s = load(p.getUniqueId());
         if (s.active.isEmpty()) return;
         boolean dirty = false;
@@ -124,7 +131,7 @@ public final class QuestManager {
                 if (o.type() != type) continue;
                 if (!o.target().equalsIgnoreCase(target) && !o.target().equalsIgnoreCase("any")) continue;
                 if (a.progress[i] >= o.count()) continue;
-                a.progress[i]++;
+                a.progress[i] = Math.min(o.count(), a.progress[i] + amount);
                 dirty = true;
                 if (actionBar) {
                     p.sendActionBar(LEGACY.deserialize("&7" + o.describe() + " &8(" + a.progress[i] + "/" + o.count() + ")"));
@@ -187,7 +194,7 @@ public final class QuestManager {
                 p.getWorld().dropItemNaturally(p.getLocation(), drop);
             }
         }
-        msg(p, "&6Quest complete: " + def.displayName());
+        p.sendMessage(plugin.messages().get("quest.completed", Map.of("name", def.displayName())));
         save(s);
     }
 

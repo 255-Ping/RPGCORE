@@ -9,11 +9,13 @@ public final class RpgDungeonsPlugin extends JavaPlugin {
 
     private DungeonRegistry registry;
     private DungeonManager manager;
+    private Messages messages;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         ensureExample("dungeons/example.yml");
+        messages = new Messages(this);
 
         registry = new DungeonRegistry(new File(getDataFolder(), "dungeons"), getLogger());
         registry.reload();
@@ -37,10 +39,12 @@ public final class RpgDungeonsPlugin extends JavaPlugin {
     public void reloadAll() {
         reloadConfig();
         registry.reload();
+        messages = new Messages(this);
     }
 
     public DungeonRegistry registry() { return registry; }
     public DungeonManager manager() { return manager; }
+    public Messages messages() { return messages; }
 
     private void ensureExample(String resourcePath) {
         File target = new File(getDataFolder(), resourcePath);

@@ -96,8 +96,36 @@ public final class DungeonRegistry {
         int maxPlayers = s.getInt("MaxPlayers", 4);
         int requiredLevel = s.getInt("RequiredLevel", 0);
 
+        java.util.List<DungeonDef.MobSpawn> mobs = new java.util.ArrayList<>();
+        for (Object o : s.getList("MobSpawns", java.util.List.of())) {
+            if (o instanceof Map<?, ?> m) {
+                Object mobId = m.get("MobId");
+                if (mobId == null) continue;
+                double mx = m.get("X") instanceof Number n ? n.doubleValue() : 0;
+                double my = m.get("Y") instanceof Number n ? n.doubleValue() : 0;
+                double mz = m.get("Z") instanceof Number n ? n.doubleValue() : 0;
+                mobs.add(new DungeonDef.MobSpawn(mobId.toString(), new Vector(mx, my, mz)));
+            }
+        }
+        java.util.List<DungeonDef.LootChest> chests = new java.util.ArrayList<>();
+        for (Object o : s.getList("LootChests", java.util.List.of())) {
+            if (o instanceof Map<?, ?> m) {
+                Object t = m.get("LootTable");
+                if (t == null) continue;
+                double cx = m.get("X") instanceof Number n ? n.doubleValue() : 0;
+                double cy = m.get("Y") instanceof Number n ? n.doubleValue() : 0;
+                double cz = m.get("Z") instanceof Number n ? n.doubleValue() : 0;
+                chests.add(new DungeonDef.LootChest(new Vector(cx, cy, cz), t.toString()));
+            }
+        }
+        DungeonDef.WinCondition wc = DungeonDef.WinCondition.fromString(s.getString("WinCondition"));
+        Vector exitBlockOffset = null;
+        ConfigurationSection eb = s.getConfigurationSection("ExitBlock");
+        if (eb != null) exitBlockOffset = readVector(eb);
+
         return new DungeonDef(id, name, world, min, max, spawn, entWorld, entVec,
-                extWorld, extVec, maxPlayers, requiredLevel);
+                extWorld, extVec, maxPlayers, requiredLevel,
+                mobs, chests, wc, exitBlockOffset);
     }
 
     private static Vector readVector(ConfigurationSection s) {

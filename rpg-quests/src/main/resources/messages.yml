@@ -1,0 +1,14 @@
+quest:
+  accepted: "&aAccepted: {name}"
+  abandoned: "&7Abandoned {name}."
+  not-active: "&eThat quest isn't active."
+  already-active: "&eAlready active."
+  unknown: "&cUnknown quest: {id}"
+  requires-level: "&eRequires Combat level {level}."
+  completed: "&6Quest complete: {name}"
+  no-active: "&7No active quests."
+  progress: "&7{describe} &8({current}/{target})"
+list:
+  header: "&6Quests:"
+  entry: "&7 - {id} &8({name})"
+unknown-sub: "&cUnknown: {sub}"

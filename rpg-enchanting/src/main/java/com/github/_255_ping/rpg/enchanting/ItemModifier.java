@@ -180,7 +180,8 @@ public final class ItemModifier {
         stack.setItemMeta(meta);
     }
 
-    private static Map<String, Integer> parseLevelMap(String raw) {
+    /** Package-private for testing — round-trips with {@link #encodeLevelMap}. */
+    static Map<String, Integer> parseLevelMap(String raw) {
         if (raw == null || raw.isEmpty()) return Map.of();
         Map<String, Integer> out = new LinkedHashMap<>();
         for (String pair : raw.split(",")) {
@@ -193,7 +194,8 @@ public final class ItemModifier {
         return out;
     }
 
-    private static String encodeLevelMap(Map<String, Integer> map) {
+    /** Package-private for testing — round-trips with {@link #parseLevelMap}. */
+    static String encodeLevelMap(Map<String, Integer> map) {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
         for (Map.Entry<String, Integer> e : map.entrySet()) {

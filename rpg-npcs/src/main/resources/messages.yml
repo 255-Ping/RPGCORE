@@ -1,0 +1,9 @@
+npc:
+  no-quest-system: "&cQuest system is not loaded."
+  nothing-to-say: "&7{name} has nothing to say."
+shop:
+  not-enough-currency: "&cNot enough currency."
+  purchased: "&aPurchased."
+  sold: "&yellow;Sold for {amount}"
+  missing-item: "&cYou don't have that item."
+  economy-unavailable: "&cEconomy is not available."

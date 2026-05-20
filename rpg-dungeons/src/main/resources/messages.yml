@@ -1,0 +1,8 @@
+dungeon:
+  unknown: "&cUnknown dungeon: {id}"
+  instance-unavailable: "&cInstance world not available."
+  already-inside: "&eYou're already inside a dungeon."
+  preparing: "&7Preparing dungeon..."
+  entering: "&6Entering {name}"
+  not-in-dungeon: "&eYou're not in a dungeon."
+  run-ended: "&cYour dungeon run has ended."

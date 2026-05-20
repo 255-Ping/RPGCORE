@@ -8,11 +8,13 @@ import java.util.Objects;
 public final class RpgNpcsPlugin extends JavaPlugin {
 
     private NpcManager manager;
+    private Messages messages;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         ensureExample("npcs/example.yml");
+        messages = new Messages(this);
         manager = new NpcManager(this);
         manager.loadAll();
 
@@ -36,9 +38,11 @@ public final class RpgNpcsPlugin extends JavaPlugin {
     public void reloadAll() {
         reloadConfig();
         manager.loadAll();
+        messages = new Messages(this);
     }
 
     public NpcManager manager() { return manager; }
+    public Messages messages() { return messages; }
 
     private void ensureExample(String resourcePath) {
         File target = new File(getDataFolder(), resourcePath);

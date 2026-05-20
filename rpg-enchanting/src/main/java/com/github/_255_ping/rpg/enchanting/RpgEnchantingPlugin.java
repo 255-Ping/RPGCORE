@@ -10,6 +10,7 @@ public final class RpgEnchantingPlugin extends JavaPlugin {
 
     private EnchantRegistry registry;
     private ItemModifier modifier;
+    private Messages messages;
 
     @Override
     public void onEnable() {
@@ -17,6 +18,7 @@ public final class RpgEnchantingPlugin extends JavaPlugin {
         ensureExample("enchants/example.yml");
         ensureExample("reforges/example.yml");
         ensureExample("upgrades/example.yml");
+        messages = new Messages(this);
 
         File enchantsDir = new File(getDataFolder(), "enchants");
         File reforgesDir = new File(getDataFolder(), "reforges");
@@ -53,10 +55,12 @@ public final class RpgEnchantingPlugin extends JavaPlugin {
     public void reloadAll() {
         reloadConfig();
         registry.reload();
+        messages = new Messages(this);
     }
 
     public EnchantRegistry registry() { return registry; }
     public ItemModifier modifier() { return modifier; }
+    public Messages messages() { return messages; }
 
     private void ensureExample(String resourcePath) {
         File target = new File(getDataFolder(), resourcePath);

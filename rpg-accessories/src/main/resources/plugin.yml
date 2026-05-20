@@ -8,12 +8,15 @@ description: Accessory bag with separate inventory; ACCESSORY items aggregate in
 depend: [rpg-core]
 commands:
   accessories:
-    description: Open your accessory bag
+    description: Open your accessory bag (or upgrade it)
     aliases: [bag]
-    usage: /accessories
+    usage: /accessories [upgrade|reload]
 permissions:
   rpg.accessories.open:
     description: Open your accessory bag
+    default: true
+  rpg.accessories.upgrade:
+    description: Upgrade your accessory bag tier
     default: true
   rpg.accessories.admin.reload:
     description: Reload rpg-accessories config

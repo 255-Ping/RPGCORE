@@ -17,6 +17,7 @@ import org.bukkit.util.io.BukkitObjectOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -34,6 +35,7 @@ public final class AccessoryBagService implements AccessoryService {
 
     private final RpgAccessoriesPlugin plugin;
     private final Map<UUID, Inventory> bags = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> tiers = new ConcurrentHashMap<>();
 
     public AccessoryBagService(RpgAccessoriesPlugin plugin) {
         this.plugin = plugin;
@@ -41,7 +43,8 @@ public final class AccessoryBagService implements AccessoryService {
 
     public Inventory openBag(Player player) {
         Inventory bag = bags.computeIfAbsent(player.getUniqueId(), k -> {
-            int rows = Math.max(1, Math.min(6, plugin.getConfig().getInt("bag.rows", 3)));
+            int tier = currentTier(player.getUniqueId());
+            int rows = rowsForTier(tier);
             int size = rows * 9;
             String title = plugin.getConfig().getString("bag.title", "&5&lAccessory Bag");
             Inventory inv = Bukkit.createInventory(player, size, LEGACY.deserialize(title));
@@ -51,18 +54,71 @@ public final class AccessoryBagService implements AccessoryService {
         return bag;
     }
 
+    /** Returns the current tier for this player; defaults to 1 if not stored. */
+    public int currentTier(UUID id) {
+        Integer cached = tiers.get(id);
+        if (cached != null) return cached;
+        int tier = 1;
+        try {
+            Optional<Map<String, Object>> opt = RpgServices.dataStore().repository(REPO).get(id.toString());
+            if (opt.isPresent()) {
+                Object t = opt.get().get("tier");
+                if (t instanceof Number n) tier = n.intValue();
+            }
+        } catch (Exception ignored) {}
+        tiers.put(id, tier);
+        return tier;
+    }
+
+    public void setTier(UUID id, int tier) {
+        tiers.put(id, tier);
+    }
+
+    public int rowsForTier(int tier) {
+        List<?> raw = plugin.getConfig().getList("tiers");
+        if (raw == null) return 3;
+        for (Object o : raw) {
+            if (o instanceof Map<?, ?> m) {
+                Object t = m.get("tier");
+                if (t instanceof Number n && n.intValue() == tier) {
+                    Object rows = m.get("rows");
+                    return rows instanceof Number rn
+                            ? Math.max(1, Math.min(6, rn.intValue()))
+                            : 3;
+                }
+            }
+        }
+        return 3;
+    }
+
+    /** Returns the cost to advance to (currentTier + 1), or -1 if no next tier defined. */
+    public double upgradeCost(int currentTier) {
+        List<?> raw = plugin.getConfig().getList("tiers");
+        if (raw == null) return -1;
+        int next = currentTier + 1;
+        for (Object o : raw) {
+            if (o instanceof Map<?, ?> m) {
+                Object t = m.get("tier");
+                if (t instanceof Number n && n.intValue() == next) {
+                    Object cost = m.get("cost");
+                    return cost instanceof Number cn ? cn.doubleValue() : -1;
+                }
+            }
+        }
+        return -1;
+    }
+
     public boolean isBagInventory(Inventory inv) {
         return bags.containsValue(inv);
     }
 
     public void save(UUID id) {
         Inventory bag = bags.get(id);
-        if (bag == null) return;
         try {
-            String encoded = serialize(bag.getContents());
             Map<String, Object> data = new HashMap<>();
-            data.put("schema-version", 1);
-            data.put("contents", encoded);
+            data.put("schema-version", 2);
+            data.put("tier", currentTier(id));
+            if (bag != null) data.put("contents", serialize(bag.getContents()));
             RpgServices.dataStore().repository(REPO).save(id.toString(), data);
         } catch (Exception ex) {
             plugin.getLogger().warning("Failed to save accessory bag for " + id + ": " + ex.getMessage());

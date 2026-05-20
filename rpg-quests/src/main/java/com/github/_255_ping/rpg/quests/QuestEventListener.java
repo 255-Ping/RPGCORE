@@ -69,8 +69,7 @@ public final class QuestEventListener implements Listener {
         ItemStack stack = e.getItem().getItemStack();
         String id = identifyItem(stack);
         if (id != null) {
-            // Increment count by 1 per pickup event tick; the player gets the actual stack.
-            manager.progressFor(p, QuestObjective.Type.COLLECT_ITEM, id);
+            manager.progressFor(p, QuestObjective.Type.COLLECT_ITEM, id, stack.getAmount());
         }
     }
 

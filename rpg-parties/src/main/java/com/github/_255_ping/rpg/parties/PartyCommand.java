@@ -85,8 +85,8 @@ public final class PartyCommand implements CommandExecutor {
         if (!manager.invite(party, target)) {
             p.sendMessage(msg("&cCan't invite that player (full, already in a party, or already a member).")); return;
         }
-        p.sendMessage(msg("&aInvited &e" + target.getName() + "&a."));
-        target.sendMessage(msg("&e" + p.getName() + " &7invited you to a party. &7Use &e/party accept &7to join."));
+        p.sendMessage(msg("&aInvited &e" + fmt(target) + "&a."));
+        target.sendMessage(msg("&e" + fmt(p) + " &7invited you to a party. &7Use &e/party accept &7to join."));
     }
 
     private void handleAccept(Player p) {
@@ -94,7 +94,7 @@ public final class PartyCommand implements CommandExecutor {
         Optional<CoreParty> joined = manager.acceptInvite(p);
         if (joined.isEmpty()) { p.sendMessage(msg("&cNo valid pending invite.")); return; }
         CoreParty party = joined.get();
-        Component announce = msg("&e" + p.getName() + " &7joined the party.");
+        Component announce = msg("&e" + fmt(p) + " &7joined the party.");
         for (Player m : party.members()) m.sendMessage(announce);
     }
 
@@ -116,7 +116,7 @@ public final class PartyCommand implements CommandExecutor {
         }
         manager.removeMember(party, target);
         target.sendMessage(msg("&cYou were kicked from the party."));
-        for (Player m : party.members()) m.sendMessage(msg("&e" + target.getName() + " &7was kicked from the party."));
+        for (Player m : party.members()) m.sendMessage(msg("&e" + fmt(target) + " &7was kicked from the party."));
     }
 
     private void handlePromote(Player p, String[] args) {
@@ -131,7 +131,7 @@ public final class PartyCommand implements CommandExecutor {
             p.sendMessage(msg("&cThat player isn't in your party.")); return;
         }
         if (manager.promote(party, target)) {
-            for (Player m : party.members()) m.sendMessage(msg("&e" + target.getName() + " &7is now a moderator."));
+            for (Player m : party.members()) m.sendMessage(msg("&e" + fmt(target) + " &7is now a moderator."));
         } else {
             p.sendMessage(msg("&7They're already a moderator (or the owner)."));
         }
@@ -149,7 +149,7 @@ public final class PartyCommand implements CommandExecutor {
             p.sendMessage(msg("&cThat player isn't in your party.")); return;
         }
         if (manager.demote(party, target)) {
-            for (Player m : party.members()) m.sendMessage(msg("&e" + target.getName() + " &7is no longer a moderator."));
+            for (Player m : party.members()) m.sendMessage(msg("&e" + fmt(target) + " &7is no longer a moderator."));
         } else {
             p.sendMessage(msg("&7They weren't a moderator."));
         }
@@ -162,7 +162,7 @@ public final class PartyCommand implements CommandExecutor {
         CoreParty party = (CoreParty) opt.get();
         manager.removeMember(party, p);
         p.sendMessage(msg("&7You left the party."));
-        for (Player m : party.members()) m.sendMessage(msg("&e" + p.getName() + " &7left the party."));
+        for (Player m : party.members()) m.sendMessage(msg("&e" + fmt(p) + " &7left the party."));
     }
 
     private void handleDisband(Player p) {
@@ -183,11 +183,17 @@ public final class PartyCommand implements CommandExecutor {
         p.sendMessage(msg("&6&l=== Party (" + party.members().size() + "/" + manager.maxSize() + ") ==="));
         for (Player m : party.members()) {
             String rank = party.isOwner(m) ? "&6Owner" : party.isModerator(m) ? "&aMod" : "&7Member";
-            p.sendMessage(msg("  " + rank + " &7- &e" + m.getName()));
+            p.sendMessage(msg("  " + rank + " &7- &e" + fmt(m)));
         }
     }
 
     private static Component msg(String legacy) {
         return LEGACY.deserialize(legacy);
+    }
+
+    /** Player name via NameFormatter (LuckPerms prefix/suffix). Falls back to raw name. */
+    private static String fmt(Player p) {
+        try { return com.github._255_ping.rpg.api.RpgServices.nameFormatter().format(p); }
+        catch (IllegalStateException ex) { return p.getName(); }
     }
 }
