@@ -206,16 +206,17 @@ public final class GuildManager implements GuildService {
 
     /** Routes a fraction of a member's skill XP gain to the guild bank of XP. */
     public void addXpFromSkill(Player member, long skillXpAmount) {
-        double fraction = plugin.getConfig().getDouble("xp-fraction", 0.1);
-        long contribution = Math.max(1L, (long) (skillXpAmount * fraction));
+        if (!plugin.getConfig().getBoolean("xp-sharing.enabled", true)) return;
+        double ratePercent = plugin.getConfig().getDouble("xp-sharing.rate-percent", 10.0);
+        long contribution = Math.max(1L, (long) (skillXpAmount * ratePercent / 100.0));
         guildOf(member).ifPresent(g -> addXp((CoreGuild) g, contribution));
     }
 
     @Override
     public int guildLevel(Guild guild) {
         if (guild == null) return 0;
-        String curve = plugin.getConfig().getString("level-curve", "level * level * 1000");
-        int maxLevel = plugin.getConfig().getInt("max-level", 25);
+        String curve = plugin.getConfig().getString("guild-curve", "level * level * 1000");
+        int maxLevel = plugin.getConfig().getInt("guild-max-level", 25);
         long remaining = guild.totalXp();
         try {
             for (int lv = 1; lv <= maxLevel; lv++) {
@@ -234,7 +235,7 @@ public final class GuildManager implements GuildService {
         int level = guildLevel(opt.get());
         if (level <= 0) return Map.of();
 
-        ConfigurationSection perks = plugin.getConfig().getConfigurationSection("perks");
+        ConfigurationSection perks = plugin.getConfig().getConfigurationSection("guild-perks");
         if (perks == null) return Map.of();
 
         Map<Stat, Double> result = new HashMap<>();

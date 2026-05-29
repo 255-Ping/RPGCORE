@@ -50,7 +50,29 @@ public final class CoreStatusEffect implements StatusEffect {
 
     /**
      * Sound + particle hook fired when the effect is applied or expires.
-     * Any field may be {@code null} to skip that part of the hook.
+     * Either field may be {@code null} to skip that part of the hook.
+     *
+     * <p>YAML schema:
+     * <pre>
+     * on-apply:
+     *   sound:
+     *     key: entity.spider.hurt
+     *     volume: 1.0
+     *     pitch: 1.5
+     *   particles:
+     *     type: DRIPPING_WATER
+     *     count: 8
+     *     spread: 0.3          # shorthand — sets all three axes
+     *     spread-x: 0.3        # overrides spread for this axis if present
+     *     spread-y: 0.5
+     *     spread-z: 0.3
+     * </pre>
      */
-    public record HookSpec(String sound, float volume, float pitch, String particle, int particleCount) {}
+    public record HookSpec(SoundSpec sound, ParticleSpec particles) {}
+
+    /** Sound played when the hook fires. All fields configurable per-effect. */
+    public record SoundSpec(String key, float volume, float pitch) {}
+
+    /** Particle burst spawned when the hook fires. All fields configurable per-effect. */
+    public record ParticleSpec(String type, int count, double spreadX, double spreadY, double spreadZ) {}
 }

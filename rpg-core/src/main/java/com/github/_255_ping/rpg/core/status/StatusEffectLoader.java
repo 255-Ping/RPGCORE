@@ -107,13 +107,31 @@ public final class StatusEffectLoader {
 
     private static CoreStatusEffect.HookSpec parseHookSpec(ConfigurationSection s) {
         if (s == null) return null;
-        String sound = s.getString("sound");
-        float volume = (float) s.getDouble("volume", 1.0);
-        float pitch = (float) s.getDouble("pitch", 1.0);
-        String particle = s.getString("particle");
-        int count = s.getInt("count", 5);
-        if ((sound == null || sound.isBlank()) && (particle == null || particle.isBlank())) return null;
-        return new CoreStatusEffect.HookSpec(sound, volume, pitch, particle, count);
+        CoreStatusEffect.SoundSpec sound = null;
+        ConfigurationSection soundSec = s.getConfigurationSection("sound");
+        if (soundSec != null) {
+            String key = soundSec.getString("key");
+            if (key != null && !key.isBlank()) {
+                float volume = (float) soundSec.getDouble("volume", 1.0);
+                float pitch = (float) soundSec.getDouble("pitch", 1.0);
+                sound = new CoreStatusEffect.SoundSpec(key, volume, pitch);
+            }
+        }
+        CoreStatusEffect.ParticleSpec particles = null;
+        ConfigurationSection partSec = s.getConfigurationSection("particles");
+        if (partSec != null) {
+            String type = partSec.getString("type");
+            if (type != null && !type.isBlank()) {
+                int count = partSec.getInt("count", 5);
+                double defaultSpread = partSec.getDouble("spread", 0.3);
+                double spreadX = partSec.getDouble("spread-x", defaultSpread);
+                double spreadY = partSec.getDouble("spread-y", defaultSpread);
+                double spreadZ = partSec.getDouble("spread-z", defaultSpread);
+                particles = new CoreStatusEffect.ParticleSpec(type, count, spreadX, spreadY, spreadZ);
+            }
+        }
+        if (sound == null && particles == null) return null;
+        return new CoreStatusEffect.HookSpec(sound, particles);
     }
 
     private static StatusEffect.Category parseCategory(String s) {

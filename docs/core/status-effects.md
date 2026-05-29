@@ -1,6 +1,6 @@
 # Status effects
 
-> **Status:** In progress — framework working: YAML-loaded effect content, stacking strategies, stat modifiers (flat + percent), and tick actions (`damage`, `heal`). Ability-based tick actions and `on-apply` / `on-expire` hooks are pending the ability framework impl. Default sample effects (`poison`, `regen`, `strength_boost`, `slow`) ship in `plugins/rpg-core/status-effects/example.yml`.
+> **Status:** In progress — framework working: YAML-loaded effect content, stacking strategies, stat modifiers (flat + percent), tick actions (`damage`, `heal`), and `on-apply` / `on-expire` sound + particle hooks. Ability-based tick actions are pending the ability framework impl. Default sample effects (`poison`, `regen`, `strength_boost`, `slow`) ship in `plugins/rpg-core/status-effects/example.yml`.
 
 A fully custom (de)buff framework. Vanilla `PotionEffect`s on entities are cancelled (per [vanilla suppression](vanilla-suppression.md)) — only our `StatusEffect` system applies.
 
@@ -20,20 +20,31 @@ Each effect is defined in YAML (planned location: `plugins/rpg-core/status-effec
 ```yaml
 poison:
   display: "&2Poison"
-  icon-cmd: 6101                 # in rpg-alchemy's CMD range
   category: debuff               # buff | debuff | neutral
   stacking: refresh              # refresh | stack-power | take-max | independent
+  hidden: false
   stat-modifiers:                # while active
-  - { stat: defense, kind: percent, value: -10 }
+    defense:
+      kind: percent
+      value: -10
   tick:
     interval-ticks: 20
-    action: damage{amount=2, type=true, source=poison}
+    action: damage               # damage | heal
+    amount: 2
+    source: poison               # shown in damage indicators
   on-apply:
-    sound: { key: entity.spider.hurt, volume: 1.0, pitch: 1.5 }
-    particles: { type: dripping_water, count: 8 }
+    sound:
+      key: entity.spider.hurt
+      volume: 1.0
+      pitch: 1.5
+    particles:
+      type: DRIPPING_WATER       # Bukkit Particle enum name (case-insensitive)
+      count: 8
+      spread: 0.3                # shorthand — all three axes; override per-axis with spread-x/y/z
   on-expire:
-    particles: { type: smoke_normal, count: 4 }
-  hidden: false
+    particles:
+      type: SMOKE_NORMAL
+      count: 4
 ```
 
 ## Stacking strategies

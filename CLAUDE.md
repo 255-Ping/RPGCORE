@@ -20,12 +20,33 @@ RPGCORE/
 
 ## Hard rules
 
-### 0. Keep CLAUDE.md in sync after substantive changes
+### 0. Keep CLAUDE.md AND docs/ in sync after every substantive change
 
-Audit this file whenever you:
+Two things must stay accurate at all times:
+
+**CLAUDE.md** — audit whenever you:
 - Add or rename a service in `RpgServices` or a class in a module
 - Change a versioning rule or bump discipline
-- Discover that what the docs say diverges from the code (it happens — docs are ahead of impl)
+- Add a new persistent field, save/load path, or player-data schema change
+- Discover that any example or number in this file is wrong
+
+**docs/** — update the relevant doc page in the same commit as every code change:
+
+| What changed | Doc page to update |
+|---|---|
+| Status effect schema / hooks / tick | `docs/core/status-effects.md` |
+| Skill XP, curves, milestones | `docs/core/skills.md` |
+| Damage pipeline | `docs/core/damage.md` |
+| Player data persistence / YAML schema | `docs/core/persistence.md` |
+| Guild config / commands / features | `docs/addons/guilds.md` |
+| Any other addon | `docs/addons/<name>.md` |
+| New content type (item/mob/ability/block) | `docs/content/<type>.md` |
+| New command or permission | `docs/commands.md` + `docs/permissions.md` |
+| `gradle.properties` keys / build | `docs/configuration.md` |
+
+If you add a feature without updating the relevant doc page, it **does not count as done**.
+The docs describe what the plugin *actually does* — not design fiction.
+When a doc page says "planned" and you implement it, remove the "planned" note and describe the real behavior.
 
 ### 1. Always depend only on `rpg-api`, never on `rpg-core`
 
@@ -68,6 +89,27 @@ When an addon ships a new service interface (`rpg-api`) with a core or addon imp
 2. Add a private static field, accessor, and setter in `RpgServices`
 3. Call the setter from the addon's `onEnable`
 4. Document the service in `docs/development.md` under "Service types still planned"
+
+### 5. Everything configurable — no hardcoded game values
+
+Every value a server admin might want to tune **must** live in a `config.yml`, not hardcoded in Java.
+
+| Kind of value | Where it goes |
+|---|---|
+| Balance numbers (rates, costs, caps, durations) | `config.yml` with a sensible default |
+| Formulas / scaling curves | `config.yml` string, evaluated by `ExpressionEvaluator` at runtime |
+| Feature flags (on/off toggles) | `config.yml` boolean |
+| Display strings / messages | `config.yml` or `messages.yml` |
+| Sound keys, particle types, visual parameters | Per-content YAML (e.g., status-effect file) |
+
+Before declaring a feature done, scan every literal in the new Java for values that belong in config.
+The only things that may be hardcoded are: Java enum names, plugin IDs, repository names, and
+structural constants that are not observable by players.
+
+### 6. One version bump per plugin per session
+
+Within a single conversation, bump each plugin's version **at most once** — at the very end after
+all changes are accumulated. Never bump the same plugin twice in one session.
 
 ## Versioning
 

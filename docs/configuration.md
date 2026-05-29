@@ -81,7 +81,7 @@ plugins/
 | `suiteVersion` | `1` | Per-plugin version suffix (every module versions as `0.0.0-${suiteVersion}`) |
 | `paperApiVersion` | `26.1.2.build.+` | Paper API compileOnly dep used by all modules |
 | `minecraftVersion` | `26.1.2` | MC version used by `run-paper` in `rpg-core` |
-| `testServerPluginsDir` | `/home/ping/Documents/TestServer/plugins` | Where built jars get symlinked on `assemble` |
+| `testServerPluginsDir` | *(set per-machine — no default)* | Where built jars get symlinked on `assemble` |
 
 ## Related
 

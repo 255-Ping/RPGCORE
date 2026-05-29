@@ -163,16 +163,19 @@ public final class CoreStatusEffectService implements StatusEffectService {
     }
 
     static void executeHook(LivingEntity entity, CoreStatusEffect.HookSpec hook) {
-        if (hook.sound() != null && !hook.sound().isBlank()) {
-            entity.getWorld().playSound(entity.getLocation(), hook.sound(), hook.volume(), hook.pitch());
+        if (hook.sound() != null) {
+            CoreStatusEffect.SoundSpec s = hook.sound();
+            entity.getWorld().playSound(entity.getLocation(), s.key(), s.volume(), s.pitch());
         }
-        if (hook.particle() != null && !hook.particle().isBlank()) {
+        if (hook.particles() != null) {
+            CoreStatusEffect.ParticleSpec p = hook.particles();
             try {
-                Particle particle = Particle.valueOf(hook.particle().toUpperCase(java.util.Locale.ROOT));
-                entity.getWorld().spawnParticle(particle, entity.getLocation().add(0, 1, 0),
-                        hook.particleCount(), 0.3, 0.3, 0.3, 0);
+                Particle particle = Particle.valueOf(p.type().toUpperCase(java.util.Locale.ROOT));
+                entity.getWorld().spawnParticle(particle,
+                        entity.getLocation().add(0, 1, 0),
+                        p.count(), p.spreadX(), p.spreadY(), p.spreadZ(), 0);
             } catch (IllegalArgumentException ignored) {
-                // unknown particle name — silently skip
+                // unknown particle name — log silently; bad config is skipped at load time in the loader
             }
         }
     }

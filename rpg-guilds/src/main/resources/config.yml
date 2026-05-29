@@ -11,20 +11,22 @@ creation:
 # Seconds before a pending invite expires.
 invite-timeout-seconds: 60
 
-# Fraction of each member's skill XP that contributes to the guild's total XP.
-xp-fraction: 0.1
+# Guild XP — a fraction of each member's earned skill XP flows into the guild's total XP pool.
+xp-sharing:
+  enabled: true
+  rate-percent: 10    # percent (0-100) of each member's skill XP that flows to the guild
 
-# Maximum guild level.
-max-level: 25
+# XP cost to advance the guild from 'level' to 'level+1'. Uses the expression evaluator.
+# Variable available: level (current level, 1-based).
+guild-curve: "level * level * 1000"
 
-# XP cost to advance from 'level' to 'level+1'. Uses the expression evaluator.
-# Variable: level (the current level, 1-based).
-level-curve: "level * level * 1000"
+# Maximum attainable guild level.
+guild-max-level: 25
 
-# Stat bonuses granted to all guild members based on guild level.
-# Each key is a stat ID; the value is an expression evaluated with 'level' as a variable.
-# Remove or comment out entries to disable those perks.
-perks:
+# Stat bonuses granted to every guild member, scaling with guild level.
+# Each key is a stat ID; the value is an expression with 'level' as a variable.
+# Remove or comment out any entry to disable that perk.
+guild-perks:
   max_health: "level * 5"
   strength: "level * 2"
   defense: "level"
