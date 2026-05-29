@@ -77,10 +77,43 @@ There are two completely separate versioning concerns. Get them right independen
 
 ### A. Plugin jar versioning (`gradle.properties`)
 
-Every module has its own `<shortName>Version` property. The final jar name is
-`<module>-<moduleVersion>-<suiteVersion>.jar`, e.g., `rpg-core-0.0.10-18.jar`.
+Every module has its own `<shortName>Version` property in the format `X.Y.Z`. The final jar
+name is `<module>-<X.Y.Z>-<suiteVersion>.jar`, e.g., `rpg-core-0.0.10-18.jar`.
 
-**Current versions (as of last update):**
+#### Per-module version (`X.Y.Z`)
+
+Each segment has a defined meaning. When you finish a change, pick the highest-severity segment
+that applies and bump only that one (reset lower segments to 0):
+
+| Segment | When to bump | Examples |
+|---|---|---|
+| **X** (major) `X.0.0` | A large chunk of a single plugin's functionality is added or overhauled | Implementing the full guild bank system, adding the entire dungeon editor flow, rewriting the damage pipeline |
+| **Y** (minor) `0.Y.0` | Smaller-to-medium changes within a single plugin | Adding a new command, wiring a new XP source, adding a config knob, implementing a missing mechanic from the docs |
+| **Z** (patch) `0.0.Z` | Small bug fixes or tiny tweaks to a single plugin | Off-by-one fix, wrong permission node, typo in a message, single-line config default |
+
+Examples:
+- Implementing hold-to-break for mining → `rpg-mining` minor bump (`0.0.2` → `0.1.0`)
+- Fixing a crash when a player has no skill data → `rpg-core` patch bump (`0.0.10` → `0.0.11`)
+- Shipping the full guild perk stat application + item bank + tier upgrades in one PR → `rpg-guilds` major bump (`0.0.2` → `1.0.0`)
+
+Reset lower segments: bumping Y resets Z to 0. Bumping X resets Y and Z to 0.
+
+#### Suite version (`suiteVersion`)
+
+`suiteVersion` is a single integer shared by all modules. When it bumps, **every** plugin jar
+gets the new suffix — the suite number signals that this build is a cohesive snapshot of the
+whole suite.
+
+**Bump `suiteVersion` when a change touches a large number of plugins at once** — e.g., updating
+the `rpg-api` interfaces that all addons implement, adding a new service to `RpgServices`,
+changing the build convention, or any cross-cutting refactor.
+
+When `suiteVersion` bumps:
+1. Increment `suiteVersion` in `gradle.properties`
+2. Run `.\gradlew.bat assemble` — every jar rebuilds with the new suffix automatically
+3. No need to touch individual `<name>Version` properties unless that module also changed
+
+#### Current versions
 
 | Module | Property | Current |
 |---|---|---|
@@ -107,18 +140,7 @@ Every module has its own `<shortName>Version` property. The final jar name is
 | rpg-cooking | `cookingVersion` | 0.0.0 |
 | suite-wide suffix | `suiteVersion` | 18 |
 
-**Bump rules:**
-
-- Bump **only the affected module's** `<name>Version` for any change to that module.
-- Bump `suiteVersion` only when a new plugin module is added to the suite OR a major
-  cross-cutting change touches nearly all modules.
-- Batch version bumps for logically related multi-module changes into one commit.
-- `testServerPluginsDir` in `gradle.properties` is set to the original developer's Linux path
-  (`/home/ping/Documents/TestServer/plugins`) — update it to your local path before running
-  `assemble` or the symlink task will fail silently.
-
-**The docs say** "all modules share `0.0.0-${suiteVersion}`" — that's stale. The actual scheme
-above has been in place since at least suiteVersion 18.
+**Keep this table in sync** — update it in the same commit as any version bump.
 
 ---
 
