@@ -4,7 +4,9 @@ import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.guilds.Guild;
 import com.github._255_ping.rpg.api.guilds.GuildService;
 import com.github._255_ping.rpg.api.persistence.DataStore;
+import com.github._255_ping.rpg.api.stats.Stat;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -200,6 +202,54 @@ public final class GuildManager implements GuildService {
     public void addXp(CoreGuild guild, long amount) {
         guild.setTotalXp(guild.totalXp() + amount);
         save(guild.id());
+    }
+
+    /** Routes a fraction of a member's skill XP gain to the guild bank of XP. */
+    public void addXpFromSkill(Player member, long skillXpAmount) {
+        double fraction = plugin.getConfig().getDouble("xp-fraction", 0.1);
+        long contribution = Math.max(1L, (long) (skillXpAmount * fraction));
+        guildOf(member).ifPresent(g -> addXp((CoreGuild) g, contribution));
+    }
+
+    @Override
+    public int guildLevel(Guild guild) {
+        if (guild == null) return 0;
+        String curve = plugin.getConfig().getString("level-curve", "level * level * 1000");
+        int maxLevel = plugin.getConfig().getInt("max-level", 25);
+        long remaining = guild.totalXp();
+        try {
+            for (int lv = 1; lv <= maxLevel; lv++) {
+                long cost = (long) RpgServices.expressions().evaluate(curve, Map.of("level", (double) lv));
+                if (remaining < cost) return lv;
+                remaining -= cost;
+            }
+        } catch (Exception ignored) {}
+        return maxLevel;
+    }
+
+    @Override
+    public Map<Stat, Double> perkStatsFor(OfflinePlayer player) {
+        Optional<Guild> opt = guildOf(player);
+        if (opt.isEmpty()) return Map.of();
+        int level = guildLevel(opt.get());
+        if (level <= 0) return Map.of();
+
+        ConfigurationSection perks = plugin.getConfig().getConfigurationSection("perks");
+        if (perks == null) return Map.of();
+
+        Map<Stat, Double> result = new HashMap<>();
+        Map<String, Double> vars = Map.of("level", (double) level);
+        for (String statId : perks.getKeys(false)) {
+            String formula = perks.getString(statId);
+            if (formula == null || formula.isBlank()) continue;
+            RpgServices.stats().get(statId).ifPresent(stat -> {
+                try {
+                    double value = RpgServices.expressions().evaluate(formula, vars);
+                    if (value != 0) result.put(stat, value);
+                } catch (Exception ignored) {}
+            });
+        }
+        return result;
     }
 
     public int maxMembers() {

@@ -117,8 +117,8 @@ When `suiteVersion` bumps:
 
 | Module | Property | Current |
 |---|---|---|
-| rpg-api | `apiVersion` | 0.0.6 |
-| rpg-core | `coreVersion` | 0.0.10 |
+| rpg-api | `apiVersion` | 0.0.7 |
+| rpg-core | `coreVersion` | 0.1.0 |
 | rpg-mining | `miningVersion` | 0.0.2 |
 | rpg-combat | `combatVersion` | 0.0.1 |
 | rpg-economy | `economyVersion` | 0.0.2 |
@@ -131,7 +131,7 @@ When `suiteVersion` bumps:
 | rpg-fishing | `fishingVersion` | 0.0.1 |
 | rpg-regions | `regionsVersion` | 0.0.2 |
 | rpg-farming | `farmingVersion` | 0.0.1 |
-| rpg-guilds | `guildsVersion` | 0.0.2 |
+| rpg-guilds | `guildsVersion` | 0.1.0 |
 | rpg-enchanting | `enchantingVersion` | 0.0.2 |
 | rpg-alchemy | `alchemyVersion` | 0.0.2 |
 | rpg-npcs | `npcsVersion` | 0.0.1 |
@@ -245,11 +245,23 @@ mana: 95.0
 skills:
   combat: 1500
   mining: 350
+bonus-stats:          # permanent milestone bonuses — absent if none earned yet
+  max_health: 25.0
+  strength: 10.0
 ```
 
 Base stats are applied from `starting-state.base-stats` in `config.yml` each session — not
 stored per player. When adding new persistent player fields, update both the save block in
 `onQuit` and the read block in `onJoin` with a fallback.
+
+**Stat aggregation order in `CoreRpgPlayer.recalculateStats()`:**
+1. Base stats (config)
+2. Bonus stats (permanent milestone gains — stored in `bonusStats` field, saved per-player)
+3. Equipment (armor + main hand)
+4. Accessories (via `rpg-accessories` if loaded)
+5. Status-effect flat modifiers
+6. Status-effect percent modifiers
+7. `StatRecalcEvent` — addons inject transient bonuses (e.g. guild perks via `holder().add()`)
 
 ### Key systems in rpg-core
 

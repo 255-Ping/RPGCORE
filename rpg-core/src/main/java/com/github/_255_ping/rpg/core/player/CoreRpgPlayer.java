@@ -23,6 +23,8 @@ public final class CoreRpgPlayer implements RpgPlayer {
 
     private final Player bukkit;
     private final MutableStatHolder base = new MutableStatHolder();
+    /** Permanent bonus stats accumulated from milestone rewards. Applied in recalculation after base. */
+    private final MutableStatHolder bonusStats = new MutableStatHolder();
     private final MutableStatHolder effective = new MutableStatHolder();
     private double currentMana;
 
@@ -50,12 +52,30 @@ public final class CoreRpgPlayer implements RpgPlayer {
     }
 
     @Override
+    public void add(Stat stat, double amount) {
+        bonusStats.add(stat, amount);
+    }
+
+    public Map<Stat, Double> bonusStats() { return bonusStats.snapshot(); }
+
+    public void setBonusStats(Map<Stat, Double> stats) {
+        bonusStats.clear();
+        stats.forEach(bonusStats::set);
+    }
+
+    @Override
     public void recalculateStats() {
         effective.clear();
 
         // Layer 1: base stats from config
         for (Map.Entry<Stat, Double> e : base.snapshot().entrySet()) {
             effective.set(e.getKey(), e.getValue());
+        }
+
+        // Layer 1.5: permanent bonus stats (milestone rewards, etc.)
+        for (Map.Entry<Stat, Double> e : bonusStats.snapshot().entrySet()) {
+            double cur = effective.get(e.getKey());
+            effective.set(e.getKey(), cur + e.getValue());
         }
 
         // Layer 2: equipment (armor slots + main hand)

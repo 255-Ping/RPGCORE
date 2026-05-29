@@ -36,6 +36,10 @@ public final class StatusEffectTickTask implements Runnable {
             for (ActiveEffectInstance ae : list) {
                 if (ae.expiryMs <= now) {
                     anyExpired = true;
+                    Optional<StatusEffect> expDef = service.registry().get(ae.effectId);
+                    if (expDef.isPresent() && expDef.get() instanceof CoreStatusEffect cse && cse.onExpire() != null) {
+                        CoreStatusEffectService.executeHook(entity, cse.onExpire());
+                    }
                     continue;
                 }
                 Optional<StatusEffect> def = service.registry().get(ae.effectId);

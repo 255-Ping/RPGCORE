@@ -6,6 +6,7 @@ import com.github._255_ping.rpg.api.status.ActiveStatusEffect;
 import com.github._255_ping.rpg.api.status.StackingStrategy;
 import com.github._255_ping.rpg.api.status.StatusEffect;
 import com.github._255_ping.rpg.api.status.StatusEffectService;
+import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -48,6 +49,9 @@ public final class CoreStatusEffectService implements StatusEffectService {
         }
 
         triggerRecalc(target);
+        if (def.get() instanceof CoreStatusEffect cse && cse.onApply() != null) {
+            executeHook(target, cse.onApply());
+        }
     }
 
     private void applyRefresh(CopyOnWriteArrayList<ActiveEffectInstance> list, String id, int level, long expiry, String src) {
@@ -156,6 +160,21 @@ public final class CoreStatusEffectService implements StatusEffectService {
 
     public CoreStatusEffectRegistry registry() {
         return registry;
+    }
+
+    static void executeHook(LivingEntity entity, CoreStatusEffect.HookSpec hook) {
+        if (hook.sound() != null && !hook.sound().isBlank()) {
+            entity.getWorld().playSound(entity.getLocation(), hook.sound(), hook.volume(), hook.pitch());
+        }
+        if (hook.particle() != null && !hook.particle().isBlank()) {
+            try {
+                Particle particle = Particle.valueOf(hook.particle().toUpperCase(java.util.Locale.ROOT));
+                entity.getWorld().spawnParticle(particle, entity.getLocation().add(0, 1, 0),
+                        hook.particleCount(), 0.3, 0.3, 0.3, 0);
+            } catch (IllegalArgumentException ignored) {
+                // unknown particle name — silently skip
+            }
+        }
     }
 
     private void triggerRecalc(LivingEntity target) {

@@ -99,7 +99,21 @@ public final class StatusEffectLoader {
             }
         }
 
-        return new CoreStatusEffect(id, display, category, stacking, hidden, modifiers, tickSpec);
+        CoreStatusEffect.HookSpec onApply = parseHookSpec(s.getConfigurationSection("on-apply"));
+        CoreStatusEffect.HookSpec onExpire = parseHookSpec(s.getConfigurationSection("on-expire"));
+
+        return new CoreStatusEffect(id, display, category, stacking, hidden, modifiers, tickSpec, onApply, onExpire);
+    }
+
+    private static CoreStatusEffect.HookSpec parseHookSpec(ConfigurationSection s) {
+        if (s == null) return null;
+        String sound = s.getString("sound");
+        float volume = (float) s.getDouble("volume", 1.0);
+        float pitch = (float) s.getDouble("pitch", 1.0);
+        String particle = s.getString("particle");
+        int count = s.getInt("count", 5);
+        if ((sound == null || sound.isBlank()) && (particle == null || particle.isBlank())) return null;
+        return new CoreStatusEffect.HookSpec(sound, volume, pitch, particle, count);
     }
 
     private static StatusEffect.Category parseCategory(String s) {

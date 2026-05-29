@@ -196,7 +196,8 @@ public final class GuildCommand implements CommandExecutor {
             guild = mustHaveGuild(p);
             if (guild == null) return;
         }
-        p.sendMessage(msg("&6&l=== &e" + guild.name() + " &6&l==="));
+        int level = manager.guildLevel(guild);
+        p.sendMessage(msg("&6&l=== &e" + guild.name() + " &7[Lv. " + level + "] &6&l==="));
         p.sendMessage(msg("&7Owner: &e" + fmt(Bukkit.getOfflinePlayer(guild.ownerId()))));
         p.sendMessage(msg("&7Members: &e" + guild.memberIds().size() + "&7/&e" + manager.maxMembers()));
         p.sendMessage(msg("&7Bank: &e" + guild.bankBalance().toPlainString() + " coins"));
@@ -298,9 +299,9 @@ public final class GuildCommand implements CommandExecutor {
 
     private static Component msg(String legacy) { return LEGACY.deserialize(legacy); }
 
-    /** Player name via NameFormatter (LuckPerms prefix/suffix). Falls back to raw. */
+    /** Player name via NameFormatter (LuckPerms prefix/suffix). Falls back to raw name. */
     private static String fmt(OfflinePlayer p) {
         try { return com.github._255_ping.rpg.api.RpgServices.nameFormatter().format(p); }
-        catch (IllegalStateException ex) { return fmt(p) == null ? "unknown" : fmt(p); }
+        catch (IllegalStateException ex) { String n = p.getName(); return n != null ? n : "unknown"; }
     }
 }

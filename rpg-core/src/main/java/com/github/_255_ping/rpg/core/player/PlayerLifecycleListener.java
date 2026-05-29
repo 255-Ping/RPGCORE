@@ -84,6 +84,15 @@ public final class PlayerLifecycleListener implements Listener {
                     }
                 }
             }
+            Object bonusRaw = data.get("bonus-stats");
+            if (bonusRaw instanceof Map<?, ?> bonusMap) {
+                Map<Stat, Double> loaded = new HashMap<>();
+                for (Map.Entry<?, ?> e : bonusMap.entrySet()) {
+                    if (!(e.getKey() instanceof String sid) || !(e.getValue() instanceof Number n)) continue;
+                    RpgServices.stats().get(sid).ifPresent(s -> loaded.put(s, n.doubleValue()));
+                }
+                if (!loaded.isEmpty()) rp.setBonusStats(loaded);
+            }
         }
 
         rp.setMana(mana);
@@ -102,6 +111,11 @@ public final class PlayerLifecycleListener implements Listener {
         data.put("hp", health.currentHp(player));
         data.put("mana", rp.mana());
         data.put("skills", new HashMap<>(skillState.raw()));
+        if (rp instanceof com.github._255_ping.rpg.core.player.CoreRpgPlayer crp) {
+            Map<String, Object> bonusMap = new HashMap<>();
+            crp.bonusStats().forEach((s, v) -> bonusMap.put(s.id(), v));
+            if (!bonusMap.isEmpty()) data.put("bonus-stats", bonusMap);
+        }
         RpgServices.dataStore().repository(REPO_NAME).save(player.getUniqueId().toString(), data);
 
         lookup.remove(player);

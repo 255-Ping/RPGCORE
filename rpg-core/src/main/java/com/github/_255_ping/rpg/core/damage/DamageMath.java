@@ -20,9 +20,8 @@ import java.util.concurrent.ThreadLocalRandom;
  *   final          = max(0, after_strength * defense_factor)
  * </pre>
  *
- * Stat aggregation from armor / accessories / effects / milestones / guild perks is not yet
- * wired — the player's stats come from {@code starting-state.base-stats} in config for now.
- * Mobs return 0 for all stats until the mob stat-holder lands.
+ * Player stats are fully aggregated (base → milestones → equipment → accessories → status effects →
+ * addon StatRecalcEvent injections). Mobs return 0 for all stats until the mob stat-holder lands.
  */
 public final class DamageMath {
 
