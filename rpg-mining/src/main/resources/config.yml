@@ -3,6 +3,13 @@
 
 default-xp: 5
 
+# Mining fatigue applied while holding a gathering tool (item with mining_speed, breaking_power, or foraging_speed).
+# This prevents vanilla blocks from being mined quickly with custom tools.
+# Amplifier: 0 = Fatigue I (10% slower), 1 = Fatigue II (60% slower), 2 = Fatigue III (even slower)
+mining-fatigue:
+  enabled: true
+  amplifier: 1  # Mining Fatigue II — severely slows vanilla block mining
+
 # Per-block-id XP overrides. Match the block id from plugins/rpg-core/blocks/*.yml.
 xp-per-block:
   red_gem_block: 20

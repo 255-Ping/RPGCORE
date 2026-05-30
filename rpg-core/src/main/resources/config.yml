@@ -40,6 +40,7 @@ vanilla-suppression:
   death-drops: true           # cancel vanilla death drops
   block-explosion-damage: true # cancel explosion damage to entities (region flag can override)
   block-break-tagged: true    # cancel vanilla break for tagged custom blocks
+  durability: false           # cancel item durability loss (items never wear out); false by default
 
 # Creative players bypass our custom systems (so admins can build freely).
 creative-mode-bypass:

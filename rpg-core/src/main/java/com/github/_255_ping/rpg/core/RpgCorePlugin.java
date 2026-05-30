@@ -24,7 +24,9 @@ import com.github._255_ping.rpg.core.mobs.MobAbilityRuntime;
 import com.github._255_ping.rpg.core.formatting.CoreMessageFormatter;
 import com.github._255_ping.rpg.core.formatting.CoreNameFormatter;
 import com.github._255_ping.rpg.core.gui.CoreGuiConfig;
+import com.github._255_ping.rpg.core.hud.CoreActionBarService;
 import com.github._255_ping.rpg.core.mobs.CoreMobStatService;
+import com.github._255_ping.rpg.core.suppression.DurabilityListener;
 import com.github._255_ping.rpg.core.formula.CoreExpressionEvaluator;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
 import com.github._255_ping.rpg.core.health.RegenTask;
@@ -155,6 +157,8 @@ public final class RpgCorePlugin extends JavaPlugin {
         RpgServices.setGuiConfig(guiCfg);
         CoreMobStatService mobStatService = new CoreMobStatService();
         RpgServices.setMobStats(mobStatService);
+        CoreActionBarService actionBarService = new CoreActionBarService();
+        RpgServices.setActionBar(actionBarService);
         messageFormatter = new CoreMessageFormatter(messagesFile);
         nameFormatter = new CoreNameFormatter();
         scheduler = new CoreSchedulerService();
@@ -218,6 +222,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         blockPersistence.load();
 
         getServer().getPluginManager().registerEvents(new VanillaSuppressionListener(this), this);
+        getServer().getPluginManager().registerEvents(new DurabilityListener(getConfig()), this);
         getServer().getPluginManager().registerEvents(
                 new PlayerLifecycleListener(this, playerLookup, healthService, skillsService), this);
         damagePipeline = new DamagePipelineListener(this, healthService);

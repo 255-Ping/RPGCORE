@@ -7,6 +7,9 @@ import org.bukkit.entity.Display;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Transformation;
 import org.joml.Quaternionf;
@@ -17,11 +20,14 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * One TextDisplay per online player, anchored above the head via the player as a passenger. The
- * display follows automatically (no per-tick teleport needed) and shows the configured nametag
- * format with prefix/suffix.
+ * One TextDisplay per online player, anchored above the head via the player as a passenger.
+ * The display follows automatically (no per-tick teleport needed) and shows the configured
+ * nametag format with prefix/suffix.
+ *
+ * <p>Handles player death/respawn: the display is removed on death and re-attached one tick
+ * after respawn so the entity reference is always valid.
  */
-public final class NametagManager {
+public final class NametagManager implements Listener {
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
@@ -39,16 +45,24 @@ public final class NametagManager {
     }
 
     public void onQuit(Player p) {
-        UUID id = displayOf.remove(p.getUniqueId());
-        if (id == null) return;
-        org.bukkit.entity.Entity ent = org.bukkit.Bukkit.getEntity(id);
-        if (ent != null) ent.remove();
+        removeDisplay(p.getUniqueId());
+    }
+
+    @EventHandler
+    public void onRespawn(PlayerRespawnEvent event) {
+        if (!plugin.getConfig().getBoolean("nametag.enabled", true)) return;
+        Player p = event.getPlayer();
+        // Remove old display first (it was attached to the pre-death entity).
+        removeDisplay(p.getUniqueId());
+        // Re-attach one tick after respawn so the player's entity is ready.
+        plugin.getServer().getScheduler().runTask(plugin, () -> spawn(p));
     }
 
     public void tick(Player p) {
         UUID displayId = displayOf.get(p.getUniqueId());
         if (displayId == null) return;
         if (!(org.bukkit.Bukkit.getEntity(displayId) instanceof TextDisplay td)) {
+            // Display was lost (e.g., chunk unload edge case) — respawn it.
             displayOf.remove(p.getUniqueId());
             spawn(p);
             return;
@@ -65,19 +79,23 @@ public final class NametagManager {
         td.text(text);
     }
 
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private void removeDisplay(UUID playerId) {
+        UUID id = displayOf.remove(playerId);
+        if (id == null) return;
+        org.bukkit.entity.Entity ent = org.bukkit.Bukkit.getEntity(id);
+        if (ent != null) ent.remove();
+    }
+
     private void spawn(Player p) {
         if (!p.isOnline()) return;
-        // Spawn at the player's feet — addPassenger will move it to the mount point.
-        // The y-offset is applied as a Display translation so it stacks on top of the
-        // passenger ride height (roughly the top of the player's head).
         float yOffset = (float) plugin.getConfig().getDouble("nametag.y-offset", 0.5);
         Location loc = p.getLocation();
         if (loc.getWorld() == null) return;
         TextDisplay td = (TextDisplay) loc.getWorld().spawnEntity(loc, EntityType.TEXT_DISPLAY);
         td.setBillboard(Display.Billboard.CENTER);
         td.setPersistent(false);
-        // Push the label above the passenger mount point via a Display transformation.
-        // identity quaternions + unit scale — only the translation changes.
         td.setTransformation(new Transformation(
                 new Vector3f(0f, yOffset, 0f),
                 new Quaternionf(),

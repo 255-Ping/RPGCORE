@@ -149,6 +149,16 @@ public final class HudTask implements Runnable {
     }
 
     private void updateActionBar(Player player) {
+        // Check for a priority message first (set by other plugins via ActionBarService).
+        try {
+            net.kyori.adventure.text.Component priority =
+                    com.github._255_ping.rpg.api.RpgServices.actionBar().peek(player);
+            if (priority != null) {
+                player.sendActionBar(priority);
+                return;
+            }
+        } catch (IllegalStateException ignored) { /* ActionBarService not loaded */ }
+
         String fmt = plugin.getConfig().getString("action-bar.idle-format", "");
         if (fmt.isEmpty()) return;
         player.sendActionBar(LEGACY.deserialize(PlaceholderResolver.resolve(player, fmt)));

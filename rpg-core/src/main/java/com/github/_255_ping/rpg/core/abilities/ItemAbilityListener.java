@@ -14,6 +14,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Optional;
@@ -22,8 +23,9 @@ import java.util.concurrent.CompletionException;
 /**
  * Right-click with a held RPG item that declares Abilities -> cast them.
  *
- * Air-rightclick on SWORD/WAND/BOW always fires; block-rightclick cancels the placement
- * only for those weapon types (so MATERIAL/QUEST items still place normally).
+ * <p>Both air-rightclick and block-rightclick are handled. Block-rightclick cancels the
+ * placement for weapon-type items so the cast doesn't also place a block.
+ * Only MAIN_HAND interactions are processed to prevent double-firing.
  */
 public final class ItemAbilityListener implements Listener {
 
@@ -35,12 +37,20 @@ public final class ItemAbilityListener implements Listener {
         this.registry = registry;
     }
 
-    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.NORMAL)
     public void onInteract(PlayerInteractEvent event) {
+        // Only fire once per click — ignore off-hand duplicate event.
+        if (event.getHand() != EquipmentSlot.HAND) return;
+
         Action action = event.getAction();
         if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) return;
 
+        Player player = event.getPlayer();
+        // event.getItem() can be null on air-clicks in some Paper versions; fall back to main hand.
         ItemStack stack = event.getItem();
+        if (stack == null || stack.getType().isAir()) {
+            stack = player.getInventory().getItemInMainHand();
+        }
         if (stack == null || stack.getType().isAir()) return;
 
         Optional<RpgItem> opt = RpgServices.items().from(stack);
@@ -53,7 +63,6 @@ public final class ItemAbilityListener implements Listener {
             event.setUseInteractedBlock(org.bukkit.event.Event.Result.DENY);
         }
 
-        Player player = event.getPlayer();
         double baseDamage = RpgServices.player(player).get(BuiltinStat.DAMAGE);
         AbilityContext ctx = new AbilityContext(player, baseDamage);
         ctx.setPoint(player.getEyeLocation());
@@ -78,18 +87,18 @@ public final class ItemAbilityListener implements Listener {
         };
     }
 
-    /** Convenience to ensure all built-ins are registered. Called once on plugin enable. */
+    /** Register all built-in effects. Called once on plugin enable. */
     public static void registerBuiltins(CoreAbilityRegistry registry) {
-        registry.register("damage", com.github._255_ping.rpg.core.abilities.effects.DamageEffect::new);
-        registry.register("heal", com.github._255_ping.rpg.core.abilities.effects.HealEffect::new);
-        registry.register("beam", com.github._255_ping.rpg.core.abilities.effects.BeamEffect::new);
-        registry.register("explode", com.github._255_ping.rpg.core.abilities.effects.ExplodeEffect::new);
-        registry.register("particles", com.github._255_ping.rpg.core.abilities.effects.ParticlesEffect::new);
-        registry.register("sound", com.github._255_ping.rpg.core.abilities.effects.SoundEffect::new);
-        registry.register("delay", com.github._255_ping.rpg.core.abilities.effects.DelayEffect::new);
+        registry.register("damage",       com.github._255_ping.rpg.core.abilities.effects.DamageEffect::new);
+        registry.register("heal",         com.github._255_ping.rpg.core.abilities.effects.HealEffect::new);
+        registry.register("beam",         com.github._255_ping.rpg.core.abilities.effects.BeamEffect::new);
+        registry.register("explode",      com.github._255_ping.rpg.core.abilities.effects.ExplodeEffect::new);
+        registry.register("aoe",          com.github._255_ping.rpg.core.abilities.effects.ExplodeEffect::new); // alias
+        registry.register("particles",    com.github._255_ping.rpg.core.abilities.effects.ParticlesEffect::new);
+        registry.register("sound",        com.github._255_ping.rpg.core.abilities.effects.SoundEffect::new);
+        registry.register("delay",        com.github._255_ping.rpg.core.abilities.effects.DelayEffect::new);
         registry.register("apply_status", com.github._255_ping.rpg.core.abilities.effects.ApplyStatusEffect::new);
-        registry.register("mana_cost", com.github._255_ping.rpg.core.abilities.effects.ManaCostEffect::new);
-        registry.register("cooldown", com.github._255_ping.rpg.core.abilities.effects.CooldownEffect::new);
+        registry.register("mana_cost",    com.github._255_ping.rpg.core.abilities.effects.ManaCostEffect::new);
+        registry.register("cooldown",     com.github._255_ping.rpg.core.abilities.effects.CooldownEffect::new);
     }
-
 }

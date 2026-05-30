@@ -44,6 +44,7 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         switch (args[0].toLowerCase()) {
+            case "help", "?" -> handleHelp(sender);
             case "version" -> handleVersion(sender);
             case "reload", "reloadall" -> handleReload(sender);
             case "item" -> handleItem(sender, args);
@@ -277,6 +278,34 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
         }
         sender.sendMessage(plugin.messages().component("block.converted",
                 Map.of("count", count, "radius", radius, "id", toId)));
+    }
+
+    private void handleHelp(CommandSender sender) {
+        sender.sendMessage(net.kyori.adventure.text.Component.text("§6§l=== RPG Plugin Commands ==="));
+        String[] lines = {
+            "§e/rpg help §7— Show this help page",
+            "§e/rpg version §7— List all loaded module versions",
+            "§e/rpg reload §7— Hot-reload all content (items/mobs/abilities/blocks/effects)",
+            "§e/rpg item give <id> [player] [amount] §7— Give a custom item",
+            "§e/rpg mob spawn <id> [count] §7— Spawn a custom mob at your location",
+            "§e/rpg block give <id> §7— Get a placeable custom block in hand",
+            "§e/rpg block convert <radius> <from> <to> §7— Bulk-convert blocks",
+            "§e/rpg wand §7— Get the selection wand",
+            "§e/rpg wand region §7— Switch wand to region-selection mode",
+            "§e/rpg wand dungeon §7— Switch wand to dungeon-selection mode",
+            "§e/spawner create <mobId> §7— Place a mob spawner at your location",
+            "§e/spawner show §7— Toggle spawner particle markers",
+            "§e/region create <id> §7— Create region from wand selection",
+            "§e/region flag <id> <flag> <value> §7— Set a region flag",
+            "§e/region info [id] §7— Show region info at your location",
+            "§e/region list §7— List all regions",
+            "§e/rpg status apply <id> [player] §7— Apply a status effect",
+            "§e/rpg skill set <skill> level <n> [player] §7— Set skill level",
+            "§e/rpg ability cast <id> §7— Debug-cast an ability",
+        };
+        for (String line : lines) {
+            sender.sendMessage(net.kyori.adventure.text.Component.text(line));
+        }
     }
 
     private void handleVersion(CommandSender sender) {

@@ -1,9 +1,11 @@
 package com.github._255_ping.rpg.core.items;
 
+import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.abilities.AbilityInvocation;
 import com.github._255_ping.rpg.api.items.ItemType;
 import com.github._255_ping.rpg.api.items.Rarity;
 import com.github._255_ping.rpg.api.items.RpgItem;
+import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import com.github._255_ping.rpg.api.stats.Stat;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -16,6 +18,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -89,24 +92,45 @@ public final class CoreRpgItem implements RpgItem {
         }
 
         List<Component> lore = new ArrayList<>();
-        for (Map.Entry<Stat, Double> e : stats.entrySet()) {
+
+        // Stats: BREAKING_POWER shown first (gathering tools), then all others.
+        List<Map.Entry<Stat, Double>> statEntries = new ArrayList<>(stats.entrySet());
+        statEntries.sort(Comparator.comparingInt(e -> e.getKey() == BuiltinStat.BREAKING_POWER ? 0 : 1));
+        for (Map.Entry<Stat, Double> e : statEntries) {
             Stat stat = e.getKey();
             double value = e.getValue();
             String line = stat.colorCode() + stat.displayName() + ": " + formatValue(value, stat.percent());
             lore.add(noItalic(LEGACY.deserialize(line)));
         }
+
         if (!stats.isEmpty() && !extraLore.isEmpty()) {
             lore.add(Component.empty());
         }
         for (String l : extraLore) {
             lore.add(noItalic(LEGACY.deserialize(l)));
         }
+
+        // Abilities: show display name + description lines from the ability registry.
         if (!abilities.isEmpty()) {
             if (!lore.isEmpty()) lore.add(Component.empty());
             for (AbilityInvocation inv : abilities) {
-                lore.add(noItalic(LEGACY.deserialize("&5Ability: &d" + inv.effectName())));
+                String abilityId = inv.effectName();
+                String displayName;
+                List<String> description;
+                try {
+                    displayName = RpgServices.abilities().abilityDisplayName(abilityId);
+                    description = RpgServices.abilities().abilityDescription(abilityId);
+                } catch (IllegalStateException ex) {
+                    displayName = abilityId;
+                    description = List.of();
+                }
+                lore.add(noItalic(LEGACY.deserialize("&5Ability: &d" + displayName)));
+                for (String line : description) {
+                    lore.add(noItalic(LEGACY.deserialize("  &7" + line)));
+                }
             }
         }
+
         if (rarity != null) {
             if (!lore.isEmpty()) lore.add(Component.empty());
             lore.add(noItalic(LEGACY.deserialize(rarity.coloredDisplay())));

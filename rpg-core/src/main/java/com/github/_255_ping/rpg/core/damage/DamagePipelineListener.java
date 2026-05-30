@@ -111,6 +111,23 @@ public final class DamagePipelineListener implements Listener {
             }
         }
 
+        // Knockback: apply velocity to the victim based on attacker's KNOCKBACK stat.
+        if (attacker != null && !(victim instanceof Player)) {
+            double knockback = 0;
+            if (attacker instanceof Player ap) {
+                knockback = RpgServices.player(ap).get(BuiltinStat.KNOCKBACK);
+            } else {
+                knockback = RpgServices.mobStats().forMob(attacker).get(BuiltinStat.KNOCKBACK);
+            }
+            if (knockback > 0) {
+                org.bukkit.util.Vector dir = victim.getLocation().toVector()
+                        .subtract(attacker.getLocation().toVector());
+                if (dir.lengthSquared() > 0) dir.normalize();
+                double strength = knockback / 100.0;
+                victim.setVelocity(dir.multiply(strength).setY(Math.min(0.3 + strength * 0.1, 0.5)));
+            }
+        }
+
         // Update mob health bar in display name.
         if (!(victim instanceof Player) && mobIdKey != null) {
             updateMobHealthBar(victim);
@@ -214,7 +231,7 @@ public final class DamagePipelineListener implements Listener {
         Integer level = mobLevelKey != null
                 ? mob.getPersistentDataContainer().get(mobLevelKey, PersistentDataType.INTEGER)
                 : null;
-        String levelPrefix = (level != null && level > 1) ? "§7[Lv. " + level + "] " : "";
+        String levelPrefix = level != null ? "§7[Lv. " + level + "] " : "";
 
         String rawName = def.get().displayName() != null ? def.get().displayName() : mobId;
         String display = levelPrefix + rawName + " " + bar + " §7" + (int) Math.ceil(cur) + "§8/§7" + (int) max;

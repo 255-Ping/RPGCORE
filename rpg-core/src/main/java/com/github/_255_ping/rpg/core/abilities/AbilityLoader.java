@@ -12,9 +12,14 @@ import java.util.logging.Logger;
 
 /**
  * Scans {@code plugins/rpg-core/abilities/} for *.yml files. Each top-level key is a
- * custom ability id with an {@code AbilitySequence} list and optional {@code Cooldown}
- * hard-floor (ticks). Each ability is registered as a {@link CompositeAbilityEffect} on
- * the ability registry, callable from item / mob Abilities lists by its id.
+ * custom ability id with an {@code AbilitySequence} list and optional fields:
+ * <ul>
+ *   <li>{@code Cooldown} — hard-floor ticks (items can't reduce below this)</li>
+ *   <li>{@code Name} — display name shown in item lore</li>
+ *   <li>{@code Description} — list of lore lines shown below the ability name</li>
+ * </ul>
+ * Each ability is registered as a {@link CompositeAbilityEffect} on the ability registry,
+ * callable from item / mob {@code Abilities} lists by its id.
  */
 public final class AbilityLoader {
 
@@ -57,6 +62,7 @@ public final class AbilityLoader {
             try {
                 CompositeAbilityEffect composite = parse(id, section);
                 registry.register(id, params -> composite);
+                registry.registerMeta(id, composite.displayName(), composite.description());
                 registered.add(id);
             } catch (Exception ex) {
                 logger.warning("Skipping ability '" + id + "' in " + file.getName() + ": " + ex.getMessage());
@@ -67,11 +73,13 @@ public final class AbilityLoader {
     private CompositeAbilityEffect parse(String id, ConfigurationSection s) {
         List<String> seq = s.getStringList("AbilitySequence");
         long cooldown = s.getLong("Cooldown", 0);
+        String displayName = s.getString("Name");
+        List<String> description = s.getStringList("Description");
 
         List<AbilityInvocation> invocations = new ArrayList<>();
         for (String line : seq) {
             invocations.addAll(AbilityDsl.parse(line));
         }
-        return new CompositeAbilityEffect(id, invocations, cooldown);
+        return new CompositeAbilityEffect(id, invocations, cooldown, displayName, description);
     }
 }

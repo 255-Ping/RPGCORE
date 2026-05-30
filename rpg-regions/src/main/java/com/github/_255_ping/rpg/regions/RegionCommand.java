@@ -19,8 +19,13 @@ import java.util.Map;
 public final class RegionCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> KNOWN_FLAGS = List.of(
-            "pvp", "mob-spawning", "mob-damage", "fall-damage", "fire-damage",
-            "entry", "exit", "fly", "god", "greeting", "farewell");
+            "pvp", "no-break", "no-break-vanilla", "no-place",
+            "no-mob-spawning", "no-natural-spawning", "mob-spawning", "mob-damage",
+            "fall-damage", "fire-damage", "explosion-damage",
+            "no-ability-use", "damage-multiplier", "health-regen-multiplier",
+            "entry", "exit", "fly", "god",
+            "greeting", "farewell",
+            "apply-status");
 
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();

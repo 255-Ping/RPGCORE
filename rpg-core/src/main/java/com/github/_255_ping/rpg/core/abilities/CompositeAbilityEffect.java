@@ -16,20 +16,30 @@ import java.util.concurrent.CompletableFuture;
  *
  * <p>The {@code Cooldown:} field in the ability YAML is a <b>hard floor</b> — items using
  * this ability can't reduce it below the value declared here.
+ *
+ * <p>The optional {@code Name:} and {@code Description:} fields are shown in item lore when
+ * this ability is attached to an item.
  */
 public final class CompositeAbilityEffect implements AbilityEffect {
 
     private final String id;
+    private final String displayName;
+    private final List<String> description;
     private final AbilityPipeline pipeline;
     private final long hardCooldownTicks;
 
-    public CompositeAbilityEffect(String id, List<AbilityInvocation> sequence, long hardCooldownTicks) {
+    public CompositeAbilityEffect(String id, List<AbilityInvocation> sequence, long hardCooldownTicks,
+                                   String displayName, List<String> description) {
         this.id = id;
         this.pipeline = new AbilityPipeline(sequence);
         this.hardCooldownTicks = hardCooldownTicks;
+        this.displayName = (displayName != null && !displayName.isBlank()) ? displayName : id;
+        this.description = description != null ? List.copyOf(description) : List.of();
     }
 
     @Override public String name() { return id; }
+    @Override public String displayName() { return displayName; }
+    @Override public List<String> description() { return description; }
 
     @Override
     public CompletableFuture<AbilityContext> apply(AbilityContext ctx) {

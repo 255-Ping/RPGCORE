@@ -82,7 +82,16 @@ public final class BlockBreakHandler implements Listener {
 
         if (!gatesPass(player, block)) return;
 
-        active.put(player.getUniqueId(), new BlockBreakProgress(loc, block));
+        BlockBreakProgress existing = active.get(player.getUniqueId());
+        if (existing != null && existing.location.equals(loc)) {
+            // Continuing on the same block — refresh the click timestamp only.
+            existing.lastClickMs = System.currentTimeMillis();
+        } else {
+            // New block — start fresh progress.
+            BlockBreakProgress progress = new BlockBreakProgress(loc, block);
+            progress.lastClickMs = System.currentTimeMillis();
+            active.put(player.getUniqueId(), progress);
+        }
     }
 
     @EventHandler
@@ -141,8 +150,22 @@ public final class BlockBreakHandler implements Listener {
             if (player == null || !player.isOnline()) return true;
             if (!registry.hasTag(progress.location)) return true;
 
-            // Still aiming at the same block? If the player switched to another block,
-            // their next BlockDamageEvent starts fresh; we just drop this one.
+            // Require the player to be holding left-click: if no BlockDamageEvent arrived in
+            // the last 400 ms, the player released the mouse button — cancel progress.
+            if (System.currentTimeMillis() - progress.lastClickMs > 400) {
+                player.sendBlockDamage(progress.location, 0f);
+                return true;
+            }
+
+            // Distance check: player must be within 6 blocks of the target.
+            Location blockCenter = progress.location.clone().add(0.5, 0.5, 0.5);
+            if (player.getWorld() != progress.location.getWorld() ||
+                    player.getLocation().distanceSquared(blockCenter) > 36) {
+                player.sendBlockDamage(progress.location, 0f);
+                return true;
+            }
+
+            // Still aiming at the same block?
             org.bukkit.block.Block targeted = player.getTargetBlockExact(8);
             if (targeted == null || !targeted.getLocation().equals(progress.location)) {
                 player.sendBlockDamage(progress.location, 0f);
@@ -204,16 +227,25 @@ public final class BlockBreakHandler implements Listener {
     private boolean gatesPass(Player player, Block block) {
         double breakingPower = RpgServices.player(player).get(BuiltinStat.BREAKING_POWER);
         if (block.requiredPower() > breakingPower) {
-            player.sendActionBar(plugin.messages().component("block.power-too-low",
+            sendPriorityActionBar(player, plugin.messages().component("block.power-too-low",
                     java.util.Map.of("required", block.requiredPower())));
             return false;
         }
         if (!toolMatches(block.requiredToolType(), player.getInventory().getItemInMainHand())) {
-            player.sendActionBar(plugin.messages().component("block.wrong-tool",
+            sendPriorityActionBar(player, plugin.messages().component("block.wrong-tool",
                     java.util.Map.of("tool", block.requiredToolType().name().toLowerCase())));
             return false;
         }
         return true;
+    }
+
+    /** Sends an action bar message via the priority service (1 second) so it isn't instantly overridden by the idle HUD. */
+    private static void sendPriorityActionBar(Player player, net.kyori.adventure.text.Component msg) {
+        try {
+            RpgServices.actionBar().send(player, msg, 20);
+        } catch (IllegalStateException ignored) {
+            player.sendActionBar(msg);
+        }
     }
 
     private void clearProgress(Player player) {

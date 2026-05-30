@@ -18,6 +18,9 @@ import java.util.concurrent.CompletableFuture;
  * Fires a particle beam from the caster's eye in the look direction, up to {@code range}
  * blocks. The first living entity hit (excluding caster) becomes the new {@code ctx.target};
  * {@code ctx.point} is set to the endpoint (hit point or max range).
+ *
+ * <p>If the beam hits an entity and {@code damage_multiplier > 0}, damage is applied
+ * immediately. Carried damage is also scaled by {@code damage_multiplier} for chained effects.
  */
 public final class BeamEffect implements AbilityEffect {
 
@@ -50,7 +53,11 @@ public final class BeamEffect implements AbilityEffect {
         if (result != null && result.getHitEntity() instanceof LivingEntity hit) {
             ctx.setTarget(hit);
             end = result.getHitPosition().toLocation(caster.getWorld());
-            ctx.setCarriedDamage(ctx.carriedDamage() * damageMultiplier);
+            double dealDamage = ctx.carriedDamage() * damageMultiplier;
+            ctx.setCarriedDamage(dealDamage);
+            if (dealDamage > 0) {
+                RpgServices.health().damage(hit, dealDamage, "ability_beam");
+            }
         } else if (result != null) {
             end = result.getHitPosition().toLocation(caster.getWorld());
         } else {
@@ -58,9 +65,9 @@ public final class BeamEffect implements AbilityEffect {
         }
         ctx.setPoint(end);
 
-        // Stripe particles along the beam.
+        // Stripe particles along the beam (3 steps per block = dense trail).
         double dist = eye.distance(end);
-        int steps = Math.max(1, (int) Math.round(dist * 2));
+        int steps = Math.max(1, (int) Math.round(dist * 3));
         Vector step = dir.clone().normalize().multiply(dist / steps);
         Location cursor = eye.clone();
         for (int i = 0; i < steps; i++) {

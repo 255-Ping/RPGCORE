@@ -209,19 +209,19 @@ When `suiteVersion` bumps:
 
 | Module | Property | Current |
 |---|---|---|
-| rpg-api | `apiVersion` | 0.0.8 |
-| rpg-core | `coreVersion` | 0.3.0 |
-| rpg-mining | `miningVersion` | 0.0.2 |
+| rpg-api | `apiVersion` | 0.0.9 |
+| rpg-core | `coreVersion` | 0.4.0 |
+| rpg-mining | `miningVersion` | 0.1.0 |
 | rpg-combat | `combatVersion` | 0.1.0 |
 | rpg-economy | `economyVersion` | 0.1.0 |
-| rpg-hud | `hudVersion` | 0.1.1 |
+| rpg-hud | `hudVersion` | 0.2.0 |
 | rpg-chat | `chatVersion` | 0.1.0 |
 | rpg-accessories | `accessoriesVersion` | 0.0.2 |
 | rpg-holograms | `hologramsVersion` | 0.0.2 |
 | rpg-parties | `partiesVersion` | 0.2.0 |
 | rpg-foraging | `foragingVersion` | 0.1.0 |
 | rpg-fishing | `fishingVersion` | 0.0.1 |
-| rpg-regions | `regionsVersion` | 0.1.0 |
+| rpg-regions | `regionsVersion` | 0.2.0 |
 | rpg-farming | `farmingVersion` | 0.1.0 |
 | rpg-guilds | `guildsVersion` | 0.1.0 |
 | rpg-enchanting | `enchantingVersion` | 0.0.2 |

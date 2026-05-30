@@ -24,6 +24,7 @@ public final class RpgHudPlugin extends JavaPlugin implements Listener, CommandE
         nametagManager = new NametagManager(this);
         hudTask.setNametagManager(nametagManager);
         getServer().getPluginManager().registerEvents(this, this);
+        getServer().getPluginManager().registerEvents(nametagManager, this);
         getServer().getScheduler().runTaskTimer(this, hudTask, 20L, 1L);
         Objects.requireNonNull(getCommand("hud"), "command 'hud' missing").setExecutor(this);
         getLogger().info("rpg-hud v" + getPluginMeta().getVersion() + " enabled.");

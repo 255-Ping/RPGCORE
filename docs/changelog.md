@@ -6,6 +6,36 @@ Version format: `<plugin>-<pluginVersion>-<suiteVersion>`. Only notable changes 
 
 ## Suite 18 (current)
 
+### rpg-api `0.0.9`
+- `AbilityEffect`: added `displayName()` and `description()` default methods for item lore.
+- `AbilityRegistry`: added `registerMeta`, `abilityDisplayName`, `abilityDescription` for custom ability lore.
+- `ActionBarService` interface: priority action bar system; `RpgServices.actionBar()` lets any plugin override the idle HUD format for a duration.
+- `BuiltinStat`: added `KNOCKBACK` stat.
+
+### rpg-core `0.4.0`
+- **Air-click fix**: abilities now fire on right-click-air and right-click-block equally. Added `EquipmentSlot.HAND` filter to prevent double-firing.
+- **Beam damage**: `BeamEffect` now applies damage directly to the hit entity. No separate `damage{}` step needed for a basic beam wand.
+- **Explode/aoe fix**: `ExplodeEffect` registered under both `explode` and `aoe` names. Particle spawning fixed — now emits a burst spread across the radius instead of a single point particle. Default particle changed to `EXPLOSION_EMITTER`.
+- **Ability lore**: custom abilities with `Name:` and `Description:` in their YAML now show that text in item lore below the ability line.
+- **Breaking power at top**: `BREAKING_POWER` stat is always rendered first in item lore.
+- **Mining hold-to-break**: progress now cancels if no `BlockDamageEvent` arrives in the last 400 ms (player released mouse). Added 6-block distance check.
+- **Action bar priority**: `CoreActionBarService` + `RpgServices.actionBar()`. Wrong-tool and insufficient-power messages now show for 1 second without being overridden by the idle HUD stats.
+- **Knockback stat**: attacking entities with `KNOCKBACK > 0` applies velocity knockback to the victim (scaled: 100 = 1.0 strength).
+- **Mob level in nameplate**: level shown for all custom mobs (previously hidden for level-1 mobs).
+- **Durability suppression**: `vanilla-suppression.durability: false` in config; set to `true` to cancel all item durability loss.
+- **`/rpg help`**: new subcommand listing every main command across the suite.
+
+### rpg-hud `0.2.0`
+- Nametag now re-attaches correctly after player death/respawn (`PlayerRespawnEvent` handler).
+- `HudTask.updateActionBar` checks `RpgServices.actionBar()` first; priority messages are shown instead of the idle format when pending.
+
+### rpg-regions `0.2.0`
+- New flag `no-break-vanilla`: cancels block breaks only for non-custom blocks (creative players exempt). Use to protect the map while still allowing custom block interaction.
+- `KNOWN_FLAGS` table expanded with all documented flags from `regions.md`.
+
+### rpg-mining `0.1.0`
+- Mining Fatigue applied while holding a gathering tool (RPG item with `MINING_SPEED`, `BREAKING_POWER`, or `FORAGING_SPEED`). Configurable via `mining-fatigue.enabled` and `mining-fatigue.amplifier` (default: Fatigue II, severely slows vanilla block mining).
+
 ### rpg-api `0.0.8`
 - Added `MobStatService` interface — per-entity stat holders for custom mobs, accessible via `RpgServices.mobStats()`.
 - Added `GuiConfig` interface — GUI pane materials and fill helpers, accessible via `RpgServices.guiConfig()`.
