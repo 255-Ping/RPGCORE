@@ -6,46 +6,69 @@ import com.github._255_ping.rpg.api.items.RpgItem;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public final class NpcInteractListener implements Listener {
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
     private final NpcManager manager;
+    private final BankerGui bankerGui;
+    private final JavaPlugin plugin;
     private final Map<UUID, String> openShop = new HashMap<>();
 
-    public NpcInteractListener(NpcManager manager) {
+    public NpcInteractListener(NpcManager manager, BankerGui bankerGui, JavaPlugin plugin) {
         this.manager = manager;
+        this.bankerGui = bankerGui;
+        this.plugin = plugin;
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onInteract(PlayerInteractEntityEvent e) {
         Optional<NpcDef> opt = manager.fromEntity(e.getRightClicked());
         if (opt.isEmpty()) return;
-        // Always cancel the vanilla interaction for NPC entities — prevents villager trade GUI.
         e.setCancelled(true);
         if (!e.getPlayer().hasPermission("rpg.npcs.use")) return;
         NpcDef def = opt.get();
         switch (def.behaviorType()) {
             case DIALOGUE -> sendDialogue(e.getPlayer(), def);
-            case SHOP -> openShop(e.getPlayer(), def);
-            case QUEST -> handoffQuest(e.getPlayer(), def);
+            case SHOP     -> openShop(e.getPlayer(), def);
+            case QUEST    -> handoffQuest(e.getPlayer(), def);
+            case BANKER   -> bankerGui.open(e.getPlayer(), def);
+        }
+    }
+
+    /**
+     * When a player joins, send them tab-list ADD packets for all active fake-player NPCs so
+     * their skins load on the client; the packets are removed after 2 ticks.
+     */
+    @EventHandler
+    public void onJoin(PlayerJoinEvent e) {
+        Player joiner = e.getPlayer();
+        for (UUID entUuid : manager.entityIndex().keySet()) {
+            org.bukkit.entity.Entity ent = Bukkit.getEntity(entUuid);
+            if (!(ent instanceof org.bukkit.entity.HumanEntity)) continue;
+            // Only care about NMS ServerPlayer (fake players), not real players
+            if (!(((CraftPlayer) ent).getHandle() instanceof ServerPlayer sp)) continue;
+            // Skip real connections — only target entities without an active connection
+            if (sp.connection != null && sp.connection.isAcceptingMessages()) continue;
+            FakePlayerNpc.sendSkinToJoiningPlayer(plugin, sp, joiner);
         }
     }
 
@@ -56,8 +79,7 @@ public final class NpcInteractListener implements Listener {
     }
 
     private void openShop(Player p, NpcDef def) {
-        Inventory inv = Bukkit.createInventory(p, 27, Component.text(def.displayName())
-                .color(NamedTextColor.GOLD));
+        Inventory inv = Bukkit.createInventory(p, 27, Component.text(def.displayName()).color(NamedTextColor.GOLD));
         int i = 0;
         for (NpcDef.ShopEntry entry : def.shopItems()) {
             if (i >= 27) break;
@@ -68,15 +90,14 @@ public final class NpcInteractListener implements Listener {
             });
             ItemMeta meta = stack.getItemMeta();
             if (meta != null) {
-                java.util.List<Component> lore = meta.lore() != null ? new java.util.ArrayList<>(meta.lore()) : new java.util.ArrayList<>();
+                List<Component> lore = meta.lore() != null ? new ArrayList<>(meta.lore()) : new ArrayList<>();
                 lore.add(Component.empty());
-                if (entry.buy() > 0) lore.add(Component.text("Buy: " + (long) entry.buy()).color(NamedTextColor.GREEN));
+                if (entry.buy() > 0)  lore.add(Component.text("Buy: "  + (long) entry.buy()).color(NamedTextColor.GREEN));
                 if (entry.sell() > 0) lore.add(Component.text("Sell (shift+click): " + (long) entry.sell()).color(NamedTextColor.YELLOW));
                 meta.lore(lore);
                 stack.setItemMeta(meta);
             }
-            inv.setItem(i, stack);
-            i++;
+            inv.setItem(i++, stack);
         }
         p.openInventory(inv);
         openShop.put(p.getUniqueId(), def.id());
@@ -87,7 +108,7 @@ public final class NpcInteractListener implements Listener {
         if (!(e.getWhoClicked() instanceof Player p)) return;
         String npcId = openShop.get(p.getUniqueId());
         if (npcId == null) return;
-        if (e.getRawSlot() >= e.getView().getTopInventory().getSize()) return; // bottom
+        if (e.getRawSlot() >= e.getView().getTopInventory().getSize()) return;
         e.setCancelled(true);
         Optional<NpcDef> opt = manager.get(npcId);
         if (opt.isEmpty()) return;
@@ -97,7 +118,6 @@ public final class NpcInteractListener implements Listener {
         try {
             Economy economy = RpgServices.economy();
             if (e.isShiftClick()) {
-                // sell-back path — check whether the player has the item.
                 Optional<RpgItem> rpg = RpgServices.items().get(entry.itemId());
                 Material mat = rpg.isPresent() ? rpg.get().material() : Material.matchMaterial(entry.itemId());
                 if (mat == null) return;
@@ -141,9 +161,7 @@ public final class NpcInteractListener implements Listener {
             p.sendMessage(Component.text(def.displayName() + " has nothing to say.").color(NamedTextColor.GRAY));
             return;
         }
-        // Quest service is provided by rpg-quests via Bukkit ServicesManager — soft dep.
-        QuestHandoffBridge bridge = Bukkit.getServer().getServicesManager()
-                .load(QuestHandoffBridge.class);
+        QuestHandoffBridge bridge = Bukkit.getServer().getServicesManager().load(QuestHandoffBridge.class);
         if (bridge == null) {
             p.sendMessage(Component.text("Quest system is not loaded.").color(NamedTextColor.RED));
             return;

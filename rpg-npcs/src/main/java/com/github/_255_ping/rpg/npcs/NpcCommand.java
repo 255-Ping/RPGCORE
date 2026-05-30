@@ -106,7 +106,7 @@ public final class NpcCommand implements CommandExecutor, TabCompleter {
     private void handleSetBehavior(CommandSender sender, String[] args) {
         if (!sender.hasPermission("rpg.npcs.admin.setbehavior")) return;
         if (args.length < 3) {
-            sender.sendMessage(Component.text("/npc setbehavior <id> <dialogue|shop|quest> [arg...]")
+            sender.sendMessage(Component.text("/npc setbehavior <id> <dialogue|shop|quest|banker> [arg...]")
                     .color(NamedTextColor.YELLOW));
             return;
         }
@@ -129,16 +129,24 @@ public final class NpcCommand implements CommandExecutor, TabCompleter {
                 if (args.length >= 4) {
                     lines.add(String.join(" ", java.util.Arrays.copyOfRange(args, 3, args.length)));
                 }
-                def.setBehavior(NpcDef.BehaviorType.DIALOGUE, def.shopItems(), lines, null);
+                def.setBehavior(NpcDef.BehaviorType.DIALOGUE, def.shopItems(), lines, null, null);
             }
             case QUEST -> {
                 String quest = args.length >= 4 ? args[3] : "";
-                def.setBehavior(NpcDef.BehaviorType.QUEST, def.shopItems(), def.dialogueLines(), quest);
+                def.setBehavior(NpcDef.BehaviorType.QUEST, def.shopItems(), def.dialogueLines(), quest, null);
             }
             case SHOP -> {
-                def.setBehavior(NpcDef.BehaviorType.SHOP, def.shopItems(), def.dialogueLines(), null);
+                def.setBehavior(NpcDef.BehaviorType.SHOP, def.shopItems(), def.dialogueLines(), null, null);
                 sender.sendMessage(Component.text("Shop behavior set. Edit npcs/all.yml to add items.")
                         .color(NamedTextColor.YELLOW));
+            }
+            case BANKER -> {
+                String bankName = args.length >= 4
+                    ? String.join(" ", java.util.Arrays.copyOfRange(args, 3, args.length))
+                    : def.displayName();
+                def.setBehavior(NpcDef.BehaviorType.BANKER, def.shopItems(), def.dialogueLines(), null,
+                    new NpcDef.BankerData(bankName, 0.5));
+                sender.sendMessage(Component.text("Banker behavior set. Bank: " + bankName).color(NamedTextColor.GREEN));
             }
         }
         plugin.manager().rebuild(def);
@@ -152,7 +160,7 @@ public final class NpcCommand implements CommandExecutor, TabCompleter {
             return plugin.manager().all().stream().map(NpcDef::id).toList();
         }
         if (args.length == 3 && args[0].equalsIgnoreCase("setbehavior")) {
-            return List.of("dialogue", "shop", "quest");
+            return List.of("dialogue", "shop", "quest", "banker");
         }
         return List.of();
     }

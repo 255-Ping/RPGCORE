@@ -3,8 +3,13 @@
 # How NPCs render in-world.
 display:
   use-text-display-for-name: true   # floating name tag above the body
-  body-entity: VILLAGER             # vanilla type used as the clickable body. Disabled AI.
+  body-entity: VILLAGER             # vanilla type used as the clickable body (EntityStyle: ENTITY NPCs only)
   click-range-blocks: 4.5
 
 # Whether new NPCs auto-save to YAML the moment they're created/moved.
 autosave: true
+
+# Banker NPC settings.
+banker:
+  default-daily-interest-percent: 0.5   # interest rate applied to savings once per interval
+  interest-interval-hours: 24           # how often interest accrues (real-time hours at 20 ticks/sec)
