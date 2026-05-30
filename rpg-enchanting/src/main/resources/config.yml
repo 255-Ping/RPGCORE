@@ -6,11 +6,16 @@ features:
   reforges: true     # reforges applied at the anvil block
   upgrades: true     # tier-upgrades applied at the anvil block
 
-# Station block IDs to listen on. Both must also be defined in rpg-core's blocks/ folder
-# with a matching StationType. The defaults below pair with the example files we ship.
+# Station block IDs to listen on (legacy — prefer setting StationType in block YAML instead).
 stations:
   enchanting-block: rpg_enchanting_table
   anvil-block: rpg_custom_anvil
+
+# Whether to also intercept the vanilla enchanting table / anvil.
+# true (default) means players can use a vanilla enchanting table and get the custom GUI.
+# Set false if you want players to use only custom station blocks.
+intercept-vanilla-enchanting: true
+intercept-vanilla-anvil: true
 
 # Skill XP awarded on successful operation. Set 0 to disable.
 xp:

@@ -55,10 +55,54 @@ public final class RegionCommand implements CommandExecutor, TabCompleter {
             case "list" -> handleList(sender);
             case "info" -> handleInfo(sender);
             case "flag" -> handleFlag(sender, args);
+            case "global" -> handleGlobal(sender, args);
             case "reload" -> handleReload(sender);
             default -> sender.sendMessage(msg("&cUnknown subcommand: " + args[0]));
         }
         return true;
+    }
+
+    private void handleGlobal(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("rpg.regions.admin.global")) {
+            sender.sendMessage(msg("&cNo permission.")); return;
+        }
+        if (args.length < 2 || args[1].equalsIgnoreCase("info")) {
+            // Show current global flags.
+            var flags = regions.globalFlags();
+            sender.sendMessage(msg("&6&l=== Global Region Flags (" + flags.size() + ") ==="));
+            if (flags.isEmpty()) {
+                sender.sendMessage(msg("&7No global flags set. Use &e/region global flag <key> <value>&7."));
+            } else {
+                for (Map.Entry<String, Object> e : flags.entrySet()) {
+                    sender.sendMessage(msg("  &8" + e.getKey() + ": &f" + e.getValue()));
+                }
+            }
+            sender.sendMessage(msg("&7These apply everywhere no region overrides them."));
+            return;
+        }
+        if (args[1].equalsIgnoreCase("flag")) {
+            if (args.length < 4) {
+                sender.sendMessage(msg("&7Usage: &e/region global flag <flag> <value|clear>")); return;
+            }
+            String flag = args[2].toLowerCase(Locale.ROOT);
+            String rawValue = args[3];
+            if (rawValue.equalsIgnoreCase("clear") || rawValue.equalsIgnoreCase("remove")) {
+                regions.removeGlobalFlag(flag);
+                sender.sendMessage(msg("&aCleared global flag &e" + flag + "&a."));
+            } else {
+                Object value;
+                if (rawValue.equalsIgnoreCase("true") || rawValue.equalsIgnoreCase("false")) {
+                    value = Boolean.parseBoolean(rawValue);
+                } else {
+                    try { value = Integer.parseInt(rawValue); }
+                    catch (NumberFormatException ex) { value = rawValue; }
+                }
+                regions.setGlobalFlag(flag, value);
+                sender.sendMessage(msg("&aSet global &e" + flag + " &7= &f" + value));
+            }
+            return;
+        }
+        sender.sendMessage(msg("&7Usage: &e/region global [info | flag <key> <value>]"));
     }
 
     private void handleReload(CommandSender sender) {
@@ -185,7 +229,7 @@ public final class RegionCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (args.length == 1) return filter(args[0], List.of("define", "delete", "list", "info", "flag", "reload"));
+        if (args.length == 1) return filter(args[0], List.of("define", "delete", "list", "info", "flag", "global", "reload"));
         String sub = args[0].toLowerCase(Locale.ROOT);
         if (args.length == 2 && List.of("delete", "flag", "info").contains(sub)) {
             return filterRegions(args[1]);

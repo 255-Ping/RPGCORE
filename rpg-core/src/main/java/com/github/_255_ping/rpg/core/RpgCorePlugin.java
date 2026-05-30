@@ -25,7 +25,9 @@ import com.github._255_ping.rpg.core.formatting.CoreMessageFormatter;
 import com.github._255_ping.rpg.core.formatting.CoreNameFormatter;
 import com.github._255_ping.rpg.core.gui.CoreGuiConfig;
 import com.github._255_ping.rpg.core.hud.CoreActionBarService;
+import com.github._255_ping.rpg.core.drops.DropManager;
 import com.github._255_ping.rpg.core.items.BowListener;
+import com.github._255_ping.rpg.core.particles.ParticleManager;
 import com.github._255_ping.rpg.core.mobs.CoreMobStatService;
 import com.github._255_ping.rpg.core.suppression.DurabilityListener;
 import com.github._255_ping.rpg.core.formula.CoreExpressionEvaluator;
@@ -110,6 +112,7 @@ public final class RpgCorePlugin extends JavaPlugin {
     private CoreWandService wandService;
     private WandListener wandListener;
     private LootChestRegistry lootChestRegistry;
+    private ParticleManager particleManager;
 
     public static RpgCorePlugin get() {
         return instance;
@@ -235,11 +238,20 @@ public final class RpgCorePlugin extends JavaPlugin {
                 new EquipmentListener(this, healthService), this);
         getServer().getPluginManager().registerEvents(
                 new ItemAbilityListener(this, abilityRegistry), this);
-        BlockBreakHandler blockBreakHandler = new BlockBreakHandler(this, blockRegistry);
+        DropManager dropManager = new DropManager(this);
+        getServer().getPluginManager().registerEvents(dropManager, this);
+
+        ParticleManager particleManager = new ParticleManager(this);
+        particleManager.start();
+
+        BlockBreakHandler blockBreakHandler = new BlockBreakHandler(this, blockRegistry, dropManager);
         getServer().getPluginManager().registerEvents(blockBreakHandler, this);
         blockBreakHandler.start();
         getServer().getPluginManager().registerEvents(damagerTracker, this);
-        getServer().getPluginManager().registerEvents(new MobLootListener(damagerTracker), this);
+        getServer().getPluginManager().registerEvents(new MobLootListener(damagerTracker, dropManager), this);
+
+        // Make particle manager accessible to RpgCommand.
+        this.particleManager = particleManager;
         getServer().getPluginManager().registerEvents(new MobAbilityEventListener(), this);
         getServer().getPluginManager().registerEvents(new DeathRulesListener(this), this);
 
@@ -360,6 +372,7 @@ public final class RpgCorePlugin extends JavaPlugin {
 
     public WandListener wandListener() { return wandListener; }
     public CoreWandService wandService() { return wandService; }
+    public ParticleManager particleManager() { return particleManager; }
     public LootChestRegistry lootChestRegistry() { return lootChestRegistry; }
 
     private DataStore openDataStore(File dataDir) {

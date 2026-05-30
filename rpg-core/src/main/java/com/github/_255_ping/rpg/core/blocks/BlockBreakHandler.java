@@ -6,6 +6,7 @@ import com.github._255_ping.rpg.api.blocks.RequiredToolType;
 import com.github._255_ping.rpg.api.items.RpgItem;
 import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import com.github._255_ping.rpg.core.RpgCorePlugin;
+import com.github._255_ping.rpg.core.drops.DropManager;
 import com.destroystokyo.paper.event.block.BlockDestroyEvent;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -45,12 +46,14 @@ public final class BlockBreakHandler implements Listener {
 
     private final RpgCorePlugin plugin;
     private final CoreBlockRegistry registry;
+    private final DropManager dropManager;
     private final Map<UUID, BlockBreakProgress> active = new HashMap<>();
     private BukkitTask tickTask;
 
-    public BlockBreakHandler(RpgCorePlugin plugin, CoreBlockRegistry registry) {
+    public BlockBreakHandler(RpgCorePlugin plugin, CoreBlockRegistry registry, DropManager dropManager) {
         this.plugin = plugin;
         this.registry = registry;
+        this.dropManager = dropManager;
     }
 
     public void start() {
@@ -291,7 +294,8 @@ public final class BlockBreakHandler implements Listener {
                     drop.setAmount(Math.min(drop.getAmount() * fortuneMult,
                             drop.getType().getMaxStackSize()));
                 }
-                loc.getWorld().dropItemNaturally(loc, drop);
+                org.bukkit.entity.Item dropped = loc.getWorld().dropItemNaturally(loc, drop);
+                dropManager.register(dropped, player);
             } catch (Exception ex) {
                 plugin.getLogger().warning(
                         "Bad drop spec '" + spec + "' on block " + block.id() + ": " + ex.getMessage());

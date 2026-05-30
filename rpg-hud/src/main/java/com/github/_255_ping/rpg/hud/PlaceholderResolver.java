@@ -54,6 +54,7 @@ public final class PlaceholderResolver {
             case "mana" -> formatNumber(RpgServices.player(player).mana());
             case "max_mana" -> formatNumber(RpgServices.player(player).maxMana());
             case "coins" -> coinsBalance(player);
+            case "effects" -> activeEffects(player);
             default -> statValue(player, key);
         };
     }
@@ -64,6 +65,35 @@ public final class PlaceholderResolver {
         RpgPlayer rp = RpgServices.player(player);
         double v = rp.get(stat.get());
         return formatNumber(v) + (stat.get().percent() ? "%" : "");
+    }
+
+    /**
+     * Returns a compact comma-separated list of active status effects for the player,
+     * for use in tablist footer: {@code §dStrength I §8(30s)  §cPoison II §8(5s)}.
+     * Returns an empty string if no effects are active or the service isn't loaded.
+     */
+    private static String activeEffects(Player player) {
+        try {
+            var effects = RpgServices.statusEffects().active(player);
+            if (effects.isEmpty()) return "";
+            StringBuilder sb = new StringBuilder();
+            for (var eff : effects) {
+                if (sb.length() > 0) sb.append("  ");
+                double secs = eff.remainingTicks() / 20.0;
+                sb.append("§d").append(eff.effectId()).append(" ").append(toRoman(eff.level()))
+                  .append(" §8(").append(secs > 0 ? String.format("%.0fs", secs) : "∞").append(")");
+            }
+            return sb.toString();
+        } catch (IllegalStateException ex) {
+            return "";
+        }
+    }
+
+    private static String toRoman(int n) {
+        return switch (Math.min(n, 5)) {
+            case 1 -> "I"; case 2 -> "II"; case 3 -> "III"; case 4 -> "IV"; case 5 -> "V";
+            default -> String.valueOf(n);
+        };
     }
 
     private static String coinsBalance(Player player) {

@@ -187,6 +187,14 @@ level-scaling:
 attack-cooldown:
   scale-damage: true    # Scale melee damage by charge level (false = always full damage)
 
+# Per-player item drops — tags each dropped item with the player who earned it.
+# Only the assigned player can pick it up until release-seconds elapses (then public).
+# Holograms appear above drops showing item name and owner. Requires rpg-holograms or
+# runs with built-in TextDisplay entities if not loaded.
+per-player-drops:
+  enabled: true
+  release-seconds: 30   # seconds before drop becomes public
+
 # GUI styling — see docs/formatting.md for the full layout convention.
 # All inventory GUIs in the suite read their pane materials/names from here.
 # Changing these values reskins every GUI at once.

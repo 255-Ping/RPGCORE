@@ -12,6 +12,7 @@ public enum BuiltinStat implements Stat {
     KNOCKBACK("knockback", "Knockback", "&f", false, "combat"),
     AMMO_USAGE_REDUCTION("ammo_usage_reduction", "Ammo Usage Reduction", "&a", true, "combat"),
     PROJECTILE_SPEED("projectile_speed", "Projectile Speed", "&b", false, "combat"),
+    AUTO_LOOT("auto_loot", "Auto Loot", "&6", false, "loot"),
 
     MAX_HEALTH("max_health", "Health", "&c", false, "survival"),
     HEALTH_REGEN("health_regen", "Health Regen", "&c", false, "survival"),

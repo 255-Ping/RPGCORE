@@ -3,6 +3,12 @@
 bag:
   title: "&5&lAccessory Bag"
 
+# If true, ACCESSORY items anywhere in the player's main inventory (hotbar, storage)
+# also contribute their stats, not just items in the dedicated bag.
+# This makes accessories work like talismans — carry them to get the bonus.
+inventory-accessories:
+  enabled: false
+
 # Ordered tier list. tier 1 is the starting size for new players.
 # rows is 1..6; cost is in primary currency; the player upgrades from tier N to N+1
 # by paying the cost listed on tier N+1.

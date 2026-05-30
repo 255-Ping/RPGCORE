@@ -136,20 +136,35 @@ public final class AccessoryBagService implements AccessoryService {
 
     @Override
     public Map<Stat, Double> aggregateStats(Player player) {
-        Inventory bag = bags.get(player.getUniqueId());
-        if (bag == null) return Map.of();
         Map<Stat, Double> out = new HashMap<>();
-        for (ItemStack stack : bag.getContents()) {
-            if (stack == null) continue;
-            Optional<RpgItem> opt = RpgServices.items().from(stack);
-            if (opt.isEmpty()) continue;
-            RpgItem item = opt.get();
-            if (item.type() != BuiltinItemType.ACCESSORY) continue;
-            for (Map.Entry<Stat, Double> e : item.stats().entrySet()) {
-                out.merge(e.getKey(), e.getValue(), Double::sum);
+
+        // Bag contents — always active.
+        Inventory bag = bags.get(player.getUniqueId());
+        if (bag != null) {
+            for (ItemStack stack : bag.getContents()) {
+                addAccessoryStats(stack, out);
             }
         }
+
+        // Inventory scan — opt-in via config (allows wearing accessories in hotbar/storage).
+        if (plugin.getConfig().getBoolean("inventory-accessories.enabled", false)) {
+            for (ItemStack stack : player.getInventory().getContents()) {
+                addAccessoryStats(stack, out);
+            }
+        }
+
         return out;
+    }
+
+    private static void addAccessoryStats(ItemStack stack, Map<Stat, Double> out) {
+        if (stack == null || stack.getType().isAir()) return;
+        Optional<RpgItem> opt = RpgServices.items().from(stack);
+        if (opt.isEmpty()) return;
+        RpgItem item = opt.get();
+        if (item.type() != BuiltinItemType.ACCESSORY) return;
+        for (Map.Entry<Stat, Double> e : item.stats().entrySet()) {
+            out.merge(e.getKey(), e.getValue(), Double::sum);
+        }
     }
 
     private void loadInto(UUID id, Inventory inv) {

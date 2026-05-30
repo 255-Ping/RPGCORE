@@ -9,6 +9,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -20,9 +21,13 @@ import java.util.concurrent.ConcurrentMap;
 public final class CoreRegionService implements RegionService {
 
     private static final String REPO = "regions";
+    /** DataStore key for the global default flags. Not a real region — stored separately. */
+    private static final String GLOBAL_KEY = "__global_flags__";
 
     private final JavaPlugin plugin;
     private final ConcurrentMap<String, CoreRegion> byId = new ConcurrentHashMap<>();
+    /** Server-wide default flags — apply when no region covers a location. */
+    private final ConcurrentMap<String, Object> globalFlags = new ConcurrentHashMap<>();
 
     public CoreRegionService(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -44,10 +49,15 @@ public final class CoreRegionService implements RegionService {
 
     @Override
     public boolean flag(Location location, String key, boolean defaultValue) {
+        // Check specific regions first (highest priority first).
         for (Region r : regionsAt(location)) {
             Object value = r.flags().get(key);
             if (value instanceof Boolean b) return b;
         }
+        // Then global default flags.
+        Object globalVal = globalFlags.get(key);
+        if (globalVal instanceof Boolean b) return b;
+        // Finally, fall back to config-level defaults.
         return plugin.getConfig().getBoolean("default-flags." + key, defaultValue);
     }
 
@@ -58,8 +68,44 @@ public final class CoreRegionService implements RegionService {
 
     @Override
     public Collection<Region> all() {
-        return java.util.Collections.unmodifiableCollection(byId.values());
+        return Collections.unmodifiableCollection(byId.values());
     }
+
+    // ── Global flags ────────────────────────────────────────────────────────
+
+    public Map<String, Object> globalFlags() {
+        return Collections.unmodifiableMap(globalFlags);
+    }
+
+    public void setGlobalFlag(String key, Object value) {
+        globalFlags.put(key, value);
+        saveGlobalFlags();
+    }
+
+    public void removeGlobalFlag(String key) {
+        globalFlags.remove(key);
+        saveGlobalFlags();
+    }
+
+    private void saveGlobalFlags() {
+        Map<String, Object> data = new HashMap<>();
+        data.put("flags", new HashMap<>(globalFlags));
+        RpgServices.dataStore().repository(REPO).save(GLOBAL_KEY, data);
+    }
+
+    private void loadGlobalFlags() {
+        globalFlags.clear();
+        RpgServices.dataStore().repository(REPO).get(GLOBAL_KEY).ifPresent(data -> {
+            Object raw = data.get("flags");
+            if (raw instanceof Map<?, ?> m) {
+                for (Map.Entry<?, ?> e : m.entrySet()) {
+                    globalFlags.put(String.valueOf(e.getKey()), e.getValue());
+                }
+            }
+        });
+    }
+
+    // ── CRUD ────────────────────────────────────────────────────────────────
 
     public void put(CoreRegion region) {
         byId.put(region.id(), region);
@@ -91,12 +137,15 @@ public final class CoreRegionService implements RegionService {
 
     public void saveAll() {
         for (String id : byId.keySet()) saveOne(id);
+        saveGlobalFlags();
     }
 
     public void loadAll() {
         byId.clear();
+        loadGlobalFlags();
         DataStore.Repository repo = RpgServices.dataStore().repository(REPO);
         for (String key : repo.keys()) {
+            if (key.equals(GLOBAL_KEY)) continue; // handled separately
             repo.get(key).ifPresent(data -> {
                 try {
                     String world = String.valueOf(data.get("world"));

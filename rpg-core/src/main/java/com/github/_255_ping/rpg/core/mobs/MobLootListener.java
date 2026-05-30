@@ -3,6 +3,8 @@ package com.github._255_ping.rpg.core.mobs;
 import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.loot.LootContext;
 import com.github._255_ping.rpg.api.mobs.RpgMob;
+import com.github._255_ping.rpg.core.drops.DropManager;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,13 +20,18 @@ import java.util.Optional;
 /**
  * On RPG mob death: cancel vanilla drops, look up our loot table, attribute via the
  * damager tracker, and drop the rolled items at the corpse.
+ *
+ * <p>If {@link DropManager} is set, each dropped item is tagged with its assigned player
+ * so only they can pick it up (until the release window expires).
  */
 public final class MobLootListener implements Listener {
 
     private final DamagerTracker tracker;
+    private final DropManager dropManager;
 
-    public MobLootListener(DamagerTracker tracker) {
+    public MobLootListener(DamagerTracker tracker, DropManager dropManager) {
         this.tracker = tracker;
+        this.dropManager = dropManager;
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -50,10 +57,15 @@ public final class MobLootListener implements Listener {
 
         Map<Player, List<ItemStack>> rolled = table.roll(ctx);
         if (victim.getWorld() == null) return;
-        for (List<ItemStack> stacks : rolled.values()) {
-            for (ItemStack s : stacks) {
+
+        for (Map.Entry<Player, List<ItemStack>> assignment : rolled.entrySet()) {
+            Player owner = assignment.getKey();
+            for (ItemStack s : assignment.getValue()) {
                 if (s == null) continue;
-                victim.getWorld().dropItemNaturally(victim.getLocation(), s);
+                Item dropped = victim.getWorld().dropItemNaturally(victim.getLocation(), s);
+                if (owner != null) {
+                    dropManager.register(dropped, owner);
+                }
             }
         }
     }

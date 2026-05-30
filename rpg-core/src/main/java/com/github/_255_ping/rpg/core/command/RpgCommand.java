@@ -53,6 +53,7 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
             case "wand" -> handleWand(sender, args);
             case "loot-chest", "lootchest" -> handleLootChest(sender, args);
             case "effects" -> handleEffects(sender, args);
+            case "particle" -> handleParticle(sender, args);
             default -> sender.sendMessage(plugin.messages().component("command.unknown",
                     Map.of("sub", args[0])));
         }
@@ -308,6 +309,70 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
                 Map.of("count", count, "radius", radius, "id", toId)));
     }
 
+    private void handleParticle(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("rpg.core.particle")) {
+            sender.sendMessage(net.kyori.adventure.text.Component.text("§cNo permission."));
+            return;
+        }
+        if (args.length < 2) {
+            sender.sendMessage(net.kyori.adventure.text.Component.text(
+                "§7Usage: §e/rpg particle <create|delete|list|move> [args]"));
+            return;
+        }
+        var pm = plugin.particleManager();
+        if (pm == null) { sender.sendMessage(net.kyori.adventure.text.Component.text("§cParticle system not ready.")); return; }
+
+        switch (args[1].toLowerCase()) {
+            case "create" -> {
+                if (!(sender instanceof org.bukkit.entity.Player p)) { sender.sendMessage(net.kyori.adventure.text.Component.text("§cPlayers only.")); return; }
+                if (args.length < 3) { sender.sendMessage(net.kyori.adventure.text.Component.text("§7Usage: §e/rpg particle create <id> [type=FLAME] [count=5] [spread=0.3] [pattern=POINT|CIRCLE|SPIRAL]")); return; }
+                String id = args[2];
+                String type = args.length > 3 ? args[3] : "FLAME";
+                int count = args.length > 4 ? parseInt(args[4], 5) : 5;
+                double spread = args.length > 5 ? parseDouble(args[5], 0.3) : 0.3;
+                com.github._255_ping.rpg.core.particles.ParticleManager.Pattern pat =
+                    com.github._255_ping.rpg.core.particles.ParticleManager.parsePattern(args.length > 6 ? args[6] : "POINT");
+                if (!pm.create(id, p.getLocation(), type, count, spread, pat)) {
+                    sender.sendMessage(net.kyori.adventure.text.Component.text("§cID '" + id + "' already exists."));
+                } else {
+                    sender.sendMessage(net.kyori.adventure.text.Component.text("§aCreated particle §e" + id + "§a (" + type + " ×" + count + " " + pat + ")"));
+                }
+            }
+            case "delete" -> {
+                if (args.length < 3) { sender.sendMessage(net.kyori.adventure.text.Component.text("§7Usage: §e/rpg particle delete <id>")); return; }
+                sender.sendMessage(pm.delete(args[2])
+                    ? net.kyori.adventure.text.Component.text("§aDeleted §e" + args[2])
+                    : net.kyori.adventure.text.Component.text("§cNot found: " + args[2]));
+            }
+            case "list" -> {
+                var all = pm.all();
+                sender.sendMessage(net.kyori.adventure.text.Component.text("§6Particles (" + all.size() + "):"));
+                for (var entry : all) {
+                    sender.sendMessage(net.kyori.adventure.text.Component.text(
+                        "§e" + entry.id() + " §7" + entry.particleType() + " ×" + entry.count() +
+                        " " + entry.pattern() + " @" + entry.worldName() +
+                        " " + (int)entry.x() + "," + (int)entry.y() + "," + (int)entry.z()));
+                }
+            }
+            case "move" -> {
+                if (!(sender instanceof org.bukkit.entity.Player p)) { sender.sendMessage(net.kyori.adventure.text.Component.text("§cPlayers only.")); return; }
+                if (args.length < 3) { sender.sendMessage(net.kyori.adventure.text.Component.text("§7Usage: §e/rpg particle move <id>")); return; }
+                sender.sendMessage(pm.move(args[2], p.getLocation())
+                    ? net.kyori.adventure.text.Component.text("§aMoved §e" + args[2] + "§a to your location.")
+                    : net.kyori.adventure.text.Component.text("§cNot found: " + args[2]));
+            }
+            default -> sender.sendMessage(net.kyori.adventure.text.Component.text("§cUnknown: " + args[1]));
+        }
+    }
+
+    private static int parseInt(String s, int def) {
+        try { return Integer.parseInt(s); } catch (NumberFormatException e) { return def; }
+    }
+
+    private static double parseDouble(String s, double def) {
+        try { return Double.parseDouble(s); } catch (NumberFormatException e) { return def; }
+    }
+
     private void handleEffects(CommandSender sender, String[] args) {
         org.bukkit.entity.Player target;
         if (args.length >= 2 && sender.hasPermission("rpg.core.effects.other")) {
@@ -363,6 +428,10 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
             "§e/rpg status apply <id> [player] §7— Apply a status effect",
             "§e/rpg skill set <skill> level <n> [player] §7— Set skill level",
             "§e/rpg ability cast <id> §7— Debug-cast an ability",
+            "§e/rpg effects [player] §7— Show active status effects",
+            "§e/rpg particle create <id> [type] [count] [spread] [pattern] §7— Place world particle effect",
+            "§e/rpg particle delete/list/move §7— Manage particle effects",
+            "§e/region global flag <key> <value> §7— Set server-wide default region flag",
         };
         for (String line : lines) {
             sender.sendMessage(net.kyori.adventure.text.Component.text(line));

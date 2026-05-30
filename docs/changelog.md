@@ -6,6 +6,27 @@ Version format: `<plugin>-<pluginVersion>-<suiteVersion>`. Only notable changes 
 
 ## Suite 18 (current)
 
+### rpg-api `0.1.1`
+- `BuiltinStat`: added `AUTO_LOOT` — items with this stat > 0 automatically pull assigned drops into the player's inventory.
+
+### rpg-core `0.6.0`
+- **Per-player drops**: `DropManager` tags every dropped item (mob loot and block drops) with the assigned player's UUID. Only that player can pick it up until `release-seconds` expires (default 30s, configurable). A TextDisplay hologram above each drop shows the item name and who it belongs to. `AUTO_LOOT` stat bypasses the wait and gives the item directly to inventory.
+- **Particle system**: `/rpg particle create <id> [type] [count] [spread] [pattern]` places a persistent particle effect at the admin's location. Patterns: `POINT`, `CIRCLE`, `SPIRAL`. Particles are saved to DataStore and respawn on reload.
+- **Drop config**: `per-player-drops:` block in `rpg-core/config.yml`.
+
+### rpg-regions `0.3.0`
+- **Global default region**: `/region global flag <key> <value>` sets server-wide flag defaults that apply everywhere no region covers. `/region global` shows all current global flags. Persisted in DataStore.
+
+### rpg-enchanting `0.1.0`
+- **Vanilla block intercept**: right-clicking a vanilla Enchanting Table or Anvil now opens the custom GUI (togglable via `intercept-vanilla-enchanting/anvil` in config). Previously required a custom block placed with the correct block ID.
+- Station detection now uses `StationType` field on custom blocks (preferred) instead of requiring exact block IDs in config.
+
+### rpg-accessories `0.1.0`
+- **Inventory accessories**: `inventory-accessories.enabled: true` in config makes ACCESSORY items in the player's main inventory (hotbar/storage) count their stats, not just items in the dedicated bag.
+
+### rpg-hud `0.3.0`
+- Added `{effects}` placeholder for use in tablist/scoreboard config. Shows active custom status effects: `§dStrength I §8(30s)  §cPoison II §8(5s)`.
+
 ### rpg-api `0.1.0`
 - `BuiltinItemType`: added `CROSSBOW`.
 - `BuiltinStat`: added `AMMO_USAGE_REDUCTION` and `PROJECTILE_SPEED`.
