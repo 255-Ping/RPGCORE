@@ -52,6 +52,7 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
             case "block" -> handleBlock(sender, args);
             case "wand" -> handleWand(sender, args);
             case "loot-chest", "lootchest" -> handleLootChest(sender, args);
+            case "effects" -> handleEffects(sender, args);
             default -> sender.sendMessage(plugin.messages().component("command.unknown",
                     Map.of("sub", args[0])));
         }
@@ -164,10 +165,37 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
                 return;
             }
             plugin.wandService().setMode(player, mode);
-            player.sendMessage(net.kyori.adventure.text.Component.text("Wand mode: " + mode));
+            player.sendMessage(net.kyori.adventure.text.Component.text("§aWand mode set to: §e" + mode));
+            // Action bar notification (2 seconds) so it's visible while holding the wand.
+            try {
+                RpgServices.actionBar().send(player,
+                        net.kyori.adventure.text.Component.text("§6[Wand] §eMode: §b" + mode), 40);
+            } catch (IllegalStateException ignored) {}
+            // Update wand item lore to show current mode.
+            updateWandLore(player, mode);
             return;
         }
         sender.sendMessage(net.kyori.adventure.text.Component.text("Unknown wand subcommand."));
+    }
+
+    /** Updates the wand item's lore in the player's hand to show the current mode. */
+    private void updateWandLore(org.bukkit.entity.Player player, String mode) {
+        org.bukkit.inventory.ItemStack hand = player.getInventory().getItemInMainHand();
+        if (!plugin.wandListener().isWand(hand)) return;
+        org.bukkit.inventory.meta.ItemMeta meta = hand.getItemMeta();
+        if (meta == null) return;
+        var lore = new java.util.ArrayList<>(java.util.List.of(
+                net.kyori.adventure.text.Component.text("§bMode: §e" + mode)
+                        .decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false),
+                net.kyori.adventure.text.Component.text("§7L-click block: corner 1")
+                        .decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false),
+                net.kyori.adventure.text.Component.text("§7R-click block: corner 2")
+                        .decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false),
+                net.kyori.adventure.text.Component.text("§8/rpg wand <mode> to switch")
+                        .decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false)
+        ));
+        meta.lore(lore);
+        hand.setItemMeta(meta);
     }
 
     private void handleBlock(CommandSender sender, String[] args) {
@@ -278,6 +306,39 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
         }
         sender.sendMessage(plugin.messages().component("block.converted",
                 Map.of("count", count, "radius", radius, "id", toId)));
+    }
+
+    private void handleEffects(CommandSender sender, String[] args) {
+        org.bukkit.entity.Player target;
+        if (args.length >= 2 && sender.hasPermission("rpg.core.effects.other")) {
+            target = plugin.getServer().getPlayer(args[1]);
+            if (target == null) {
+                sender.sendMessage(net.kyori.adventure.text.Component.text("§cPlayer not found: " + args[1]));
+                return;
+            }
+        } else if (sender instanceof org.bukkit.entity.Player p) {
+            target = p;
+        } else {
+            sender.sendMessage(net.kyori.adventure.text.Component.text("§cSpecify a player name."));
+            return;
+        }
+
+        var active = RpgServices.statusEffects().active(target);
+        if (active.isEmpty()) {
+            sender.sendMessage(net.kyori.adventure.text.Component.text(
+                    "§7" + target.getName() + " has no active status effects."));
+            return;
+        }
+        sender.sendMessage(net.kyori.adventure.text.Component.text(
+                "§6=== Active Effects: §e" + target.getName() + " §6==="));
+        for (var effect : active) {
+            double secs = effect.remainingTicks() / 20.0;
+            String timeStr = secs > 0
+                    ? String.format("§7%.1fs remaining", secs)
+                    : "§8permanent";
+            sender.sendMessage(net.kyori.adventure.text.Component.text(
+                    "§d" + effect.effectId() + " §8Lv." + effect.level() + " §8— " + timeStr));
+        }
     }
 
     private void handleHelp(CommandSender sender) {

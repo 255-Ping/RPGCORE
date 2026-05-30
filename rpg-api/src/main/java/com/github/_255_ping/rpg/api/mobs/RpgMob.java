@@ -24,5 +24,11 @@ public interface RpgMob {
     ItemStack offHand();
     String customHeadTexture();
 
+    /**
+     * Kill XP awarded to the killer. {@code 0} means use the combat addon's configured
+     * {@code default-kill-xp} value instead. Set {@code XP: N} in the mob YAML.
+     */
+    long xp();
+
     LivingEntity spawn(Location loc);
 }

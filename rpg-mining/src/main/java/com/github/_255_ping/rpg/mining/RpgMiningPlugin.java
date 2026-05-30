@@ -58,8 +58,11 @@ public final class RpgMiningPlugin extends JavaPlugin implements Listener, org.b
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(RpgBlockBreakEvent event) {
-        long base = getConfig().getLong("xp-per-block." + event.block().id(),
-                getConfig().getLong("default-xp", 5));
+        // Block-level XP takes priority over config; falls back to config if 0.
+        long base = event.block().xp() > 0
+                ? event.block().xp()
+                : getConfig().getLong("xp-per-block." + event.block().id(),
+                    getConfig().getLong("default-xp", 5));
         if (base <= 0) return;
         double wisdom = RpgServices.player(event.player()).get(BuiltinStat.MINING_WISDOM);
         long amount = Math.round(base * (1.0 + wisdom / 100.0));

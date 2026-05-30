@@ -2,6 +2,7 @@ package com.github._255_ping.rpg.core.damage;
 
 import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.damage.DamageContext;
+import com.github._255_ping.rpg.core.items.BowListener;
 import com.github._255_ping.rpg.api.damage.PostDamageEvent;
 import com.github._255_ping.rpg.api.damage.PreDamageEvent;
 import com.github._255_ping.rpg.api.mobs.RpgMob;
@@ -60,6 +61,7 @@ public final class DamagePipelineListener implements Listener {
 
         LivingEntity attacker = null;
         String source = sourceFor(event.getCause());
+        double baseDamageOverride = -1; // -1 = no override
 
         if (event instanceof EntityDamageByEntityEvent edbe) {
             if (edbe.getDamager() instanceof LivingEntity le) {
@@ -70,17 +72,32 @@ public final class DamagePipelineListener implements Listener {
                 if (shooter instanceof LivingEntity le) {
                     attacker = le;
                     source = "projectile";
+                    // Custom bow projectile: use the PDC-stored damage as base.
+                    Double bowDmg = proj.getPersistentDataContainer()
+                            .get(BowListener.ARROW_DAMAGE_KEY, org.bukkit.persistence.PersistentDataType.DOUBLE);
+                    if (bowDmg != null && bowDmg > 0) {
+                        baseDamageOverride = bowDmg;
+                    }
                 }
             }
         }
 
         // For custom mob attackers, use their registered DAMAGE stat as the base.
         // Fall back to event damage for vanilla mobs (no registered holder).
-        double baseDamage = event.getFinalDamage();
-        if (attacker != null && !(attacker instanceof Player)) {
+        // PDC override from custom bow projectiles takes highest priority.
+        double baseDamage = baseDamageOverride > 0 ? baseDamageOverride : event.getFinalDamage();
+        if (baseDamageOverride <= 0 && attacker != null && !(attacker instanceof Player)) {
             StatHolder mobHolder = RpgServices.mobStats().forMob(attacker);
             double mobDmg = mobHolder.get(BuiltinStat.DAMAGE);
             if (mobDmg > 0) baseDamage = mobDmg;
+        }
+
+        // Attack cooldown scaling: scale melee damage by how charged the attack is.
+        // Formula matches Minecraft: 0.2 + 0.8 * charge^2 (weak swing = 20% damage).
+        if (attacker instanceof Player ap && "melee".equals(source)
+                && plugin.getConfig().getBoolean("attack-cooldown.scale-damage", true)) {
+            float charge = ap.getAttackCooldown();
+            baseDamage *= 0.2 + 0.8 * charge * charge;
         }
 
         DamageContext ctx = new DamageContext(attacker, victim, baseDamage, source);

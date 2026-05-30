@@ -10,6 +10,8 @@ public enum BuiltinStat implements Stat {
     FEROCITY("ferocity", "Ferocity", "&c", true, "combat"),
     LIFESTEAL("lifesteal", "Lifesteal", "&c", true, "combat"),
     KNOCKBACK("knockback", "Knockback", "&f", false, "combat"),
+    AMMO_USAGE_REDUCTION("ammo_usage_reduction", "Ammo Usage Reduction", "&a", true, "combat"),
+    PROJECTILE_SPEED("projectile_speed", "Projectile Speed", "&b", false, "combat"),
 
     MAX_HEALTH("max_health", "Health", "&c", false, "survival"),
     HEALTH_REGEN("health_regen", "Health Regen", "&c", false, "survival"),

@@ -25,6 +25,7 @@ import com.github._255_ping.rpg.core.formatting.CoreMessageFormatter;
 import com.github._255_ping.rpg.core.formatting.CoreNameFormatter;
 import com.github._255_ping.rpg.core.gui.CoreGuiConfig;
 import com.github._255_ping.rpg.core.hud.CoreActionBarService;
+import com.github._255_ping.rpg.core.items.BowListener;
 import com.github._255_ping.rpg.core.mobs.CoreMobStatService;
 import com.github._255_ping.rpg.core.suppression.DurabilityListener;
 import com.github._255_ping.rpg.core.formula.CoreExpressionEvaluator;
@@ -223,6 +224,7 @@ public final class RpgCorePlugin extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new VanillaSuppressionListener(this), this);
         getServer().getPluginManager().registerEvents(new DurabilityListener(getConfig()), this);
+        getServer().getPluginManager().registerEvents(new BowListener(this), this);
         getServer().getPluginManager().registerEvents(
                 new PlayerLifecycleListener(this, playerLookup, healthService, skillsService), this);
         damagePipeline = new DamagePipelineListener(this, healthService);

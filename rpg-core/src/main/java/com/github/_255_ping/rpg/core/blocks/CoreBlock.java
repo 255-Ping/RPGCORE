@@ -16,5 +16,6 @@ public record CoreBlock(
         Material respawnPlaceholder,
         boolean interactable,
         String stationType,
-        List<String> dropSpecs
+        List<String> dropSpecs,
+        long xp
 ) implements Block {}

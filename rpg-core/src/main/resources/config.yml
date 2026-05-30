@@ -180,6 +180,13 @@ level-scaling:
     damage-percent: 5.0    # % outgoing damage increase per level above 1
     defense: 2.0           # defense points per level above 1
 
+# Attack cooldown — Minecraft's built-in attack charge system integration.
+# Items can set AttackCooldown: N (ticks) to control their swing speed via the
+# generic.attack_speed attribute. scale-damage applies the same formula Minecraft uses
+# for the charge indicator: damage * (0.2 + 0.8 * charge^2).
+attack-cooldown:
+  scale-damage: true    # Scale melee damage by charge level (false = always full damage)
+
 # GUI styling — see docs/formatting.md for the full layout convention.
 # All inventory GUIs in the suite read their pane materials/names from here.
 # Changing these values reskins every GUI at once.

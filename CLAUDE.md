@@ -209,10 +209,10 @@ When `suiteVersion` bumps:
 
 | Module | Property | Current |
 |---|---|---|
-| rpg-api | `apiVersion` | 0.0.9 |
-| rpg-core | `coreVersion` | 0.4.0 |
-| rpg-mining | `miningVersion` | 0.1.0 |
-| rpg-combat | `combatVersion` | 0.1.0 |
+| rpg-api | `apiVersion` | 0.1.0 |
+| rpg-core | `coreVersion` | 0.5.0 |
+| rpg-mining | `miningVersion` | 0.2.0 |
+| rpg-combat | `combatVersion` | 0.2.0 |
 | rpg-economy | `economyVersion` | 0.1.0 |
 | rpg-hud | `hudVersion` | 0.2.0 |
 | rpg-chat | `chatVersion` | 0.1.0 |

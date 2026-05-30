@@ -36,6 +36,7 @@ public final class CoreRpgMob implements RpgMob {
     private final CoreLootTable lootTable;
     private final MobAiProfile aiProfile;
 
+    private final long xp;
     private final NamespacedKey mobIdKey;
     private final CoreHealthService healthService;
 
@@ -48,6 +49,7 @@ public final class CoreRpgMob implements RpgMob {
                       List<MobAbilityBinding> bindings,
                       CoreLootTable lootTable,
                       MobAiProfile aiProfile,
+                      long xp,
                       NamespacedKey mobIdKey, CoreHealthService healthService) {
         this.id = id;
         this.displayName = displayName;
@@ -66,6 +68,7 @@ public final class CoreRpgMob implements RpgMob {
         this.bindings = List.copyOf(bindings);
         this.lootTable = lootTable;
         this.aiProfile = aiProfile == null ? MobAiProfile.DEFAULT : aiProfile;
+        this.xp = xp;
         this.mobIdKey = mobIdKey;
         this.healthService = healthService;
     }
@@ -86,6 +89,7 @@ public final class CoreRpgMob implements RpgMob {
     @Override public ItemStack mainHand() { return mainHand; }
     @Override public ItemStack offHand() { return offHand; }
     @Override public String customHeadTexture() { return customHeadTexture; }
+    @Override public long xp() { return xp; }
 
     public List<MobAbilityBinding> abilityBindings() { return bindings; }
     public CoreLootTable lootTable() { return lootTable; }

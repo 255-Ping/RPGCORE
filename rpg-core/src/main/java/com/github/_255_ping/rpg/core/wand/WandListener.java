@@ -58,16 +58,27 @@ public final class WandListener implements Listener {
         Player p = e.getPlayer();
         if (e.getAction() == Action.LEFT_CLICK_BLOCK) {
             service.setCorner1(p, e.getClickedBlock().getLocation());
-            p.sendMessage(Component.text("Corner 1 set at "
-                            + format(e.getClickedBlock().getLocation()) + " (mode: " + service.modeOf(p) + ")")
-                    .color(NamedTextColor.AQUA));
+            String mode1 = service.modeOf(p);
+            p.sendMessage(Component.text("Corner 1 set at " + format(e.getClickedBlock().getLocation())
+                    + " (mode: " + mode1 + ")").color(NamedTextColor.AQUA));
+            sendWandActionBar(p, "§aCorner 1 §7set — mode: §b" + mode1);
             e.setCancelled(true);
         } else if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
             service.setCorner2(p, e.getClickedBlock().getLocation());
-            p.sendMessage(Component.text("Corner 2 set at "
-                            + format(e.getClickedBlock().getLocation()) + " (mode: " + service.modeOf(p) + ")")
-                    .color(NamedTextColor.AQUA));
+            String mode2 = service.modeOf(p);
+            p.sendMessage(Component.text("Corner 2 set at " + format(e.getClickedBlock().getLocation())
+                    + " (mode: " + mode2 + ")").color(NamedTextColor.AQUA));
+            sendWandActionBar(p, "§aCorner 2 §7set — mode: §b" + mode2 + " §7— /region create <id>");
             e.setCancelled(true);
+        }
+    }
+
+    private static void sendWandActionBar(Player p, String msg) {
+        try {
+            com.github._255_ping.rpg.api.RpgServices.actionBar().send(p,
+                    net.kyori.adventure.text.Component.text(msg), 40);
+        } catch (IllegalStateException ignored) {
+            p.sendActionBar(net.kyori.adventure.text.Component.text(msg));
         }
     }
 

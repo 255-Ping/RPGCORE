@@ -52,13 +52,18 @@ public final class RpgCombatPlugin extends JavaPlugin implements Listener {
         if (killer == null) return;
         if (!whitelisted(event.getEntity().getType().name())) return;
 
-        // Prefer the RPG mob-id for the config lookup so per-mob overrides work.
-        String mobKey = RpgServices.mobs().from(event.getEntity())
-                .map(RpgMob::id)
-                .orElse(event.getEntity().getType().name().toLowerCase(Locale.ROOT));
-
-        long base = getConfig().getLong("xp-per-kill." + mobKey,
-                getConfig().getLong("default-kill-xp", 10));
+        // If the mob has an XP value set directly in its YAML definition, use that.
+        // Otherwise fall back to the config xp-per-kill table then default-kill-xp.
+        java.util.Optional<RpgMob> rpgMob = RpgServices.mobs().from(event.getEntity());
+        long base;
+        if (rpgMob.isPresent() && rpgMob.get().xp() > 0) {
+            base = rpgMob.get().xp();
+        } else {
+            String mobKey = rpgMob.map(RpgMob::id)
+                    .orElse(event.getEntity().getType().name().toLowerCase(Locale.ROOT));
+            base = getConfig().getLong("xp-per-kill." + mobKey,
+                    getConfig().getLong("default-kill-xp", 10));
+        }
         if (base <= 0) return;
 
         double wisdom = RpgServices.player(killer).get(BuiltinStat.COMBAT_WISDOM);

@@ -71,9 +71,10 @@ public final class BlockLoader {
         String stationType = s.getString("StationType", "");
 
         List<String> dropSpecs = s.getStringList("Drops");
+        long xp = s.getLong("XP", 0);
 
         return new CoreBlock(id, material, toughness, requiredPower, tool,
-                respawnTicks, placeholder, interactable, stationType, dropSpecs);
+                respawnTicks, placeholder, interactable, stationType, dropSpecs, xp);
     }
 
     private static RequiredToolType parseTool(String s) {

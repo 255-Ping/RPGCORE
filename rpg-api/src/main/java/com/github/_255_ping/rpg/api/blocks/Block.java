@@ -39,4 +39,10 @@ public interface Block {
 
     /** Drop entries in the form {@code [file] <itemId> <min>[-<max>]}. */
     List<String> dropSpecs();
+
+    /**
+     * Skill XP awarded when this block is broken. {@code 0} means use the skill addon's
+     * configured {@code default-xp} value instead. Set {@code XP: N} in the block YAML.
+     */
+    default long xp() { return 0; }
 }

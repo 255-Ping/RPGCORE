@@ -6,6 +6,34 @@ Version format: `<plugin>-<pluginVersion>-<suiteVersion>`. Only notable changes 
 
 ## Suite 18 (current)
 
+### rpg-api `0.1.0`
+- `BuiltinItemType`: added `CROSSBOW`.
+- `BuiltinStat`: added `AMMO_USAGE_REDUCTION` and `PROJECTILE_SPEED`.
+- `Block`: added `default long xp()` — block-level mining XP override.
+- `RpgMob`: added `long xp()` — mob-level kill XP override.
+- `RpgItem`: added `attackCooldownTicks()`, `itemCooldownTicks()`, `ammoType()`, `infiniteAmmo()`, `projectileType()` for attack cooldown and bow/crossbow support.
+- `AbilityEffect`: added `displayName()` and `description()` default methods.
+- `AbilityRegistry`: added `registerMeta`, `abilityDisplayName`, `abilityDescription`.
+- `ActionBarService` (hud package): priority action bar system accessible via `RpgServices.actionBar()`.
+
+### rpg-core `0.5.0`
+- **Attack cooldown**: `AttackCooldown: N` on any item sets `generic.attack_speed` on equip. Melee damage scales by `0.2 + 0.8 * charge²` (Minecraft formula) when `attack-cooldown.scale-damage: true` in config.
+- **Item cooldown**: `ItemCooldown: N` prevents rapid re-use of wands/consumables at the item level (separate from ability cooldowns).
+- **Bows & crossbows**: `BowListener` handles `EntityShootBowEvent` for BOW/CROSSBOW items. Supports `AmmoType: <itemId>`, `InfiniteAmmo: true/false`, `ProjectileType: ARROW/SPECTRAL_ARROW/SNOWBALL/EGG/SMALL_FIREBALL/TRIDENT`. Arrow damage is PDC-tagged so the damage pipeline uses the bow's DAMAGE stat scaled by draw force.
+- **`AMMO_USAGE_REDUCTION` stat**: percent chance to not consume ammo when firing.
+- **`PROJECTILE_SPEED` stat**: multiplies arrow velocity.
+- **XP in mob YAML**: `XP: N` on mob definitions overrides rpg-combat's config table.
+- **XP in block YAML**: `XP: N` on block definitions overrides rpg-mining's config table.
+- **`/rpg effects`**: shows a player's active custom status effects with levels and remaining duration.
+- **Wand UX**: mode switch sends a 2-second action bar message + updates the wand's lore to show current mode. Corner-set confirmations also appear in the action bar.
+- Ability lore, breaking power ordering, mining improvements, knockback, durability toggle, `/rpg help` (see previous entry).
+
+### rpg-mining `0.2.0`
+- Uses `block.xp()` from block definition when > 0; falls back to config.
+
+### rpg-combat `0.2.0`
+- Uses `mob.xp()` from mob definition when > 0; falls back to config.
+
 ### rpg-api `0.0.9`
 - `AbilityEffect`: added `displayName()` and `description()` default methods for item lore.
 - `AbilityRegistry`: added `registerMeta`, `abilityDisplayName`, `abilityDescription` for custom ability lore.

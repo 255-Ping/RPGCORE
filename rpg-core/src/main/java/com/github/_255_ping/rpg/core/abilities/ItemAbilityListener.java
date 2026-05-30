@@ -63,6 +63,20 @@ public final class ItemAbilityListener implements Listener {
             event.setUseInteractedBlock(org.bukkit.event.Event.Result.DENY);
         }
 
+        // Item-level cooldown check (prevents rapid re-use of wands/consumables).
+        int itemCd = item.itemCooldownTicks();
+        if (itemCd > 0) {
+            String cdKey = "item_use:" + item.id();
+            if (RpgServices.cooldowns().isOnCooldown(player.getUniqueId(), cdKey)) {
+                try {
+                    RpgServices.actionBar().send(player,
+                            net.kyori.adventure.text.Component.text("§cItem on cooldown!"), 15);
+                } catch (IllegalStateException ignored) {}
+                return;
+            }
+            RpgServices.cooldowns().set(player.getUniqueId(), cdKey, itemCd);
+        }
+
         double baseDamage = RpgServices.player(player).get(BuiltinStat.DAMAGE);
         AbilityContext ctx = new AbilityContext(player, baseDamage);
         ctx.setPoint(player.getEyeLocation());
@@ -82,7 +96,7 @@ public final class ItemAbilityListener implements Listener {
     private static boolean isWeaponType(RpgItem item) {
         if (!(item.type() instanceof BuiltinItemType bt)) return false;
         return switch (bt) {
-            case SWORD, BOW, WAND, CONSUMABLE, ACCESSORY, UPGRADE, QUEST -> true;
+            case SWORD, BOW, CROSSBOW, WAND, CONSUMABLE, ACCESSORY, UPGRADE, QUEST -> true;
             case ARMOR, MATERIAL -> false;
         };
     }

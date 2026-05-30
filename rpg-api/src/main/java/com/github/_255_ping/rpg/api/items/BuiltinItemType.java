@@ -4,6 +4,7 @@ public enum BuiltinItemType implements ItemType {
     SWORD,
     WAND,
     BOW,
+    CROSSBOW,
     ARMOR,
     MATERIAL,
     QUEST,

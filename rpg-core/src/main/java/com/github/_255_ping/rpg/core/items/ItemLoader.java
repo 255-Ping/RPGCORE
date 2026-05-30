@@ -123,8 +123,16 @@ public final class ItemLoader {
             }
         }
 
+        int attackCooldown  = s.getInt("AttackCooldown", 0);
+        int itemCooldown    = s.getInt("ItemCooldown", 0);
+        String ammoType     = s.getString("AmmoType");
+        boolean infiniteAmmo = s.getBoolean("InfiniteAmmo", false);
+        String projectileType = s.getString("ProjectileType", "ARROW");
+
         return new CoreRpgItem(id, displayName, type, rarity, material, customModelData,
-                stats, abilities, lore, consumeEffects, itemIdKey);
+                stats, abilities, lore, consumeEffects,
+                attackCooldown, itemCooldown, ammoType, infiniteAmmo, projectileType,
+                itemIdKey);
     }
 
     private static ItemType parseType(String s) {

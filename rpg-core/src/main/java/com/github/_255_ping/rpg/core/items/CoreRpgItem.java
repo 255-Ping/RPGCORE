@@ -38,19 +38,34 @@ public final class CoreRpgItem implements RpgItem {
     private final List<AbilityInvocation> abilities;
     private final List<String> extraLore;
     private final List<ConsumeEffect> consumeEffects;
+    private final int attackCooldownTicks;
+    private final int itemCooldownTicks;
+    private final String ammoType;
+    private final boolean infiniteAmmo;
+    private final String projectileType;
     private final NamespacedKey itemIdKey;
 
     public CoreRpgItem(String id, String displayName, ItemType type, Rarity rarity,
                        Material material, int customModelData,
                        Map<Stat, Double> stats, List<AbilityInvocation> abilities,
                        List<String> extraLore, NamespacedKey itemIdKey) {
-        this(id, displayName, type, rarity, material, customModelData, stats, abilities, extraLore, List.of(), itemIdKey);
+        this(id, displayName, type, rarity, material, customModelData, stats, abilities, extraLore, List.of(), 0, 0, null, false, "ARROW", itemIdKey);
     }
 
     public CoreRpgItem(String id, String displayName, ItemType type, Rarity rarity,
                        Material material, int customModelData,
                        Map<Stat, Double> stats, List<AbilityInvocation> abilities,
                        List<String> extraLore, List<ConsumeEffect> consumeEffects, NamespacedKey itemIdKey) {
+        this(id, displayName, type, rarity, material, customModelData, stats, abilities, extraLore, consumeEffects, 0, 0, null, false, "ARROW", itemIdKey);
+    }
+
+    public CoreRpgItem(String id, String displayName, ItemType type, Rarity rarity,
+                       Material material, int customModelData,
+                       Map<Stat, Double> stats, List<AbilityInvocation> abilities,
+                       List<String> extraLore, List<ConsumeEffect> consumeEffects,
+                       int attackCooldownTicks, int itemCooldownTicks,
+                       String ammoType, boolean infiniteAmmo, String projectileType,
+                       NamespacedKey itemIdKey) {
         this.id = id;
         this.displayName = displayName;
         this.type = type;
@@ -61,6 +76,11 @@ public final class CoreRpgItem implements RpgItem {
         this.abilities = List.copyOf(abilities);
         this.extraLore = List.copyOf(extraLore);
         this.consumeEffects = List.copyOf(consumeEffects);
+        this.attackCooldownTicks = attackCooldownTicks;
+        this.itemCooldownTicks = itemCooldownTicks;
+        this.ammoType = ammoType;
+        this.infiniteAmmo = infiniteAmmo;
+        this.projectileType = projectileType != null ? projectileType : "ARROW";
         this.itemIdKey = itemIdKey;
     }
 
@@ -74,6 +94,11 @@ public final class CoreRpgItem implements RpgItem {
     @Override public List<AbilityInvocation> abilities() { return abilities; }
     @Override public List<String> extraLore() { return extraLore; }
     public List<ConsumeEffect> consumeEffects() { return consumeEffects; }
+    @Override public int attackCooldownTicks() { return attackCooldownTicks; }
+    @Override public int itemCooldownTicks() { return itemCooldownTicks; }
+    @Override public String ammoType() { return ammoType; }
+    @Override public boolean infiniteAmmo() { return infiniteAmmo; }
+    @Override public String projectileType() { return projectileType; }
 
     @Override
     public ItemStack toItemStack() {

@@ -147,10 +147,11 @@ public final class MobLoader {
 
         CoreLootTable lootTable = parseLootTable(id, s.getConfigurationSection("LootTable"));
         MobAiProfile aiProfile = parseAiProfile(s.getConfigurationSection("AI"));
+        long xp = s.getLong("XP", 0);
 
         return new CoreRpgMob(id, displayName, type, health, damage, defense,
                 stats, helmet, chest, legs, boots, hand, off, null, bindings, lootTable,
-                aiProfile, mobIdKey, healthService);
+                aiProfile, xp, mobIdKey, healthService);
     }
 
     private MobAiProfile parseAiProfile(ConfigurationSection s) {
