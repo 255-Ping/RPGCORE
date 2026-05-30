@@ -8,6 +8,9 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Transformation;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -64,12 +67,22 @@ public final class NametagManager {
 
     private void spawn(Player p) {
         if (!p.isOnline()) return;
-        double yOffset = plugin.getConfig().getDouble("nametag.y-offset", 0.4);
-        Location loc = p.getLocation().clone().add(0, p.getHeight() + yOffset, 0);
+        // Spawn at the player's feet — addPassenger will move it to the mount point.
+        // The y-offset is applied as a Display translation so it stacks on top of the
+        // passenger ride height (roughly the top of the player's head).
+        float yOffset = (float) plugin.getConfig().getDouble("nametag.y-offset", 0.5);
+        Location loc = p.getLocation();
         if (loc.getWorld() == null) return;
         TextDisplay td = (TextDisplay) loc.getWorld().spawnEntity(loc, EntityType.TEXT_DISPLAY);
         td.setBillboard(Display.Billboard.CENTER);
         td.setPersistent(false);
+        // Push the label above the passenger mount point via a Display transformation.
+        // identity quaternions + unit scale — only the translation changes.
+        td.setTransformation(new Transformation(
+                new Vector3f(0f, yOffset, 0f),
+                new Quaternionf(),
+                new Vector3f(1f, 1f, 1f),
+                new Quaternionf()));
         String fmt = plugin.getConfig().getString("nametag.format", "{prefix} {name} {suffix}");
         td.text(LEGACY.deserialize(PlaceholderResolver.resolve(p, fmt)));
         p.addPassenger(td);
