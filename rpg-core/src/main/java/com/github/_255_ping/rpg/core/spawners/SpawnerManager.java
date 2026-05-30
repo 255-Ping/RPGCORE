@@ -3,10 +3,13 @@ package com.github._255_ping.rpg.core.spawners;
 import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.mobs.RpgMob;
 import com.github._255_ping.rpg.api.persistence.DataStore;
+import com.github._255_ping.rpg.core.health.CoreHealthService;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.persistence.PersistentDataType;
@@ -33,14 +36,16 @@ public final class SpawnerManager {
     private static final String REPO = "spawners";
 
     private final JavaPlugin plugin;
+    private final CoreHealthService healthService;
     private final NamespacedKey spawnerKey;
     private final NamespacedKey mobLevelKey;
     private final ConcurrentMap<String, SpawnerDef> byId = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Long> lastSpawnTick = new ConcurrentHashMap<>();
     private long currentTick = 0;
 
-    public SpawnerManager(JavaPlugin plugin) {
+    public SpawnerManager(JavaPlugin plugin, CoreHealthService healthService) {
         this.plugin = plugin;
+        this.healthService = healthService;
         this.spawnerKey = new NamespacedKey(plugin, "spawner_id");
         this.mobLevelKey = new NamespacedKey(plugin, "mob_level");
     }
@@ -147,6 +152,18 @@ public final class SpawnerManager {
                         ? def.minLevel()
                         : def.minLevel() + ThreadLocalRandom.current().nextInt(def.maxLevel() - def.minLevel() + 1);
                 spawned.getPersistentDataContainer().set(mobLevelKey, PersistentDataType.INTEGER, level);
+
+                // Apply HP scaling for leveled mobs (level 1 is base — no change).
+                if (level > 1 && plugin.getConfig().getBoolean("mob-level-scaling.enabled", true)) {
+                    double hpPerLevel = plugin.getConfig().getDouble("mob-level-scaling.per-level-gains.health", 5.0);
+                    double scaledHp = mob.get().maxHealth() + (level - 1) * hpPerLevel;
+                    // Update Bukkit MAX_HEALTH so the RPG health sync doesn't clamp below scaled HP.
+                    AttributeInstance attr = spawned.getAttribute(Attribute.MAX_HEALTH);
+                    if (attr != null) attr.setBaseValue(Math.min(scaledHp, 2048.0));
+                    healthService.setMaxHp(spawned, scaledHp);
+                    healthService.setCurrentHp(spawned, scaledHp);
+                }
+
                 // Prefix the display name with [Lv. N] so players see the level.
                 if (level > 1 || def.minLevel() > 1) {
                     var existing = spawned.customName();

@@ -1,0 +1,63 @@
+# rpg-admin configuration
+# All commands can be individually disabled by setting enabled: false.
+# Permission nodes are fully configurable per command.
+
+commands:
+  gmc:
+    enabled: true
+    permission: rpg.admin.gamemode
+  gms:
+    enabled: true
+    permission: rpg.admin.gamemode
+  gma:
+    enabled: true
+    permission: rpg.admin.gamemode
+  gmsp:
+    enabled: true
+    permission: rpg.admin.gamemode
+
+  fly:
+    enabled: true
+    permission: rpg.admin.fly
+
+  god:
+    enabled: true
+    permission: rpg.admin.god
+
+  tp:
+    enabled: true
+    permission: rpg.admin.tp
+  tphere:
+    enabled: true
+    permission: rpg.admin.tp
+
+  heal:
+    enabled: true
+    permission: rpg.admin.heal
+    others-permission: rpg.admin.heal.others
+
+  feed:
+    enabled: true
+    permission: rpg.admin.feed
+    others-permission: rpg.admin.feed.others
+
+  speed:
+    enabled: true
+    permission: rpg.admin.speed
+    max-walk-speed: 1.0   # 0.0 – 1.0; Bukkit default is 0.2
+    max-fly-speed: 1.0    # 0.0 – 1.0; Bukkit default is 0.1
+
+  clear:
+    enabled: true
+    permission: rpg.admin.clear
+    others-permission: rpg.admin.clear.others
+
+  broadcast:
+    enabled: true
+    permission: rpg.admin.broadcast
+    # {message} is replaced with the broadcast text
+    format: "&c[&lANNOUNCEMENT&c] &f{message}"
+
+  sudo:
+    enabled: true
+    permission: rpg.admin.sudo

@@ -160,7 +160,7 @@ When `suiteVersion` bumps:
 | Module | Property | Current |
 |---|---|---|
 | rpg-api | `apiVersion` | 0.0.7 |
-| rpg-core | `coreVersion` | 0.1.0 |
+| rpg-core | `coreVersion` | 0.1.1 |
 | rpg-mining | `miningVersion` | 0.0.2 |
 | rpg-combat | `combatVersion` | 0.0.1 |
 | rpg-economy | `economyVersion` | 0.1.0 |
@@ -180,6 +180,7 @@ When `suiteVersion` bumps:
 | rpg-quests | `questsVersion` | 0.0.2 |
 | rpg-dungeons | `dungeonsVersion` | 0.0.2 |
 | rpg-cooking | `cookingVersion` | 0.0.0 |
+| rpg-admin | `adminVersion` | 0.1.0 |
 | suite-wide suffix | `suiteVersion` | 18 |
 
 **Keep this table in sync** — update it in the same commit as any version bump.
@@ -305,6 +306,8 @@ stored per player. When adding new persistent player fields, update both the sav
 6. Status-effect percent modifiers
 7. `StatRecalcEvent` — addons inject transient bonuses (e.g. guild perks via `holder().add()`)
 
+- `rpg-admin` — standalone admin utility addon (`depend: [rpg-core]`). Provides `/gmc /gms /gma /gmsp /fly /god /tp /tphere /heal /feed /speed /clear /broadcast /sudo`. Every command individually enable/disable-able via `config.yml`; permission nodes configurable per command. God mode hooks into `PreDamageEvent` to cancel RPG damage. Heal integrates with `RpgServices.health()` and falls back to vanilla.
+
 ### Key systems in rpg-core
 
 | Class | What it does |
@@ -350,6 +353,22 @@ prefer refactoring to extract the logic instead.
 
 ~36 tests exist covering: `DamageMath`, `CoreExpressionEvaluator`, `MutableStatHolder`,
 `EnchantDef.statsAtLevel`, `ItemModifier` PDC round-trip, `QuestObjective.Type.fromString`.
+
+## Planned features (do not implement — document only)
+
+These features are scoped and documented under `docs/planned/` but have no code yet.
+When starting implementation, move the doc to `docs/addons/<name>.md` and remove it from this list.
+
+| Feature | Doc | Notes |
+|---|---|---|
+| Auction House | `docs/planned/auction-house.md` | Player listings; sign entry for coin amounts |
+| Bazaar | `docs/planned/bazaar.md` | Admin-configured fixed-price shop; configurable items/categories |
+| GUI Overhaul | `docs/planned/gui-overhaul.md` | Party, Guild, Quest, Hologram, Spawner GUIs; chat entry for player names; sign entry for numbers |
+
+Key planned interaction patterns:
+- **Chat entry** — for text/player-name inputs: close GUI, send prompt, capture next chat message, reopen GUI
+- **Sign entry** — for numeric inputs (prices, amounts): open virtual sign via packet, parse on submit
+- Reference sign implementation: `https://github.com/255-Ping/SurvivalCore`
 
 ## Git discipline
 

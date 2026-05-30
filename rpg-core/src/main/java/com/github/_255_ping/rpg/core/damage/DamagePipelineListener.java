@@ -81,6 +81,9 @@ public final class DamagePipelineListener implements Listener {
         double finalDamage = DamageMath.compute(ctx);
         if (finalDamage <= 0) return;
 
+        // Mob level stat bonuses — leveled mobs deal more damage and absorb more.
+        finalDamage = applyMobLevelStatScaling(attacker, victim, finalDamage);
+
         // Level scaling: reduce damage dealt to/by over-leveled mobs.
         finalDamage = applyLevelScaling(attacker, victim, finalDamage);
 
@@ -104,6 +107,44 @@ public final class DamagePipelineListener implements Listener {
 
         PostDamageEvent post = new PostDamageEvent(ctx, finalDamage);
         Bukkit.getPluginManager().callEvent(post);
+    }
+
+    /**
+     * Applies per-level stat bonuses to mob attackers and mob victims.
+     * <ul>
+     *   <li>Mob attacker: each level above 1 multiplies outgoing damage by
+     *       {@code 1 + (level-1) * damage-percent / 100}</li>
+     *   <li>Mob victim: each level above 1 reduces incoming damage using the standard
+     *       defense formula {@code defense / (defense + 100)} where
+     *       {@code defense = (level-1) * per-level-defense}</li>
+     * </ul>
+     * Both effects are controlled by {@code mob-level-scaling.enabled} and their respective
+     * {@code per-level-gains} keys in config.yml.
+     */
+    private double applyMobLevelStatScaling(LivingEntity attacker, LivingEntity victim, double damage) {
+        if (!plugin.getConfig().getBoolean("mob-level-scaling.enabled", true)) return damage;
+        if (mobLevelKey == null) return damage;
+
+        // Leveled mob attacker → bonus damage output
+        if (attacker != null && !(attacker instanceof Player)) {
+            Integer mobLvl = attacker.getPersistentDataContainer().get(mobLevelKey, PersistentDataType.INTEGER);
+            if (mobLvl != null && mobLvl > 1) {
+                double dmgPct = plugin.getConfig().getDouble("mob-level-scaling.per-level-gains.damage-percent", 5.0);
+                damage *= 1.0 + (mobLvl - 1) * dmgPct / 100.0;
+            }
+        }
+
+        // Leveled mob victim → bonus damage reduction (defense scaling)
+        if (!(victim instanceof Player) && damage > 0) {
+            Integer mobLvl = victim.getPersistentDataContainer().get(mobLevelKey, PersistentDataType.INTEGER);
+            if (mobLvl != null && mobLvl > 1) {
+                double defPerLvl = plugin.getConfig().getDouble("mob-level-scaling.per-level-gains.defense", 2.0);
+                double bonusDef = (mobLvl - 1) * defPerLvl;
+                damage *= 1.0 - bonusDef / (bonusDef + 100.0);
+            }
+        }
+
+        return damage;
     }
 
     private double applyLevelScaling(LivingEntity attacker, LivingEntity victim, double damage) {

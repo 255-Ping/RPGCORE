@@ -1,0 +1,72 @@
+name: rpg-admin
+version: '${version}'
+main: com.github._255_ping.rpg.admin.RpgAdminPlugin
+api-version: '1.21'
+depend: [rpg-core]
+load: POSTWORLD
+authors: [255_ping]
+description: Administrative utility commands for RPGCORE servers.
+
+commands:
+  gmc:
+    description: Set gamemode to Creative
+    usage: /gmc [player]
+  gms:
+    description: Set gamemode to Survival
+    usage: /gms [player]
+  gma:
+    description: Set gamemode to Adventure
+    usage: /gma [player]
+  gmsp:
+    description: Set gamemode to Spectator
+    usage: /gmsp [player]
+  fly:
+    description: Toggle fly mode
+    usage: /fly [player]
+  god:
+    description: Toggle invincibility
+    usage: /god [player]
+  tp:
+    description: Teleport to a player or coordinates
+    usage: /tp <player> | /tp <x> <y> <z> | /tp <from> <to>
+  tphere:
+    description: Teleport a player to you
+    usage: /tphere <player>
+  heal:
+    description: Heal a player to full health
+    usage: /heal [player]
+  feed:
+    description: Restore a player's hunger
+    usage: /feed [player]
+  speed:
+    description: Set walk or fly speed
+    usage: /speed <value> [player] | /speed walk|fly <value> [player]
+  clear:
+    description: Clear a player's inventory
+    usage: /clear [player]
+  broadcast:
+    description: Broadcast a message to all players
+    usage: /broadcast <message>
+    aliases: [bc]
+  sudo:
+    description: Force a player to execute a command
+    usage: /sudo <player> <command>
+
+permissions:
+  rpg.admin.*:
+    description: All rpg-admin permissions
+    default: op
+    children:
+      rpg.admin.gamemode: true
+      rpg.admin.fly: true
+      rpg.admin.god: true
+      rpg.admin.tp: true
+      rpg.admin.heal: true
+      rpg.admin.heal.others: true
+      rpg.admin.feed: true
+      rpg.admin.feed.others: true
+      rpg.admin.speed: true
+      rpg.admin.clear: true
+      rpg.admin.clear.others: true
+      rpg.admin.broadcast: true
+      rpg.admin.sudo: true

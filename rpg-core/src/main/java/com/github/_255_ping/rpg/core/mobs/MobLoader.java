@@ -126,11 +126,21 @@ public final class MobLoader {
         }
 
         List<MobAbilityBinding> bindings = new ArrayList<>();
-        for (String inv : s.getStringList("Abilities")) {
+        List<?> abilityList = s.getList("Abilities", List.of());
+        for (Object entry : abilityList) {
             try {
-                bindings.add(parseAbilityBinding(inv));
+                if (entry instanceof String str) {
+                    bindings.add(parseAbilityBinding(str, 1));
+                } else if (entry instanceof java.util.Map<?, ?> m) {
+                    // Map format: {invocation: "...", trigger: "...", min-level: N}
+                    String invStr = m.get("invocation") != null ? m.get("invocation").toString() : "";
+                    String trigStr = m.get("trigger") != null ? m.get("trigger").toString() : "";
+                    int minLevel = m.get("min-level") instanceof Number n ? n.intValue() : 1;
+                    String combined = trigStr.isEmpty() ? invStr : invStr + "~" + trigStr;
+                    bindings.add(parseAbilityBinding(combined, minLevel));
+                }
             } catch (Exception ex) {
-                logger.warning("mob '" + id + "' has bad ability invocation '" + inv + "': " + ex.getMessage());
+                logger.warning("mob '" + id + "' has bad ability entry '" + entry + "': " + ex.getMessage());
             }
         }
 
@@ -152,7 +162,7 @@ public final class MobLoader {
         return new MobAiProfile(kind, aggro, attack, leash, immune);
     }
 
-    private static MobAbilityBinding parseAbilityBinding(String spec) {
+    private static MobAbilityBinding parseAbilityBinding(String spec, int minLevel) {
         int triggerIdx = spec.indexOf('~');
         String invStr = triggerIdx < 0 ? spec : spec.substring(0, triggerIdx).trim();
         MobAbilityTrigger trigger;
@@ -162,7 +172,7 @@ public final class MobLoader {
             trigger = MobAbilityTrigger.parse(spec.substring(triggerIdx + 1));
         }
         List<AbilityInvocation> invocations = AbilityDsl.parse(invStr);
-        return new MobAbilityBinding(invocations, trigger);
+        return new MobAbilityBinding(invocations, trigger, minLevel);
     }
 
     private CoreLootTable parseLootTable(String mobId, ConfigurationSection s) {

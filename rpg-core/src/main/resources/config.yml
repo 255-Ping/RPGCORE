@@ -165,11 +165,19 @@ mob-health-bar:
 
 # Level scaling — reduces damage when players are much higher level than a mob.
 # Applies to both player→mob and mob→player directions.
+# per-level-gains control how a mob's stats grow with each level above 1.
+#   health:         flat HP added per level  (e.g. level 5 mob gets +4 * 5 = 20 extra HP)
+#   damage-percent: outgoing damage multiplied by 1 + (level-1) * X / 100 per level
+#   defense:        effective defense points added per level (reduces incoming damage)
 level-scaling:
   enabled: true
   threshold: 5             # level difference before scaling kicks in
   reduction-per-level: 0.08  # damage multiplier reduction per level above threshold
   min-damage-factor: 0.10  # floor: never reduce below 10% of base damage
+  per-level-gains:
+    health: 5.0            # flat HP per level above 1
+    damage-percent: 5.0    # % outgoing damage increase per level above 1
+    defense: 2.0           # defense points per level above 1
 
 # Debug logging per-system. Verbose builds are noisy — leave off in prod.
 debug:

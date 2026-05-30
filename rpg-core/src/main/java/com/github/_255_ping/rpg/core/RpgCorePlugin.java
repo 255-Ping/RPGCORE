@@ -20,6 +20,7 @@ import com.github._255_ping.rpg.core.death.DeathRulesListener;
 import com.github._255_ping.rpg.core.damage.DamageIndicatorListener;
 import com.github._255_ping.rpg.core.damage.DamagePipelineListener;
 import com.github._255_ping.rpg.core.items.ConsumableItemListener;
+import com.github._255_ping.rpg.core.mobs.MobAbilityRuntime;
 import com.github._255_ping.rpg.core.formatting.CoreMessageFormatter;
 import com.github._255_ping.rpg.core.formatting.CoreNameFormatter;
 import com.github._255_ping.rpg.core.formula.CoreExpressionEvaluator;
@@ -263,9 +264,10 @@ public final class RpgCorePlugin extends JavaPlugin {
         Objects.requireNonNull(getCommand("skill")).setExecutor(new SkillCommand(this));
         Objects.requireNonNull(getCommand("effects")).setExecutor(new EffectsCommand(this));
 
-        spawnerManager = new SpawnerManager(this);
+        spawnerManager = new SpawnerManager(this, healthService);
         spawnerManager.loadAll();
         damagePipeline.setMobKeys(mobIdKey, spawnerManager.mobLevelKey());
+        MobAbilityRuntime.setMobLevelKey(spawnerManager.mobLevelKey());
         SpawnerCommand spawnerCommand = new SpawnerCommand(this, spawnerManager);
         var spawnerCmd = Objects.requireNonNull(getCommand("spawner"));
         spawnerCmd.setExecutor(spawnerCommand);
