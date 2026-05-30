@@ -11,3 +11,17 @@ combat-xp-multiplier-from-abilities: 1.0
 # zombie-rabbit). The base type must match one of these vanilla entity types, or set
 # to ["any"] to award for any LivingEntity damage.
 victim-whitelist: ["any"]
+
+# ── Kill XP ───────────────────────────────────────────────────────────────────
+# Flat XP awarded when the player lands the killing blow. Scaled by COMBAT_WISDOM.
+# Use the mob's rpg-id (from plugins/rpg-core/mobs/*.yml) for per-mob overrides.
+# Falls back to default-kill-xp when no entry matches.
+default-kill-xp: 10
+
+xp-per-kill: {}
+  # zombie: 15
+  # skeleton: 15
+  # cave_spider: 20
+  # Per RPG mob-id examples:
+  # crypt_guardian: 100
+  # forest_troll: 60

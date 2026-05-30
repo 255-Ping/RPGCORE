@@ -2,15 +2,18 @@ package com.github._255_ping.rpg.combat;
 
 import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.damage.PostDamageEvent;
+import com.github._255_ping.rpg.api.mobs.RpgMob;
 import com.github._255_ping.rpg.api.skills.BuiltinSkill;
 import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.Locale;
 
 public final class RpgCombatPlugin extends JavaPlugin implements Listener {
 
@@ -22,6 +25,7 @@ public final class RpgCombatPlugin extends JavaPlugin implements Listener {
         getLogger().info("rpg-combat v" + getPluginMeta().getVersion() + " enabled.");
     }
 
+    /** XP per point of damage dealt — scales with COMBAT_WISDOM. */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPostDamage(PostDamageEvent event) {
         if (!(event.context().attacker() instanceof Player attacker)) return;
@@ -39,6 +43,28 @@ public final class RpgCombatPlugin extends JavaPlugin implements Listener {
         long amount = Math.round(event.dealtDamage() * rate * abilityMult * (1.0 + wisdom / 100.0));
         if (amount <= 0) return;
         RpgServices.skills().awardXp(attacker, BuiltinSkill.COMBAT.id(), amount);
+    }
+
+    /** Bonus XP on kill — looks up the mob's RPG id first, falls back to entity type name. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEntityDeath(EntityDeathEvent event) {
+        Player killer = event.getEntity().getKiller();
+        if (killer == null) return;
+        if (!whitelisted(event.getEntity().getType().name())) return;
+
+        // Prefer the RPG mob-id for the config lookup so per-mob overrides work.
+        String mobKey = RpgServices.mobs().from(event.getEntity())
+                .map(RpgMob::id)
+                .orElse(event.getEntity().getType().name().toLowerCase(Locale.ROOT));
+
+        long base = getConfig().getLong("xp-per-kill." + mobKey,
+                getConfig().getLong("default-kill-xp", 10));
+        if (base <= 0) return;
+
+        double wisdom = RpgServices.player(killer).get(BuiltinStat.COMBAT_WISDOM);
+        long amount = Math.round(base * (1.0 + wisdom / 100.0));
+        if (amount <= 0) return;
+        RpgServices.skills().awardXp(killer, BuiltinSkill.COMBAT.id(), amount);
     }
 
     private boolean whitelisted(String entityTypeName) {

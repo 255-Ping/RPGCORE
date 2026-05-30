@@ -187,7 +187,7 @@ public final class BlockBreakHandler implements Listener {
             loc.getBlock().setType(Material.AIR);
         }
 
-        rollDrops(block, loc);
+        rollDrops(block, loc, player);
 
         if (block.respawnTicks() > 0 && loc.getWorld() != null) {
             loc.getBlock().setType(block.respawnPlaceholder());
@@ -235,14 +235,34 @@ public final class BlockBreakHandler implements Listener {
         };
     }
 
-    private void rollDrops(Block block, Location loc) {
+    /**
+     * Rolls drops for a broken block, applying the player's {@code MINING_FORTUNE} stat.
+     *
+     * <p>Fortune formula: every 100 points = +1 guaranteed extra drop multiplier. The
+     * fractional part is a probabilistic extra (50 fortune → 50 % chance of an extra
+     * multiply). Total multiplier = 1 + floor(fortune/100) + chanceRoll.
+     */
+    private void rollDrops(Block block, Location loc, Player player) {
         if (loc.getWorld() == null) return;
+
+        double fortune = RpgServices.player(player).get(BuiltinStat.MINING_FORTUNE);
+        int guaranteed = (int) (fortune / 100.0);
+        double chance   = (fortune % 100.0) / 100.0;
+        int fortuneMult = 1 + guaranteed
+                + (ThreadLocalRandom.current().nextDouble() < chance ? 1 : 0);
+
         for (String spec : block.dropSpecs()) {
             try {
                 ItemStack drop = parseDrop(spec);
-                if (drop != null) loc.getWorld().dropItemNaturally(loc, drop);
+                if (drop == null) continue;
+                if (fortuneMult > 1) {
+                    drop.setAmount(Math.min(drop.getAmount() * fortuneMult,
+                            drop.getType().getMaxStackSize()));
+                }
+                loc.getWorld().dropItemNaturally(loc, drop);
             } catch (Exception ex) {
-                plugin.getLogger().warning("Bad drop spec '" + spec + "' on block " + block.id() + ": " + ex.getMessage());
+                plugin.getLogger().warning(
+                        "Bad drop spec '" + spec + "' on block " + block.id() + ": " + ex.getMessage());
             }
         }
     }
