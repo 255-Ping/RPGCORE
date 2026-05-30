@@ -29,19 +29,17 @@ testitem: #itemid
 
 ### `CONSUMABLE`
 
-A right-clickable item that applies a status effect / stat buff and is consumed.
+A right-clickable item that applies status effects and is consumed on use.
 
 ```yaml
 healing_apple:
   MinecraftItem: apple
   Type: CONSUMABLE
   DisplayName: "&dHealing Apple"
-  Consumable:
-    Duration: 200                # ticks for the buff (0 = instant)
-    Heal: 50                     # instant HP healed
-    Effects:                     # status effects applied
-    - { id: regen, level: 2, duration: 200 }
-    Cooldown: 100                # ticks before player can consume again
+  OnConsume:
+    Effects:                     # status effects applied on right-click
+    - { effect: regen, level: 2, duration: 200 }
+    - { effect: strength_boost, level: 1, duration: 100 }
 ```
 
 ### `UPGRADE`

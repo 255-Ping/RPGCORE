@@ -9,19 +9,15 @@ Custom food / consumable crafting at a cooking station block. All vanilla furnac
 `plugins/rpg-cooking/config.yml`:
 
 ```yaml
-skill:
-  id: cooking
-  max-level: 50
-  curve: "100 * level ^ 1.5"
-  milestones:
-    10: { message: "&aYour cooking improves!" }
-    25: { stats: { cooking_wisdom: 10 } }
-  implicit-per-level:
-    stats:
-      cooking_wisdom: 0.5
+features:
+  cooking: true
 
 # Default cook time if a recipe doesn't specify its own
 default-cook-ticks: 200
+
+# Skill XP awarded on successful cook
+xp:
+  per-cook: 20
 ```
 
 ## Recipes
@@ -31,21 +27,19 @@ Files under `plugins/rpg-cooking/recipes/<file>.yml`. See also [Recipes (cooking
 ```yaml
 roasted_rabbit:
   Inputs:
-  - { item: raw_rabbit, amount: 1 }
+  - { Item: raw_rabbit, Amount: 1 }
   CookTicks: 160
-  Output: { item: roasted_rabbit, amount: 1 }
-  Requirements:
-    cooking-level: 5
+  Output: { Item: roasted_rabbit, Amount: 1 }
+  RequiredLevel: 5
 
 hearty_stew:
   Inputs:
-  - { item: raw_meat, amount: 2 }
-  - { item: mushroom, amount: 1 }
-  - { item: bowl, amount: 1 }
+  - { Item: raw_meat, Amount: 2 }
+  - { Item: mushroom, Amount: 1 }
+  - { Item: bowl, Amount: 1 }
   CookTicks: 300
-  Output: { item: hearty_stew, amount: 1 }
-  Requirements:
-    cooking-level: 20
+  Output: { Item: hearty_stew, Amount: 1 }
+  RequiredLevel: 20
 ```
 
 ## Station block
@@ -75,13 +69,10 @@ hearty_stew:
   Type: CONSUMABLE
   DisplayName: "&6Hearty Stew"
   Rarity: "&a&lUNCOMMON"
-  Consumable:
-    Heal: 30
-    Duration: 0
+  OnConsume:
     Effects:
-    - { id: strength_boost, level: 1, duration: 1200 }
-    - { id: regen, level: 1, duration: 400 }
-    Cooldown: 200
+    - { effect: strength_boost, level: 1, duration: 1200 }
+    - { effect: regen, level: 1, duration: 400 }
 ```
 
 ## Stats
@@ -95,6 +86,7 @@ hearty_stew:
 | Command | Permission |
 |---|---|
 | `/cooking reload` | `rpg.cooking.admin.reload` |
+| `/cooking list` | `rpg.cooking.admin.list` |
 
 ## Related
 

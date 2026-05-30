@@ -53,12 +53,10 @@ A custom block with `StationType: cooking` opens the cooking GUI (recipe-pick li
 ```yaml
 roasted_meat:
   Inputs:
-  - { item: raw_meat, amount: 1 }
-  CookTicks: 200                 # ticks per craft (queue-and-walk-away)
-  Output: { item: roasted_meat, amount: 1 }
-  Requirements:
-    cooking-level: 5
-    permission: rpg.cooking.recipe.roasted_meat   # optional
+  - { Item: raw_meat, Amount: 1 }
+  CookTicks: 200
+  Output: { Item: roasted_meat, Amount: 1 }
+  RequiredLevel: 5
 ```
 
 ## Brewing recipes
@@ -67,14 +65,12 @@ A custom block with `StationType: brewing` opens the brewing GUI. Vanilla brewin
 
 ```yaml
 strength_potion_t1:
-  Ingredients:
-  - { item: strength_essence, amount: 1 }
-  - { item: water_bottle, amount: 1 }
+  Inputs:
+  - { Item: strength_essence, Amount: 1 }
+  - { Item: glass_bottle, Amount: 1 }
   BrewTicks: 600
-  Output: { item: strength_potion_t1, amount: 1 }
-  Requirements:
-    alchemy-level: 5
-    permission: rpg.alchemy.brew.strength_t1
+  Output: { Item: strength_potion_t1, Amount: 1 }
+  RequiredLevel: 5
 ```
 
 The output potion is itself an item with a `Consumable:` block in its YAML that applies the status effects on right-click.

@@ -9,19 +9,17 @@ Custom potion-style brewing at a brewing station block. Vanilla brewing stand re
 `plugins/rpg-alchemy/config.yml`:
 
 ```yaml
-skill:
-  id: alchemy
-  max-level: 50
-  curve: "100 * level ^ 1.5"
-  milestones:
-    10: { message: "&aYour brewing improves!" }
-    25: { stats: { alchemy_wisdom: 10 } }
-  implicit-per-level:
-    stats:
-      alchemy_wisdom: 0.5
+features:
+  brewing: true       # brewing station block + recipe-driven brewing
+  drinking: true      # right-click custom potions to consume
 
 # Default brew time if a recipe doesn't specify its own
-default-brew-ticks: 600
+default-brew-ticks: 200
+
+# Skill XP awards
+xp:
+  per-brew: 30
+  per-drink: 0
 ```
 
 ## Recipes
@@ -30,24 +28,21 @@ Files under `plugins/rpg-alchemy/recipes/<file>.yml`. See also [Recipes (brewing
 
 ```yaml
 strength_potion_t1:
-  Ingredients:
-  - { item: strength_essence, amount: 1 }
-  - { item: water_bottle, amount: 1 }
+  Inputs:
+  - { Item: strength_essence, Amount: 1 }
+  - { Item: glass_bottle, Amount: 1 }
   BrewTicks: 600
-  Output: { item: strength_potion_t1, amount: 1 }
-  Requirements:
-    alchemy-level: 5
+  Output: { Item: strength_potion_t1, Amount: 1 }
+  RequiredLevel: 5
 
 speed_elixir:
-  Ingredients:
-  - { item: wind_crystal, amount: 1 }
-  - { item: silver_dust, amount: 2 }
-  - { item: glass_bottle, amount: 1 }
+  Inputs:
+  - { Item: wind_crystal, Amount: 1 }
+  - { Item: silver_dust, Amount: 2 }
+  - { Item: glass_bottle, Amount: 1 }
   BrewTicks: 800
-  Output: { item: speed_elixir, amount: 1 }
-  Requirements:
-    alchemy-level: 20
-    permission: rpg.alchemy.brew.speed_elixir
+  Output: { Item: speed_elixir, Amount: 1 }
+  RequiredLevel: 20
 ```
 
 ## Station block
@@ -75,11 +70,9 @@ strength_potion_t1:
   Type: CONSUMABLE
   DisplayName: "&cStrength Potion I"
   Rarity: "&7&lCOMMON"
-  Consumable:
-    Duration: 0
+  OnConsume:
     Effects:
-    - { id: strength_boost, level: 1, duration: 1200 }
-    Cooldown: 100
+    - { effect: strength_boost, level: 1, duration: 1200 }
 ```
 
 ## Custom status effects
@@ -104,6 +97,7 @@ Common effects shipped with alchemy:
 | Command | Permission |
 |---|---|
 | `/alchemy reload` | `rpg.alchemy.admin.reload` |
+| `/alchemy list` | `rpg.alchemy.admin.list` |
 
 ## Related
 

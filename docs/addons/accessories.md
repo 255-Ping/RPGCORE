@@ -29,11 +29,18 @@ A per-player inventory tab opened via `/accessories` (alias `/bag`). Default siz
 ```yaml
 # plugins/rpg-accessories/config.yml
 bag:
-  tiers:
-    1: { slots: 27, upgrade-cost: { coins: 0 } }
-    2: { slots: 36, upgrade-cost: { coins: 50000, items: { small_storage: 1 } } }
-    3: { slots: 45, upgrade-cost: { coins: 250000 } }
-  upgrade-permission: rpg.accessories.upgrade
+  title: "&5&lAccessory Bag"
+
+# Each tier defines a row count (1–6 rows = 9–54 slots).
+# cost is in primary currency; the player upgrades from tier N to N+1
+# by paying the cost on tier N+1.
+tiers:
+  - { tier: 1, rows: 1, cost: 0 }
+  - { tier: 2, rows: 2, cost: 1000 }
+  - { tier: 3, rows: 3, cost: 5000 }
+  - { tier: 4, rows: 4, cost: 25000 }
+  - { tier: 5, rows: 5, cost: 100000 }
+  - { tier: 6, rows: 6, cost: 500000 }
 ```
 
 `/accessories upgrade` opens the upgrade GUI.

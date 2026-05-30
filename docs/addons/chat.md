@@ -10,30 +10,15 @@ Replaces vanilla chat with a configurable format, channels, and moderation. Wrap
 
 ```yaml
 chat-format: "{prefix}{name}{suffix} &7» &f{message}"
-
-channels:
-  global:
-    prefix: "&7[G]"
-    permission: "rpg.chat.use.global"
-    default: true
-  staff:
-    prefix: "&c[Staff]"
-    permission: "rpg.chat.use.staff"
-    default: false
-  # party and guild channels are registered automatically when those addons load
-
 message-format: "&d{sender} &7-> &d{target}&7: &f{message}"
-socialspy-format: "&8[SPY] {sender} -> {target}: {message}"
 
-moderation:
-  clearchat-lines: 100
-  mutechat-bypass-permission: "rpg.chat.mute.bypass"
-slowmode-default-seconds: 0
+clearchat-lines: 100
+mutechat-default: false
 
-name-format:                     # passed to core NameFormatter
-  use-luckperms-prefix: true
-  use-luckperms-suffix: true
-  fallback-format: "{name}"
+# Per-channel prefix prepended to the rendered chat line. Empty = no prefix.
+channel-prefix-global: ""
+channel-prefix-party: "&8[&dParty&8] "
+channel-prefix-guild: "&8[&aGuild&8] "
 ```
 
 ## Placeholders
@@ -52,15 +37,11 @@ name-format:                     # passed to core NameFormatter
 
 | Command | Permission |
 |---|---|
-| `/chat <channel>` | `rpg.chat.use.<channel>` |
-| `/msg <player> <msg>` | `rpg.chat.msg` |
-| `/reply <msg>` | `rpg.chat.reply` |
+| `/chat <global\|party\|guild>` | `rpg.chat.use.<channel>` |
+| `/msg <player> <message>` | `rpg.chat.msg` |
+| `/reply <message>` | `rpg.chat.reply` |
 | `/clearchat` | `rpg.chat.clearchat` |
-| `/mutechat [on\|off]` | `rpg.chat.mutechat` |
-| `/mute <player> [duration] [reason]` | `rpg.chat.mute` |
-| `/unmute <player>` | `rpg.chat.unmute` |
-| `/slowmode <seconds>` | `rpg.chat.slowmode` |
-| `/socialspy` | `rpg.chat.socialspy` |
+| `/mutechat` | `rpg.chat.mutechat` |
 
 ## Channels
 

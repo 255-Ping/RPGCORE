@@ -16,28 +16,34 @@ Vanilla enchanting tables and anvils are cancelled (per [vanilla suppression](..
 `plugins/rpg-enchanting/config.yml`:
 
 ```yaml
+# Per-feature toggles.
 features:
   enchanting: true
   reforges: true
   upgrades: true
-  anvil: true                    # if false, /anvil and the anvil GUI are disabled
 
-skill:
-  id: enchanting
-  max-level: 50
-  curve: "100 * level ^ 1.5"
-  xp-sources:
-    apply-enchant-base: 50
-    apply-reforge-base: 10
-    apply-upgrade-base: 5
-  milestones:
-    10: { stats: { enchanting_luck: 5 } }
+# Station block IDs to listen on (legacy — prefer setting StationType in block YAML instead).
+stations:
+  enchanting-block: rpg_enchanting_table
+  anvil-block: rpg_custom_anvil
 
-reforges:
-  pay-currency-random:
-    cost-per-reforge: 5000
-  consumable-reforge-stones:
-    enabled: true
+# Whether to also intercept the vanilla enchanting table / anvil (default true).
+intercept-vanilla-enchanting: true
+intercept-vanilla-anvil: true
+
+# Skill XP awarded on successful operation.
+xp:
+  per-enchant: 25
+  per-reforge: 15
+  per-upgrade: 40
+
+# Whether enchants/reforges/upgrades require currency in addition to materials.
+charge-currency: true
+
+# Mirror of rpg-core vanilla-suppression flags (convenience overrides).
+suppress:
+  enchanting-table: true
+  anvil: true
 ```
 
 ## Custom enchants
@@ -108,11 +114,11 @@ custom_anvil:
 
 | Command | Permission |
 |---|---|
-| `/enchant` | `rpg.enchanting.open` |
-| `/reforge` | `rpg.enchanting.reforge` |
-| `/anvil` | `rpg.enchanting.anvil` |
+| `/enchanting reload` | `rpg.enchanting.admin.reload` |
+| `/enchanting list` | `rpg.enchanting.admin.list` |
+| `/enchanting give <id>` | `rpg.enchanting.admin.give` |
 
-(Commands work from anywhere as a convenience. Custom blocks open the same GUIs on right-click.)
+Station blocks open the enchanting/anvil GUIs on right-click. The commands are admin utilities.
 
 ## Stats
 

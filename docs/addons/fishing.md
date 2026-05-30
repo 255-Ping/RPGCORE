@@ -9,17 +9,11 @@ Replaces vanilla fishing loot with a configurable catch system. Fish types, rari
 `plugins/rpg-fishing/config.yml`:
 
 ```yaml
-xp-per-catch: 5                  # base XP per successful catch
+xp-per-catch: 10                 # base XP per successful catch
 # FISHING_WISDOM stat scales: finalXp = xp-per-catch * (1 + wisdom / 100)
-
-# Vanilla fishing loot is cancelled per vanilla-suppression.
-# Custom catches come from the catch-table below.
-
-catch-table: default_ocean       # loot-table id used when no per-biome override
-biome-overrides: {}
-  # river:  river_fish
-  # ocean:  ocean_fish
 ```
+
+> **Planned:** `catch-table` and `biome-overrides` keys for custom fish loot will be added in a future content slice.
 
 ## Content
 

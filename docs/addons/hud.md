@@ -12,36 +12,39 @@ Configurable scoreboard, tablist, action bar, and player nametags. All formats a
 scoreboard:
   enabled: true
   title: "&6&lRPG"
-  lines:
-  - "&7Health: &c{health}/{max_health}"
-  - "&7Mana: &b{mana}/{max_mana}"
-  - "&7Combat: &c{skill:combat:level}"
-  - ""
-  - "&e{coins} coins"
   update-ticks: 10
+  lines:
+  - "&7&m                  "
+  - "&7Health: &c{health}&7/&c{max_health}"
+  - "&7Mana: &b{mana}&7/&b{max_mana}"
+  - "&7Defense: &a{defense}"
+  - "&7&m                  "
+  - "&7Combat: &c{skill:combat:level}"
+  - "&7Mining: &6{skill:mining:level}"
+  - "&7&m                  "
+  - "&e{coins} coins"
 
 tablist:
   enabled: true
+  update-ticks: 40
   header:
   - "&6&lRPG SERVER"
-  - "&7Players online: {online}"
+  - "&7Players online: &f{online}"
   footer:
-  - "&7play.example.com"
-  name-format: "{prefix}{name}{suffix}"
-
-nametags:
-  enabled: true
-  format: "{prefix}{name}{suffix}"
-  y-offset: 0.5                  # TextDisplay vertical translation above mount point
-  show-health-bar: true          # tiny health bar under the name (deferred)
-  show-status-icons: true        # active status effects show as icons (deferred)
+  - "&7Combat: &c{skill:combat:level} &8| &7Mining: &6{skill:mining:level}"
 
 action-bar:
+  enabled: true
+  update-ticks: 5
   idle-format: "&c❤ {health}/{max_health}  &b✦ {mana}/{max_mana}  &a✤ {defense}"
-  show-on-xp-gain: true
-  xp-gain-format: "&a+{amount} {skill} XP &7(&e{progress}/{required}&7)"
-  priority-order: [combat-feedback, xp-gain, idle]
-  message-duration-ticks: 40
+
+# Nametag above the player's head (TextDisplay entity). Hides when sneaking.
+nametag:
+  enabled: true
+  format: "{prefix} {name} {suffix}"
+  hide-when-sneaking: true
+  y-offset: 0.5
+  update-ticks: 10
 ```
 
 ## Placeholders
@@ -56,8 +59,8 @@ Same set as [chat](chat.md#placeholders) plus:
 | `{ping}` | Player ping |
 | `{world}` | World name |
 | `{skill:<id>:level}` | Skill level |
-| `{skill:<id>:progress}` | XP toward next level |
-| `{skill:<id>:required}` | XP required to next level |
+| `{skill:<id>:total_xp}` | Total accumulated skill XP |
+| `{skill:<id>:to_next}` | XP needed to reach next level |
 
 ## Commands
 
@@ -68,23 +71,7 @@ Same set as [chat](chat.md#placeholders) plus:
 
 ## Action bar priorities
 
-The action bar shows one message at a time. When multiple sources want it (combat feedback, XP gain, idle stats), they're prioritized:
-
-- **combat-feedback** — damage indicators not handled by holograms, mana-cost notices, ability cast info
-- **xp-gain** — XP gain messages (optionally suppressed)
-- **idle** — stat summary when nothing else to show
-
-`priority-order` is configurable. Each transient message displays for `message-duration-ticks` before idle resumes.
-
-## Pinned XP bar
-
-The vanilla XP bar (above hotbar) is repurposed (per [vanilla suppression](../core/vanilla-suppression.md)):
-
-```yaml
-vanilla-xp-bar: most-recent      # most-recent | pinned | hidden
-```
-
-Most-recent shows the skill you most recently gained XP in. `/skill pin <skill>` (core command) overrides to a specific skill.
+The action bar shows one message at a time. When multiple sources want it, `RpgServices.actionBar()` priority messages (sent by combat, ability, and tool-gate code) display first; the idle HUD format resumes when no priority message is pending.
 
 ## Player join
 
