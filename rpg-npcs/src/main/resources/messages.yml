@@ -4,6 +4,6 @@ npc:
 shop:
   not-enough-currency: "&cNot enough currency."
   purchased: "&aPurchased."
-  sold: "&yellow;Sold for {amount}"
+  sold: "&eSold for {amount}"
   missing-item: "&cYou don't have that item."
   economy-unavailable: "&cEconomy is not available."

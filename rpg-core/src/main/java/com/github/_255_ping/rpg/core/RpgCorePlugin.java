@@ -23,6 +23,7 @@ import com.github._255_ping.rpg.core.items.ConsumableItemListener;
 import com.github._255_ping.rpg.core.mobs.MobAbilityRuntime;
 import com.github._255_ping.rpg.core.formatting.CoreMessageFormatter;
 import com.github._255_ping.rpg.core.formatting.CoreNameFormatter;
+import com.github._255_ping.rpg.core.gui.CoreGuiConfig;
 import com.github._255_ping.rpg.core.formula.CoreExpressionEvaluator;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
 import com.github._255_ping.rpg.core.health.RegenTask;
@@ -149,6 +150,8 @@ public final class RpgCorePlugin extends JavaPlugin {
         NamespacedKey mobIdKey = new NamespacedKey(this, "mob_id");
 
         dataStore = openDataStore(dataDir);
+        CoreGuiConfig guiCfg = new CoreGuiConfig(getConfig());
+        RpgServices.setGuiConfig(guiCfg);
         messageFormatter = new CoreMessageFormatter(messagesFile);
         nameFormatter = new CoreNameFormatter();
         scheduler = new CoreSchedulerService();

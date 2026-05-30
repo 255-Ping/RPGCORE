@@ -44,6 +44,7 @@ Two things must stay accurate at all times:
 | New command or permission | `docs/commands.md` + `docs/permissions.md` |
 | `gradle.properties` keys / build | `docs/configuration.md` |
 | Any version bump in `gradle.properties` | `docs/changelog.md` (see Rule 6) |
+| Any new GUI or message format | `docs/formatting.md` (see Rule 7) |
 
 If you add a feature without updating the relevant doc page, it **does not count as done**.
 The docs describe what the plugin *actually does* — not design fiction.
@@ -129,6 +130,36 @@ Changelog entry checklist:
 - Update the changelog **in the same commit** as the version bump
 
 If you finish a session and realise the changelog is missing an entry, add it before pushing.
+
+### 7. Frontend formatting — always follow `docs/formatting.md`
+
+Every player-visible GUI, message, item lore, action bar, scoreboard, and damage indicator must follow the standards in `docs/formatting.md`. Key rules you must check before declaring any frontend work done:
+
+**GUIs:**
+- Background panes: `GRAY_STAINED_GLASS_PANE`. Bottom border row (extra space only): `BLACK_STAINED_GLASS_PANE`.
+- **Always** read both via `RpgServices.guiConfig()` — never hardcode the material or display name.
+- Fill unused slots with `gui.fillAll(inv)` or `gui.fillBackground(inv)` AFTER placing content.
+- Add the black bottom border row only when there is a full unused row at the bottom.
+- Action/navigation buttons go in the last content row, above any black border row.
+- GUI titles follow the color-per-type table in `docs/formatting.md`.
+
+**Text / messages:**
+- Every player-visible string goes in the plugin's `messages.yml` — never hardcoded in Java.
+- System message prefix `&8[&6RPG&8] &r` is in `rpg-core/messages.yml` key `prefix`; read via `RpgServices.messageFormatter()`.
+- Color convention: `&7` descriptions, `&a` success, `&c` error, `&e` warning, `&6` headings/gold, `&b` mana/magic, `&5`/`&d` abilities, `&8` metadata/brackets.
+
+**Item lore:**
+- Section order: description → stats → abilities → rarity (always last line, bold, uppercase).
+- All italic explicitly suppressed: `.decoration(TextDecoration.ITALIC, false)`.
+
+**Serializer:** `LegacyComponentSerializer.legacyAmpersand()` only. Never `§` codes in content, never MiniMessage.
+
+**Audit checklist before submitting any GUI or message change:**
+1. Pane materials read from `RpgServices.guiConfig()` ✓
+2. All strings in `messages.yml`, not Java literals ✓
+3. Colors match the palette in `docs/formatting.md` ✓
+4. Item lore has correct section order and italic suppressed ✓
+5. Buttons are in the correct row per the slot-map table ✓
 
 ## Versioning
 
@@ -302,6 +333,7 @@ RpgServices.expressions()   // ExpressionEvaluator
 RpgServices.lootTables()    // LootTableRegistry
 RpgServices.currencies()    // CurrencyRegistry
 RpgServices.blocks()        // BlockRegistry
+RpgServices.guiConfig()     // GuiConfig (rpg-core) — pane materials, fill helpers
 // addons set their own services on enable:
 RpgServices.economy()       // Economy (rpg-economy)
 RpgServices.accessories()   // AccessoryService (rpg-accessories)

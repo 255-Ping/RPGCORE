@@ -17,6 +17,7 @@ A suite of Paper Minecraft plugins (Paper API `26.1.2`, Java 25) that together b
 - [Development](development.md) — build, test, contribute
 - [Admin guide](admin-guide.md) — workflows, authoring walkthrough, troubleshooting
 - [Changelog](changelog.md) — version history
+- [Formatting guide](formatting.md) — GUI layouts, text colors, item lore, message standards
 
 ---
 
