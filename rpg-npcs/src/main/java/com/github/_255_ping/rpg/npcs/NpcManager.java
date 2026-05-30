@@ -30,6 +30,8 @@ public final class NpcManager {
     private final SkinFetcher skinFetcher;
     private final Map<String, NpcDef> byId = new ConcurrentHashMap<>();
     private final Map<UUID, String> entityToId = new ConcurrentHashMap<>();
+    /** Tracks live State for PLAYER-style NPCs (npcId → State). */
+    private final Map<String, FakePlayerNpc.State> fakePlayerStates = new ConcurrentHashMap<>();
 
     public NpcManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -135,9 +137,19 @@ public final class NpcManager {
             if (ent != null) ent.remove();
         }
         entityToId.clear();
+        for (FakePlayerNpc.State state : fakePlayerStates.values()) {
+            FakePlayerNpc.despawn(plugin, state);
+        }
+        fakePlayerStates.clear();
     }
 
     public void despawn(NpcDef def) {
+        // Despawn fake player state if any
+        FakePlayerNpc.State state = fakePlayerStates.remove(def.id());
+        if (state != null) {
+            FakePlayerNpc.despawn(plugin, state);
+        }
+        // Despawn entity-style body + name tag
         Location loc = def.location();
         if (loc == null || loc.getWorld() == null) return;
         for (Entity ent : loc.getWorld().getEntities()) {
@@ -210,15 +222,20 @@ public final class NpcManager {
     }
 
     private void doSpawnPlayerNpc(NpcDef def, Location loc) {
-        Entity ent = FakePlayerNpc.spawn(plugin, def, npcIdKey);
-        if (ent == null) {
+        FakePlayerNpc.State state = FakePlayerNpc.spawn(plugin, def, npcIdKey);
+        if (state == null) {
             plugin.getLogger().warning("Failed to spawn fake player NPC '" + def.id() + "'.");
             return;
         }
-        entityToId.put(ent.getUniqueId(), def.id());
+        fakePlayerStates.put(def.id(), state);
+        // Track the interaction entity so fromEntity() resolves it
+        entityToId.put(state.interactionEntity().getUniqueId(), def.id());
         boolean useTextDisplay = plugin.getConfig().getBoolean("display.use-text-display-for-name", true);
         spawnNameTag(def, loc, useTextDisplay);
     }
+
+    /** Called by NpcInteractListener on PlayerJoinEvent to resend fake player packets. */
+    public Map<String, FakePlayerNpc.State> fakePlayerStates() { return fakePlayerStates; }
 
     private void spawnNameTag(NpcDef def, Location loc, boolean useTextDisplay) {
         if (!useTextDisplay) return;

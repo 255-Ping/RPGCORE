@@ -6,10 +6,8 @@ import com.github._255_ping.rpg.api.items.RpgItem;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -54,22 +52,18 @@ public final class NpcInteractListener implements Listener {
         }
     }
 
-    /**
-     * When a player joins, send them tab-list ADD packets for all active fake-player NPCs so
-     * their skins load on the client; the packets are removed after 2 ticks.
-     */
+    /** When a player joins, resend fake-player entity packets so they see all PLAYER-style NPCs. */
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
         Player joiner = e.getPlayer();
-        for (UUID entUuid : manager.entityIndex().keySet()) {
-            org.bukkit.entity.Entity ent = Bukkit.getEntity(entUuid);
-            if (!(ent instanceof org.bukkit.entity.HumanEntity)) continue;
-            // Only care about NMS ServerPlayer (fake players), not real players
-            if (!(((CraftPlayer) ent).getHandle() instanceof ServerPlayer sp)) continue;
-            // Skip real connections — only target entities without an active connection
-            if (sp.connection != null && sp.connection.isAcceptingMessages()) continue;
-            FakePlayerNpc.sendSkinToJoiningPlayer(plugin, sp, joiner);
-        }
+        // Defer by 1 tick so the player's connection is fully established
+        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+            if (!joiner.isOnline()) return;
+            for (var entry : manager.fakePlayerStates().entrySet()) {
+                manager.get(entry.getKey()).ifPresent(def ->
+                    FakePlayerNpc.sendToPlayer(plugin, joiner, def, entry.getValue()));
+            }
+        }, 1L);
     }
 
     private void sendDialogue(Player p, NpcDef def) {

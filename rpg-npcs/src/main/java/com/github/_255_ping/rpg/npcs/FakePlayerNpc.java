@@ -4,110 +4,176 @@ import com.google.common.collect.HashMultimap;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ClientInformation;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.bukkit.craftbukkit.CraftServer;
-import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
-import org.bukkit.entity.Entity;
+import org.bukkit.entity.Interaction;
 import org.bukkit.entity.Player;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.List;
-import java.util.UUID;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 /**
- * Spawns and manages NMS-level fake player entities.
- * The entity appears as a player model with a skin but is NOT in the server's PlayerList
- * and NOT shown in the tab list after initial skin-load tick.
+ * Packet-based fake player NPC.
+ *
+ * The ServerPlayer is NEVER added to the world — doing so causes crashes because Paper's entity
+ * tracker calls player.connection.send() and connection is null.
+ *
+ * Instead we:
+ *  1. Allocate a fake entity ID via Entity.nextEntityId().
+ *  2. Send ClientboundPlayerInfoUpdatePacket (ADD_PLAYER with skin, listed=false) to load skin.
+ *  3. Send ClientboundAddEntityPacket(PLAYER) to spawn the client-side model.
+ *  4. Schedule ClientboundPlayerInfoRemovePacket after 2 ticks (tab list gone, skin cached).
+ *  5. Spawn an invisible Interaction entity at the same spot for server-side click detection.
+ *
+ * On despawn: ClientboundRemoveEntitiesPacket + ClientboundPlayerInfoRemovePacket to all players.
+ * On player join: re-send steps 1-4 so they see the NPC.
  */
 public final class FakePlayerNpc {
 
     private FakePlayerNpc() {}
 
+    /** State per active fake-player NPC. */
+    public record State(int entityId, UUID uuid, org.bukkit.entity.Entity interactionEntity) {}
+
     /**
-     * Spawn a fake player NPC into the world. Tags it with the NPC id key so NpcManager can
-     * find it via PDC. Returns the Bukkit entity, or null if the world is unavailable.
+     * Spawn the fake player NPC. Returns the `State` containing the entity ID and interaction entity.
+     * The interaction entity is tagged with the NPC id key so NpcInteractListener can find it.
      */
-    public static Entity spawn(JavaPlugin plugin, NpcDef def, NamespacedKey npcIdKey) {
-        var loc = def.location();
+    public static State spawn(JavaPlugin plugin, NpcDef def, NamespacedKey npcIdKey) {
+        Location loc = def.location();
         if (loc == null || loc.getWorld() == null) return null;
 
-        MinecraftServer nmsServer = ((CraftServer) Bukkit.getServer()).getServer();
-        ServerLevel nmsLevel = ((CraftWorld) loc.getWorld()).getHandle();
+        UUID uuid = deterministicUuid(def.id());
+        int entityId = Entity.nextEntityId();
+        GameProfile profile = buildProfile(uuid, def.id(), def.skin());
 
-        UUID uuid = UUID.nameUUIDFromBytes(("rpg_npc:" + def.id()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        // Send skin/tab-list entry + entity spawn to all online players
+        sendToAll(plugin, uuid, entityId, profile, def);
 
+        // Spawn invisible Interaction entity for server-side click detection
+        Interaction interaction = loc.getWorld().spawn(loc, Interaction.class, e -> {
+            e.getPersistentDataContainer().set(npcIdKey, PersistentDataType.STRING, def.id());
+            e.setPersistent(true);
+            e.setInteractionWidth(0.6f);
+            e.setInteractionHeight(1.8f);
+            e.setResponsive(true);
+        });
+
+        return new State(entityId, uuid, interaction);
+    }
+
+    /** Send the NPC to a player who just joined. */
+    public static void sendToPlayer(JavaPlugin plugin, Player joiner, NpcDef def, State state) {
+        sendNpcToPlayer(plugin, joiner, state.uuid(), state.entityId(),
+            buildProfile(state.uuid(), def.id(), def.skin()), def);
+    }
+
+    /** Remove the fake player entity from all clients and remove the interaction entity. */
+    public static void despawn(JavaPlugin plugin, State state) {
+        var removeEntities = new ClientboundRemoveEntitiesPacket(new int[]{state.entityId()});
+        var removeInfo = new ClientboundPlayerInfoRemovePacket(List.of(state.uuid()));
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            sendPacket(p, removeEntities);
+            sendPacket(p, removeInfo);
+        }
+        if (state.interactionEntity() != null && state.interactionEntity().isValid()) {
+            state.interactionEntity().remove();
+        }
+    }
+
+    // ---- private helpers ----
+
+    private static void sendToAll(JavaPlugin plugin, UUID uuid, int entityId, GameProfile profile, NpcDef def) {
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            sendNpcToPlayer(plugin, p, uuid, entityId, profile, def);
+        }
+    }
+
+    private static void sendNpcToPlayer(JavaPlugin plugin, Player target, UUID uuid, int entityId,
+                                        GameProfile profile, NpcDef def) {
+        // 1. Add to tab list (unlisted=false keeps them off the visible list, but skin loads)
+        var infoPacket = buildInfoPacket(uuid, profile);
+        sendPacket(target, infoPacket);
+
+        // 2. Spawn the player entity client-side
+        var spawnPacket = buildSpawnPacket(entityId, uuid, def);
+        sendPacket(target, spawnPacket);
+
+        // 3. Remove from tab list after 2 ticks so they don't appear in the player list
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (target.isOnline()) {
+                sendPacket(target, new ClientboundPlayerInfoRemovePacket(List.of(uuid)));
+            }
+        }, 2L);
+    }
+
+    private static ClientboundPlayerInfoUpdatePacket buildInfoPacket(UUID uuid, GameProfile profile) {
+        // Use the Entry record constructor directly — avoids reading player.connection.latency()
+        var entry = new ClientboundPlayerInfoUpdatePacket.Entry(
+            uuid,
+            profile,
+            false,          // listed = false: skin loads but player is not shown in tab list
+            0,              // latency
+            GameType.SURVIVAL,
+            null,           // displayName
+            true,           // showHat
+            0,              // listOrder
+            null            // chatSession
+        );
+        return new ClientboundPlayerInfoUpdatePacket(
+            EnumSet.of(
+                ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER,
+                ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED,
+                ClientboundPlayerInfoUpdatePacket.Action.UPDATE_GAME_MODE,
+                ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LATENCY,
+                ClientboundPlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME,
+                ClientboundPlayerInfoUpdatePacket.Action.UPDATE_HAT
+            ),
+            List.of(entry)
+        );
+    }
+
+    private static ClientboundAddEntityPacket buildSpawnPacket(int entityId, UUID uuid, NpcDef def) {
+        return new ClientboundAddEntityPacket(
+            entityId,
+            uuid,
+            def.x(), def.y(), def.z(),
+            def.pitch(), def.yaw(),
+            EntityType.PLAYER,
+            0,
+            Vec3.ZERO,
+            def.yaw()
+        );
+    }
+
+    private static GameProfile buildProfile(UUID uuid, String npcId, NpcDef.SkinDef skin) {
         PropertyMap properties = new PropertyMap(HashMultimap.create());
-        NpcDef.SkinDef skin = def.skin();
         if (skin != null && skin.value() != null && skin.signature() != null) {
             properties.put("textures", new Property("textures", skin.value(), skin.signature()));
         }
-        GameProfile profile = new GameProfile(uuid, truncateName(def.id()), properties);
-
-        ServerPlayer fakePlayer = new ServerPlayer(nmsServer, nmsLevel, profile, ClientInformation.createDefault());
-        fakePlayer.setPos(def.x(), def.y(), def.z());
-        fakePlayer.setYRot(def.yaw());
-        fakePlayer.setXRot(def.pitch());
-        fakePlayer.setInvulnerable(true);
-        fakePlayer.noPhysics = true;
-        fakePlayer.setNoGravity(true);
-        fakePlayer.setSilent(true);
-
-        // Tag with NPC id before adding to world so interact listener can resolve it immediately
-        Entity bukkit = fakePlayer.getBukkitEntity();
-        bukkit.getPersistentDataContainer().set(npcIdKey, PersistentDataType.STRING, def.id());
-        bukkit.setPersistent(true);
-
-        nmsLevel.addFreshEntity(fakePlayer);
-
-        // Brief tab-list add so clients load the skin texture, then remove after 2 ticks
-        sendTabListAdd(fakePlayer);
-        Bukkit.getScheduler().runTaskLater(plugin, () -> sendTabListRemove(uuid), 2L);
-
-        return bukkit;
+        return new GameProfile(uuid, truncateName(npcId), properties);
     }
 
-    /** Send to a single newly-joined player so they see the skin; tab-list entry removed after 2 ticks. */
-    public static void sendSkinToJoiningPlayer(JavaPlugin plugin, ServerPlayer fakePlayer, Player joiningPlayer) {
-        sendTabListAddTo(fakePlayer, joiningPlayer);
-        Bukkit.getScheduler().runTaskLater(plugin,
-            () -> sendTabListRemoveTo(fakePlayer.getUUID(), joiningPlayer), 2L);
+    private static void sendPacket(Player player, net.minecraft.network.protocol.Packet<?> packet) {
+        ((CraftPlayer) player).getHandle().connection.send(packet);
     }
 
-    private static void sendTabListAdd(ServerPlayer fakePlayer) {
-        var packet = ClientboundPlayerInfoUpdatePacket.createPlayerInitializing(List.of(fakePlayer));
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            ((CraftPlayer) p).getHandle().connection.send(packet);
-        }
+    public static UUID deterministicUuid(String npcId) {
+        return UUID.nameUUIDFromBytes(("rpg_npc:" + npcId).getBytes(StandardCharsets.UTF_8));
     }
 
-    private static void sendTabListAddTo(ServerPlayer fakePlayer, Player target) {
-        var packet = ClientboundPlayerInfoUpdatePacket.createPlayerInitializing(List.of(fakePlayer));
-        ((CraftPlayer) target).getHandle().connection.send(packet);
-    }
-
-    private static void sendTabListRemove(UUID uuid) {
-        var packet = new ClientboundPlayerInfoRemovePacket(List.of(uuid));
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            ((CraftPlayer) p).getHandle().connection.send(packet);
-        }
-    }
-
-    private static void sendTabListRemoveTo(UUID uuid, Player target) {
-        if (!target.isOnline()) return;
-        var packet = new ClientboundPlayerInfoRemovePacket(List.of(uuid));
-        ((CraftPlayer) target).getHandle().connection.send(packet);
-    }
-
-    /** GameProfile names are capped at 16 chars. */
     private static String truncateName(String id) {
         return id.length() > 16 ? id.substring(0, 16) : id;
     }
