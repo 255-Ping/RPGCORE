@@ -1,6 +1,6 @@
 # Alchemy (`rpg-alchemy`)
 
-> **Status:** In progress — Plugin module ships. XP on brewing-station recipe completion, scaled by `ALCHEMY_WISDOM`. Custom station block (`StationType: brewing`) defined in `blocks/`. Station right-click interaction and recipe matching are pending the station-dispatch slice. All vanilla brewing-stand mechanics are cancelled.
+> **Status:** Working — Station right-click dispatch active via `StationType: brewing` on the block definition. Recipe matching (ingredient check + consume + output potion) fully implemented. XP on brewing-station recipe completion, scaled by `ALCHEMY_WISDOM`. All vanilla brewing-stand mechanics are cancelled.
 
 Custom potion-style brewing at a brewing station block. Vanilla brewing stand recipes are fully replaced; admins define every recipe.
 

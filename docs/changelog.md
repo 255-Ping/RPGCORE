@@ -4,7 +4,23 @@ Version format: `<plugin>-<pluginVersion>-<suiteVersion>`. Only notable changes 
 
 ---
 
-## Suite 18 (current)
+## Suite 19 (current)
+
+### rpg-api `0.2.0`
+- Added `StationService` interface (`api/station/`) with `register(stationType, handler)` and `open(stationType, player, block)`. Accessible via `RpgServices.stations()`.
+
+### rpg-core `0.7.0`
+- **Station dispatch**: new `CoreStationService` implementation + `BlockInteractListener`. Right-clicking any custom block with `Interactable: true` and a non-empty `StationType` now routes through `RpgServices.stations()`. Addons register their GUI handler once in `onEnable`; rpg-core handles event cancellation.
+
+### rpg-cooking `0.1.0`
+- Station interaction now wired through `RpgServices.stations().register("cooking", ...)` — no longer needs a per-block-id config key. Removed `cooking-block` config key and `CookingStationInteractListener`.
+
+### rpg-alchemy `0.1.0`
+- Station interaction now wired through `RpgServices.stations().register("brewing", ...)`. Removed `brewing-block` config key and `BrewingStationInteractListener`.
+
+---
+
+## Suite 18
 
 ### rpg-api `0.1.1`
 - `BuiltinStat`: added `AUTO_LOOT` — items with this stat > 0 automatically pull assigned drops into the player's inventory.

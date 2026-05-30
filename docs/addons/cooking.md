@@ -1,6 +1,6 @@
 # Cooking (`rpg-cooking`)
 
-> **Status:** In progress — Plugin module ships. XP on cooking-station recipe completion, scaled by `COOKING_WISDOM`. Custom station block (`StationType: cooking`) defined in `blocks/`. Station right-click interaction and recipe matching are pending the station-dispatch slice.
+> **Status:** Working — Station right-click dispatch active via `StationType: cooking` on the block definition. Recipe matching (ingredient check + consume + output) fully implemented. XP on cooking-station recipe completion, scaled by `COOKING_WISDOM`.
 
 Custom food / consumable crafting at a cooking station block. All vanilla furnace recipes are cancelled; admins define every recipe.
 

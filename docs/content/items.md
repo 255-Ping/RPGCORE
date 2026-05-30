@@ -1,6 +1,6 @@
 # Items
 
-> **Status:** In progress — YAML loader, registry, PDC tagging, and lore rendering all working. `/rpg item give <id> [player] [amount]` lights up. Stats on items show in lore but don't aggregate into the player yet (equipment aggregation slice is pending). Type-specific blocks (`Consumable`, `Upgrade`, `Accessory`) parse the basic fields; type-specific runtime behavior arrives with those addons.
+> **Status:** Working — YAML loader, registry, PDC tagging, lore rendering, and equipment stat aggregation all working. Stats on equipped items (armor slots + main hand) aggregate into the player's effective stat sheet on every gear change via `EquipmentListener`. `/rpg item give <id> [player] [amount]` lights up. Type-specific runtime behavior for `CONSUMABLE`, `UPGRADE`, and `ACCESSORY` items is handled by their respective addons.
 
 Custom items are defined in YAML under `plugins/rpg-core/items/`. Any number of files, any number of items per file.
 

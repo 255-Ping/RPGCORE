@@ -4,9 +4,6 @@ features:
   brewing: true       # brewing station block + recipe-driven brewing
   drinking: true      # right-click custom potions to consume
 
-# Brewing station custom-block id (rpg-core's blocks/ folder owns the block def).
-brewing-block: rpg_brewing_stand
-
 # Brewing duration in ticks per recipe; can be overridden per recipe.
 default-brew-ticks: 200
 

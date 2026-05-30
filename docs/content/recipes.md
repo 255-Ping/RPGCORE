@@ -1,6 +1,6 @@
 # Recipes
 
-> **Status:** Planned — YAML schemas below are the authoritative target design. Custom station blocks (`StationType: crafting/cooking/brewing`) open a GUI on right-click, but the recipe-matching backend that reads these YAML files and validates ingredients is not yet implemented. Recipes defined now will auto-load when that slice ships.
+> **Status:** Working — Cooking and brewing recipe matching fully implemented. Station right-click dispatch routes via `StationType` on the block definition (no per-addon config needed). Crafting recipes (shaped/shapeless) register with Bukkit. Custom items are matched by PDC item-id; vanilla materials by `Material` name.
 
 Three recipe systems share a common shape: **crafting**, **cooking**, and **brewing**. All vanilla recipes are cancelled by default (per [vanilla suppression](../core/vanilla-suppression.md)) — every recipe in the game is authored by admins.
 

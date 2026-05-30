@@ -209,8 +209,8 @@ When `suiteVersion` bumps:
 
 | Module | Property | Current |
 |---|---|---|
-| rpg-api | `apiVersion` | 0.1.1 |
-| rpg-core | `coreVersion` | 0.6.0 |
+| rpg-api | `apiVersion` | 0.2.0 |
+| rpg-core | `coreVersion` | 0.7.0 |
 | rpg-mining | `miningVersion` | 0.2.0 |
 | rpg-combat | `combatVersion` | 0.2.0 |
 | rpg-economy | `economyVersion` | 0.1.0 |
@@ -225,13 +225,13 @@ When `suiteVersion` bumps:
 | rpg-farming | `farmingVersion` | 0.1.0 |
 | rpg-guilds | `guildsVersion` | 0.1.0 |
 | rpg-enchanting | `enchantingVersion` | 0.1.0 |
-| rpg-alchemy | `alchemyVersion` | 0.0.2 |
+| rpg-alchemy | `alchemyVersion` | 0.1.0 |
 | rpg-npcs | `npcsVersion` | 0.1.0 |
 | rpg-quests | `questsVersion` | 0.0.2 |
 | rpg-dungeons | `dungeonsVersion` | 0.0.2 |
-| rpg-cooking | `cookingVersion` | 0.0.0 |
+| rpg-cooking | `cookingVersion` | 0.1.0 |
 | rpg-admin | `adminVersion` | 0.1.0 |
-| suite-wide suffix | `suiteVersion` | 18 |
+| suite-wide suffix | `suiteVersion` | 19 |
 
 **Keep this table in sync** — update it in the same commit as any version bump.
 
@@ -342,6 +342,7 @@ RpgServices.parties()       // PartyService (rpg-parties)
 RpgServices.guilds()        // GuildService (rpg-guilds)
 RpgServices.regionService() // RegionService (rpg-regions)
 RpgServices.wands()         // WandService (rpg-core)
+RpgServices.stations()      // StationService (rpg-core) — central right-click dispatch for Interactable blocks by StationType
 ```
 
 ### Persistence API

@@ -5,6 +5,7 @@ import com.github._255_ping.rpg.api.accessories.AccessoryService;
 import com.github._255_ping.rpg.api.gui.GuiConfig;
 import com.github._255_ping.rpg.api.hud.ActionBarService;
 import com.github._255_ping.rpg.api.mobs.MobStatService;
+import com.github._255_ping.rpg.api.station.StationService;
 import com.github._255_ping.rpg.api.blocks.BlockRegistry;
 import com.github._255_ping.rpg.api.cooldown.CooldownService;
 import com.github._255_ping.rpg.api.currency.CurrencyRegistry;
@@ -71,6 +72,7 @@ public final class RpgServices {
     private static GuiConfig guiConfig;
     private static MobStatService mobStats;
     private static ActionBarService actionBar;
+    private static StationService stationService;
 
     private RpgServices() {}
 
@@ -106,6 +108,7 @@ public final class RpgServices {
     public static GuiConfig guiConfig() { return require(guiConfig, "GuiConfig"); }
     public static MobStatService mobStats() { return require(mobStats, "MobStatService"); }
     public static ActionBarService actionBar() { return require(actionBar, "ActionBarService"); }
+    public static StationService stations() { return require(stationService, "StationService"); }
 
     // ----- Setters (rpg-core only) -----
 
@@ -138,6 +141,7 @@ public final class RpgServices {
     public static void setGuiConfig(GuiConfig svc) { guiConfig = svc; }
     public static void setMobStats(MobStatService svc) { mobStats = svc; }
     public static void setActionBar(ActionBarService svc) { actionBar = svc; }
+    public static void setStations(StationService svc) { stationService = svc; }
 
     private static <T> T require(T svc, String name) {
         if (svc == null) throw new IllegalStateException(name + " not bootstrapped — is rpg-core loaded?");

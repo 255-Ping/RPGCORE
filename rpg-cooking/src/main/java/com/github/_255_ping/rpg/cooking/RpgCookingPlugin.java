@@ -1,5 +1,6 @@
 package com.github._255_ping.rpg.cooking;
 
+import com.github._255_ping.rpg.api.RpgServices;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -26,7 +27,9 @@ public final class RpgCookingPlugin extends JavaPlugin implements CommandExecuto
 
         CookingGui gui = new CookingGui(this, registry);
         getServer().getPluginManager().registerEvents(gui, this);
-        getServer().getPluginManager().registerEvents(new CookingStationInteractListener(this, gui), this);
+        RpgServices.stations().register("cooking", (player, block) -> {
+            if (getConfig().getBoolean("features.cooking", true)) gui.open(player);
+        });
 
         Objects.requireNonNull(getCommand("cooking"), "command 'cooking' missing").setExecutor(this);
 

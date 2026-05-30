@@ -5,9 +5,11 @@ import com.github._255_ping.rpg.core.abilities.AbilityLoader;
 import com.github._255_ping.rpg.core.abilities.CoreAbilityRegistry;
 import com.github._255_ping.rpg.core.abilities.ItemAbilityListener;
 import com.github._255_ping.rpg.core.blocks.BlockBreakHandler;
+import com.github._255_ping.rpg.core.blocks.BlockInteractListener;
 import com.github._255_ping.rpg.core.blocks.BlockLoader;
 import com.github._255_ping.rpg.core.blocks.BlockPersistence;
 import com.github._255_ping.rpg.core.blocks.CoreBlockRegistry;
+import com.github._255_ping.rpg.core.station.CoreStationService;
 import com.github._255_ping.rpg.core.command.EffectsCommand;
 import com.github._255_ping.rpg.core.command.SpawnerCommand;
 import com.github._255_ping.rpg.core.spawners.SpawnerManager;
@@ -163,6 +165,8 @@ public final class RpgCorePlugin extends JavaPlugin {
         RpgServices.setMobStats(mobStatService);
         CoreActionBarService actionBarService = new CoreActionBarService();
         RpgServices.setActionBar(actionBarService);
+        CoreStationService stationService = new CoreStationService();
+        RpgServices.setStations(stationService);
         messageFormatter = new CoreMessageFormatter(messagesFile);
         nameFormatter = new CoreNameFormatter();
         scheduler = new CoreSchedulerService();
@@ -247,6 +251,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         BlockBreakHandler blockBreakHandler = new BlockBreakHandler(this, blockRegistry, dropManager);
         getServer().getPluginManager().registerEvents(blockBreakHandler, this);
         blockBreakHandler.start();
+        getServer().getPluginManager().registerEvents(new BlockInteractListener(blockRegistry), this);
         getServer().getPluginManager().registerEvents(damagerTracker, this);
         getServer().getPluginManager().registerEvents(new MobLootListener(damagerTracker, dropManager), this);
 

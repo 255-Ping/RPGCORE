@@ -1,5 +1,6 @@
 package com.github._255_ping.rpg.alchemy;
 
+import com.github._255_ping.rpg.api.RpgServices;
 import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -29,7 +30,9 @@ public final class RpgAlchemyPlugin extends JavaPlugin {
 
         BrewingGui gui = new BrewingGui(this, registry, potionItems);
         getServer().getPluginManager().registerEvents(gui, this);
-        getServer().getPluginManager().registerEvents(new BrewingStationInteractListener(this, gui), this);
+        RpgServices.stations().register("brewing", (player, block) -> {
+            if (getConfig().getBoolean("features.brewing", true)) gui.open(player);
+        });
         getServer().getPluginManager().registerEvents(new PotionDrinkListener(this, registry, potionItems), this);
 
         Objects.requireNonNull(getCommand("alchemy"), "command 'alchemy' missing").setExecutor(new AlchemyCommand(this));

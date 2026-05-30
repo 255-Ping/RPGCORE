@@ -107,6 +107,7 @@ The following are registered in `RpgServices` and set by their owning plugin on 
 - `RpgServices.guilds()` — `GuildService` (rpg-guilds)
 - `RpgServices.regionService()` — `RegionService` (rpg-regions)
 - `RpgServices.wands()` — `WandService` (rpg-core)
+- `RpgServices.stations()` — `StationService` (rpg-core) — set by rpg-core on enable; addons call `register` on it to claim station types
 
 Calling any of these before the owning addon loads throws `IllegalStateException`. Use `try/catch IllegalStateException` in addons that soft-depend.
 
@@ -114,10 +115,13 @@ Service types still planned (not yet in code):
 
 - `Hologram`, `DamageIndicator` (rpg-holograms)
 - `Npc` (rpg-npcs)
-- `Station` (rpg-core, station block dispatch)
 - `DungeonService` (rpg-dungeons)
 - `HudService` (rpg-hud)
 - `MobAi` (rpg-core, when AI profile override system lands)
+
+Implemented since initial design:
+
+- `RpgServices.stations()` — `StationService` (rpg-core) — central right-click dispatch for interactable blocks; addons call `RpgServices.stations().register("type", handler)` in `onEnable`.
 
 ## Versioning
 

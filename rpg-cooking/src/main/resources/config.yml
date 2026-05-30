@@ -3,10 +3,6 @@
 features:
   cooking: true
 
-# Cooking station custom-block id (rpg-core's blocks/ folder owns the block def; this addon
-# auto-installs it on first enable).
-cooking-block: rpg_cooking_station
-
 # Default ticks-per-craft if a recipe doesn't override.
 default-cook-ticks: 200
 
