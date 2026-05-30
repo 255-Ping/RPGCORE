@@ -417,6 +417,20 @@ All game content (items, mobs, abilities, blocks, recipes, status effects) is au
 under the plugin's data folder and loaded at startup + `/rpg reloadall`. A malformed file logs
 clearly and is skipped — the plugin keeps running.
 
+## Standard workflow
+
+Every task follows this loop, no exceptions:
+
+1. **Implement** — do the requested work; apply all hard rules
+2. **Update docs** — run `/update-docs`; reads actual config/source, fixes every affected doc page, fixes inconsistencies found in those pages while open, updates changelog + versions table
+3. **Build** — `.\gradlew.bat assemble`
+4. **Fix errors** — if build fails, fix errors, re-run `/update-docs` if any doc-relevant file changed, rebuild; repeat until clean
+5. **Push** — `git push` only when build is green and docs are updated
+
+Never push with a failing build. Never push without running `/update-docs` first.
+
+The `/work` slash command encodes this entire loop.
+
 ## Build
 
 **Before building or pushing: run `/update-docs`.** It fixes doc drift, updates the changelog, and keeps the CLAUDE.md versions table current. If you skip it and push, the docs will lie.
