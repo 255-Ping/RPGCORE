@@ -177,6 +177,7 @@ public final class NpcManager {
         Entity ent = loc.getWorld().spawnEntity(loc, type);
         ent.setPersistent(true);
         ent.getPersistentDataContainer().set(npcIdKey, PersistentDataType.STRING, def.id());
+        boolean useTextDisplay = plugin.getConfig().getBoolean("display.use-text-display-for-name", true);
         if (ent instanceof LivingEntity le) {
             le.setAI(false);
             le.setCollidable(false);
@@ -184,11 +185,12 @@ public final class NpcManager {
             le.setSilent(true);
             le.setRemoveWhenFarAway(false);
             le.customName(LEGACY.deserialize(def.displayName()));
-            le.setCustomNameVisible(true);
+            // Only show entity built-in nametag when NOT using a TextDisplay — prevents double name.
+            le.setCustomNameVisible(!useTextDisplay);
         }
         entityToId.put(ent.getUniqueId(), def.id());
 
-        if (plugin.getConfig().getBoolean("display.use-text-display-for-name", true)) {
+        if (useTextDisplay) {
             Location above = loc.clone().add(0, 2.0, 0);
             TextDisplay text = (TextDisplay) loc.getWorld().spawnEntity(above, EntityType.TEXT_DISPLAY);
             text.text(Component.text("").append(LEGACY.deserialize(def.displayName())));

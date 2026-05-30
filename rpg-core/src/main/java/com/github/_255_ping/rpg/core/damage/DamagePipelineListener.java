@@ -4,10 +4,16 @@ import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.damage.DamageContext;
 import com.github._255_ping.rpg.api.damage.PostDamageEvent;
 import com.github._255_ping.rpg.api.damage.PreDamageEvent;
+import com.github._255_ping.rpg.api.mobs.RpgMob;
 import com.github._255_ping.rpg.api.player.RpgPlayer;
 import com.github._255_ping.rpg.api.stats.BuiltinStat;
+import com.github._255_ping.rpg.core.RpgCorePlugin;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -18,16 +24,29 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.Optional;
 
 public final class DamagePipelineListener implements Listener {
 
-    private final JavaPlugin plugin;
-    private final CoreHealthService health;
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
-    public DamagePipelineListener(JavaPlugin plugin, CoreHealthService health) {
+    private final RpgCorePlugin plugin;
+    private final CoreHealthService health;
+    private NamespacedKey mobIdKey;
+    private NamespacedKey mobLevelKey;
+
+    public DamagePipelineListener(RpgCorePlugin plugin, CoreHealthService health) {
         this.plugin = plugin;
         this.health = health;
+    }
+
+    /** Called after SpawnerManager is created so we can read keys without circular deps. */
+    public void setMobKeys(NamespacedKey mobIdKey, NamespacedKey mobLevelKey) {
+        this.mobIdKey = mobIdKey;
+        this.mobLevelKey = mobLevelKey;
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -62,6 +81,9 @@ public final class DamagePipelineListener implements Listener {
         double finalDamage = DamageMath.compute(ctx);
         if (finalDamage <= 0) return;
 
+        // Level scaling: reduce damage dealt to/by over-leveled mobs.
+        finalDamage = applyLevelScaling(attacker, victim, finalDamage);
+
         health.damage(victim, finalDamage, source);
 
         if (attacker instanceof Player ap) health.markInCombat(ap);
@@ -75,8 +97,77 @@ public final class DamagePipelineListener implements Listener {
             }
         }
 
+        // Update mob health bar in display name.
+        if (!(victim instanceof Player) && mobIdKey != null) {
+            updateMobHealthBar(victim);
+        }
+
         PostDamageEvent post = new PostDamageEvent(ctx, finalDamage);
         Bukkit.getPluginManager().callEvent(post);
+    }
+
+    private double applyLevelScaling(LivingEntity attacker, LivingEntity victim, double damage) {
+        if (!plugin.getConfig().getBoolean("level-scaling.enabled", true)) return damage;
+        int threshold = plugin.getConfig().getInt("level-scaling.threshold", 5);
+        double reductionPerLevel = plugin.getConfig().getDouble("level-scaling.reduction-per-level", 0.08);
+        double minFactor = plugin.getConfig().getDouble("level-scaling.min-damage-factor", 0.10);
+
+        Integer mobLevel = null;
+        LivingEntity mob = null;
+        Player player = null;
+
+        if (attacker instanceof Player p && !(victim instanceof Player)) {
+            player = p; mob = victim;
+        } else if (victim instanceof Player p && !(attacker instanceof Player)) {
+            player = p; mob = attacker;
+        }
+        if (player == null || mob == null || mobLevelKey == null) return damage;
+
+        Integer stored = mob.getPersistentDataContainer().get(mobLevelKey, PersistentDataType.INTEGER);
+        if (stored == null) return damage;
+        mobLevel = stored;
+
+        int playerLevel;
+        try {
+            playerLevel = RpgServices.skills().level(player, "combat");
+            if (playerLevel <= 0) playerLevel = 1;
+        } catch (Exception ex) {
+            return damage;
+        }
+
+        int diff = playerLevel - mobLevel;
+        if (diff <= threshold) return damage;
+
+        double factor = Math.max(minFactor, 1.0 - (diff - threshold) * reductionPerLevel);
+        return damage * factor;
+    }
+
+    private void updateMobHealthBar(LivingEntity mob) {
+        if (mobIdKey == null) return;
+        String mobId = mob.getPersistentDataContainer().get(mobIdKey, PersistentDataType.STRING);
+        if (mobId == null) return;
+        if (!plugin.getConfig().getBoolean("mob-health-bar.enabled", true)) return;
+
+        Optional<RpgMob> def = RpgServices.mobs().get(mobId);
+        if (def.isEmpty()) return;
+
+        double cur = health.currentHp(mob);
+        double max = health.maxHp(mob);
+        int barLen = plugin.getConfig().getInt("mob-health-bar.bar-length", 10);
+        int filled = (int) Math.round((cur / max) * barLen);
+        filled = Math.max(0, Math.min(barLen, filled));
+
+        String bar = "§c" + "█".repeat(filled) + "§8" + "░".repeat(barLen - filled);
+
+        Integer level = mobLevelKey != null
+                ? mob.getPersistentDataContainer().get(mobLevelKey, PersistentDataType.INTEGER)
+                : null;
+        String levelPrefix = (level != null && level > 1) ? "§7[Lv. " + level + "] " : "";
+
+        String rawName = def.get().displayName() != null ? def.get().displayName() : mobId;
+        String display = levelPrefix + rawName + " " + bar + " §7" + (int) Math.ceil(cur) + "§8/§7" + (int) max;
+        mob.customName(LEGACY.deserialize(display));
+        mob.setCustomNameVisible(true);
     }
 
     @EventHandler

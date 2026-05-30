@@ -6,6 +6,9 @@ import com.github._255_ping.rpg.api.items.RpgItem;
 import com.github._255_ping.rpg.api.mobs.RpgMob;
 import com.github._255_ping.rpg.core.RpgCorePlugin;
 import com.github._255_ping.rpg.core.blocks.CoreBlockRegistry;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -14,6 +17,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -203,10 +208,19 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
             try { amount = Math.max(1, Integer.parseInt(args[3])); }
             catch (NumberFormatException ex) { amount = 1; }
         }
-        // Placement registers the location via BlockPlacementListener (planned). For v1
-        // the giver hands you a raw vanilla material so you can place it; tagging at
-        // placement is wired in a follow-up. Use /rpg block convert for now to bulk-tag.
-        player.getInventory().addItem(new org.bukkit.inventory.ItemStack(opt.get().material(), amount));
+        Block block = opt.get();
+        ItemStack stack = new ItemStack(block.material(), amount);
+        ItemMeta meta = stack.getItemMeta();
+        if (meta != null) {
+            meta.displayName(Component.text("[RPG] " + block.id(), NamedTextColor.AQUA)
+                    .decoration(TextDecoration.ITALIC, false));
+            meta.lore(List.of(
+                    Component.text("Block ID: " + block.id(), NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false),
+                    Component.text("Place then /rpg block convert to register", NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false)
+            ));
+            stack.setItemMeta(meta);
+        }
+        player.getInventory().addItem(stack);
     }
 
     private void handleBlockConvert(CommandSender sender, String[] args) {

@@ -34,6 +34,7 @@ public final class SpawnerManager {
 
     private final JavaPlugin plugin;
     private final NamespacedKey spawnerKey;
+    private final NamespacedKey mobLevelKey;
     private final ConcurrentMap<String, SpawnerDef> byId = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Long> lastSpawnTick = new ConcurrentHashMap<>();
     private long currentTick = 0;
@@ -41,9 +42,11 @@ public final class SpawnerManager {
     public SpawnerManager(JavaPlugin plugin) {
         this.plugin = plugin;
         this.spawnerKey = new NamespacedKey(plugin, "spawner_id");
+        this.mobLevelKey = new NamespacedKey(plugin, "mob_level");
     }
 
     public NamespacedKey spawnerKey() { return spawnerKey; }
+    public NamespacedKey mobLevelKey() { return mobLevelKey; }
 
     public void loadAll() {
         byId.clear();
@@ -59,7 +62,9 @@ public final class SpawnerManager {
                             num(data, "spawn-radius"),
                             num(data, "cooldown-ticks"),
                             num(data, "max-alive"),
-                            data.get("continuous") instanceof Boolean b ? b : true
+                            data.get("continuous") instanceof Boolean b ? b : true,
+                            num(data, "min-level") > 0 ? num(data, "min-level") : 1,
+                            num(data, "max-level") > 0 ? num(data, "max-level") : 1
                     );
                     byId.put(id, def);
                 } catch (Exception ex) {
@@ -103,6 +108,8 @@ public final class SpawnerManager {
         data.put("cooldown-ticks", def.cooldownTicks());
         data.put("max-alive", def.maxAlive());
         data.put("continuous", def.continuous());
+        data.put("min-level", def.minLevel());
+        data.put("max-level", def.maxLevel());
         RpgServices.dataStore().repository(REPO).save(id, data);
     }
 
@@ -136,6 +143,19 @@ public final class SpawnerManager {
             LivingEntity spawned = mob.get().spawn(spawnLoc);
             if (spawned != null) {
                 spawned.getPersistentDataContainer().set(spawnerKey, PersistentDataType.STRING, def.id());
+                int level = def.minLevel() == def.maxLevel()
+                        ? def.minLevel()
+                        : def.minLevel() + ThreadLocalRandom.current().nextInt(def.maxLevel() - def.minLevel() + 1);
+                spawned.getPersistentDataContainer().set(mobLevelKey, PersistentDataType.INTEGER, level);
+                // Prefix the display name with [Lv. N] so players see the level.
+                if (level > 1 || def.minLevel() > 1) {
+                    var existing = spawned.customName();
+                    net.kyori.adventure.text.Component levelPrefix =
+                            net.kyori.adventure.text.Component.text("[Lv. " + level + "] ",
+                                    net.kyori.adventure.text.format.NamedTextColor.GRAY);
+                    spawned.customName(existing != null ? levelPrefix.append(existing) : levelPrefix);
+                    spawned.setCustomNameVisible(true);
+                }
             }
             lastSpawnTick.put(def.id(), currentTick);
         }

@@ -3,6 +3,7 @@ package com.github._255_ping.rpg.hud;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Criteria;
@@ -109,12 +110,13 @@ public final class HudTask implements Runnable {
 
     private void updateScoreboard(Player player) {
         Scoreboard sb = boards.computeIfAbsent(player.getUniqueId(), k -> Bukkit.getScoreboardManager().getNewScoreboard());
+        String rawTitle = plugin.getConfig().getString("scoreboard.title", "&6&lRPG");
         Objective obj = sb.getObjective("rpg");
         if (obj == null) {
-            obj = sb.registerNewObjective("rpg", Criteria.DUMMY, LEGACY.deserialize(plugin.getConfig().getString("scoreboard.title", "RPG")));
+            obj = sb.registerNewObjective("rpg", Criteria.DUMMY, LEGACY.deserialize(rawTitle));
             obj.setDisplaySlot(DisplaySlot.SIDEBAR);
         } else {
-            obj.displayName(LEGACY.deserialize(plugin.getConfig().getString("scoreboard.title", "RPG")));
+            obj.displayName(LEGACY.deserialize(rawTitle));
         }
 
         // Clear prior scores by un-registering all entries.
@@ -128,7 +130,9 @@ public final class HudTask implements Runnable {
         Set<String> used = new HashSet<>();
         for (String raw : lines) {
             String resolved = PlaceholderResolver.resolve(player, raw);
-            String entry = uniquify(resolved, used);
+            // Scoreboard entry keys use § codes, not & codes — translate before passing to API.
+            String colorized = ChatColor.translateAlternateColorCodes('&', resolved);
+            String entry = uniquify(colorized, used);
             Score s = obj.getScore(entry);
             s.setScore(score--);
         }

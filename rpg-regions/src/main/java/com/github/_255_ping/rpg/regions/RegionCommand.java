@@ -7,14 +7,21 @@ import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public final class RegionCommand implements CommandExecutor {
+public final class RegionCommand implements CommandExecutor, TabCompleter {
+
+    private static final List<String> KNOWN_FLAGS = List.of(
+            "pvp", "mob-spawning", "mob-damage", "fall-damage", "fire-damage",
+            "entry", "exit", "fly", "god", "greeting", "farewell");
+
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
@@ -169,6 +176,34 @@ public final class RegionCommand implements CommandExecutor {
         region.setFlag(flag, value);
         regions.saveOne(region.id());
         sender.sendMessage(msg("&aSet &e" + region.id() + "." + flag + " &7= &f" + value));
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) return filter(args[0], List.of("define", "delete", "list", "info", "flag", "reload"));
+        String sub = args[0].toLowerCase(Locale.ROOT);
+        if (args.length == 2 && List.of("delete", "flag", "info").contains(sub)) {
+            return filterRegions(args[1]);
+        }
+        if (sub.equals("flag") && args.length == 3) return filter(args[2], KNOWN_FLAGS);
+        if (sub.equals("flag") && args.length == 4) return filter(args[3], List.of("true", "false"));
+        return List.of();
+    }
+
+    private List<String> filterRegions(String prefix) {
+        List<String> out = new ArrayList<>();
+        String lower = prefix.toLowerCase();
+        for (Region r : regions.all()) {
+            if (r.id().toLowerCase().startsWith(lower)) out.add(r.id());
+        }
+        return out;
+    }
+
+    private static List<String> filter(String prefix, List<String> options) {
+        List<String> out = new ArrayList<>();
+        String lower = prefix.toLowerCase();
+        for (String o : options) { if (o.startsWith(lower)) out.add(o); }
+        return out;
     }
 
     private static Component msg(String legacy) { return LEGACY.deserialize(legacy); }

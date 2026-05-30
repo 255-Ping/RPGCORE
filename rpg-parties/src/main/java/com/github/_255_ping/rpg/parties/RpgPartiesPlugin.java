@@ -20,7 +20,10 @@ public final class RpgPartiesPlugin extends JavaPlugin implements Listener {
         manager = new PartyManager(this);
         RpgServices.setParties(manager);
 
-        Objects.requireNonNull(getCommand("party"), "command 'party' missing").setExecutor(new PartyCommand(manager, this));
+        PartyCommand partyCommand = new PartyCommand(manager, this);
+        var partyCmd = Objects.requireNonNull(getCommand("party"), "command 'party' missing");
+        partyCmd.setExecutor(partyCommand);
+        partyCmd.setTabCompleter(partyCommand);
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getScheduler().runTaskTimer(this, manager::cleanExpiredInvites, 200L, 200L);
 

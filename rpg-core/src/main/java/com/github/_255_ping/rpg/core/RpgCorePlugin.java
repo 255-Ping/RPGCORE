@@ -17,7 +17,9 @@ import com.github._255_ping.rpg.core.command.StatsCommand;
 import com.github._255_ping.rpg.core.cooldown.CoreCooldownService;
 import com.github._255_ping.rpg.core.currency.CoreCurrencyRegistry;
 import com.github._255_ping.rpg.core.death.DeathRulesListener;
+import com.github._255_ping.rpg.core.damage.DamageIndicatorListener;
 import com.github._255_ping.rpg.core.damage.DamagePipelineListener;
+import com.github._255_ping.rpg.core.items.ConsumableItemListener;
 import com.github._255_ping.rpg.core.formatting.CoreMessageFormatter;
 import com.github._255_ping.rpg.core.formatting.CoreNameFormatter;
 import com.github._255_ping.rpg.core.formula.CoreExpressionEvaluator;
@@ -95,6 +97,7 @@ public final class RpgCorePlugin extends JavaPlugin {
     private CoreCurrencyRegistry currencyRegistry;
     private CoreLootTableRegistry lootTableRegistry;
     private SpawnerManager spawnerManager;
+    private DamagePipelineListener damagePipeline;
     private RecipeLoader recipeLoader;
     private SmeltingLoader smeltingLoader;
     private CoreWandService wandService;
@@ -209,8 +212,10 @@ public final class RpgCorePlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new VanillaSuppressionListener(this), this);
         getServer().getPluginManager().registerEvents(
                 new PlayerLifecycleListener(this, playerLookup, healthService, skillsService), this);
-        getServer().getPluginManager().registerEvents(
-                new DamagePipelineListener(this, healthService), this);
+        damagePipeline = new DamagePipelineListener(this, healthService);
+        getServer().getPluginManager().registerEvents(damagePipeline, this);
+        getServer().getPluginManager().registerEvents(new DamageIndicatorListener(this), this);
+        getServer().getPluginManager().registerEvents(new ConsumableItemListener(itemIdKey), this);
         getServer().getPluginManager().registerEvents(
                 new EquipmentListener(this, healthService), this);
         getServer().getPluginManager().registerEvents(
@@ -260,7 +265,11 @@ public final class RpgCorePlugin extends JavaPlugin {
 
         spawnerManager = new SpawnerManager(this);
         spawnerManager.loadAll();
-        Objects.requireNonNull(getCommand("spawner")).setExecutor(new SpawnerCommand(this, spawnerManager));
+        damagePipeline.setMobKeys(mobIdKey, spawnerManager.mobLevelKey());
+        SpawnerCommand spawnerCommand = new SpawnerCommand(this, spawnerManager);
+        var spawnerCmd = Objects.requireNonNull(getCommand("spawner"));
+        spawnerCmd.setExecutor(spawnerCommand);
+        spawnerCmd.setTabCompleter(spawnerCommand);
         getServer().getScheduler().runTaskTimer(this, spawnerManager::tick, 20L, 20L);
 
         File craftingDir = new File(getDataFolder(), "recipes/crafting");

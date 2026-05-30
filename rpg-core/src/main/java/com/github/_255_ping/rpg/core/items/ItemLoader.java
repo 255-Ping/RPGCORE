@@ -110,8 +110,21 @@ public final class ItemLoader {
             }
         }
 
+        List<CoreRpgItem.ConsumeEffect> consumeEffects = new ArrayList<>();
+        ConfigurationSection consumeSec = s.getConfigurationSection("OnConsume");
+        if (consumeSec != null) {
+            for (Object entry : consumeSec.getList("Effects", List.of())) {
+                if (entry instanceof java.util.Map<?, ?> m) {
+                    String effectId = String.valueOf(m.get("effect"));
+                    int level = m.get("level") instanceof Number n ? n.intValue() : 1;
+                    int duration = m.get("duration") instanceof Number n ? n.intValue() : 200;
+                    consumeEffects.add(new CoreRpgItem.ConsumeEffect(effectId, level, duration));
+                }
+            }
+        }
+
         return new CoreRpgItem(id, displayName, type, rarity, material, customModelData,
-                stats, abilities, lore, itemIdKey);
+                stats, abilities, lore, consumeEffects, itemIdKey);
     }
 
     private static ItemType parseType(String s) {

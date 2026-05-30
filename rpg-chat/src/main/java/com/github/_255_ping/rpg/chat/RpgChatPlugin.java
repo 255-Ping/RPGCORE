@@ -6,15 +6,19 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-public final class RpgChatPlugin extends JavaPlugin implements CommandExecutor {
+public final class RpgChatPlugin extends JavaPlugin implements CommandExecutor, TabCompleter {
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
@@ -28,9 +32,39 @@ public final class RpgChatPlugin extends JavaPlugin implements CommandExecutor {
         muted = getConfig().getBoolean("mutechat-default", false);
         getServer().getPluginManager().registerEvents(new ChatFormatListener(this), this);
         for (String c : new String[]{"msg", "reply", "clearchat", "mutechat", "chat"}) {
-            Objects.requireNonNull(getCommand(c), "command '" + c + "' missing").setExecutor(this);
+            var cmd = Objects.requireNonNull(getCommand(c), "command '" + c + "' missing");
+            cmd.setExecutor(this);
+            cmd.setTabCompleter(this);
         }
         getLogger().info("rpg-chat v" + getPluginMeta().getVersion() + " enabled.");
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        String name = command.getName().toLowerCase();
+        if (name.equals("chat")) {
+            if (args.length == 1) return filter(args[0], List.of("global", "party", "guild", "reload"));
+        }
+        if (name.equals("msg") || name.equals("tell") || name.equals("w") || name.equals("whisper")) {
+            if (args.length == 1) return filterPlayers(args[0]);
+        }
+        return List.of();
+    }
+
+    private static List<String> filter(String prefix, List<String> options) {
+        List<String> out = new ArrayList<>();
+        String lower = prefix.toLowerCase();
+        for (String o : options) { if (o.startsWith(lower)) out.add(o); }
+        return out;
+    }
+
+    private static List<String> filterPlayers(String prefix) {
+        List<String> out = new ArrayList<>();
+        String lower = prefix.toLowerCase();
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (p.getName().toLowerCase().startsWith(lower)) out.add(p.getName());
+        }
+        return out;
     }
 
     public boolean isMuted() { return muted; }

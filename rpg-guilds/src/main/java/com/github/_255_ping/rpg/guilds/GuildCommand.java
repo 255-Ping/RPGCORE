@@ -9,15 +9,23 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
-public final class GuildCommand implements CommandExecutor {
+public final class GuildCommand implements CommandExecutor, TabCompleter {
+
+    private static final List<String> SUBS = List.of(
+            "create", "invite", "accept", "kick", "promote", "demote",
+            "leave", "disband", "info", "list", "deposit", "withdraw", "reload");
+
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
@@ -295,6 +303,45 @@ public final class GuildCommand implements CommandExecutor {
             Player p = Bukkit.getPlayer(id);
             if (p != null) p.sendMessage(component);
         }
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) return filter(args[0], SUBS);
+        String sub = args[0].toLowerCase(Locale.ROOT);
+        if (args.length == 2) {
+            return switch (sub) {
+                case "invite", "kick", "promote", "demote" -> filterPlayers(args[1]);
+                case "info" -> filterGuilds(args[1]);
+                default -> List.of();
+            };
+        }
+        return List.of();
+    }
+
+    private List<String> filterGuilds(String prefix) {
+        List<String> out = new ArrayList<>();
+        String lower = prefix.toLowerCase();
+        for (Guild g : manager.all()) {
+            if (g.name().toLowerCase().startsWith(lower)) out.add(g.name());
+        }
+        return out;
+    }
+
+    private static List<String> filter(String prefix, List<String> options) {
+        List<String> out = new ArrayList<>();
+        String lower = prefix.toLowerCase();
+        for (String o : options) { if (o.startsWith(lower)) out.add(o); }
+        return out;
+    }
+
+    private static List<String> filterPlayers(String prefix) {
+        List<String> out = new ArrayList<>();
+        String lower = prefix.toLowerCase();
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (p.getName().toLowerCase().startsWith(lower)) out.add(p.getName());
+        }
+        return out;
     }
 
     private static Component msg(String legacy) { return LEGACY.deserialize(legacy); }

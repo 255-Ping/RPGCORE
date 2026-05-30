@@ -36,8 +36,9 @@ public final class RpgEconomyPlugin extends JavaPlugin {
 
         EconomyCommands handler = new EconomyCommands(this, economy);
         for (String cmd : new String[]{"balance", "pay", "eco", "baltop"}) {
-            PluginCommand pc = getCommand(cmd);
-            Objects.requireNonNull(pc, "command '" + cmd + "' missing from plugin.yml").setExecutor(handler);
+            PluginCommand pc = Objects.requireNonNull(getCommand(cmd), "command '" + cmd + "' missing from plugin.yml");
+            pc.setExecutor(handler);
+            pc.setTabCompleter(handler);
         }
 
         getLogger().info("rpg-economy v" + getPluginMeta().getVersion() + " enabled.");

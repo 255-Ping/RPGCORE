@@ -38,8 +38,9 @@ public final class NpcInteractListener implements Listener {
     public void onInteract(PlayerInteractEntityEvent e) {
         Optional<NpcDef> opt = manager.fromEntity(e.getRightClicked());
         if (opt.isEmpty()) return;
-        if (!e.getPlayer().hasPermission("rpg.npcs.use")) return;
+        // Always cancel the vanilla interaction for NPC entities — prevents villager trade GUI.
         e.setCancelled(true);
+        if (!e.getPlayer().hasPermission("rpg.npcs.use")) return;
         NpcDef def = opt.get();
         switch (def.behaviorType()) {
             case DIALOGUE -> sendDialogue(e.getPlayer(), def);

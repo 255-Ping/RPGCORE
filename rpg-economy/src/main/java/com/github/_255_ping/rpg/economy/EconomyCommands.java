@@ -8,6 +8,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -20,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public final class EconomyCommands implements CommandExecutor {
+public final class EconomyCommands implements CommandExecutor, TabCompleter {
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
@@ -205,6 +206,38 @@ public final class EconomyCommands implements CommandExecutor {
             raw = raw.replace("{" + e.getKey() + "}", String.valueOf(e.getValue()));
         }
         return LEGACY.deserialize(raw);
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        String name = command.getName().toLowerCase();
+        if (name.equals("eco")) {
+            if (args.length == 1) return filter(args[0], List.of("set", "add", "remove", "reset", "reload"));
+            if (args.length == 2 && !args[0].equalsIgnoreCase("reload")) return filterPlayers(args[1]);
+        }
+        if (name.equals("balance") || name.equals("baltop")) {
+            if (args.length == 1) return filterPlayers(args[0]);
+        }
+        if (name.equals("pay")) {
+            if (args.length == 1) return filterPlayers(args[0]);
+        }
+        return List.of();
+    }
+
+    private static List<String> filter(String prefix, List<String> options) {
+        List<String> out = new ArrayList<>();
+        String lower = prefix.toLowerCase();
+        for (String o : options) { if (o.startsWith(lower)) out.add(o); }
+        return out;
+    }
+
+    private static List<String> filterPlayers(String prefix) {
+        List<String> out = new ArrayList<>();
+        String lower = prefix.toLowerCase();
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (p.getName().toLowerCase().startsWith(lower)) out.add(p.getName());
+        }
+        return out;
     }
 
     private static String fmt(OfflinePlayer p) {

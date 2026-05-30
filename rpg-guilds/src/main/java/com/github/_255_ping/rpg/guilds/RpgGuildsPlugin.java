@@ -22,8 +22,10 @@ public final class RpgGuildsPlugin extends JavaPlugin implements Listener {
         manager.loadAll();
         RpgServices.setGuilds(manager);
 
-        Objects.requireNonNull(getCommand("guild"), "command 'guild' missing")
-                .setExecutor(new GuildCommand(this, manager));
+        GuildCommand guildCommand = new GuildCommand(this, manager);
+        var guildCmd = Objects.requireNonNull(getCommand("guild"), "command 'guild' missing");
+        guildCmd.setExecutor(guildCommand);
+        guildCmd.setTabCompleter(guildCommand);
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getScheduler().runTaskTimer(this, manager::cleanExpiredInvites, 200L, 200L);
 

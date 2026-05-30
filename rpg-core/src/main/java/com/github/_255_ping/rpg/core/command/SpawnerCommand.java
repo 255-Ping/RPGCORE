@@ -1,6 +1,7 @@
 package com.github._255_ping.rpg.core.command;
 
 import com.github._255_ping.rpg.api.RpgServices;
+import com.github._255_ping.rpg.api.mobs.RpgMob;
 import com.github._255_ping.rpg.core.RpgCorePlugin;
 import com.github._255_ping.rpg.core.spawners.SpawnerDef;
 import com.github._255_ping.rpg.core.spawners.SpawnerManager;
@@ -11,12 +12,15 @@ import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
-public final class SpawnerCommand implements CommandExecutor {
+public final class SpawnerCommand implements CommandExecutor, TabCompleter {
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
@@ -129,6 +133,8 @@ public final class SpawnerCommand implements CommandExecutor {
                 case "cooldown", "cooldown-ticks" -> def.setCooldownTicks(Integer.parseInt(value));
                 case "spawn-radius", "radius" -> def.setSpawnRadius(Integer.parseInt(value));
                 case "continuous" -> def.setContinuous(Boolean.parseBoolean(value));
+                case "min-level" -> def.setMinLevel(Integer.parseInt(value));
+                case "max-level" -> def.setMaxLevel(Integer.parseInt(value));
                 default -> { sender.sendMessage(msg("&cUnknown field: &7" + field)); return; }
             }
         } catch (NumberFormatException ex) {
@@ -136,6 +142,48 @@ public final class SpawnerCommand implements CommandExecutor {
         }
         manager.saveOne(def.id());
         sender.sendMessage(msg("&aSet &e" + def.id() + "." + field + " &7= &f" + value));
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) return filter(args[0], List.of("create", "delete", "list", "tp", "set"));
+        String sub = args[0].toLowerCase(Locale.ROOT);
+        if (args.length == 2 && List.of("delete", "tp", "set").contains(sub)) {
+            return filterSpawners(args[1]);
+        }
+        if (sub.equals("create") && args.length == 3) {
+            return filterMobs(args[2]);
+        }
+        if (sub.equals("set") && args.length == 3) {
+            return filter(args[2], List.of("max-alive", "cooldown-ticks", "spawn-radius",
+                    "continuous", "min-level", "max-level"));
+        }
+        return List.of();
+    }
+
+    private List<String> filterSpawners(String prefix) {
+        List<String> out = new ArrayList<>();
+        String lower = prefix.toLowerCase();
+        for (SpawnerDef d : manager.all()) {
+            if (d.id().toLowerCase().startsWith(lower)) out.add(d.id());
+        }
+        return out;
+    }
+
+    private static List<String> filterMobs(String prefix) {
+        List<String> out = new ArrayList<>();
+        String lower = prefix.toLowerCase();
+        for (RpgMob m : RpgServices.mobs().all()) {
+            if (m.id().toLowerCase().startsWith(lower)) out.add(m.id());
+        }
+        return out;
+    }
+
+    private static List<String> filter(String prefix, List<String> options) {
+        List<String> out = new ArrayList<>();
+        String lower = prefix.toLowerCase();
+        for (String o : options) { if (o.startsWith(lower)) out.add(o); }
+        return out;
     }
 
     private static Component msg(String legacy) { return LEGACY.deserialize(legacy); }

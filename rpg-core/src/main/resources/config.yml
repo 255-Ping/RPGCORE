@@ -152,6 +152,25 @@ chat-name-format:
 # Locale for messages.yml selection (en is shipped; others come later).
 locale: en
 
+# Floating damage indicators (TextDisplay entities above the hit mob).
+damage-indicators:
+  enabled: true
+  duration-ticks: 30       # total life of the indicator
+  rise-blocks: 1.5         # how far the number floats upward before fading
+
+# Mob health bar shown in the mob's display name after each hit.
+mob-health-bar:
+  enabled: true
+  bar-length: 10           # number of segments in the █░ bar
+
+# Level scaling — reduces damage when players are much higher level than a mob.
+# Applies to both player→mob and mob→player directions.
+level-scaling:
+  enabled: true
+  threshold: 5             # level difference before scaling kicks in
+  reduction-per-level: 0.08  # damage multiplier reduction per level above threshold
+  min-damage-factor: 0.10  # floor: never reduce below 10% of base damage
+
 # Debug logging per-system. Verbose builds are noisy — leave off in prod.
 debug:
   damage: false

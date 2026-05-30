@@ -10,6 +10,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -22,6 +23,8 @@ public final class CoreRpgItem implements RpgItem {
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
+    public record ConsumeEffect(String effectId, int level, int durationTicks) {}
+
     private final String id;
     private final String displayName;
     private final ItemType type;
@@ -31,12 +34,20 @@ public final class CoreRpgItem implements RpgItem {
     private final Map<Stat, Double> stats;
     private final List<AbilityInvocation> abilities;
     private final List<String> extraLore;
+    private final List<ConsumeEffect> consumeEffects;
     private final NamespacedKey itemIdKey;
 
     public CoreRpgItem(String id, String displayName, ItemType type, Rarity rarity,
                        Material material, int customModelData,
                        Map<Stat, Double> stats, List<AbilityInvocation> abilities,
                        List<String> extraLore, NamespacedKey itemIdKey) {
+        this(id, displayName, type, rarity, material, customModelData, stats, abilities, extraLore, List.of(), itemIdKey);
+    }
+
+    public CoreRpgItem(String id, String displayName, ItemType type, Rarity rarity,
+                       Material material, int customModelData,
+                       Map<Stat, Double> stats, List<AbilityInvocation> abilities,
+                       List<String> extraLore, List<ConsumeEffect> consumeEffects, NamespacedKey itemIdKey) {
         this.id = id;
         this.displayName = displayName;
         this.type = type;
@@ -46,6 +57,7 @@ public final class CoreRpgItem implements RpgItem {
         this.stats = Map.copyOf(stats);
         this.abilities = List.copyOf(abilities);
         this.extraLore = List.copyOf(extraLore);
+        this.consumeEffects = List.copyOf(consumeEffects);
         this.itemIdKey = itemIdKey;
     }
 
@@ -58,6 +70,7 @@ public final class CoreRpgItem implements RpgItem {
     @Override public Map<Stat, Double> stats() { return stats; }
     @Override public List<AbilityInvocation> abilities() { return abilities; }
     @Override public List<String> extraLore() { return extraLore; }
+    public List<ConsumeEffect> consumeEffects() { return consumeEffects; }
 
     @Override
     public ItemStack toItemStack() {
@@ -101,6 +114,9 @@ public final class CoreRpgItem implements RpgItem {
         if (!lore.isEmpty()) meta.lore(lore);
 
         meta.getPersistentDataContainer().set(itemIdKey, PersistentDataType.STRING, id);
+
+        // Suppress vanilla tooltip lines (attack damage, potion effects, "No Effects", etc.)
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
 
         stack.setItemMeta(meta);
         return stack;
