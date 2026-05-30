@@ -22,6 +22,8 @@ RPGCORE/
 
 ### 0. Keep CLAUDE.md AND docs/ in sync after every substantive change
 
+**Run `/update-docs` before every build and push.** This slash command audits every doc page touched by the current changes, fixes drift against the actual config/code, fixes unrelated inconsistencies it finds in those pages, and updates `docs/changelog.md` and the CLAUDE.md versions table. It is mandatory — do not build or push without running it first.
+
 Two things must stay accurate at all times:
 
 **CLAUDE.md** — audit whenever you:
@@ -30,7 +32,7 @@ Two things must stay accurate at all times:
 - Add a new persistent field, save/load path, or player-data schema change
 - Discover that any example or number in this file is wrong
 
-**docs/** — update the relevant doc page in the same commit as every code change:
+**docs/** — update the relevant doc page in the same commit as every code change. The `/update-docs` skill handles this automatically, but the routing table for reference:
 
 | What changed | Doc page to update |
 |---|---|
@@ -416,6 +418,8 @@ under the plugin's data folder and loaded at startup + `/rpg reloadall`. A malfo
 clearly and is skipped — the plugin keeps running.
 
 ## Build
+
+**Before building or pushing: run `/update-docs`.** It fixes doc drift, updates the changelog, and keeps the CLAUDE.md versions table current. If you skip it and push, the docs will lie.
 
 | Command | Effect |
 |---|---|
