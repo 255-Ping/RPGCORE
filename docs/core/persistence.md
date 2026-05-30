@@ -1,6 +1,6 @@
 # Persistence
 
-> **Status:** In progress — YAML backend works; MySQL backend not yet implemented (config key reserved, currently no-op)
+> **Status:** In progress — YAML backend fully working. MySQL backend implemented (`MysqlDataStore`, HikariCP connection pool, schema-version migration runner). On-startup `BackendMigrator` detects a backend switch (YAML→MySQL or MySQL→YAML) and copies all data forward before the server goes live.
 
 `rpg-core` provides a `DataStore` service that every addon must go through to read or write persistent data. The backend is selectable in core config: **YAML (default)** or **MySQL**.
 
@@ -82,6 +82,28 @@ Repository names map to a folder under the calling plugin's data folder (or a ta
 ## Concurrency
 
 Reads can happen on any thread. Writes are queued onto a single I/O thread per store, serialized in order. Players' read-modify-write cycles use a per-player lock to prevent torn writes.
+
+## Backend switching & migration
+
+When you change `persistence.backend` and restart, `BackendMigrator` (in rpg-core) automatically migrates all existing data to the new backend before the server accepts players:
+
+- **YAML → MySQL**: Scans every `plugins/<addon>/data/` subdirectory, opens a `YamlRepository` per folder, and writes all records to the MySQL tables.
+- **MySQL → YAML**: Opens a temporary MySQL connection, enumerates all tables matching `<prefix>%`, and writes records to YAML files.
+
+Migration status is tracked in `plugins/rpg-core/backend.yml`. If migration fails for any reason, `backend.yml` is NOT updated — the next restart will retry the migration from scratch. Resolve connection issues first.
+
+> **Tip:** Take a backup before switching backends. Migration copies forward; it does not delete the source.
+
+## YAML schema migrations (per-repo)
+
+`YamlMigrationRunner` applies versioned code-level migrations to existing YAML records on startup. Version tracked per-repo in `plugins/rpg-core/yaml-migrations/<repoName>.yml`. Addons register their migrations at enable-time:
+
+```java
+new YamlMigrationRunner(repo, metaDir, "players", getLogger()).run(List.of(
+    new YamlMigrationRunner.Migration(2, "add_guild_id",
+        data -> { data.putIfAbsent("guild-id", null); return data; })
+));
+```
 
 ## Backup
 

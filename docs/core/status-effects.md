@@ -71,6 +71,19 @@ poison:
 3. **Modify stats** — while active, modifiers are folded into the target's `StatHolder` aggregation.
 4. **Expire** — when duration reaches 0 (or `StatusEffectService.clear` is called), `on-expire` runs and modifiers are removed.
 
+## Built-in effect catalog
+
+These effects ship in `plugins/rpg-core/status-effects/example.yml` on first run. They're ready to use in abilities, consumables, and region flags without any authoring.
+
+| ID | Category | What it does |
+|---|---|---|
+| `poison` | debuff | Deals 2 true damage every 20 ticks; −10% defense while active |
+| `regen` | buff | Heals 3 HP every 20 ticks |
+| `strength_boost` | buff | +20 flat `strength` while active |
+| `slow` | debuff | −20% `speed` while active |
+
+Define your own in `plugins/rpg-core/status-effects/<file>.yml` following the schema below. Addons (e.g., `rpg-alchemy`) can ship their own files alongside.
+
 ## API surface
 
 ```java

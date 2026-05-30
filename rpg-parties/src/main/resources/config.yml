@@ -8,3 +8,26 @@ disband-on-owner-leave: false
 
 # Seconds before a pending invite expires.
 invite-timeout-seconds: 60
+
+# ── XP sharing ────────────────────────────────────────────────────────────────
+xp-sharing:
+  enabled: false
+
+  # Which skills share XP.
+  #   all-skills  — every skill shares
+  #   combat-only — only the "combat" skill shares
+  #   list        — only the skills listed under `skills:` share
+  scope: all-skills
+  skills: []
+  #  - combat
+  #  - mining
+
+  # Maximum distance (in blocks) between the earner and a party member for that
+  # member to receive shared XP.  0 = unlimited (same world only).
+  range-blocks: 64
+
+  # Expression for the XP each *other* member receives.
+  # Variables:  amount     — the original XP award
+  #             party_size — number of in-range members (including the earner)
+  # The earner keeps their full XP; this amount is credited as a bonus to others.
+  split-formula: "amount / party_size"

@@ -46,7 +46,20 @@ Built-in flags (extensible by addons):
 | `health-regen-multiplier` | 1.0 | Multiplies out-of-combat regen |
 | `no-mob-spawning` | false | Disables all mob spawning (admin spawners + natural) in this region |
 | `no-dungeon-entry` | false | Disables `/dungeon join` from inside |
-| `apply-status` | `[]` | Auto-applies these effects while a player is inside |
+| `apply-status` | `[]` | Auto-applies these status effects while a player is inside the region |
+
+### `apply-status` example
+
+```yaml
+flags:
+  # Players inside this region permanently have the "haste_zone" buff applied.
+  # Buff is removed when they leave. List any number of effect IDs.
+  apply-status:
+    - { id: strength_boost, level: 1, duration: 100 }  # refreshed every 5 ticks by the polling task
+    - { id: regen,          level: 2, duration: 100 }
+```
+
+Duration should be slightly longer than the poll interval (default 5 ticks) so effects don't flicker.
 
 ## Priority
 

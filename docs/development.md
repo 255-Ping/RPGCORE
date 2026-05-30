@@ -99,25 +99,36 @@ Public types live in:
 - `com.github._255_ping.rpg.api.regions` — `Region`
 - `com.github._255_ping.rpg.api.blocks` — `Block`, `BlockRegistry`, `RequiredToolType`
 
-Service types still planned (not yet in code; expected when their owning addon ships):
+The following are registered in `RpgServices` and set by their owning plugin on enable:
 
-- `RegionService` (rpg-regions)
-- `MobAi` (rpg-core, when AI override system lands)
+- `RpgServices.economy()` — `Economy` (rpg-economy)
+- `RpgServices.accessories()` — `AccessoryService` (rpg-accessories)
+- `RpgServices.parties()` — `PartyService` (rpg-parties)
+- `RpgServices.guilds()` — `GuildService` (rpg-guilds)
+- `RpgServices.regionService()` — `RegionService` (rpg-regions)
+- `RpgServices.wands()` — `WandService` (rpg-core)
+
+Calling any of these before the owning addon loads throws `IllegalStateException`. Use `try/catch IllegalStateException` in addons that soft-depend.
+
+Service types still planned (not yet in code):
+
 - `Hologram`, `DamageIndicator` (rpg-holograms)
 - `Npc` (rpg-npcs)
 - `Station` (rpg-core, station block dispatch)
-- `Economy` (rpg-economy — `CurrencyRegistry` already in api)
-- `PartyService` (rpg-parties)
-- `GuildService` (rpg-guilds)
 - `DungeonService` (rpg-dungeons)
 - `HudService` (rpg-hud)
-- `SelectionWand` (rpg-core, planned)
+- `MobAi` (rpg-core, when AI profile override system lands)
 
 ## Versioning
 
-All plugin modules share `version = "0.0.0-${suiteVersion}"`. `suiteVersion` lives in `gradle.properties`.
+Each plugin module has its own version in `gradle.properties` (`coreVersion`, `combatVersion`, `foragingVersion`, etc.). Full jar version = `<pluginVersion>-<suiteVersion>` (e.g., `rpg-core-0.2.0-18.jar`).
 
-Bump rule (current): bump when a new plugin module is added OR a major feature affects nearly all plugins.
+**Bump rules:**
+
+- **Per-plugin version** — bump only the plugin(s) you changed. One bump per plugin per session regardless of how many features landed. Minor bumps (`0.x.0`) for new features; patch bumps (`0.0.x`) for fixes.
+- **`suiteVersion`** — bump only when a new module is added OR a major change affects nearly every plugin simultaneously.
+
+`suiteVersion` lives in `gradle.properties` alongside all per-plugin version properties.
 
 ## Git push discipline
 

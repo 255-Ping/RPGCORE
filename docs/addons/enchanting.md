@@ -1,6 +1,6 @@
 # Enchanting (`rpg-enchanting`)
 
-> **Status:** v0.0.0-16 — shipped. Custom enchants, reforges, item upgrades all functional. GUIs open from custom enchanting/anvil blocks (admins must copy `blocks-example.yml` into `plugins/rpg-core/blocks/`). Vanilla enchanting-table + anvil + smithing-table outputs suppressed.
+> **Status:** v0.0.2 — shipped. Custom enchants, reforges, item upgrades all functional. GUIs open from custom enchanting/anvil blocks (admins must copy `blocks-example.yml` into `plugins/rpg-core/blocks/`). Vanilla enchanting-table + anvil + smithing-table outputs suppressed.
 
 One addon bundling four related "improve your gear" features. Each sub-feature is individually toggleable.
 

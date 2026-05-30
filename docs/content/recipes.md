@@ -1,6 +1,6 @@
 # Recipes
 
-> **Status:** Planned
+> **Status:** Planned — YAML schemas below are the authoritative target design. Custom station blocks (`StationType: crafting/cooking/brewing`) open a GUI on right-click, but the recipe-matching backend that reads these YAML files and validates ingredients is not yet implemented. Recipes defined now will auto-load when that slice ships.
 
 Three recipe systems share a common shape: **crafting**, **cooking**, and **brewing**. All vanilla recipes are cancelled by default (per [vanilla suppression](../core/vanilla-suppression.md)) — every recipe in the game is authored by admins.
 

@@ -1,6 +1,6 @@
 # Damage pipeline
 
-> **Status:** In progress — basic pipeline working (vanilla damage cancelled, our pipeline applies). Stat aggregation from armor / accessories / status effects / milestones / guild perks is not yet wired, so attacker/victim stats currently come only from `starting-state.base-stats` for players and from 0 for mobs. Combat XP awards, damage indicators, and per-source damage tuning land in later slices.
+> **Status:** In progress — pipeline working; stat aggregation from equipment/accessories/effects/milestones/guild perks is wired for players. Mob attackers/victims return 0 for all stats until mob stat-holder lands. Combat XP awards and damage indicators are live. Per-source damage tuning and ferocity are planned.
 
 All damage flows through `rpg-core`. Vanilla `EntityDamageEvent` is cancelled at `LOWEST` priority and replaced with our pipeline.
 
@@ -114,6 +114,30 @@ PreDamageEvent — Cancellable, mutable context
 PostDamageEvent — read-only, with finalDealt
 DamageContext  — { attacker, victim, baseDamage, critMultiplier, trueDamage, source }
 ```
+
+## Actual v1 formula (implemented in `DamageMath.java`)
+
+The configurable formula strings in the YAML above are the design target. Current hard-coded math:
+
+```
+after_strength = base * (1 + strength / 100)
+if crit:  after_strength *= (1 + crit_damage / 100)
+defense_factor = 1 − defense / (defense + 100)      # trueDamage → uses true_defense instead
+final = max(0, after_strength × defense_factor)
+```
+
+Crit is rolled as `uniform[0, 100) < min(crit_chance, 100)`.
+
+### Formula variable reference
+
+| Variable | Stat source | Notes |
+|---|---|---|
+| `base` | `DamageContext.baseDamage()` | Weapon `damage` stat, or ability `carriedDamage` |
+| `strength` | Attacker `STRENGTH` | 0 if attacker is not a player (mob stat-holder pending) |
+| `crit_chance` | Attacker `CRIT_CHANCE` | Clamped to 100 |
+| `crit_damage` | Attacker `CRIT_DAMAGE` | Applied only on a successful crit roll |
+| `defense` | Victim `DEFENSE` | Ignored when `trueDamage = true` |
+| `true_defense` | Victim `TRUE_DEFENSE` | Used instead of defense when `trueDamage = true` |
 
 ## Related
 

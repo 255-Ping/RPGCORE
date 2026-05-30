@@ -1,6 +1,6 @@
 # Content authoring overview
 
-> **Status:** Planned
+> **Status:** In progress — items, mobs, abilities, blocks, loot tables, admin spawners, and natural spawning all working. Recipes (crafting/cooking/brewing) are planned — station blocks open GUIs but recipe matching is not yet wired.
 
 This section covers everything an admin authors as YAML to add content to the server: items, mobs, abilities, blocks, recipes, loot tables, NPCs, holograms, spawners, and natural-spawn rules.
 

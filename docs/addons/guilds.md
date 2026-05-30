@@ -70,21 +70,24 @@ Members' personal skill XP also flows into the guild (at `rate-percent`). The gu
 
 ## Commands
 
-| Command | Permission |
-|---|---|
-| `/guild create <name>` | `rpg.guilds.create` |
-| `/guild invite <player>` | `rpg.guilds.invite` |
-| `/guild kick <player>` | `rpg.guilds.kick` |
-| `/guild promote <player>` | `rpg.guilds.promote` |
-| `/guild demote <player>` | `rpg.guilds.demote` |
-| `/guild leave` | `rpg.guilds.leave` |
-| `/guild disband` | `rpg.guilds.disband` |
-| `/guild info [guild]` | `rpg.guilds.info` |
-| `/guild list` | `rpg.guilds.list` |
-| `/guild bank` | `rpg.guilds.bank` |
-| `/guild bank upgrade` | `rpg.guilds.bank.upgrade` |
-| `/guild ranks` | `rpg.guilds.ranks` |
-| `/chat guild` | `rpg.chat.use.guild` |
+| Command | Permission | Notes |
+|---|---|---|
+| `/guild create <name>` | `rpg.guilds.create` | Costs `creation.cost` coins if economy loaded |
+| `/guild invite <player>` | `rpg.guilds.invite` | Owner/officer only |
+| `/guild accept` | `rpg.guilds.accept` | Accept a pending invite |
+| `/guild kick <player>` | `rpg.guilds.kick` | Owner/officer only; can't kick owner |
+| `/guild promote <player>` | `rpg.guilds.promote` | Owner only → officer |
+| `/guild demote <player>` | `rpg.guilds.demote` | Owner only → member |
+| `/guild leave` | `rpg.guilds.leave` | |
+| `/guild disband` | `rpg.guilds.disband` | Owner only; broadcasts to members |
+| `/guild info [guild]` | `rpg.guilds.info` | No arg = your own guild |
+| `/guild list` | `rpg.guilds.list` | |
+| `/guild deposit <amount>` | `rpg.guilds.bank` | Any member; deducted from personal balance |
+| `/guild withdraw <amount>` | `rpg.guilds.bank` | Officer/owner only |
+| `/guild bank upgrade` | `rpg.guilds.bank.upgrade` | Rank-gated, planned |
+| `/guild ranks` | `rpg.guilds.ranks` | Rename rank slots, planned |
+| `/guild reload` | `rpg.guilds.admin.reload` | Op only |
+| `/chat guild` | `rpg.chat.use.guild` | Registered by rpg-chat if loaded |
 
 ## Persistence
 

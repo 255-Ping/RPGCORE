@@ -1,6 +1,6 @@
 # Skill addons
 
-> **Status:** Planned
+> **Status:** In progress — all skill addons shipped. See per-skill status notes below.
 
 Each skill is its own addon. They all follow the same shape — described once here, with skill-specific deltas in each section.
 
@@ -22,25 +22,26 @@ Common commands:
 
 ## Combat (`rpg-combat`)
 
-> **Status:** In progress — `rpg-combat` module ships. Awards XP on `PostDamageEvent` proportional to dealt damage, scaled by `COMBAT_WISDOM`. Configurable `xp-per-damage` rate; ability-source damage gets an extra `combat-xp-multiplier-from-abilities` knob.
+> **Status:** In progress — XP from `PostDamageEvent` (proportional to damage) and kill XP from `EntityDeathEvent` both live. `COMBAT_WISDOM` scales both. Per-mob kill-XP override table in config.
 
-### XP source
+### XP sources
 
-Listens to `PostDamageEvent`. XP awarded proportional to damage dealt (configurable per victim-type and per source).
+**Damage XP:** Proportional to HP dealt. `xp-per-damage` rate; ability-source damage gets a separate `combat-xp-multiplier-from-abilities` multiplier. The per-ability `CombatXpMultiplier` (in ability YAML) layers on top of that.
+
+**Kill XP:** Flat award when the player lands the killing blow. `default-kill-xp` fallback; override per mob type (vanilla name or RPG mob id) in `xp-per-kill`.
 
 ```yaml
 # rpg-combat/config.yml
-xp-sources:
-  damage-per-hp:
-    default: 1.0                 # XP per HP of damage dealt
-    per-victim-rarity:
-      common: 1.0
-      rare: 2.0
-      epic: 5.0
+xp-per-damage: 1.0
 combat-xp-multiplier-from-abilities: 1.0
-```
+victim-whitelist: ["any"]      # entity types that award XP; ["any"] = all LivingEntities
 
-The per-ability `CombatXpMultiplier` (in ability YAML) layers on top.
+default-kill-xp: 10
+xp-per-kill:
+  {}
+  # zombie: 15
+  # crypt_guardian: 100        # RPG mob id override
+```
 
 ### Stats milestones (defaults)
 
@@ -48,7 +49,7 @@ The per-ability `CombatXpMultiplier` (in ability YAML) layers on top.
 
 ## Mining (`rpg-mining`)
 
-> **Status:** In progress — Mining XP awarded on `RpgBlockBreakEvent` (fired by core's BlockBreakHandler when a tagged custom block breaks). XP per block-id configurable in `rpg-mining/config.yml`, with a `default-xp` fallback. `MINING_WISDOM` stat scales the award. `MINING_SPEED` HP-per-second ticking still pending the hold-to-break polish slice.
+> **Status:** In progress — Mining XP awarded on `RpgBlockBreakEvent`. XP per block-id configurable in `rpg-mining/config.yml`, with a `default-xp` fallback. `MINING_WISDOM` scales the award. `MINING_SPEED` hold-to-break is live (BlockBreakHandler ticks at HP/sec). `MINING_FORTUNE` drop multiplier live (applied in `BlockBreakHandler.rollDrops`).
 
 ### Content
 
@@ -65,7 +66,7 @@ Per-level: `mining_speed +0.5`, `mining_fortune +0.1`. Tier breakpoints unlock r
 
 ## Foraging (`rpg-foraging`)
 
-> **Status:** In progress — Foraging XP awarded on `BlockBreakEvent` for log/stem materials. XP per material configurable; auto-fallback to `default-xp` for any unrecognized `*_log` or `*_stem` block. `FORAGING_WISDOM` stat scales the award. `FORAGING_SPEED` and custom tree content arrive with the foraging block content slice.
+> **Status:** In progress — Foraging XP awarded on `BlockBreakEvent` for log/stem materials (any `*_log` or `*_stem` plus explicitly configured block IDs). `FORAGING_WISDOM` scales XP. `FORAGING_FORTUNE` drop multiplier live via `BlockDropItemEvent`. `FORAGING_SPEED` and custom tree content arrive with the foraging block content slice.
 
 ### Content
 
@@ -78,7 +79,7 @@ Custom-block break for axe-target blocks.
 
 ## Farming (`rpg-farming`)
 
-> **Status:** In progress — Farming XP awarded on `BlockBreakEvent` when the broken block is a configured crop and (if Ageable) at maximum age. Default config covers wheat/carrots/potatoes/beetroots/nether_wart/cocoa/pumpkin/melon/sugar_cane/bamboo. Scaled by `FARMING_WISDOM`.
+> **Status:** In progress — Farming XP awarded on `BlockBreakEvent` for mature Ageable crops. Default config covers wheat/carrots/potatoes/beetroots/nether_wart/cocoa/pumpkin/melon/sugar_cane/bamboo. Scaled by `FARMING_WISDOM`. `FARMING_FORTUNE` drop multiplier live via `BlockDropItemEvent` (same formula as mining/foraging; only triggers at max age).
 
 ### Content
 
@@ -95,53 +96,21 @@ No `FARMING_SPEED` stat by design — farming uses `FARMING_FORTUNE` only. Crop 
 
 ## Fishing (`rpg-fishing`)
 
-> **Status:** In progress — Fishing XP awarded on every successful `PlayerFishEvent` catch (state `CAUGHT_FISH`). Configurable `xp-per-catch`, scaled by `FISHING_WISDOM`. Custom fish content + sea-creature spawns + rod stat scaling come later.
+> See **[Fishing](fishing.md)** for the full page.
 
-### Content
-
-- Fish definitions in YAML (rarity, weight, biome, time-of-day restrictions)
-- Rod items with `FISHING_SPEED`, `FISHING_FORTUNE`, `SEA_CREATURE_CHANCE`
-
-### XP source
-
-Successful catches.
-
-### Sea creatures
-
-A configurable chance (`SEA_CREATURE_CHANCE` stat) per cast that the catch becomes a mob from the mob registry spawning at the float location instead of a fish item.
+XP on successful `PlayerFishEvent` catch, scaled by `FISHING_WISDOM`. Stats: `FISHING_SPEED`, `FISHING_FORTUNE`, `SEA_CREATURE_CHANCE`. Sea creatures spawn mobs at the float location instead of a fish drop.
 
 ## Cooking (`rpg-cooking`)
 
-### Content
+> See **[Cooking](cooking.md)** for the full page.
 
-- Cooking station custom block (`StationType: cooking`)
-- Recipes under `plugins/rpg-cooking/recipes/`
-- Output items are `CONSUMABLE` items that apply stat buffs / status effects
-
-### XP source
-
-Cooking-recipe completion.
-
-### Stats
-
-Mostly enables food / consumables; no new combat stats. `COOKING_WISDOM` for XP scaling.
+XP on cooking-station recipe completion, scaled by `COOKING_WISDOM`. Cooking station is a custom block (`StationType: cooking`). Outputs are `CONSUMABLE` items with stat buffs and status effects.
 
 ## Alchemy (`rpg-alchemy`)
 
-### Content
+> See **[Alchemy](alchemy.md)** for the full page.
 
-- Brewing station custom block (`StationType: brewing`)
-- Brewing recipes under `plugins/rpg-alchemy/recipes/`
-- Output items are potion-style `CONSUMABLE`s that apply status effects
-- Custom status effects shipped here (e.g., `regen`, `strength`, `slowness`)
-
-### XP source
-
-Brewing-recipe completion.
-
-### Stats
-
-`ALCHEMY_WISDOM`, plus content uses `INTELLIGENCE` for effect duration scaling.
+XP on brewing-station recipe completion, scaled by `ALCHEMY_WISDOM`. Brewing station is a custom block (`StationType: brewing`). Outputs are potion-style `CONSUMABLE` items that apply status effects.
 
 ## Related
 

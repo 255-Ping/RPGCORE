@@ -1,6 +1,6 @@
 # Addons
 
-> **Status:** Planned (some skeletons exist)
+> **Status:** In progress — all addons below are shipped and functional. See individual pages for per-feature status.
 
 Each addon is its own plugin jar. All addons hard-depend on `rpg-core`. To enable an addon, drop its jar in `plugins/`. To disable, remove it.
 
@@ -17,15 +17,18 @@ Each addon is its own plugin jar. All addons hard-depend on `rpg-core`. To enabl
 | `rpg-dungeons` | Shipped | [dungeons](dungeons.md) | Instanced dungeons authored in-game |
 | `rpg-accessories` | Shipped | [accessories](accessories.md) | Accessory bag + `ACCESSORY` item type |
 | `rpg-enchanting` | Shipped | [enchanting](enchanting.md) | Enchanting skill + reforges + upgrades + anvil |
-| `rpg-alchemy` | Shipped | (see [skills](skills.md)) | Alchemy skill + brewing station + custom potions |
-| `rpg-cooking` | Shipped | (see [skills](skills.md)) | Cooking skill + cooking station + custom consumables |
+| `rpg-alchemy` | Shipped | [alchemy](alchemy.md) | Alchemy skill + brewing station + custom potions |
+| `rpg-cooking` | Shipped | [cooking](cooking.md) | Cooking skill + cooking station + custom consumables |
+| `rpg-fishing` | Shipped | [fishing](fishing.md) | Fishing skill + sea creatures + custom catches |
 | `rpg-npcs` | Shipped | [npcs](npcs.md) | Shop / dialogue / quest NPCs (replaces villagers) |
 | `rpg-holograms` | Shipped | [holograms](holograms.md) | DisplayEntity holograms + damage indicators |
 | `rpg-quests` | Shipped | [quests](quests.md) | Quest system with objective DSL, NPC hand-off |
 
 ## Skill addons
 
-All on one page: [skills](skills.md). Each skill is its own addon (`rpg-combat`, `rpg-mining`, `rpg-foraging`, `rpg-farming`, `rpg-fishing`, `rpg-cooking`, `rpg-alchemy`). `rpg-enchanting` is also a skill addon but documented separately because it bundles reforges + upgrades + anvil.
+Combat, mining, foraging, and farming overviews: [skills.md](skills.md).
+Fishing, cooking, and alchemy have their own pages (linked in the table above).
+Enchanting is separately documented at [enchanting.md](enchanting.md) because it bundles reforges + upgrades + anvil.
 
 ## Deferred
 

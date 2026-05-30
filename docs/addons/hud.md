@@ -1,6 +1,6 @@
 # HUD (`rpg-hud`)
 
-> **Status:** In progress — Scoreboard (sidebar), tablist (header/footer), and action bar are all live with configurable templates. Placeholder resolution: `{name}`, `{prefix}`, `{suffix}`, `{health}`, `{max_health}`, `{mana}`, `{max_mana}`, `{coins}`, `{online}`, `{world}`, any stat by id (e.g. `{defense}`), and `{skill:<id>:level|total_xp|to_next}`. `/hud toggle <scoreboard|tablist|actionbar>` toggles per-element. Player nametags above the head aren't customized yet — that requires team scoreboards and is deferred to a polish slice.
+> **Status:** In progress — Scoreboard (sidebar), tablist (header/footer), action bar, and player nametags all live. Nametags use `TextDisplay` entities (not team scoreboards) — mounted as passengers above the player, position set via `Transformation` so the offset is accurate regardless of player height. `y-offset` is configurable. Placeholder resolution: `{name}`, `{prefix}`, `{suffix}`, `{health}`, `{max_health}`, `{mana}`, `{max_mana}`, `{coins}`, `{online}`, `{world}`, any stat by id, and `{skill:<id>:level|total_xp|to_next}`. Status-effect icons on nametags deferred to a polish slice.
 
 Configurable scoreboard, tablist, action bar, and player nametags. All formats are templates with placeholders resolved by core's `MessageFormatter`.
 
@@ -32,8 +32,9 @@ tablist:
 nametags:
   enabled: true
   format: "{prefix}{name}{suffix}"
-  show-health-bar: true          # tiny health bar under the name
-  show-status-icons: true        # active status effects show as icons
+  y-offset: 0.5                  # TextDisplay vertical translation above mount point
+  show-health-bar: true          # tiny health bar under the name (deferred)
+  show-status-icons: true        # active status effects show as icons (deferred)
 
 action-bar:
   idle-format: "&c❤ {health}/{max_health}  &b✦ {mana}/{max_mana}  &a✤ {defense}"

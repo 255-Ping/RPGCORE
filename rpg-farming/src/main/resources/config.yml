@@ -1,4 +1,7 @@
 # rpg-farming — XP from harvesting mature crops. Scaled by FARMING_WISDOM.
+# Drop multiplier from FARMING_FORTUNE: every 100 pts = +1 guaranteed extra multiply;
+# fractional part is probabilistic (50 fortune → 50 % chance of ×2 vs ×1).
+# Fortune only triggers for blocks listed in xp-per-block at maximum crop age.
 
 default-xp: 3
 

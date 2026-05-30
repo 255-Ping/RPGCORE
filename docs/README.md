@@ -2,7 +2,7 @@
 
 A suite of Paper Minecraft plugins (Paper API `26.1.2`, Java 25) that together build an entirely custom RPG framework. The goal is **total vanilla replacement** in heavily moderated, admin-built areas — every gameplay mechanic (damage, mana, skills, mob spawning, crafting, enchanting, brewing, regen, etc.) is custom-coded and configurable.
 
-> **Project status:** Pre-implementation planning. The design is locked; implementation work is starting from `rpg-api` outward. Each page below has a `Status:` header indicating where its system stands.
+> **Project status:** Actively in development — core systems, all skill addons, guilds, parties, dungeons, enchanting, accessories, NPCs, holograms, quests, economy, chat, HUD, and regions are all shipped. Each page has a `Status:` header showing where each individual subsystem stands.
 
 ---
 
@@ -15,6 +15,8 @@ A suite of Paper Minecraft plugins (Paper API `26.1.2`, Java 25) that together b
 - [Master stat reference](stats.md) — every stat with effect
 - [Resource pack & CustomModelData ranges](resource-pack.md)
 - [Development](development.md) — build, test, contribute
+- [Admin guide](admin-guide.md) — workflows, authoring walkthrough, troubleshooting
+- [Changelog](changelog.md) — version history
 
 ---
 
@@ -63,9 +65,9 @@ Each addon is its own plugin jar. They all hard-depend on `rpg-core`. Toggle add
 | `rpg-mining` | Mining | [Skills overview](addons/skills.md#mining) |
 | `rpg-foraging` | Foraging | [Skills overview](addons/skills.md#foraging) |
 | `rpg-farming` | Farming | [Skills overview](addons/skills.md#farming) |
-| `rpg-fishing` | Fishing | [Skills overview](addons/skills.md#fishing) |
-| `rpg-cooking` | Cooking | [Skills overview](addons/skills.md#cooking) |
-| `rpg-alchemy` | Alchemy | [Skills overview](addons/skills.md#alchemy) |
+| `rpg-fishing` | Fishing | [Fishing](addons/fishing.md) |
+| `rpg-cooking` | Cooking | [Cooking](addons/cooking.md) |
+| `rpg-alchemy` | Alchemy | [Alchemy](addons/alchemy.md) |
 | `rpg-enchanting` | Enchanting (+ reforge + upgrades) | [Enchanting](addons/enchanting.md) |
 
 ### Feature addons

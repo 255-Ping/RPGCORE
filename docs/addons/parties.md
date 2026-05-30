@@ -1,6 +1,6 @@
 # Parties (`rpg-parties`)
 
-> **Status:** In progress — Session-only parties working. `/party create|invite|accept|kick|promote|demote|leave|disband|list` all wired. Owner/moderator/member ranks enforced. Invites time out (default 60s). On player quit, the leaver is removed; on owner quit, ownership transfers to the highest-rank remaining member (unless `disband-on-owner-leave: true`). New `PartyService` API exposed via `RpgServices.parties()` so chat/dungeons can query party membership. XP sharing config knobs are deferred to a polish slice.
+> **Status:** In progress — Session-only parties working. `/party create|invite|accept|kick|promote|demote|leave|disband|list` all wired. Owner/moderator/member ranks enforced. Invites time out (default 60s). On player quit, the leaver is removed; on owner quit, ownership transfers to the highest-rank remaining member (unless `disband-on-owner-leave: true`). `PartyService` API exposed via `RpgServices.parties()`. XP sharing live — `SkillXpAwardEvent` distributes bonus XP to in-range party members per the configurable `split-formula`.
 
 Session-only player groups. No persistence — parties dissolve on owner disconnect (configurable). For persistent groups, see [guilds](guilds.md).
 
@@ -10,14 +10,15 @@ Session-only player groups. No persistence — parties dissolve on owner disconn
 
 ```yaml
 max-size: 5
-xp-sharing:
-  enabled: true
-  scope: all-skills              # all-skills | combat-only | list: [combat, mining]
-  range-blocks: 64               # 0 = unlimited
-  split-formula: "amount / party_size"   # configurable expression
 disband-on-owner-leave: false
-allow-friendly-fire: false
 invite-timeout-seconds: 60
+
+xp-sharing:
+  enabled: false                 # opt-in
+  scope: all-skills              # all-skills | combat-only | list
+  skills: []                     # used when scope: list
+  range-blocks: 64               # 0 = unlimited (same world only)
+  split-formula: "amount / party_size"
 ```
 
 ## Ranks
@@ -43,13 +44,26 @@ invite-timeout-seconds: 60
 
 ## XP sharing
 
-When `xp-sharing.enabled`, the XP a member earns is shared across the party. The `split-formula` is an expression with variables:
+When `xp-sharing.enabled`, each XP award fires a bonus to every in-range party member via `SkillXpAwardEvent`. The earner keeps their full XP; other members receive the `split-formula` result as a bonus. A `ThreadLocal` guard prevents recursive re-entry.
+
+**Formula variables:**
 
 - `amount` — original XP amount
-- `party_size` — total members
-- `nearby_count` — members within `range-blocks`
+- `party_size` — total in-range members including the earner
 
-Default `amount / party_size` (equal split). `amount / 1` would mean each member gets full XP independently (no penalty).
+**Examples:**
+
+| Formula | Meaning |
+|---|---|
+| `amount / party_size` | Each other member gets `1/n` of the XP (default — scales down with party size) |
+| `amount * 0.5` | Each other member always gets 50% bonus, regardless of party size |
+| `amount` | Full XP to everyone (no penalty) |
+
+**Scope options** (`xp-sharing.scope`):
+
+- `all-skills` — every skill shares (default)
+- `combat-only` — only the `combat` skill shares
+- `list` — only the skill IDs listed under `skills:` share
 
 ## Dungeons integration
 
