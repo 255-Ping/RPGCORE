@@ -6,6 +6,15 @@ Version format: `<plugin>-<pluginVersion>-<suiteVersion>`. Only notable changes 
 
 ## Suite 18 (current)
 
+### rpg-api `0.0.8`
+- Added `MobStatService` interface — per-entity stat holders for custom mobs, accessible via `RpgServices.mobStats()`.
+- Added `GuiConfig` interface — GUI pane materials and fill helpers, accessible via `RpgServices.guiConfig()`.
+
+### rpg-core `0.3.0`
+- **Mob stat-holder**: custom mobs now register a `MutableStatHolder` on spawn (keyed by UUID in `CoreMobStatService`). The damage pipeline reads `DAMAGE`, `DEFENSE`, `STRENGTH`, and any other `Stats:` map entries from the mob definition. Mob-vs-player and player-vs-mob fights now correctly apply the mob's defense and base damage instead of returning 0 across the board.
+- Mob stat holders are cleaned up on `EntityDeathEvent` and `EntitiesUnloadEvent` to prevent memory leaks.
+- **`GuiConfig` service**: pane materials and fill helpers for all inventory GUIs. Configurable via `gui:` block in `rpg-core/config.yml`. All GUIs should use `RpgServices.guiConfig()` instead of hardcoding materials.
+
 ### rpg-farming `0.1.0`
 - Added `FARMING_FORTUNE` drop multiplier via `BlockDropItemEvent`. Same formula as mining/foraging — only applies on mature crops (Ageable max-age gate).
 

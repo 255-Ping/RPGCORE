@@ -7,6 +7,7 @@ import com.github._255_ping.rpg.api.damage.PreDamageEvent;
 import com.github._255_ping.rpg.api.mobs.RpgMob;
 import com.github._255_ping.rpg.api.player.RpgPlayer;
 import com.github._255_ping.rpg.api.stats.BuiltinStat;
+import com.github._255_ping.rpg.api.stats.StatHolder;
 import com.github._255_ping.rpg.core.RpgCorePlugin;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
 import net.kyori.adventure.text.Component;
@@ -24,6 +25,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.world.EntitiesUnloadEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -72,7 +74,16 @@ public final class DamagePipelineListener implements Listener {
             }
         }
 
-        DamageContext ctx = new DamageContext(attacker, victim, event.getFinalDamage(), source);
+        // For custom mob attackers, use their registered DAMAGE stat as the base.
+        // Fall back to event damage for vanilla mobs (no registered holder).
+        double baseDamage = event.getFinalDamage();
+        if (attacker != null && !(attacker instanceof Player)) {
+            StatHolder mobHolder = RpgServices.mobStats().forMob(attacker);
+            double mobDmg = mobHolder.get(BuiltinStat.DAMAGE);
+            if (mobDmg > 0) baseDamage = mobDmg;
+        }
+
+        DamageContext ctx = new DamageContext(attacker, victim, baseDamage, source);
 
         PreDamageEvent pre = new PreDamageEvent(ctx);
         Bukkit.getPluginManager().callEvent(pre);
@@ -214,6 +225,17 @@ public final class DamagePipelineListener implements Listener {
     @EventHandler
     public void onDeath(EntityDeathEvent event) {
         health.removeEntity(event.getEntity());
+        RpgServices.mobStats().unregister(event.getEntity().getUniqueId());
+    }
+
+    /** Clean up mob stat holders when entities are removed with a chunk unload. */
+    @EventHandler
+    public void onEntitiesUnload(EntitiesUnloadEvent event) {
+        for (org.bukkit.entity.Entity e : event.getEntities()) {
+            if (!(e instanceof Player)) {
+                RpgServices.mobStats().unregister(e.getUniqueId());
+            }
+        }
     }
 
     private static String sourceFor(EntityDamageEvent.DamageCause cause) {

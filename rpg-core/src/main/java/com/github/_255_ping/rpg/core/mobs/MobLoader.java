@@ -88,6 +88,7 @@ public final class MobLoader {
         double defense = s.getDouble("Armor", 0);
 
         Map<Stat, Double> stats = new HashMap<>();
+        stats.put(BuiltinStat.DAMAGE, damage);
         stats.put(BuiltinStat.DEFENSE, defense);
         ConfigurationSection bonus = s.getConfigurationSection("Stats");
         if (bonus != null) {

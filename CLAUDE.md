@@ -209,8 +209,8 @@ When `suiteVersion` bumps:
 
 | Module | Property | Current |
 |---|---|---|
-| rpg-api | `apiVersion` | 0.0.7 |
-| rpg-core | `coreVersion` | 0.2.0 |
+| rpg-api | `apiVersion` | 0.0.8 |
+| rpg-core | `coreVersion` | 0.3.0 |
 | rpg-mining | `miningVersion` | 0.0.2 |
 | rpg-combat | `combatVersion` | 0.1.0 |
 | rpg-economy | `economyVersion` | 0.1.0 |
@@ -334,6 +334,7 @@ RpgServices.lootTables()    // LootTableRegistry
 RpgServices.currencies()    // CurrencyRegistry
 RpgServices.blocks()        // BlockRegistry
 RpgServices.guiConfig()     // GuiConfig (rpg-core) — pane materials, fill helpers
+RpgServices.mobStats()      // MobStatService (rpg-core) — per-entity stat holders for custom mobs
 // addons set their own services on enable:
 RpgServices.economy()       // Economy (rpg-economy)
 RpgServices.accessories()   // AccessoryService (rpg-accessories)

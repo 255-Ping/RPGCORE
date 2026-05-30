@@ -128,6 +128,9 @@ public final class CoreRpgMob implements RpgMob {
 
         le.getPersistentDataContainer().set(mobIdKey, PersistentDataType.STRING, id);
 
+        // Register stat holder so the damage pipeline can read this mob's stats.
+        com.github._255_ping.rpg.api.RpgServices.mobStats().register(le, stats);
+
         applyAiProfile(le);
 
         // Fire OnSpawn ability bindings now that the entity is in-world and tagged.

@@ -24,6 +24,7 @@ import com.github._255_ping.rpg.core.mobs.MobAbilityRuntime;
 import com.github._255_ping.rpg.core.formatting.CoreMessageFormatter;
 import com.github._255_ping.rpg.core.formatting.CoreNameFormatter;
 import com.github._255_ping.rpg.core.gui.CoreGuiConfig;
+import com.github._255_ping.rpg.core.mobs.CoreMobStatService;
 import com.github._255_ping.rpg.core.formula.CoreExpressionEvaluator;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
 import com.github._255_ping.rpg.core.health.RegenTask;
@@ -152,6 +153,8 @@ public final class RpgCorePlugin extends JavaPlugin {
         dataStore = openDataStore(dataDir);
         CoreGuiConfig guiCfg = new CoreGuiConfig(getConfig());
         RpgServices.setGuiConfig(guiCfg);
+        CoreMobStatService mobStatService = new CoreMobStatService();
+        RpgServices.setMobStats(mobStatService);
         messageFormatter = new CoreMessageFormatter(messagesFile);
         nameFormatter = new CoreNameFormatter();
         scheduler = new CoreSchedulerService();

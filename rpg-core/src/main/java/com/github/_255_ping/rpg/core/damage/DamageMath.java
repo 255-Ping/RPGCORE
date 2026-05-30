@@ -59,7 +59,6 @@ public final class DamageMath {
         if (entity instanceof Player p) {
             return RpgServices.player(p).get(stat);
         }
-        // Mob stat aggregation not yet wired — non-player attackers/victims get 0 across the board.
-        return 0;
+        return RpgServices.mobStats().forMob(entity).get(stat);
     }
 }

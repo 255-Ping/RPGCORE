@@ -3,6 +3,7 @@ package com.github._255_ping.rpg.api;
 import com.github._255_ping.rpg.api.abilities.AbilityRegistry;
 import com.github._255_ping.rpg.api.accessories.AccessoryService;
 import com.github._255_ping.rpg.api.gui.GuiConfig;
+import com.github._255_ping.rpg.api.mobs.MobStatService;
 import com.github._255_ping.rpg.api.blocks.BlockRegistry;
 import com.github._255_ping.rpg.api.cooldown.CooldownService;
 import com.github._255_ping.rpg.api.currency.CurrencyRegistry;
@@ -67,6 +68,7 @@ public final class RpgServices {
     private static GuildService guilds;
     private static WandService wands;
     private static GuiConfig guiConfig;
+    private static MobStatService mobStats;
 
     private RpgServices() {}
 
@@ -100,6 +102,7 @@ public final class RpgServices {
     public static GuildService guilds() { return require(guilds, "GuildService"); }
     public static WandService wands() { return require(wands, "WandService"); }
     public static GuiConfig guiConfig() { return require(guiConfig, "GuiConfig"); }
+    public static MobStatService mobStats() { return require(mobStats, "MobStatService"); }
 
     // ----- Setters (rpg-core only) -----
 
@@ -130,6 +133,7 @@ public final class RpgServices {
     public static void setGuilds(GuildService svc) { guilds = svc; }
     public static void setWands(WandService svc) { wands = svc; }
     public static void setGuiConfig(GuiConfig svc) { guiConfig = svc; }
+    public static void setMobStats(MobStatService svc) { mobStats = svc; }
 
     private static <T> T require(T svc, String name) {
         if (svc == null) throw new IllegalStateException(name + " not bootstrapped — is rpg-core loaded?");
