@@ -5,8 +5,16 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.configuration.ConfigurationSection;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -51,6 +59,29 @@ public final class MysqlDataStore implements DataStore, AutoCloseable {
     public Repository repository(String name) {
         return repos.computeIfAbsent(name,
                 n -> new MysqlRepository(pool, tablePrefix + sanitize(n), logger));
+    }
+
+    /**
+     * Returns the logical repository names present in MySQL — i.e. every table that carries
+     * our prefix, minus the internal {@code schema_version} table.
+     * Used by {@link BackendMigrator} when copying MySQL data back to YAML.
+     */
+    public List<String> repositoryNames() {
+        List<String> names = new ArrayList<>();
+        try (Connection c = pool.getConnection();
+             PreparedStatement ps = c.prepareStatement("SHOW TABLES LIKE ?")) {
+            ps.setString(1, tablePrefix + "%");
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String table = rs.getString(1);
+                    if (table.equals(tablePrefix + "schema_version")) continue;
+                    names.add(table.substring(tablePrefix.length()));
+                }
+            }
+        } catch (SQLException ex) {
+            logger.log(Level.WARNING, "Failed to enumerate repository tables", ex);
+        }
+        return Collections.unmodifiableList(names);
     }
 
     @Override

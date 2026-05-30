@@ -160,7 +160,7 @@ When `suiteVersion` bumps:
 | Module | Property | Current |
 |---|---|---|
 | rpg-api | `apiVersion` | 0.0.7 |
-| rpg-core | `coreVersion` | 0.1.1 |
+| rpg-core | `coreVersion` | 0.2.0 |
 | rpg-mining | `miningVersion` | 0.0.2 |
 | rpg-combat | `combatVersion` | 0.0.1 |
 | rpg-economy | `economyVersion` | 0.1.0 |
@@ -205,27 +205,58 @@ Format: `V1__create_players.sql`, `V2__add_guild_column.sql`, etc.
 When you add a new table or alter a column for a MySQL-backed feature, add a new
 `V<n+1>__<description>.sql` file to the relevant module's resources.
 
-#### YAML — no migration runner (not yet implemented)
+#### YAML — `YamlMigrationRunner` (implemented)
 
-The docs claim YAML migrations "mutate the YAML in-place" — **this is not true yet**.
-`PlayerLifecycleListener` writes `schema-version: 1` to player files but never reads that
-field back or runs any upgrade logic. There is no YAML equivalent of `MigrationRunner`.
+`YamlMigrationRunner` (`rpg-core/persistence/`) applies versioned, code-defined
+transformations to every record in a `DataStore.Repository`. Analogous to `MigrationRunner`
+for SQL. Schema version is tracked per-repository in
+`plugins/rpg-core/yaml-migrations/<repoName>.yml`.
+
+Usage (from any plugin's `onEnable`, after `RpgServices.dataStore()` is available):
+
+```java
+File metaDir = new File(getDataFolder(), "yaml-migrations");
+new YamlMigrationRunner(RpgServices.dataStore().repository("players"), metaDir, "players", getLogger())
+    .run(List.of(
+        new YamlMigrationRunner.Migration(2, "rename_hp_field", data -> {
+            if (data.containsKey("old-hp")) {
+                data.put("hp", data.remove("old-hp"));
+            }
+            return data;
+        })
+    ));
+```
+
+Migrations run synchronously on startup before any player joins. Only migrations whose
+version exceeds the last stored version run; re-running after a crash is safe (idempotent).
 
 **What this means in practice:**
 
-- All YAML field reads must be additive with fallbacks. If a field is absent (old save),
-  fall through to a sane default. Example from `PlayerLifecycleListener`:
+- All YAML field reads must still be additive with fallbacks for any field that might be
+  absent in old saves:
 
   ```java
   hp = numberOr(data.get("hp"), maxHp);  // fallback to maxHp if field missing
   ```
 
-- Additive changes (new field with a default) are safe — old files load fine.
-- Breaking changes (rename, type change, restructure) require either:
-  1. Implementing a YAML migration runner first (check the `MigrationRunner` class in
-     `rpg-core` — the same interface could be adapted for YAML), or
-  2. Doing a server data wipe for the affected repository.
-- Don't remove a field from the save/load code without handling old files that still have it.
+- **Additive changes** (new field with a default) — no migration needed; old files load fine.
+- **Breaking changes** (rename, type change, restructure) — register a new `YamlMigrationRunner.Migration`
+  with the next version number in the appropriate plugin's `onEnable`.
+- Don't remove a field from save/load code without handling old files that still have it.
+
+#### Backend migration — `BackendMigrator` (implemented)
+
+`BackendMigrator` (`rpg-core/persistence/`) detects when `persistence.backend` changes
+between restarts and automatically copies all data to the new backend on startup.
+
+- **YAML → MySQL**: all subdirectories in `data/` are treated as repository names; every
+  `.yml` file in each directory is read and upserted into MySQL.
+- **MySQL → YAML**: a temporary MySQL connection is opened, `SHOW TABLES LIKE '<prefix>%'`
+  enumerates repositories, all rows are copied to YAML files.
+
+The last active backend is recorded in `plugins/rpg-core/backend.yml`. Migration only
+runs when that value differs from the current config. If migration fails mid-way, the file
+is not updated so the full migration retries on next restart (idempotent by design).
 
 ---
 

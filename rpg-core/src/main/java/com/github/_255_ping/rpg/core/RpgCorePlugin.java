@@ -39,6 +39,7 @@ import com.github._255_ping.rpg.core.mobs.MobAbilityEventListener;
 import com.github._255_ping.rpg.core.mobs.MobAbilityTimerTask;
 import com.github._255_ping.rpg.core.mobs.MobLoader;
 import com.github._255_ping.rpg.core.mobs.MobLootListener;
+import com.github._255_ping.rpg.core.persistence.BackendMigrator;
 import com.github._255_ping.rpg.core.persistence.MysqlDataStore;
 import com.github._255_ping.rpg.core.persistence.YamlDataStore;
 import com.github._255_ping.rpg.api.persistence.DataStore;
@@ -350,16 +351,27 @@ public final class RpgCorePlugin extends JavaPlugin {
 
     private DataStore openDataStore(File dataDir) {
         String backend = getConfig().getString("persistence.backend", "yaml").toLowerCase();
+        var mysqlCfg = getConfig().getConfigurationSection("persistence.mysql");
+        BackendMigrator migrator = new BackendMigrator(getDataFolder(), dataDir, getLogger());
+
         if ("mysql".equals(backend)) {
             try {
-                var cfg = getConfig().getConfigurationSection("persistence.mysql");
-                if (cfg == null) throw new IllegalStateException("persistence.mysql missing");
-                return new MysqlDataStore(cfg, getLogger());
+                if (mysqlCfg == null) throw new IllegalStateException("persistence.mysql missing");
+                MysqlDataStore mysql = new MysqlDataStore(mysqlCfg, getLogger());
+                // Migrate YAML → MySQL if the backend was previously YAML.
+                migrator.maybeRun("mysql", mysql, mysqlCfg);
+                return mysql;
             } catch (Throwable t) {
                 getLogger().warning("MySQL datastore failed to initialize ("
-                        + t.getMessage() + "); falling back to YAML.");
+                        + t.getMessage() + "); falling back to YAML (backend migration skipped).");
             }
         }
-        return new YamlDataStore(dataDir);
+
+        // YAML backend — but first migrate MySQL → YAML if the backend was previously MySQL.
+        YamlDataStore yaml = new YamlDataStore(dataDir);
+        if ("yaml".equals(backend)) {
+            migrator.maybeRun("yaml", yaml, mysqlCfg);
+        }
+        return yaml;
     }
 }

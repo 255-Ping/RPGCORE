@@ -3,7 +3,6 @@ package com.github._255_ping.rpg.hud;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Criteria;
@@ -27,7 +26,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class HudTask implements Runnable {
 
-    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
+    private static final LegacyComponentSerializer LEGACY         = LegacyComponentSerializer.legacyAmpersand();
+    /** Re-serialises to § codes — required for Bukkit scoreboard entry strings. */
+    private static final LegacyComponentSerializer LEGACY_SECTION = LegacyComponentSerializer.legacySection();
 
     private final JavaPlugin plugin;
     private final Map<UUID, Scoreboard> boards = new ConcurrentHashMap<>();
@@ -130,8 +131,8 @@ public final class HudTask implements Runnable {
         Set<String> used = new HashSet<>();
         for (String raw : lines) {
             String resolved = PlaceholderResolver.resolve(player, raw);
-            // Scoreboard entry keys use § codes, not & codes — translate before passing to API.
-            String colorized = ChatColor.translateAlternateColorCodes('&', resolved);
+            // Scoreboard entry keys need § codes. Parse & codes via Adventure, re-serialize to §.
+            String colorized = LEGACY_SECTION.serialize(LEGACY.deserialize(resolved));
             String entry = uniquify(colorized, used);
             Score s = obj.getScore(entry);
             s.setScore(score--);
