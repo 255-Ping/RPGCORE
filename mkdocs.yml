@@ -1,0 +1,84 @@
+site_name: RPGCORE Documentation
+site_description: Documentation for the RPGCORE Paper Minecraft plugin suite
+docs_dir: docs
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: deep purple
+    accent: purple
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: README.md
+  - Getting Started:
+    - Installation: installation.md
+    - Admin Guide: admin-guide.md
+    - Configuration: configuration.md
+    - Permissions: permissions.md
+    - Commands: commands.md
+    - Formatting: formatting.md
+    - Resource Pack: resource-pack.md
+  - Core Systems:
+    - Overview: core/README.md
+    - Stats: stats.md
+    - Damage: core/damage.md
+    - Health Display: core/health-display.md
+    - Skills: core/skills.md
+    - Status Effects: core/status-effects.md
+    - Persistence: core/persistence.md
+    - Selection Wand: core/selection-wand.md
+    - Vanilla Suppression: core/vanilla-suppression.md
+  - Content Creation:
+    - Overview: content/README.md
+    - Items: content/items.md
+    - Mobs: content/mobs.md
+    - Abilities: content/abilities.md
+    - Blocks: content/blocks.md
+    - Loot Tables: content/loot-tables.md
+    - Recipes: content/recipes.md
+    - Spawning: content/spawning.md
+  - Addons:
+    - Overview: addons/README.md
+    - Accessories: addons/accessories.md
+    - Alchemy: addons/alchemy.md
+    - Chat: addons/chat.md
+    - Cooking: addons/cooking.md
+    - Dungeons: addons/dungeons.md
+    - Economy: addons/economy.md
+    - Enchanting: addons/enchanting.md
+    - Fishing: addons/fishing.md
+    - Guilds: addons/guilds.md
+    - Holograms: addons/holograms.md
+    - HUD: addons/hud.md
+    - NPCs: addons/npcs.md
+    - Parties: addons/parties.md
+    - Quests: addons/quests.md
+    - Regions: addons/regions.md
+    - Skills: addons/skills.md
+  - Changelog:
+    - Overview: changelog.md
+    - Suite 19: changelog/suite-19.md
+    - Suite 18: changelog/suite-18.md
+    - Suite 16: changelog/suite-16.md
+  - Development:
+    - Developer Guide: development.md
+    - Roadmap: planned/todo.md
+    - Backlog: planned/backlog.md
