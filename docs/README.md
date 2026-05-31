@@ -18,7 +18,7 @@ A suite of Paper Minecraft plugins (Paper API `26.1.2`, Java 25) that together b
 - [Admin guide](admin-guide.md) — workflows, authoring walkthrough, troubleshooting
 - [Changelog](changelog.md) — version history
 - [Formatting guide](formatting.md) — GUI layouts, text colors, item lore, message standards
-- [**Todo / Backlog**](planned/todo.md) — everything that still needs to be built, with priority order
+- [**Todo / Backlog**](planned/todo.md) — everything that still needs to be built, with priority order ([bugs](planned/todo-bugs.md) · [new features](planned/todo-features.md) · [improvements](planned/todo-improvements.md) · [GUI redesigns](planned/todo-gui.md) · [docs](planned/todo-docs.md))
 
 ---
 
