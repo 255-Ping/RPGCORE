@@ -355,7 +355,7 @@ public final class StationGui implements Listener {
         }
         if (!def.description().isEmpty()) lore.add(Component.empty());
         if (def.currencyCost() > 0) {
-            lore.add(ni(LEGACY.deserialize("&7Cost: &e$" + (long) def.currencyCost())));
+            lore.add(ni(LEGACY.deserialize("&7Cost: &e" + fmtCurrency(def.currencyCost()))));
         }
         if (def.requiredSkillLevel() > 1) {
             lore.add(ni(LEGACY.deserialize("&7Requires Enchanting Lv &e" + def.requiredSkillLevel())));
@@ -546,6 +546,18 @@ public final class StationGui implements Listener {
 
     private static Component ni(Component c) {
         return c.decoration(TextDecoration.ITALIC, false);
+    }
+
+    /** Formats an amount using the economy plugin's configured currency prefix/suffix.
+     *  Falls back to a raw integer string if the currency registry is not loaded. */
+    private static String fmtCurrency(double amount) {
+        try {
+            return RpgServices.currencies().primary()
+                    .map(c -> c.format(java.math.BigDecimal.valueOf(amount)))
+                    .orElse(String.valueOf((long) amount));
+        } catch (IllegalStateException ex) {
+            return String.valueOf((long) amount);
+        }
     }
 
     private static String fmtVal(double v, boolean percent) {

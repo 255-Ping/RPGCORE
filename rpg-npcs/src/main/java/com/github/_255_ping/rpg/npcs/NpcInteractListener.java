@@ -86,8 +86,8 @@ public final class NpcInteractListener implements Listener {
             if (meta != null) {
                 List<Component> lore = meta.lore() != null ? new ArrayList<>(meta.lore()) : new ArrayList<>();
                 lore.add(Component.empty());
-                if (entry.buy() > 0)  lore.add(Component.text("Buy: "  + (long) entry.buy()).color(NamedTextColor.GREEN));
-                if (entry.sell() > 0) lore.add(Component.text("Sell (shift+click): " + (long) entry.sell()).color(NamedTextColor.YELLOW));
+                if (entry.buy() > 0)  lore.add(Component.text("Buy: "  + fmtCurrency(entry.buy())).color(NamedTextColor.GREEN));
+                if (entry.sell() > 0) lore.add(Component.text("Sell (shift+click): " + fmtCurrency(entry.sell())).color(NamedTextColor.YELLOW));
                 meta.lore(lore);
                 stack.setItemMeta(meta);
             }
@@ -121,7 +121,7 @@ public final class NpcInteractListener implements Listener {
                 }
                 p.getInventory().removeItem(new ItemStack(mat, 1));
                 economy.deposit(p, BigDecimal.valueOf(entry.sell()));
-                p.sendMessage(Component.text("Sold for " + (long) entry.sell()).color(NamedTextColor.YELLOW));
+                p.sendMessage(Component.text("Sold for " + fmtCurrency(entry.sell()) + ".").color(NamedTextColor.YELLOW));
             } else {
                 if (economy.balance(p).compareTo(BigDecimal.valueOf(entry.buy())) < 0) {
                     p.sendMessage(Component.text("Not enough currency.").color(NamedTextColor.RED));
@@ -148,6 +148,16 @@ public final class NpcInteractListener implements Listener {
     @EventHandler
     public void onShopClose(org.bukkit.event.inventory.InventoryCloseEvent e) {
         if (e.getPlayer() instanceof Player p) openShop.remove(p.getUniqueId());
+    }
+
+    private static String fmtCurrency(double amount) {
+        try {
+            return RpgServices.currencies().primary()
+                    .map(c -> c.format(java.math.BigDecimal.valueOf(amount)))
+                    .orElse(String.valueOf((long) amount));
+        } catch (IllegalStateException ex) {
+            return String.valueOf((long) amount);
+        }
     }
 
     private void handoffQuest(Player p, NpcDef def) {

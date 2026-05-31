@@ -99,9 +99,11 @@ public final class PlaceholderResolver {
     private static String coinsBalance(Player player) {
         try {
             BigDecimal bal = RpgServices.economy().balance(player);
-            return bal.stripTrailingZeros().toPlainString();
+            return RpgServices.currencies().primary()
+                    .map(c -> c.format(bal))
+                    .orElse(bal.stripTrailingZeros().toPlainString());
         } catch (IllegalStateException ex) {
-            // rpg-economy not loaded — placeholder is empty
+            // rpg-economy or currency registry not loaded
             return "0";
         }
     }

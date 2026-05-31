@@ -74,17 +74,17 @@ public final class BankerGui implements Listener {
         setInfo(inv, 4, "&6Bank Balance: &e" + fmt(savings), "&7Wallet: &f" + fmt(wallet));
 
         // Row 1: deposit
-        setAmount(inv, 9,  Material.LIME_STAINED_GLASS_PANE, "&aDeposit &f100",       "deposit", 100);
-        setAmount(inv, 10, Material.LIME_STAINED_GLASS_PANE, "&aDeposit &f1,000",     "deposit", 1_000);
-        setAmount(inv, 11, Material.LIME_STAINED_GLASS_PANE, "&aDeposit &f10,000",    "deposit", 10_000);
-        setAmount(inv, 12, Material.LIME_STAINED_GLASS_PANE, "&aDeposit &f100,000",   "deposit", 100_000);
+        setAmount(inv, 9,  Material.LIME_STAINED_GLASS_PANE, "&aDeposit &f" + fmt(BigDecimal.valueOf(100)),     "deposit", 100);
+        setAmount(inv, 10, Material.LIME_STAINED_GLASS_PANE, "&aDeposit &f" + fmt(BigDecimal.valueOf(1_000)),   "deposit", 1_000);
+        setAmount(inv, 11, Material.LIME_STAINED_GLASS_PANE, "&aDeposit &f" + fmt(BigDecimal.valueOf(10_000)),  "deposit", 10_000);
+        setAmount(inv, 12, Material.LIME_STAINED_GLASS_PANE, "&aDeposit &f" + fmt(BigDecimal.valueOf(100_000)), "deposit", 100_000);
         setAction(inv, 13, Material.LIME_DYE,               "&aDeposit All",          "deposit_all");
 
         // Row 2: withdraw
-        setAmount(inv, 18, Material.RED_STAINED_GLASS_PANE, "&cWithdraw &f100",       "withdraw", 100);
-        setAmount(inv, 19, Material.RED_STAINED_GLASS_PANE, "&cWithdraw &f1,000",     "withdraw", 1_000);
-        setAmount(inv, 20, Material.RED_STAINED_GLASS_PANE, "&cWithdraw &f10,000",    "withdraw", 10_000);
-        setAmount(inv, 21, Material.RED_STAINED_GLASS_PANE, "&cWithdraw &f100,000",   "withdraw", 100_000);
+        setAmount(inv, 18, Material.RED_STAINED_GLASS_PANE, "&cWithdraw &f" + fmt(BigDecimal.valueOf(100)),     "withdraw", 100);
+        setAmount(inv, 19, Material.RED_STAINED_GLASS_PANE, "&cWithdraw &f" + fmt(BigDecimal.valueOf(1_000)),   "withdraw", 1_000);
+        setAmount(inv, 20, Material.RED_STAINED_GLASS_PANE, "&cWithdraw &f" + fmt(BigDecimal.valueOf(10_000)),  "withdraw", 10_000);
+        setAmount(inv, 21, Material.RED_STAINED_GLASS_PANE, "&cWithdraw &f" + fmt(BigDecimal.valueOf(100_000)), "withdraw", 100_000);
         setAction(inv, 22, Material.RED_DYE,                "&cWithdraw All",          "withdraw_all");
 
         // Fill all remaining empty slots with the configured background pane
@@ -165,7 +165,7 @@ public final class BankerGui implements Listener {
             }
             eco.withdraw(p, actual);
             setBalance(p.getUniqueId(), npcId, savings.add(actual));
-            p.sendMessage(Component.text("Deposited " + fmt(actual) + ". Savings: " + fmt(savings.add(actual))).color(NamedTextColor.GREEN));
+            p.sendMessage(Component.text("Deposited " + fmt(actual) + ".  Savings: " + fmt(savings.add(actual))).color(NamedTextColor.GREEN));
         } else {
             BigDecimal actual = amount.min(savings);
             if (actual.compareTo(BigDecimal.ZERO) <= 0) {
@@ -174,7 +174,7 @@ public final class BankerGui implements Listener {
             }
             eco.deposit(p, actual);
             setBalance(p.getUniqueId(), npcId, savings.subtract(actual));
-            p.sendMessage(Component.text("Withdrew " + fmt(actual) + ". Savings: " + fmt(savings.subtract(actual))).color(NamedTextColor.GREEN));
+            p.sendMessage(Component.text("Withdrew " + fmt(actual) + ".  Savings: " + fmt(savings.subtract(actual))).color(NamedTextColor.GREEN));
         }
     }
 
@@ -270,12 +270,25 @@ public final class BankerGui implements Listener {
         return pdc.get(key, org.bukkit.persistence.PersistentDataType.STRING);
     }
 
+    /**
+     * Compact-formats a balance with K/M/B abbreviation and wraps it with the
+     * economy plugin's configured currency prefix and suffix.
+     * Falls back to a bare abbreviated number if the currency registry is not loaded.
+     */
     private static String fmt(BigDecimal val) {
         long v = val.longValue();
-        if (v >= 1_000_000_000) return String.format("%.1fB", v / 1_000_000_000.0);
-        if (v >= 1_000_000) return String.format("%.1fM", v / 1_000_000.0);
-        if (v >= 1_000) return String.format("%.1fK", v / 1_000.0);
-        return String.valueOf(v);
+        String num;
+        if (v >= 1_000_000_000) num = String.format("%.1fB", v / 1_000_000_000.0);
+        else if (v >= 1_000_000) num = String.format("%.1fM", v / 1_000_000.0);
+        else if (v >= 1_000)     num = String.format("%.1fK", v / 1_000.0);
+        else                     num = String.valueOf(v);
+        try {
+            return RpgServices.currencies().primary()
+                    .map(c -> c.prefix() + num + c.suffix())
+                    .orElse(num);
+        } catch (IllegalStateException ex) {
+            return num;
+        }
     }
 
     private static String stripColor(String s) {
