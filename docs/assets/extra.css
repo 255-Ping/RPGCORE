@@ -1,0 +1,156 @@
+/* ── Fantasy fonts ────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --md-text-font: 'EB Garamond', serif;
+  --md-code-font: 'JetBrains Mono', monospace;
+}
+
+/* ── Colour palette ───────────────────────────────────────────────────── */
+[data-md-color-scheme="slate"] {
+
+  /* Backgrounds */
+  --md-default-bg-color:           #181410;
+  --md-default-bg-color--light:    #201a12;
+  --md-default-bg-color--lighter:  #2a221a;
+  --md-default-bg-color--lightest: #342a1f;
+
+  /* Body text — warm parchment */
+  --md-default-fg-color:           #ddd0b8;
+  --md-default-fg-color--light:    #c4b49a;
+  --md-default-fg-color--lighter:  #a89880;
+  --md-default-fg-color--lightest: #7a6b58;
+
+  /* Primary — nav header, dark bark brown */
+  --md-primary-fg-color:        #271a0e;
+  --md-primary-fg-color--light: #3a2718;
+  --md-primary-fg-color--dark:  #180f07;
+  --md-primary-bg-color:        #e8dcc8;
+  --md-primary-bg-color--light: #c4b49a;
+
+  /* Accent — forest green */
+  --md-accent-fg-color:              #5ea86e;
+  --md-accent-fg-color--transparent: rgba(94, 168, 110, 0.12);
+  --md-accent-bg-color:              #181410;
+
+  /* Links */
+  --md-typeset-a-color: #6ab87a;
+
+  /* Code */
+  --md-code-bg-color: #1f1812;
+  --md-code-fg-color: #b4d4a4;
+
+  /* Footer */
+  --md-footer-bg-color:       #110e0a;
+  --md-footer-bg-color--dark: #0c0a07;
+  --md-footer-fg-color:       #a89880;
+  --md-footer-fg-color--light: #7a6b58;
+}
+
+/* ── Headings — Cinzel (medieval serif) ───────────────────────────────── */
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6 {
+  font-family: 'Cinzel', serif;
+  color: #f0e6d0;
+  letter-spacing: 0.03em;
+}
+
+.md-typeset h1 { font-size: 2rem;   font-weight: 700; }
+.md-typeset h2 { font-size: 1.5rem; font-weight: 600; }
+.md-typeset h3 { font-size: 1.2rem; font-weight: 600; }
+
+/* Site title + nav titles in Cinzel */
+.md-header__title,
+.md-nav__title {
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.04em;
+}
+
+/* ── Body text size bump — EB Garamond reads better slightly larger ───── */
+.md-typeset {
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+/* ── Nav / sidebar ────────────────────────────────────────────────────── */
+.md-nav__link--active,
+.md-nav__link:hover {
+  color: #6ab87a !important;
+}
+
+.md-sidebar {
+  background-color: #201a12;
+}
+
+/* ── Tables ───────────────────────────────────────────────────────────── */
+.md-typeset table:not([class]) th {
+  background-color: #271a0e;
+  color: #f0e6d0;
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.md-typeset table:not([class]) tr:nth-child(even) {
+  background-color: #201a12;
+}
+
+.md-typeset table:not([class]) {
+  border: 1px solid #4a3a2a;
+}
+
+.md-typeset table:not([class]) td,
+.md-typeset table:not([class]) th {
+  border-color: #4a3a2a;
+}
+
+/* ── Code ─────────────────────────────────────────────────────────────── */
+.md-typeset code {
+  color: #b4d4a4;
+  background-color: #1f1812;
+  border-radius: 3px;
+}
+
+.md-typeset pre > code {
+  border-left: 3px solid #5ea86e;
+}
+
+/* ── Admonition blocks ────────────────────────────────────────────────── */
+.md-typeset .admonition,
+.md-typeset details {
+  border-color: #4a3a2a;
+  background-color: #201a12;
+}
+
+.md-typeset .admonition-title,
+.md-typeset summary {
+  background-color: #2c2016 !important;
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.04em;
+}
+
+/* ── Horizontal rules — decorative divider feel ───────────────────────── */
+.md-typeset hr {
+  border-color: #4a3a2a;
+  margin: 2rem 0;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #181410; }
+::-webkit-scrollbar-thumb { background: #4a3a2a; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #5ea86e; }
+
+/* ── Search ───────────────────────────────────────────────────────────── */
+.md-search__form {
+  background-color: #2a221a;
+}
+
+.md-search__input {
+  color: #ddd0b8;
+}
