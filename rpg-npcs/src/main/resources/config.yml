@@ -6,8 +6,9 @@
 display:
   use-text-display-for-name: true   # true = floating TextDisplay name tag above the body (recommended)
                                      # false = vanilla entity name tag (shows on hover, looks different)
-  body-entity: VILLAGER              # vanilla entity type used as the clickable body for ENTITY-style NPCs
-                                     # any valid EntityType name: VILLAGER, ZOMBIE, ARMOR_STAND, etc.
+  body-entity: ZOMBIE                # vanilla entity type used as the clickable body for ENTITY-style NPCs
+                                     # any valid EntityType name: ZOMBIE, ARMOR_STAND, etc.
+                                     # Avoid VILLAGER — Paper's villager trade GUI can interfere with right-click handling
   click-range-blocks: 4.5           # how far away (in blocks) a player can click to interact with an NPC
 
 # Whether new NPCs auto-save to YAML the moment they're created/moved.

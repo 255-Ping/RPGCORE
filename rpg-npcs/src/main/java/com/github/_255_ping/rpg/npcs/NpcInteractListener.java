@@ -37,7 +37,10 @@ public final class NpcInteractListener implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    // NORMAL priority, ignoreCancelled = false: we always want to handle NPC right-clicks even
+    // if a third-party plugin or Paper internal handler cancelled the event at LOWEST/LOW.
+    // We cancel the event ourselves to suppress default entity behavior (e.g. villager trade GUI).
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = false)
     public void onInteract(PlayerInteractEntityEvent e) {
         Optional<NpcDef> opt = manager.fromEntity(e.getRightClicked());
         if (opt.isEmpty()) return;

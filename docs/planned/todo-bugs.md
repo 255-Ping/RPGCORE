@@ -52,14 +52,14 @@ Arrows **do** deal damage (confirmed in testing), but the hit visuals are wrong 
 
 ---
 
-### NPC Click Does Nothing — All Behaviors Broken (`rpg-npcs`) — 🟡 Medium
-Right-clicking any NPC (dialogue, shop, quest, banker) does nothing. Two likely causes, both need investigating:
+### ~~NPC Click Does Nothing — All Behaviors Broken (`rpg-npcs`)~~ ✅ Fixed in `rpg-npcs 0.5.1`
 
-1. **`rpg.npcs.use` permission** — `NpcInteractListener.onInteract` cancels the vanilla interact then immediately returns if the player lacks `rpg.npcs.use`. If this permission defaults to op-only (check `plugin.yml`), regular players get silently blocked. Fix: set `rpg.npcs.use` to `default: true` in `plugin.yml`.
+Three causes fixed:
+1. **Orphan sweep**: `NpcManager.loadAll()` now sweeps all loaded worlds for `rpg_npc_id`-tagged entities before despawning and re-spawning. Persistent entities from previous sessions no longer stack up on each reload.
+2. **Entity type default**: changed from `VILLAGER` → `ZOMBIE`. Paper's villager trade GUI can fire even when `PlayerInteractEntityEvent` is cancelled.
+3. **Handler priority**: changed from `LOW / ignoreCancelled = true` → `NORMAL / ignoreCancelled = false`. NPC clicks now work even if a third-party listener pre-cancelled the event.
 
-2. **Villager entity type interference** — the default entity type is `VILLAGER`. Paper may be pre-processing villager trades before `PlayerInteractEntityEvent` reaches our `LOW`-priority handler. Since the handler uses `ignoreCancelled = true`, anything that pre-cancels or pre-handles the event will silently skip our code. Fix: change the default entity type to something that doesn't have special right-click behaviour (e.g., `ARMOR_STAND` or `ZOMBIE`) and/or change handler priority to `NORMAL`/`HIGH`.
-
-3. **Double-spawn on reload** — NPC entities are spawned with `setPersistent(true)`. On reload, `despawnAll()` runs against an empty `entityToId` map (not populated yet), so old persistent entities stay in the world. Then `spawnAll()` adds new ones on top. Two overlapping entities exist at every NPC location; clicks may resolve to the wrong one. Fix: on `loadAll`, scan the world for entities with the `rpg_npc_id` PDC key and remove them before spawning fresh ones.
+`rpg.npcs.use` was already `default: true` — no change needed.
 
 ---
 

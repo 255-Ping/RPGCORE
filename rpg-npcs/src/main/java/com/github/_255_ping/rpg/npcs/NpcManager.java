@@ -51,6 +51,12 @@ public final class NpcManager {
     }
 
     public void loadAll() {
+        // Sweep persistent entities tagged by this plugin from all loaded worlds.
+        // This handles the case where the server was restarted or the plugin was
+        // reloaded: setPersistent(true) entities survive chunk unload/reload, so
+        // despawnAll() (which only tracks UUIDs from the current session) misses them.
+        // Without this sweep, each reload stacks a new copy on top of the old one.
+        sweepOrphanedEntities();
         despawnAll();
         byId.clear();
         if (!npcsDir.isDirectory()) {
@@ -180,7 +186,7 @@ public final class NpcManager {
     }
 
     private void spawnEntityNpc(NpcDef def, Location loc) {
-        String entType = plugin.getConfig().getString("display.body-entity", "VILLAGER");
+        String entType = plugin.getConfig().getString("display.body-entity", "ZOMBIE");
         EntityType type;
         try {
             type = EntityType.valueOf(entType.toUpperCase(Locale.ROOT));
@@ -310,6 +316,21 @@ public final class NpcManager {
             return NpcDef.BehaviorType.valueOf(s.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
             return NpcDef.BehaviorType.DIALOGUE;
+        }
+    }
+
+    /**
+     * Removes all entities in every loaded world that carry the rpg_npc_id PDC key.
+     * Called at the start of loadAll() so persistent entities from a previous session
+     * don't accumulate on top of freshly-spawned ones.
+     */
+    private void sweepOrphanedEntities() {
+        for (org.bukkit.World world : Bukkit.getWorlds()) {
+            for (Entity ent : world.getEntities()) {
+                if (ent.getPersistentDataContainer().has(npcIdKey, PersistentDataType.STRING)) {
+                    ent.remove();
+                }
+            }
         }
     }
 

@@ -4,6 +4,11 @@
 
 ---
 
+### rpg-npcs `0.5.1`
+- **NPC click fix — orphan sweep**: `NpcManager.loadAll()` now calls `sweepOrphanedEntities()` before `despawnAll()`, scanning every loaded world for entities carrying the `rpg_npc_id` PDC key and removing them. Previously, NPCs with `setPersistent(true)` survived server restarts and plugin reloads; each reload stacked a new copy on top, causing visual overlap and unreliable interaction resolution.
+- **NPC click fix — entity type default**: changed default `display.body-entity` from `VILLAGER` to `ZOMBIE`. Paper's villager trade GUI can interfere with right-click handling even when `PlayerInteractEntityEvent` is cancelled.
+- **NPC click fix — handler priority**: `NpcInteractListener.onInteract` changed from `LOW / ignoreCancelled = true` to `NORMAL / ignoreCancelled = false`. NPC interactions now fire even if a third-party plugin pre-cancelled the event.
+
 ### rpg-core `1.0.3`
 - **Attack cooldown fix**: `CoreRpgItem.toItemStack()` now explicitly removes vanilla attribute modifiers (`ATTACK_DAMAGE`, `ATTACK_SPEED`, `ARMOR`, `ARMOR_TOUGHNESS`, `KNOCKBACK_RESISTANCE`) from every custom item's `ItemMeta`. Previously `HIDE_ATTRIBUTES` hid them from the tooltip but they still applied — holding an iron-based sword applied a `-2.4` ADDITION to `generic.attack_speed`, making our `setBaseValue()` resolve to a negative value and the attack bar never fill.
 - **Currency drops from mob loot tables**: `CoreLootTable` now supports a `currency-rolls:` section (`{ chance, min, max }` entries). `MobLootListener` calls `rollCurrency()` after item rolls and deposits the result via `RpgServices.economy()` directly to the player's balance. Requires `rpg-economy`; silently skipped if not loaded. Update mob YAMLs to use `currency-rolls:` for coin drops instead of spawning coin item entities.
