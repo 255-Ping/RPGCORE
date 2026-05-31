@@ -53,13 +53,14 @@ public final class EnchantRegistry {
         forEachYaml(enchantsDir, (id, s) -> {
             int maxLevel = s.getInt("MaxLevel", 1);
             String displayName = s.getString("DisplayName", id);
+            List<String> description = s.getStringList("Description");
             List<String> appliesTo = lower(s.getStringList("AppliesTo"));
             Map<String, Double> stats = readDoubleMap(s.getConfigurationSection("Stats"));
             double scale = s.getDouble("ScalePerLevel", 1.0);
             long xpCost = s.getLong("XpCost", 0);
             double currencyCost = s.getDouble("CurrencyCost", 0);
             int reqLevel = s.getInt("RequiredLevel", 1);
-            enchants.put(id, new EnchantDef(id, displayName, maxLevel,
+            enchants.put(id, new EnchantDef(id, displayName, description, maxLevel,
                     appliesTo, stats, scale, xpCost, currencyCost, reqLevel));
         });
     }

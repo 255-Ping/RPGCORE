@@ -210,6 +210,7 @@ public final class StationGui implements Listener {
 
         modifier.setEnchant(target, def.id(), curLevel + 1);
         modifier.rewriteLore(target, registry);
+        modifier.rewriteName(target, registry);
 
         long xp = plugin.getConfig().getLong("xp.per-enchant", 25);
         if (xp > 0) RpgServices.skills().awardXp(p, BuiltinSkill.ENCHANTING.id(), xp);
@@ -231,6 +232,7 @@ public final class StationGui implements Listener {
                 if (!checkAndCharge(p, def.currencyCost(), def.requiredSkillLevel())) return;
                 modifier.setReforge(target, def.id());
                 modifier.rewriteLore(target, registry);
+                modifier.rewriteName(target, registry);
                 long xp = plugin.getConfig().getLong("xp.per-reforge", 15);
                 if (xp > 0) RpgServices.skills().awardXp(p, BuiltinSkill.ENCHANTING.id(), xp);
                 p.sendMessage(plugin.messages().get("reforge.applied"));
@@ -260,6 +262,7 @@ public final class StationGui implements Listener {
                 if (!checkAndCharge(p, def.currencyCost(), def.requiredSkillLevel())) return;
                 modifier.addUpgradeTier(target, def.id(), def.maxTier());
                 modifier.rewriteLore(target, registry);
+                modifier.rewriteName(target, registry);
                 long xp = plugin.getConfig().getLong("xp.per-upgrade", 40);
                 if (xp > 0) RpgServices.skills().awardXp(p, BuiltinSkill.ENCHANTING.id(), xp);
                 p.sendMessage(plugin.messages().get("upgrade.applied"));

@@ -2,6 +2,8 @@
 #
 #   <enchant_id>:
 #     DisplayName: "&7Sharpness"
+#     Description:                     # optional lines shown in item lore below the enchant name
+#       - "Increases Strength by +5 per level."
 #     MaxLevel: 5
 #     AppliesTo: [SWORD, BOW]          # ItemType ids; or [any]
 #     Stats:                           # per-level stats added when applied
@@ -12,6 +14,8 @@
 #     RequiredLevel: 1                 # min Enchanting skill level
 sharpness:
   DisplayName: "&7Sharpness"
+  Description:
+    - "Increases Strength by +5 per level."
   MaxLevel: 5
   AppliesTo: [sword]
   Stats:
@@ -23,6 +27,8 @@ sharpness:
 
 protection:
   DisplayName: "&aProtection"
+  Description:
+    - "Increases Defense by +10 per level."
   MaxLevel: 5
   AppliesTo: [armor]
   Stats:

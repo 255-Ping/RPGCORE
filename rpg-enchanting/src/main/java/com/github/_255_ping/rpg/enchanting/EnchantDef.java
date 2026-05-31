@@ -6,6 +6,8 @@ import java.util.Map;
 public record EnchantDef(
         String id,
         String displayName,
+        /** Short description lines shown in item lore below the enchant name. May be empty. */
+        List<String> description,
         int maxLevel,
         List<String> appliesTo,
         Map<String, Double> baseStats,

@@ -1,7 +1,9 @@
 package com.github._255_ping.rpg.enchanting;
 
 import com.github._255_ping.rpg.api.RpgServices;
+import com.github._255_ping.rpg.api.abilities.AbilityInvocation;
 import com.github._255_ping.rpg.api.items.RpgItem;
+import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import com.github._255_ping.rpg.api.stats.Stat;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -12,6 +14,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +31,19 @@ import java.util.Optional;
  *   <li>{@code rpg_reforge} — String, single reforge id (or absent)</li>
  *   <li>{@code rpg_upgrades} — String, format {@code "id1:tier1,id2:tier2,..."}</li>
  * </ul>
+ *
+ * <p>Lore section order produced by {@link #rewriteLore}:
+ * <ol>
+ *   <li>Stats — base value + bonus in &amp;8dark-grey parentheses</li>
+ *   <li>Enchantments — one per line with optional description below</li>
+ *   <li>Extra lore + abilities from the base item definition</li>
+ *   <li>Not-Tradeable indicator (if applicable)</li>
+ *   <li>Upgrades — name and current tier</li>
+ *   <li>Rarity</li>
+ * </ol>
+ *
+ * <p>Always call {@link #rewriteName} alongside {@link #rewriteLore} so the reforge
+ * prefix on the item display name stays in sync.
  */
 public final class ItemModifier {
 
@@ -77,53 +94,153 @@ public final class ItemModifier {
         write(stack, upgradesKey, encodeLevelMap(map));
     }
 
+    // ── Lore rewrite ──────────────────────────────────────────────────────────
+
+    /**
+     * Rebuilds the item lore from scratch using the base item definition plus the current
+     * enchant/reforge/upgrade PDC state. Section order: stats → enchants → lore/abilities
+     * → upgrades → rarity.
+     */
     public void rewriteLore(ItemStack stack, EnchantRegistry registry) {
         ItemMeta meta = stack.getItemMeta();
         if (meta == null) return;
-        java.util.List<Component> lore = new java.util.ArrayList<>();
-        Optional<RpgItem> base = RpgServices.items().from(stack);
-        // Re-render the original item lines (stats, base lore, abilities, rarity).
-        // Easiest path: rebuild from base.toItemStack() and copy that lore as the starting point.
-        if (base.isPresent()) {
-            ItemStack fresh = base.get().toItemStack();
-            ItemMeta freshMeta = fresh.getItemMeta();
-            if (freshMeta != null && freshMeta.lore() != null) {
-                lore.addAll(freshMeta.lore());
-            }
-        }
+        Optional<RpgItem> baseOpt = RpgServices.items().from(stack);
+        if (baseOpt.isEmpty()) return;
+        RpgItem base = baseOpt.get();
 
-        Optional<String> reforgeId = reforge(stack);
+        Map<Stat, Double> bonusMap = contributedStats(stack, registry);
         Map<String, Integer> enchMap = enchants(stack);
         Map<String, Integer> upMap = upgrades(stack);
 
+        List<Component> lore = new ArrayList<>();
+
+        // ── 1. Stats — base + bonus with (+x) indicator ───────────────────────
+        List<Map.Entry<Stat, Double>> baseEntries = new ArrayList<>(base.stats().entrySet());
+        // BREAKING_POWER first (gathering tools), then alphabetical by display name
+        baseEntries.sort(Comparator.comparingInt(e -> e.getKey() == BuiltinStat.BREAKING_POWER ? 0 : 1));
+        for (Map.Entry<Stat, Double> e : baseEntries) {
+            Stat stat = e.getKey();
+            double baseVal = e.getValue();
+            double bonus = bonusMap.getOrDefault(stat, 0.0);
+            double total = baseVal + bonus;
+            String line;
+            if (bonus != 0.0) {
+                line = stat.colorCode() + stat.displayName() + ": " + fmtVal(total, stat.percent())
+                     + " &8(" + fmtVal(bonus, stat.percent()) + ")";
+            } else {
+                line = stat.colorCode() + stat.displayName() + ": " + fmtVal(baseVal, stat.percent());
+            }
+            lore.add(noItalic(LEGACY.deserialize(line)));
+        }
+        // Pure-bonus stats (not on base item — added entirely by enchant/reforge/upgrade)
+        for (Map.Entry<Stat, Double> e : bonusMap.entrySet()) {
+            if (base.stats().containsKey(e.getKey())) continue;
+            double bonus = e.getValue();
+            if (bonus == 0.0) continue;
+            Stat stat = e.getKey();
+            String line = stat.colorCode() + stat.displayName() + ": " + fmtVal(bonus, stat.percent())
+                        + " &8(" + fmtVal(bonus, stat.percent()) + ")";
+            lore.add(noItalic(LEGACY.deserialize(line)));
+        }
+
+        // ── 2. Enchantments (between stats and lore) ──────────────────────────
         if (!enchMap.isEmpty()) {
-            lore.add(Component.empty());
-            lore.add(noItalic(LEGACY.deserialize("&5Enchantments:")));
+            if (!lore.isEmpty()) lore.add(Component.empty());
             for (Map.Entry<String, Integer> e : enchMap.entrySet()) {
                 EnchantDef def = registry.enchant(e.getKey()).orElse(null);
                 String name = def != null ? def.displayName() : e.getKey();
-                lore.add(noItalic(LEGACY.deserialize("  " + name + " " + roman(e.getValue()))));
+                lore.add(noItalic(LEGACY.deserialize("&5" + name + " " + roman(e.getValue()))));
+                if (def != null) {
+                    for (String desc : def.description()) {
+                        lore.add(noItalic(LEGACY.deserialize("  &8" + desc)));
+                    }
+                }
             }
         }
-        if (reforgeId.isPresent()) {
-            ReforgeDef def = registry.reforge(reforgeId.get()).orElse(null);
-            if (def != null) {
-                lore.add(Component.empty());
-                lore.add(noItalic(LEGACY.deserialize("&dReforge: " + def.displayName())));
+
+        // ── 3. Extra lore + abilities ──────────────────────────────────────────
+        List<String> extraLore = base.extraLore();
+        List<AbilityInvocation> abilities = base.abilities();
+        if (!extraLore.isEmpty() || !abilities.isEmpty()) {
+            if (!lore.isEmpty()) lore.add(Component.empty());
+            for (String l : extraLore) {
+                lore.add(noItalic(LEGACY.deserialize(l)));
+            }
+            if (!abilities.isEmpty()) {
+                if (!extraLore.isEmpty()) lore.add(Component.empty());
+                for (AbilityInvocation inv : abilities) {
+                    String abilityId = inv.effectName();
+                    String dispName;
+                    List<String> desc;
+                    try {
+                        dispName = RpgServices.abilities().abilityDisplayName(abilityId);
+                        desc = RpgServices.abilities().abilityDescription(abilityId);
+                    } catch (IllegalStateException ex) {
+                        dispName = abilityId;
+                        desc = List.of();
+                    }
+                    lore.add(noItalic(LEGACY.deserialize("&5Ability: &d" + dispName)));
+                    for (String dl : desc) {
+                        lore.add(noItalic(LEGACY.deserialize("  &7" + dl)));
+                    }
+                }
             }
         }
+
+        // ── 4. Not-tradeable indicator ─────────────────────────────────────────
+        if (!base.tradeable()) {
+            if (!lore.isEmpty()) lore.add(Component.empty());
+            lore.add(noItalic(LEGACY.deserialize("&c✘ Not Tradeable")));
+        }
+
+        // ── 5. Upgrades — below enchants/lore, above rarity ───────────────────
         if (!upMap.isEmpty()) {
-            lore.add(Component.empty());
-            lore.add(noItalic(LEGACY.deserialize("&6Upgrades:")));
+            if (!lore.isEmpty()) lore.add(Component.empty());
             for (Map.Entry<String, Integer> e : upMap.entrySet()) {
                 UpgradeDef def = registry.upgrade(e.getKey()).orElse(null);
                 String name = def != null ? def.displayName() : e.getKey();
-                lore.add(noItalic(LEGACY.deserialize("  " + name + " &7x" + e.getValue())));
+                lore.add(noItalic(LEGACY.deserialize("&6" + name + " &7(Tier " + e.getValue() + ")")));
             }
         }
+
+        // ── 6. Rarity ──────────────────────────────────────────────────────────
+        if (base.rarity() != null) {
+            if (!lore.isEmpty()) lore.add(Component.empty());
+            lore.add(noItalic(LEGACY.deserialize(base.rarity().coloredDisplay())));
+        }
+
         meta.lore(lore);
         stack.setItemMeta(meta);
     }
+
+    /**
+     * Rewrites the item's display name: prepends the reforge's display name if a reforge
+     * is applied, or resets to the base item name otherwise. Always call alongside
+     * {@link #rewriteLore}.
+     */
+    public void rewriteName(ItemStack stack, EnchantRegistry registry) {
+        ItemMeta meta = stack.getItemMeta();
+        if (meta == null) return;
+        Optional<RpgItem> baseOpt = RpgServices.items().from(stack);
+        if (baseOpt.isEmpty()) return;
+        String baseName = baseOpt.get().displayName();
+        if (baseName == null || baseName.isEmpty()) baseName = baseOpt.get().id();
+
+        Optional<String> reforgeId = reforge(stack);
+        if (reforgeId.isPresent()) {
+            ReforgeDef def = registry.reforge(reforgeId.get()).orElse(null);
+            if (def != null) {
+                meta.displayName(noItalic(LEGACY.deserialize(def.displayName() + " " + baseName)));
+                stack.setItemMeta(meta);
+                return;
+            }
+        }
+        // No reforge (or unknown reforge) — reset to base name
+        meta.displayName(noItalic(LEGACY.deserialize(baseName)));
+        stack.setItemMeta(meta);
+    }
+
+    // ── Stat contributions ────────────────────────────────────────────────────
 
     /** Compute combined stat additions from all enchant/reforge/upgrade tags on this item. */
     public Map<Stat, Double> contributedStats(ItemStack stack, EnchantRegistry registry) {
@@ -148,6 +265,8 @@ public final class ItemModifier {
         }
         return out;
     }
+
+    // ── Private helpers ───────────────────────────────────────────────────────
 
     private static void addByStatId(Map<Stat, Double> out, Map<String, Double> in) {
         for (Map.Entry<String, Double> e : in.entrySet()) {
@@ -208,6 +327,17 @@ public final class ItemModifier {
 
     private static Component noItalic(Component c) {
         return c.decoration(TextDecoration.ITALIC, false);
+    }
+
+    private static String fmtVal(double v, boolean percent) {
+        String num;
+        if (v == Math.floor(v) && !Double.isInfinite(v)) {
+            num = Long.toString((long) v);
+        } else {
+            num = String.format("%.1f", v);
+        }
+        String sign = v >= 0 ? "+" : "";
+        return sign + num + (percent ? "%" : "");
     }
 
     private static String roman(int n) {
