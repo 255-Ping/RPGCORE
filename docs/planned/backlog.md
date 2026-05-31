@@ -6,20 +6,11 @@ Items collected from testing and review, sorted by complexity. Pull into a sessi
 
 ## Phase 2 — Medium complexity
 
-### Tab completions audit
-Every command should have tab completions. Do a full pass: check every `/rpg`, `/dungeon`, `/trade`, `/region`, `/npc`, etc. for missing completions on new arguments added since initial writing.
-
 ### Global region in /region commands
 The global region (applies world-wide before any child region) should appear in `/region list` and be editable via the same `/region` commands. Currently it is invisible to the command system.
 
 ### Config examples everywhere
 Go through `config.yml` in every plugin and add in-line YAML comments with example values for every configurable field. Make it obvious what each key does and what range/format is expected.
-
-### Potions bug
-Drinking a potion gives no effect visible in `/effects`. Clicking a block with a potion causes it to vanish from inventory with no effect. Needs investigation — possibly the vanilla potion event is being cancelled by the damage/effect pipeline and no RPG equivalent is applied.
-
-### Admin custom block placement
-When an admin in any game mode places a custom block it doesn't work correctly. Using `/rpg block convert` works fine. The place-event listener likely isn't triggering the registration path that `/rpg block convert` uses. Investigate and unify.
 
 ### Shift-click in other GUIs
 Several GUIs (shop, banker, accessories, etc.) do not correctly handle shift-click from player inventory. Add a standard shift-click → first available slot routing pattern to every GUI that has input slots, similar to the fix applied to CookingGui.
@@ -93,5 +84,5 @@ Items defined with `tradeable: false` should be blocked in:
 
 | Bug | Plugin | Notes |
 |-----|--------|-------|
-| Potions vanish on block click, no `/effects` entry | rpg-core or rpg-combat | Potion interaction event may be cancelled by pipeline |
-| Admin custom block placement doesn't register | rpg-core | Place event listener vs. convert command path |
+| ~~Potions vanish on block click, no `/effects` entry~~ | ~~rpg-core~~ | ~~Fixed: potions suppression default changed to false~~ |
+| ~~Admin custom block placement doesn't register~~ | ~~rpg-core~~ | ~~Fixed: BlockPlaceListener + PDC tag on give items~~ |
