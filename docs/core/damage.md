@@ -1,6 +1,6 @@
 # Damage pipeline
 
-> **Status:** In progress — pipeline working; stat aggregation from equipment/accessories/effects/milestones/guild perks is wired for players. Mob attackers/victims return 0 for all stats until mob stat-holder lands. Combat XP awards and damage indicators are live. Per-source damage tuning and ferocity are planned.
+> **Status:** In Progress — pipeline working; stat aggregation from equipment/accessories/effects/milestones/guild perks is wired for players. Mob attackers/victims return 0 for all stats until mob stat-holder lands. Combat XP awards and damage indicators are live. Per-source damage tuning and ferocity are planned.
 
 All damage flows through `rpg-core`. Vanilla `EntityDamageEvent` is cancelled at `LOWEST` priority and replaced with our pipeline.
 

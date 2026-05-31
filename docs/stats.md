@@ -117,6 +117,74 @@ Stats whose owning addon isn't loaded are hidden from menus via per-stat config 
 
 ---
 
+## Damage formulas
+
+These are the actual formulas used by `DamageMath.java`. The config YAML can override them — these are the v1 defaults.
+
+### Melee damage
+
+```
+after_strength  = base × (1 + strength / 100)
+defense_factor  = 1 − defense / (defense + 100)
+final           = after_strength × defense_factor
+
+on crit:  final × (1 + crit_damage / 100)
+```
+
+`base` = weapon's `damage` stat. `defense` and `true_defense` are the victim's stats (true damage uses `true_defense` instead of `defense`).
+
+### Defense — worked examples
+
+| Defense | Damage reduction | 100 base → dealt |
+|---|---|---|
+| 0 | 0% | 100 |
+| 50 | 33% | 67 |
+| 100 | 50% | 50 |
+| 200 | 67% | 33 |
+| 300 | 75% | 25 |
+| 500 | 83% | 17 |
+
+Diminishing returns — each extra point is worth less. No hard cap.
+
+### Strength — worked examples
+
+| Strength | Multiplier | 100 base → after strength |
+|---|---|---|
+| 0 | ×1.0 | 100 |
+| 25 | ×1.25 | 125 |
+| 50 | ×1.5 | 150 |
+| 100 | ×2.0 | 200 |
+| 200 | ×3.0 | 300 |
+
+Linear — every point of strength is worth the same.
+
+### Full worked example
+
+> Player: `strength 80`, weapon: `damage 120`, vs mob: `defense 100`, `crit_damage 50`
+
+```
+after_strength  = 120 × (1 + 80/100)  = 120 × 1.80 = 216
+defense_factor  = 1 − 100/(100+100)   = 0.50
+normal hit      = 216 × 0.50          = 108 damage
+crit hit        = 108 × (1 + 50/100)  = 162 damage
+```
+
+### Stat budgets per tier
+
+Rough guidelines for authoring balanced gear. Adjust to suit your server's XP curve.
+
+| Tier | Example zone | Weapon `damage` | Player `strength` | Player `defense` | Mob HP |
+|---|---|---|---|---|---|
+| Starter | Tutorial area | 30–60 | 0–20 | 0–30 | 80–250 |
+| Early | First content zone | 80–150 | 20–60 | 30–80 | 300–800 |
+| Mid | Mid-game zones | 150–350 | 60–150 | 80–200 | 800–3,000 |
+| Late | Late-game zones | 350–800 | 150–350 | 200–500 | 3,000–15,000 |
+| End | Boss / endgame | 800–2,000 | 350–600 | 400–800 | 15,000–100,000 |
+
+Use the worked example formula to sanity-check any gear set before shipping.
+
+---
+
 ## Stat sources
 
 A `StatHolder` (player or mob) aggregates stats from:

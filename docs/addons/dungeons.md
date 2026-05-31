@@ -1,54 +1,35 @@
 # Dungeons (`rpg-dungeons`)
 
-> **Status:** v0.0.0-16 — shipped. Auto-bootstraps a void instance world (`rpg_dungeon_instances`); paste-copies a template area for each run; party-aware entry (soft-dep on rpg-parties); death handling per config (solo/spectator/wipe). `/dungeon create|delete|enter|leave|setentrance|setexit|setspawn|list|reload`.
+> **Status:** In Progress — Template commands (create, setentrance, setexit, setspawn, list, reload) all working. `/dungeon enter` teleports the player into the instance world but gameplay systems (mob spawning, win conditions, completion rewards, death handling) are not yet wired — entering gives an empty void. Full dungeon gameplay is a major planned flesh-out. See [todo-improvements](../planned/todo-improvements.md).
 
 Admin-authored, instanced dungeons. Players (solo or as a party) teleport into a per-run copy of the dungeon volume. Multiple instances of the same dungeon run in parallel.
 
-## Authoring flow
+## What works now
 
-1. **Set up the build area.** Build the dungeon physically in a normal world.
-2. **`/dungeon create <id>`** — registers the dungeon ID and begins authoring.
-3. **`/rpg wand dungeon`** — switch the wand to dungeon mode. Left-click and right-click to mark the 3D box around the build.
-4. **`/dungeon save <id>`** — captures the volume (blocks, tile entities) into a stored template.
-5. **`/dungeon edit <id>`** — opens the editor GUI:
-   - **Entrance**: where players teleport when entering. Drop a wand-marked location.
-   - **Exit**: where players teleport on leave/complete.
-   - **Requirements**: items (with `consume-on-entry` flag), skill levels, party-size limits, currency cost.
-   - **Spawners**: place mob spawners inside the dungeon volume. Each is the same `Spawner` schema as [admin spawners](../content/spawning.md#admin-spawners), with `mode: continuous | one-shot | bounded:<n>`.
-   - **Win condition**: pick one or compose:
-     - `kill_mob:<mobId>` — kill a specific mob instance
-     - `kill_all_mobs` — defeat every spawned mob
-     - `reach_location:<x,y,z,radius>` — touch a point (relative to dungeon origin)
-     - `collect_item:<itemId>` — pick up a target item
-     - `survive_ticks:<n>` — last N ticks
-     - `composite: all | any` of sub-conditions
-   - **Time limit** (optional)
-   - **Death rules**: solo / party / all-dead handling overrides
-   - **Loot pool**: weighted item list (references `items/`), per-player roll on win
-6. **`/dungeon save <id>`** again to seal.
+**Template authoring:**
+1. Build the dungeon physically in a normal world.
+2. `/dungeon create <id>` — registers the dungeon.
+3. `/rpg wand dungeon` — switch the wand to dungeon mode. Left-click + right-click to mark the 3D volume.
+4. `/dungeon setentrance <id>` — while standing at the entrance point, sets where players teleport in.
+5. `/dungeon setexit <id>` — sets the exit/completion teleport destination.
+6. `/dungeon setspawn <id>` — sets the mob spawn anchor (used once mob spawning is wired).
+7. `/dungeon enter <id>` — teleports you into the instance world copy. **Currently drops you into a void — no mobs, no win condition, no exit trigger. Use for layout testing only.**
 
-## Play flow
+**Instance world:**
+`rpg_dungeon_instances` — a flat void world auto-created on first run. Template blocks are pasted there on entry. Players can only enter via `/dungeon enter`.
 
-1. `/dungeon join <id>` — perm `rpg.dungeons.join`.
-2. If in a party, every member must pass entry requirements; otherwise refused.
-3. **Instance allocation**: the saved template is pasted into the instance world `rpg_dungeon_instances` (auto-bootstrapped as a void world on first run) at a free, non-overlapping region.
-4. Player(s) teleported to the entrance location of that instance.
-5. Spawners activate per their config.
-6. Win condition monitored.
-7. On win: roll loot per player, teleport everyone to the exit, free the instance slot.
+## What's planned (not yet working)
 
-## Death handling
+The following systems are designed but not yet implemented. They will be built as part of the dungeon flesh-out:
 
-Configurable per-dungeon. Defaults:
+- **Mob spawning inside the instance** — spawner definitions in the dungeon YAML, activated on entry
+- **Win conditions** — kill all mobs, reach a location, collect an item, survive N ticks, or composite conditions
+- **Completion rewards** — per-player loot pool roll on win
+- **Death handling** — spectator-leash mode for party members, all-dead wipe condition
+- **Entry requirements** — item cost, skill level gates, party size limits, currency cost
+- **Loot pool** — weighted item list rolled per player on win
 
-- **Solo player dies** — teleport out, apply normal death rules (drops per [death tiers](../core/damage.md#death-rules)).
-- **Party member dies** — switched into **spectator-leashed** mode: visible to teammates as a ghost, leashed within `spectator-leash-radius` blocks of the dungeon. Cannot rejoin combat.
-- **All party members dead** — kick everyone, apply normal death rules.
-- **Party wins with one or more members dead** — dead members' deaths **don't count** (no items lost). They're TP'd out with the rest at the exit.
-
-## Instance world
-
-`rpg_dungeon_instances` — a flat void world auto-created on first run. Sized to accommodate many instances laid out on a grid. Players can't enter it directly; `/dungeon join` is the only valid entry.
+See [todo-improvements](../planned/todo-improvements.md) for the full flesh-out spec.
 
 ## Loot pool
 
@@ -69,13 +50,15 @@ loot-pool:
 | Command | Permission |
 |---|---|
 | `/dungeon create <id>` | `rpg.dungeons.admin.create` |
-| `/dungeon save <id>` | `rpg.dungeons.admin.save` |
-| `/dungeon edit <id>` | `rpg.dungeons.admin.edit` |
 | `/dungeon delete <id>` | `rpg.dungeons.admin.delete` |
-| `/dungeon list` | `rpg.dungeons.list` |
-| `/dungeon join <id>` | `rpg.dungeons.join` |
-| `/dungeon leave` | `rpg.dungeons.leave` |
-| `/dungeon admin abort <instance>` | `rpg.dungeons.admin.abort` |
+| `/dungeon setentrance <id>` | `rpg.dungeons.admin.set` |
+| `/dungeon setexit <id>` | `rpg.dungeons.admin.set` |
+| `/dungeon setspawn <id>` | `rpg.dungeons.admin.set` |
+| `/dungeon list` | `rpg.dungeons.admin.list` |
+| `/dungeon reload` | `rpg.dungeons.admin.reload` |
+| `/dungeon enter <id>` | `rpg.dungeons.use.enter` |
+| `/dungeon leave` | `rpg.dungeons.use.leave` |
+| Alias: `/dgn` | — | Short alias for all subcommands |
 
 ## Storage
 

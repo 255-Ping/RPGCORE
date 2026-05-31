@@ -1,6 +1,6 @@
 # Addons
 
-> **Status:** In progress — all addons below are shipped and functional. See individual pages for per-feature status.
+> **Status:** In Progress — all addons below are shipped and functional. See individual pages for per-feature status.
 
 Each addon is its own plugin jar. All addons hard-depend on `rpg-core`. To enable an addon, drop its jar in `plugins/`. To disable, remove it.
 

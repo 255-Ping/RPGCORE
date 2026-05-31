@@ -1,6 +1,6 @@
 # Core (`rpg-core`)
 
-> **Status:** In progress — persistence (YAML + MySQL), damage pipeline, block break handler, skills framework, stat registry, health display, status-effect framework, loot tables, natural spawning, admin spawners, expression evaluator, and content loaders (items/mobs/abilities/blocks/recipes) all working.
+> **Status:** In Progress — persistence (YAML + MySQL), damage pipeline, block break handler, skills framework, stat registry, health display, status-effect framework, loot tables, natural spawning, admin spawners, expression evaluator, and content loaders (items/mobs/abilities/blocks/recipes) all working.
 
 `rpg-core` is the bootstrap plugin that owns every shared service. Every addon depends on it.
 

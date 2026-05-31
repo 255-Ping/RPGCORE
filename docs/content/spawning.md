@@ -1,6 +1,6 @@
 # Spawning
 
-> **Status:** In progress — Admin spawners working. `/spawner create <id> <mobId>` plants a spawner at the admin's location (radius 4, cooldown 100t, max-alive 5, continuous). `/spawner list`, `/spawner tp <id>`, `/spawner delete <id>`, `/spawner set <id> <field> <value>` (fields: max-alive, cooldown, spawn-radius, continuous). Spawners persist via DataStore. **Natural spawning is now live too**: rules under `plugins/rpg-core/natural-spawning/*.yml` with weighted-mob lists, time-of-day / weather / biome / light / y-range conditions, and per-player-per-tick spawn rates. Toggled globally by `natural-spawning.enabled` in core config (default off so admins opt in). Spawn-condition gates on admin spawners (light/biome/etc.) are still deferred.
+> **Status:** In Progress — Admin spawners working. `/spawner create <id> <mobId>` plants a spawner at the admin's location (radius 4, cooldown 100t, max-alive 5, continuous). `/spawner list`, `/spawner tp <id>`, `/spawner delete <id>`, `/spawner set <id> <field> <value>` (fields: max-alive, cooldown, spawn-radius, continuous). Spawners persist via DataStore. **Natural spawning is now live too**: rules under `plugins/rpg-core/natural-spawning/*.yml` with weighted-mob lists, time-of-day / weather / biome / light / y-range conditions, and per-player-per-tick spawn rates. Toggled globally by `natural-spawning.enabled` in core config (default off so admins opt in). Spawn-condition gates on admin spawners (light/biome/etc.) are still deferred.
 
 Mob spawning is fully custom. Two independent mechanisms:
 

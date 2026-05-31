@@ -1,6 +1,6 @@
 # Skills framework
 
-> **Status:** In progress — `SkillsService` tracks per-player XP, computes level from configured curves via the expression evaluator, fires `SkillXpAwardEvent`, persists across sessions. Pinned skill tracking works. Milestones, per-level implicit rewards, and per-skill addon XP sources arrive with each skill addon.
+> **Status:** In Progress — `SkillsService` tracks per-player XP, computes level from configured curves via the expression evaluator, fires `SkillXpAwardEvent`, persists across sessions. Pinned skill tracking works. Milestones, per-level implicit rewards, and per-skill addon XP sources arrive with each skill addon.
 
 `rpg-core` ships the skills *framework*. Each individual skill is its own addon ([rpg-combat](../addons/skills.md#combat), [rpg-mining](../addons/skills.md#mining), etc.).
 

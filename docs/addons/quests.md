@@ -1,6 +1,6 @@
 # Quests (`rpg-quests`)
 
-> **Status:** In progress — Four objective types live: `kill_mob`, `mine_block`, `collect_item`, `talk_npc`. Per-player state via core DataStore. Rewards: skill XP, currency, items. Auto-complete on objective finish (configurable). NPC turn-in via `rpg-npcs` bridge. `/quest` commands wired. Quest log GUI deferred.
+> **Status:** In Progress — Four objective types live: `kill_mob`, `mine_block`, `collect_item`, `talk_npc`. Per-player state via core DataStore. Rewards: skill XP, currency, items. Auto-complete on objective finish (configurable). NPC turn-in via `rpg-npcs` bridge. `/quest` commands wired. Quest log GUI deferred.
 
 Quest definitions live in YAML under `plugins/rpg-quests/quests/`. Any number of files, any number of quests per file. An example file (`quests/example.yml`) is generated on first run.
 

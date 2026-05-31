@@ -1,6 +1,6 @@
 # HUD (`rpg-hud`)
 
-> **Status:** In progress — Scoreboard (sidebar), tablist (header/footer), action bar, and player nametags all live. Nametags use `TextDisplay` entities (not team scoreboards) — mounted as passengers above the player, position set via `Transformation` so the offset is accurate regardless of player height. `y-offset` is configurable. Placeholder resolution: `{name}`, `{prefix}`, `{suffix}`, `{health}`, `{max_health}`, `{mana}`, `{max_mana}`, `{coins}`, `{online}`, `{world}`, any stat by id, and `{skill:<id>:level|total_xp|to_next}`. Status-effect icons on nametags deferred to a polish slice.
+> **Status:** In Progress — Scoreboard (sidebar), tablist (header/footer), action bar, and player nametags all live. Nametags use `TextDisplay` entities (not team scoreboards) — mounted as passengers above the player, position set via `Transformation` so the offset is accurate regardless of player height. `y-offset` is configurable. Placeholder resolution: `{name}`, `{prefix}`, `{suffix}`, `{health}`, `{max_health}`, `{mana}`, `{max_mana}`, `{coins}`, `{online}`, `{world}`, any stat by id, and `{skill:<id>:level|total_xp|to_next}`. Status-effect icons on nametags deferred to a polish slice.
 
 Configurable scoreboard, tablist, action bar, and player nametags. All formats are templates with placeholders resolved by core's `MessageFormatter`.
 
@@ -22,7 +22,7 @@ scoreboard:
   - "&7Combat: &c{skill:combat:level}"
   - "&7Mining: &6{skill:mining:level}"
   - "&7&m                  "
-  - "&e{coins} coins"
+  - "&e{coins}"
 
 tablist:
   enabled: true

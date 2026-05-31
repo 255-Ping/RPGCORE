@@ -1,6 +1,6 @@
 # Economy (`rpg-economy`)
 
-> **Status:** In progress — `rpg-economy` module ships. Single primary currency configurable in `config.yml` (id, prefix, suffix, decimals, starting balance, max balance). Commands: `/balance`, `/pay`, `/eco set|add|remove|reset`, `/baltop` (all with documented permissions). Balances persist via core's `DataStore` as one record per UUID under `balances/`. Vault provider integration not yet shipped — non-suite plugins can use the `Economy` API from `rpg-api` directly.
+> **Status:** In Progress — `rpg-economy` module ships. Single primary currency configurable in `config.yml` (id, prefix, suffix, decimals, starting balance, max balance). Commands: `/balance`, `/pay`, `/eco set|add|remove|reset`, `/baltop` (all with documented permissions). Balances persist via core's `DataStore` as one record per UUID under `balances/`. Vault provider integration not yet shipped — non-suite plugins can use the `Economy` API from `rpg-api` directly.
 
 Currency, balances, payments. Replaces the previously-considered `CURRENCY` ItemType.
 

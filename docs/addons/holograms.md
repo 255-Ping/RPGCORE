@@ -1,6 +1,6 @@
 # Holograms (`rpg-holograms`)
 
-> **Status:** In progress — **Damage indicators only** for v1. TextDisplay-based floating numbers spawn on `PostDamageEvent`, configured format per source kind (normal / crit / true / lifesteal / healed). Visibility filtered to attacker + victim-if-player by default; bystanders toggleable. Numbers rise upward and despawn after `duration-ticks`. Full hologram editor (multi-line, click actions, persistence, GUI) is the next polish slice.
+> **Status:** Working — Static multi-line holograms (create, edit lines, move, teleport, delete, persist across restart) and damage indicators are both fully working. The GUI editor for hologram creation/editing is planned but not yet built — all management is done via commands.
 
 Two related features in one addon:
 
@@ -59,14 +59,16 @@ More actions can be added by other addons.
 
 | Command | Permission |
 |---|---|
-| `/hologram create <id>` | `rpg.holograms.admin.create` |
-| `/hologram edit <id>` | `rpg.holograms.admin.edit` |
-| `/hologram addline <id> <text>` | `rpg.holograms.admin.edit` |
-| `/hologram delete <id>` | `rpg.holograms.admin.delete` |
-| `/hologram list [near\|world]` | `rpg.holograms.admin.list` |
-| `/hologram tp <id>` | `rpg.holograms.admin.tp` |
+| `/holograms create <id>` | `rpg.holograms.admin.create` |
+| `/holograms line <id> <text>` | `rpg.holograms.admin.edit` |
+| `/holograms delete <id>` | `rpg.holograms.admin.delete` |
+| `/holograms list` | `rpg.holograms.admin.list` |
+| `/holograms tp <id>` | `rpg.holograms.admin.tp` |
+| `/holograms move <id>` | `rpg.holograms.admin.move` |
+| `/holograms reload` | `rpg.holograms.admin.reload` |
+| Alias: `/holo` | — | Short alias for all subcommands |
 
-`/hologram create <id>` uses the selection wand's `hologram` mode for the anchor location.
+`/holograms create <id>` spawns the hologram at your current location. Use `/holograms move <id>` to reposition it.
 
 ## Damage indicators
 

@@ -52,6 +52,8 @@ nav:
     - Vanilla Suppression: core/vanilla-suppression.md
   - Content Creation:
     - Overview: content/README.md
+    - Quickstart: content/first-mob.md
+    - Cookbook: content/cookbook.md
     - Items: content/items.md
     - Mobs: content/mobs.md
     - Abilities: content/abilities.md
@@ -62,21 +64,25 @@ nav:
   - Addons:
     - Overview: addons/README.md
     - Accessories: addons/accessories.md
+    - Admin Utilities: addons/admin.md
     - Alchemy: addons/alchemy.md
     - Chat: addons/chat.md
     - Cooking: addons/cooking.md
     - Dungeons: addons/dungeons.md
     - Economy: addons/economy.md
     - Enchanting: addons/enchanting.md
+    - Farming: addons/farming.md
     - Fishing: addons/fishing.md
     - Guilds: addons/guilds.md
     - Holograms: addons/holograms.md
     - HUD: addons/hud.md
+    - Mining: addons/mining.md
     - NPCs: addons/npcs.md
     - Parties: addons/parties.md
     - Quests: addons/quests.md
     - Regions: addons/regions.md
     - Skills: addons/skills.md
+    - Trade: addons/trade.md
   - Changelog:
     - Overview: changelog.md
     - Suite 19: changelog/suite-19.md

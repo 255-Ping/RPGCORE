@@ -1,6 +1,6 @@
 # Persistence
 
-> **Status:** In progress — YAML backend fully working. MySQL backend implemented (`MysqlDataStore`, HikariCP connection pool, schema-version migration runner). On-startup `BackendMigrator` detects a backend switch (YAML→MySQL or MySQL→YAML) and copies all data forward before the server goes live.
+> **Status:** In Progress — YAML backend fully working. MySQL backend implemented (`MysqlDataStore`, HikariCP connection pool, schema-version migration runner). On-startup `BackendMigrator` detects a backend switch (YAML→MySQL or MySQL→YAML) and copies all data forward before the server goes live.
 
 `rpg-core` provides a `DataStore` service that every addon must go through to read or write persistent data. The backend is selectable in core config: **YAML (default)** or **MySQL**.
 

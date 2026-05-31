@@ -1,6 +1,6 @@
 # Parties (`rpg-parties`)
 
-> **Status:** In progress — Session-only parties working. `/party create|invite|accept|kick|promote|demote|leave|disband|list` all wired. Owner/moderator/member ranks enforced. Invites time out (default 60s). On player quit, the leaver is removed; on owner quit, ownership transfers to the highest-rank remaining member (unless `disband-on-owner-leave: true`). `PartyService` API exposed via `RpgServices.parties()`. XP sharing live — `SkillXpAwardEvent` distributes bonus XP to in-range party members per the configurable `split-formula`.
+> **Status:** In Progress — Session-only parties working. `/party create|invite|accept|kick|promote|demote|leave|disband|list` all wired. Owner/moderator/member ranks enforced. Invites time out (default 60s). On player quit, the leaver is removed; on owner quit, ownership transfers to the highest-rank remaining member (unless `disband-on-owner-leave: true`). `PartyService` API exposed via `RpgServices.parties()`. XP sharing live — `SkillXpAwardEvent` distributes bonus XP to in-range party members per the configurable `split-formula`.
 
 Session-only player groups. No persistence — parties dissolve on owner disconnect (configurable). For persistent groups, see [guilds](guilds.md).
 

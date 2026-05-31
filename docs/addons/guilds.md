@@ -1,6 +1,6 @@
 # Guilds (`rpg-guilds`)
 
-> **Status:** In progress — Persistent guilds via DataStore. v1 ships fixed ranks (`owner` / `officer` / `member`). Guild XP from member skill gains, configurable guild level curve, and per-stat perk formulas are implemented. Commands: `/guild create <name>`, `/guild invite`, `/guild accept`, `/guild kick`, `/guild promote`, `/guild demote`, `/guild leave`, `/guild disband`, `/guild info [name]`, `/guild list`, `/guild deposit <amount>`, `/guild withdraw <amount>`. Officers can invite/kick/withdraw; owner alone can promote/demote/disband. Creation cost via `rpg-economy` (soft-depend; free if economy isn't loaded). Planned: tiered bank, configurable rank slots, per-rank perm flags, custom rank renaming.
+> **Status:** In Progress — Persistent guilds via DataStore. v1 ships fixed ranks (`owner` / `officer` / `member`). Guild XP from member skill gains, configurable guild level curve, and per-stat perk formulas are implemented. Commands: `/guild create <name>`, `/guild invite`, `/guild accept`, `/guild kick`, `/guild promote`, `/guild demote`, `/guild leave`, `/guild disband`, `/guild info [name]`, `/guild list`, `/guild deposit <amount>`, `/guild withdraw <amount>`. Officers can invite/kick/withdraw; owner alone can promote/demote/disband. Creation cost via `rpg-economy` (soft-depend; free if economy isn't loaded). Planned: tiered bank, configurable rank slots, per-rank perm flags, custom rank renaming.
 
 Persistent player communities with bank, ranks, XP/level, and perks.
 

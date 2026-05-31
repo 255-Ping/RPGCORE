@@ -1,6 +1,6 @@
 # Health display (heart-as-percent)
 
-> **Status:** In progress — heart-as-percent display, in-combat tagging, and out-of-combat HEALTH_REGEN tick all working. Stat aggregation from gear/effects layered on top is pending; for now `max_health` comes from `starting-state.base-stats`.
+> **Status:** Working — heart-as-percent display, in-combat tagging, out-of-combat HEALTH_REGEN tick, and stat aggregation from equipped gear and accessories all working. `max_health` is the sum of base stats + equipped item stats + accessory bag stats + active status effect modifiers.
 
 The vanilla health bar shows **20 hearts max** (two rows of 10 hearts) regardless of the player's actual `max_health` stat.
 

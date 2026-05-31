@@ -1,6 +1,6 @@
 # Loot tables
 
-> **Status:** In progress — Inline loot tables on mobs work end-to-end. All four attribution modes (`last-hit`, `top-damager`, `split-equal`, `weighted-by-damage`) and both roll modes (`per-player`, `shared`) implemented. `magic-find-affected` rolls scale by the killer's `MAGIC_FIND` stat. Damager tracking via `DamagerTracker` listens on `PostDamageEvent`. External loot-table files referenced by id (`LootTable: <id>`) aren't yet supported — only inline. Coin drops pending the economy addon.
+> **Status:** In Progress — Inline loot tables on mobs work end-to-end. All four attribution modes (`last-hit`, `top-damager`, `split-equal`, `weighted-by-damage`) and both roll modes (`per-player`, `shared`) implemented. `magic-find-affected` rolls scale by the killer's `MAGIC_FIND` stat. Damager tracking via `DamagerTracker` listens on `PostDamageEvent`. External loot-table files referenced by id (`LootTable: <id>`) aren't yet supported — only inline. Coin drops pending the economy addon.
 
 Loot tables describe what drops from a mob (or a custom block, or a chest). They can be inlined in a mob's YAML or extracted as standalone files for sharing.
 

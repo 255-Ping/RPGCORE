@@ -1,6 +1,6 @@
 # Fishing (`rpg-fishing`)
 
-> **Status:** In progress — Fishing XP awarded on every successful `PlayerFishEvent` catch (state `CAUGHT_FISH`). Configurable `xp-per-catch`, scaled by `FISHING_WISDOM`. Custom fish loot table + sea-creature spawning + rod stat scaling are planned for a content slice.
+> **Status:** In Progress — Fishing XP awarded on every successful `PlayerFishEvent` catch (state `CAUGHT_FISH`). Configurable `xp-per-catch`, scaled by `FISHING_WISDOM`. Custom fish loot table + sea-creature spawning + rod stat scaling are planned for a content slice.
 
 Replaces vanilla fishing loot with a configurable catch system. Fish types, rarities, and biome/time restrictions are admin-defined in YAML.
 

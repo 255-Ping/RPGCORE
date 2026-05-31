@@ -1,6 +1,6 @@
 # Abilities
 
-> **Status:** In progress — Built-in effects library (damage, heal, beam, explode, particles, sound, delay, apply_status, mana_cost, cooldown), custom ability YAML loader, item right-click cast, **and full mob ability trigger system** (`~onTimer:N`, `~onHit`, `~onHurt`, `~onSpawn`, `~onDeath`) all working. Items and mobs share the same ability registry, so custom abilities defined in `abilities/*.yml` are usable from both.
+> **Status:** In Progress — Built-in effects library (damage, heal, beam, explode, particles, sound, delay, apply_status, mana_cost, cooldown), custom ability YAML loader, item right-click cast, **and full mob ability trigger system** (`~onTimer:N`, `~onHit`, `~onHurt`, `~onSpawn`, `~onDeath`) all working. Items and mobs share the same ability registry, so custom abilities defined in `abilities/*.yml` are usable from both.
 
 The ability system has two layers:
 
@@ -173,6 +173,27 @@ An `AbilityContext` carries:
 - `bag` — open `Map<String,Object>` for cross-effect state
 
 Effects return `CompletableFuture<AbilityContext>`. The pipeline chains effects with `thenCompose`, so an effect can defer (e.g., `delay`, `projectile` waiting for impact).
+
+### What each effect reads and writes
+
+| Effect | Reads from context | Writes to context |
+|---|---|---|
+| `beam` | `caster` location + look direction | `target` (first hit entity), `point` (beam endpoint) |
+| `projectile` | `caster` location + look direction | `target`, `point` (on impact — chain resumes there) |
+| `explode` | `point` (fallback: caster location if point not set) | — |
+| `aoe` | `caster` location | — |
+| `damage` | `target`, `carriedDamage` (used if `amount` param omitted) | — |
+| `heal` | `target` (default: caster if not set) | — |
+| `particles` | `point` (fallback: caster location) | — |
+| `sound` | `caster` location | — |
+| `apply_status` | `target` (default: caster) | — |
+| `teleport` | `caster` | caster's location changes |
+| `summon` | `caster` location | — |
+| `delay` | — | — (just pauses the chain) |
+| `mana_cost` | `caster` mana | Aborts chain if insufficient |
+| `cooldown` | ability ID | Starts cooldown keyed to ability ID |
+
+**Example reading the table:** `beam → explode` fires the beam, sets `point` to the endpoint, then `explode` reads that `point` and detonates there. `beam → particles` would spawn particles at the same endpoint. `beam → damage` would deal damage to whatever `beam` set as `target`.
 
 ## Cooldowns
 

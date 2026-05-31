@@ -1,6 +1,6 @@
 # Skill addons
 
-> **Status:** In progress — all skill addons shipped. See per-skill status notes below.
+> **Status:** In Progress — all skill addons shipped. See per-skill status notes below.
 
 Each skill is its own addon. They all follow the same shape — described once here, with skill-specific deltas in each section.
 
@@ -22,7 +22,7 @@ Common commands:
 
 ## Combat (`rpg-combat`)
 
-> **Status:** In progress — XP from `PostDamageEvent` (proportional to damage) and kill XP from `EntityDeathEvent` both live. `COMBAT_WISDOM` scales both. Per-mob kill-XP override table in config.
+> **Status:** In Progress — XP from `PostDamageEvent` (proportional to damage) and kill XP from `EntityDeathEvent` both live. `COMBAT_WISDOM` scales both. Per-mob kill-XP override table in config.
 
 ### XP sources
 
@@ -49,7 +49,7 @@ xp-per-kill:
 
 ## Mining (`rpg-mining`)
 
-> **Status:** In progress — Mining XP awarded on `RpgBlockBreakEvent`. XP per block-id configurable in `rpg-mining/config.yml`, with a `default-xp` fallback. `MINING_WISDOM` scales the award. `MINING_SPEED` hold-to-break is live (BlockBreakHandler ticks at HP/sec). `MINING_FORTUNE` drop multiplier live (applied in `BlockBreakHandler.rollDrops`).
+> **Status:** In Progress — Mining XP awarded on `RpgBlockBreakEvent`. XP per block-id configurable in `rpg-mining/config.yml`, with a `default-xp` fallback. `MINING_WISDOM` scales the award. `MINING_SPEED` hold-to-break is live (BlockBreakHandler ticks at HP/sec). `MINING_FORTUNE` drop multiplier live (applied in `BlockBreakHandler.rollDrops`).
 
 ### Content
 
@@ -66,7 +66,7 @@ Per-level: `mining_speed +0.5`, `mining_fortune +0.1`. Tier breakpoints unlock r
 
 ## Foraging (`rpg-foraging`)
 
-> **Status:** In progress — Foraging XP awarded on `BlockBreakEvent` for log/stem materials (any `*_log` or `*_stem` plus explicitly configured block IDs). `FORAGING_WISDOM` scales XP. `FORAGING_FORTUNE` drop multiplier live via `BlockDropItemEvent`. `FORAGING_SPEED` and custom tree content arrive with the foraging block content slice.
+> **Status:** In Progress — Foraging XP awarded on `BlockBreakEvent` for log/stem materials (any `*_log` or `*_stem` plus explicitly configured block IDs). `FORAGING_WISDOM` scales XP. `FORAGING_FORTUNE` drop multiplier live via `BlockDropItemEvent`. `FORAGING_SPEED` and custom tree content arrive with the foraging block content slice.
 
 ### Content
 
@@ -79,7 +79,7 @@ Custom-block break for axe-target blocks.
 
 ## Farming (`rpg-farming`)
 
-> **Status:** In progress — Farming XP awarded on `BlockBreakEvent` for mature Ageable crops. Default config covers wheat/carrots/potatoes/beetroots/nether_wart/cocoa/pumpkin/melon/sugar_cane/bamboo. Scaled by `FARMING_WISDOM`. `FARMING_FORTUNE` drop multiplier live via `BlockDropItemEvent` (same formula as mining/foraging; only triggers at max age).
+> **Status:** In Progress — Farming XP awarded on `BlockBreakEvent` for mature Ageable crops. Default config covers wheat/carrots/potatoes/beetroots/nether_wart/cocoa/pumpkin/melon/sugar_cane/bamboo. Scaled by `FARMING_WISDOM`. `FARMING_FORTUNE` drop multiplier live via `BlockDropItemEvent` (same formula as mining/foraging; only triggers at max age).
 
 ### Content
 
