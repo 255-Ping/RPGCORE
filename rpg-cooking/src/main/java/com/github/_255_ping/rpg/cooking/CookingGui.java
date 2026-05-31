@@ -31,7 +31,10 @@ import java.util.UUID;
  */
 public final class CookingGui implements Listener {
 
-    private static final int[] INPUT_SLOTS = {10, 11, 12};
+    // Ingredient slots: row 0, middle three (slot 4, 5, 6 in a 36-slot GUI)
+    private static final int[] INPUT_SLOTS = {4, 5, 6};
+    // Recipe tiles start at slot 9 (second row) and fill forward
+    private static final int RECIPE_START = 9;
 
     private final RpgCookingPlugin plugin;
     private final CookingRegistry registry;
@@ -58,16 +61,44 @@ public final class CookingGui implements Listener {
         if (!(e.getWhoClicked() instanceof Player p)) return;
         if (open.get(p.getUniqueId()) == null) return;
         int raw = e.getRawSlot();
-        if (raw >= e.getView().getTopInventory().getSize()) return;
-        if (isInputSlot(raw)) {
-            plugin.getServer().getScheduler().runTask(plugin, () -> refresh(e.getView().getTopInventory()));
-            return;
-        }
-        if (raw >= 19 && raw <= 25) {
+        int topSize = e.getView().getTopInventory().getSize();
+        Inventory top = e.getView().getTopInventory();
+
+        // Shift-click from player's bottom inventory → route into first free input slot
+        if (raw >= topSize && e.isShiftClick()) {
+            ItemStack clicked = e.getCurrentItem();
+            if (clicked == null || clicked.getType().isAir()) return;
             e.setCancelled(true);
-            tryCook(p, e.getView().getTopInventory(), raw - 19);
+            for (int slot : INPUT_SLOTS) {
+                ItemStack existing = top.getItem(slot);
+                if (existing == null || existing.getType().isAir()) {
+                    top.setItem(slot, clicked.clone());
+                    clicked.setAmount(0);
+                    plugin.getServer().getScheduler().runTask(plugin, () -> refresh(top));
+                    return;
+                }
+            }
+            // No free slot — do nothing (item stays in player inventory)
             return;
         }
+
+        if (raw >= topSize) return; // other bottom-inventory interactions: ignore
+
+        if (isInputSlot(raw)) {
+            // Allow the click; defer refresh so the inventory state settles first
+            plugin.getServer().getScheduler().runTask(plugin, () -> refresh(top));
+            return;
+        }
+
+        // Recipe tile click
+        if (raw >= RECIPE_START) {
+            e.setCancelled(true);
+            int idx = raw - RECIPE_START;
+            tryCook(p, top, idx);
+            return;
+        }
+
+        // Everything else in the top inventory is a pane
         e.setCancelled(true);
     }
 
@@ -93,8 +124,9 @@ public final class CookingGui implements Listener {
 
     private void refresh(Inventory inv) {
         List<CookRecipeDef> recipes = new java.util.ArrayList<>(registry.all());
-        for (int i = 0; i < 7; i++) {
-            int slot = 19 + i;
+        int maxTiles = inv.getSize() - RECIPE_START;
+        for (int i = 0; i < maxTiles; i++) {
+            int slot = RECIPE_START + i;
             if (i >= recipes.size()) { inv.setItem(slot, paneItem()); continue; }
             CookRecipeDef r = recipes.get(i);
             inv.setItem(slot, recipeTile(r, slotsSatisfy(inv, r.inputs())));

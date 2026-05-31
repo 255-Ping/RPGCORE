@@ -56,6 +56,7 @@ public final class DamageMath {
     }
 
     private static double statOf(LivingEntity entity, Stat stat) {
+        if (entity == null) return 0.0;
         if (entity instanceof Player p) {
             return RpgServices.player(p).get(stat);
         }

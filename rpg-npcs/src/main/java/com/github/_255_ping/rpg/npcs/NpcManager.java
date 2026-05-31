@@ -197,8 +197,15 @@ public final class NpcManager {
             le.setInvulnerable(true);
             le.setSilent(true);
             le.setRemoveWhenFarAway(false);
-            le.customName(LEGACY.deserialize(def.displayName()));
-            le.setCustomNameVisible(!useTextDisplay);
+            // Only set the entity's built-in name if we're NOT using a TextDisplay — otherwise
+            // both the floating TextDisplay and the hover tooltip would show simultaneously.
+            if (useTextDisplay) {
+                le.customName(null);
+                le.setCustomNameVisible(false);
+            } else {
+                le.customName(LEGACY.deserialize(def.displayName()));
+                le.setCustomNameVisible(true);
+            }
         }
         entityToId.put(ent.getUniqueId(), def.id());
         spawnNameTag(def, loc, useTextDisplay);

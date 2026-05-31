@@ -20,21 +20,21 @@ public final class NpcProtectionListener implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
     public void onDamage(EntityDamageEvent e) {
         if (manager.fromEntity(e.getEntity()).isPresent()) {
             e.setCancelled(true);
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
     public void onDamageByEntity(EntityDamageByEntityEvent e) {
         if (manager.fromEntity(e.getEntity()).isPresent()) {
             e.setCancelled(true);
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
     public void onTarget(EntityTargetEvent e) {
         if (e.getTarget() != null && manager.fromEntity(e.getTarget()).isPresent()) {
             e.setCancelled(true);

@@ -52,7 +52,7 @@ public final class DamagePipelineListener implements Listener {
         this.mobLevelKey = mobLevelKey;
     }
 
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onDamage(EntityDamageEvent event) {
         if (!plugin.getConfig().getBoolean("vanilla-suppression.damage", true)) return;
         if (!(event.getEntity() instanceof LivingEntity victim)) return;

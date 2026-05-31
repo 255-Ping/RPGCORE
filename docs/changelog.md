@@ -6,6 +6,19 @@ Version format: `<plugin>-<pluginVersion>-<suiteVersion>`. Only notable changes 
 
 ## Suite 19 (current)
 
+### rpg-core `0.8.0`
+- **Damage NPE fix**: `DamageMath.statOf()` now null-guards the entity argument — fall damage, campfire, and other non-attacker damage sources no longer throw `NullPointerException`.
+- **Damage pipeline priority**: `DamagePipelineListener.onDamage` moved from `LOWEST` to `NORMAL` (`ignoreCancelled = true` unchanged). This lets lower-priority listeners (e.g. NPC protection) cancel the event before the pipeline runs, eliminating damage indicators on protected entities.
+- **Custom block break permission**: creative-mode bypass now requires `rpg.admin` in addition to `GameMode.CREATIVE`. Non-admin creative players can no longer break custom blocks; only `rpg.admin` admins can.
+
+### rpg-npcs `0.3.0`
+- **NPC damage indicators fixed**: `NpcProtectionListener` damage/targeting handlers moved from `HIGHEST` to `LOWEST` priority — they now cancel the event before `DamagePipelineListener` (at `NORMAL`) runs, preventing hit-indicator animations on NPC entities.
+- **Double name tag fixed**: entity-style NPCs no longer have `customName` set on their body entity when the TextDisplay overlay is active. Hovering over the entity no longer shows a second name tooltip.
+
+### rpg-cooking `0.2.0`
+- **Slot layout redesign**: ingredient slots moved to row 0 center (slots 4, 5, 6); recipe tiles now start at slot 9 (row 1) and fill forward across the grid.
+- **Shift-click fix**: shift-clicking an ingredient from the player's inventory now correctly routes it into the first free input slot instead of silently failing or landing on a pane tile.
+
 ### rpg-npcs `0.2.0`
 - **Damage bug fix**: `NpcProtectionListener` cancels all damage and mob-targeting events for NPC entities at `HIGHEST` priority, and respawns the NPC after one tick if it somehow dies. Belt-and-suspenders on top of `setInvulnerable(true)`.
 - **Fake player NPCs**: `EntityStyle: player` spawns an NMS `ServerPlayer` with a custom `GameProfile`. Skins configured via raw texture `Value`/`Signature` or by `Name` (fetched async from Mojang API, cached). Not shown in tab list — brief ADD packet sent for skin load, removed after 2 ticks. New players on join receive the skin packet for all active fake player NPCs.

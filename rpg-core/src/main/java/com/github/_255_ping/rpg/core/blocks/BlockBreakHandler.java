@@ -75,7 +75,9 @@ public final class BlockBreakHandler implements Listener {
         Player player = event.getPlayer();
 
         // Creative bypass: instant-break the tagged block, no progress.
+        // Only admins (rpg.admin) in creative mode can break custom blocks.
         if (player.getGameMode() == GameMode.CREATIVE
+                && player.hasPermission("rpg.admin")
                 && plugin.getConfig().getBoolean("creative-mode-bypass.break-time", true)) {
             event.setInstaBreak(true);
             return;
@@ -108,7 +110,9 @@ public final class BlockBreakHandler implements Listener {
         if (!registry.hasTag(loc)) return;
 
         // Creative bypass — let the break go through, but un-tag.
+        // Only admins (rpg.admin) in creative mode can break custom blocks.
         if (event.getPlayer().getGameMode() == GameMode.CREATIVE
+                && event.getPlayer().hasPermission("rpg.admin")
                 && plugin.getConfig().getBoolean("creative-mode-bypass.break-time", true)) {
             registry.untagLocation(loc);
             event.setDropItems(false);
