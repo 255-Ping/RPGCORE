@@ -1,6 +1,7 @@
 package com.github._255_ping.rpg.core.mobs;
 
 import com.github._255_ping.rpg.api.RpgServices;
+import com.github._255_ping.rpg.api.economy.Economy;
 import com.github._255_ping.rpg.api.loot.LootContext;
 import com.github._255_ping.rpg.api.mobs.RpgMob;
 import com.github._255_ping.rpg.core.drops.DropManager;
@@ -13,6 +14,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -66,6 +68,23 @@ public final class MobLootListener implements Listener {
                 if (owner != null) {
                     dropManager.register(dropped, owner);
                 }
+            }
+        }
+
+        // Currency rolls — deposit directly to player balance instead of dropping items.
+        Map<Player, BigDecimal> currency = table.rollCurrency(ctx);
+        if (!currency.isEmpty()) {
+            try {
+                Economy economy = RpgServices.economy();
+                if (economy != null) {
+                    for (Map.Entry<Player, BigDecimal> entry : currency.entrySet()) {
+                        if (entry.getValue().compareTo(BigDecimal.ZERO) > 0) {
+                            economy.deposit(entry.getKey(), entry.getValue());
+                        }
+                    }
+                }
+            } catch (IllegalStateException ignored) {
+                // rpg-economy not loaded — currency drops silently skipped.
             }
         }
     }

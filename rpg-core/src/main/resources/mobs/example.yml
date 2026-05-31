@@ -19,6 +19,8 @@
 #                    roll-mode:   per-player | shared
 #                    rolls:       list of { item, chance (%), min, max, magic-find-affected }
 #                    guaranteed:  list of { item, min, max }
+#                    currency-rolls: list of { chance (%), min, max } — deposited directly to
+#                                    each eligible player's balance (requires rpg-economy)
 
 testmob:
   MinecraftMob: zombie
@@ -43,6 +45,9 @@ testmob:
     - { item: red_gem, chance: 5.0, min: 1, max: 1, magic-find-affected: true }
     guaranteed:
     - { item: bone, min: 1, max: 1 }
+    # currency-rolls: deposited directly to the killer's balance — no item dropped.
+    currency-rolls:
+    - { chance: 100.0, min: 10, max: 25 }   # always drops 10–25 coins
 
 mini_boss:
   MinecraftMob: zombified_piglin

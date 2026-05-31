@@ -12,6 +12,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -181,6 +182,17 @@ public final class CoreRpgItem implements RpgItem {
         if (!lore.isEmpty()) meta.lore(lore);
 
         meta.getPersistentDataContainer().set(itemIdKey, PersistentDataType.STRING, id);
+
+        // Remove vanilla attribute modifiers so they don't interfere with our own stat system.
+        // HIDE_ATTRIBUTES only hides them from the tooltip — Minecraft still applies them to the
+        // player when the item is held/worn unless we explicitly remove them here.
+        // Without this, e.g. holding an iron_sword applies a -2.4 ADDITION to generic.attack_speed,
+        // which offsets our setBaseValue() and causes the attack bar to never fill.
+        meta.removeAttributeModifier(Attribute.ATTACK_DAMAGE);
+        meta.removeAttributeModifier(Attribute.ATTACK_SPEED);
+        meta.removeAttributeModifier(Attribute.ARMOR);
+        meta.removeAttributeModifier(Attribute.ARMOR_TOUGHNESS);
+        meta.removeAttributeModifier(Attribute.KNOCKBACK_RESISTANCE);
 
         // Suppress vanilla tooltip lines (attack damage, potion effects, "No Effects", etc.)
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);

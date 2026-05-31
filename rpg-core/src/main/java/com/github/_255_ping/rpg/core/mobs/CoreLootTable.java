@@ -11,6 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,20 +29,29 @@ public final class CoreLootTable implements LootTable {
 
     public record Roll(String itemId, double chancePercent, int min, int max, boolean magicFindAffected) {}
     public record Guaranteed(String itemId, int min, int max) {}
+    /** A currency drop: rolls a random amount in [min, max] with the given chance. Uses the primary currency. */
+    public record CurrencyRoll(double chancePercent, long min, long max) {}
 
     private final String id;
     private final Attribution attribution;
     private final RollMode rollMode;
     private final List<Roll> rolls;
     private final List<Guaranteed> guaranteed;
+    private final List<CurrencyRoll> currencyRolls;
 
     public CoreLootTable(String id, Attribution attribution, RollMode rollMode,
                           List<Roll> rolls, List<Guaranteed> guaranteed) {
+        this(id, attribution, rollMode, rolls, guaranteed, List.of());
+    }
+
+    public CoreLootTable(String id, Attribution attribution, RollMode rollMode,
+                          List<Roll> rolls, List<Guaranteed> guaranteed, List<CurrencyRoll> currencyRolls) {
         this.id = id;
         this.attribution = attribution;
         this.rollMode = rollMode;
         this.rolls = List.copyOf(rolls);
         this.guaranteed = List.copyOf(guaranteed);
+        this.currencyRolls = List.copyOf(currencyRolls);
     }
 
     @Override public String id() { return id; }
@@ -88,6 +98,30 @@ public final class CoreLootTable implements LootTable {
                         if (stack != null) out.computeIfAbsent(p, k -> new ArrayList<>()).add(stack);
                     }
                 }
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Rolls the currency-rolls table and returns the amount each player should receive.
+     * Callers are responsible for depositing via {@code RpgServices.economy()}.
+     */
+    public Map<Player, BigDecimal> rollCurrency(LootContext context) {
+        if (currencyRolls.isEmpty()) return Collections.emptyMap();
+        List<Player> eligible = pickEligible(context);
+        Map<Player, BigDecimal> out = new HashMap<>();
+        if (eligible.isEmpty()) return out;
+
+        for (CurrencyRoll r : currencyRolls) {
+            if (ThreadLocalRandom.current().nextDouble(100.0) >= r.chancePercent()) continue;
+            long amount = r.min() >= r.max() ? r.min()
+                    : ThreadLocalRandom.current().nextLong(r.min(), r.max() + 1);
+            if (amount <= 0) continue;
+            BigDecimal bd = BigDecimal.valueOf(amount);
+            // All eligible players each receive the full rolled amount.
+            for (Player p : eligible) {
+                out.merge(p, bd, BigDecimal::add);
             }
         }
         return out;

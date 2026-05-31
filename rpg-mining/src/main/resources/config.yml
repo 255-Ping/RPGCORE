@@ -7,11 +7,13 @@
 default-xp: 5   # XP for any custom block not explicitly listed in xp-per-block
 
 # Mining fatigue applied while holding a gathering tool (item with mining_speed, breaking_power,
-# or foraging_speed stat). This prevents vanilla blocks from being mined quickly with custom tools.
-# Amplifier: 0 = Fatigue I (slight slowdown), 1 = Fatigue II (60% slower), 2 = Fatigue III (very slow)
+# or foraging_speed stat). This completely prevents vanilla block mining — players must use the
+# RPG block-break system (hold left-click with a tool that has sufficient breaking_power).
+# Amplifier 255 = instant-infinite break time; vanilla blocks cannot be mined at all.
+# Lower values (e.g. 2) only slow mining rather than prevent it.
 mining-fatigue:
   enabled: true
-  amplifier: 1   # Fatigue II — severely slows vanilla block mining while holding RPG tools
+  amplifier: 255   # Max fatigue — fully suppresses vanilla block breaking while holding RPG tools
 
 # Per-block-id XP overrides. Match the block id from plugins/rpg-core/blocks/*.yml.
 # Blocks not listed here fall back to default-xp.

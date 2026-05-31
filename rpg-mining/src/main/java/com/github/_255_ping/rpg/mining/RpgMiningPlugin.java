@@ -92,7 +92,7 @@ public final class RpgMiningPlugin extends JavaPlugin implements Listener, org.b
         }
         if (isGatheringTool(held)) {
             if (!fatigueApplied.contains(player.getUniqueId())) {
-                int amplifier = getConfig().getInt("mining-fatigue.amplifier", 1);
+                int amplifier = getConfig().getInt("mining-fatigue.amplifier", 255);
                 player.addPotionEffect(new PotionEffect(
                         PotionEffectType.MINING_FATIGUE,
                         Integer.MAX_VALUE, amplifier,

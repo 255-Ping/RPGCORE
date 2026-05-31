@@ -24,10 +24,10 @@ Both paths should apply the potion's configured effects and show them in `/effec
 
 ---
 
-### Mining: Custom Block Can't Be Mined + Vanilla Break Still Visuals (`rpg-mining` / `rpg-core`) — 🟢 Easy
-Two related issues:
-1. **Miners Pickaxe cannot mine a Red Gem Block** — the pickaxe has the correct breaking power but the block doesn't break. Likely a `BREAKING_POWER` gate check or tool-type check mismatch in `BlockBreakHandler`.
-2. **Visual vanilla "Minecraft" mining still plays** — the block shows crack animation and appears to break visually, but doesn't actually drop. Mining Fatigue level being applied is probably not high enough to fully suppress vanilla break time. Needs a higher amplifier (e.g., level 255) to make vanilla break time effectively infinite.
+### ~~Mining: Vanilla Break Still Visuals (`rpg-mining`)~~ ✅ Fixed in `rpg-mining 0.2.1`
+Mining fatigue amplifier bumped from `1` (Fatigue II) to `255` — vanilla block breaking fully suppressed while holding an RPG gathering tool. Configurable via `mining-fatigue.amplifier` in `plugins/rpg-mining/config.yml`.
+
+> **Still open:** Miners Pickaxe cannot mine a Red Gem Block — `BREAKING_POWER` gate check or tool-type check mismatch in `BlockBreakHandler`. Needs separate investigation.
 
 ---
 
@@ -40,8 +40,8 @@ The collision detection is working (it stops correctly), so the issue is in the 
 
 ---
 
-### Iron Shortsword: Attack Cooldown Stuck at Infinite (`rpg-core` / `rpg-combat`) — 🟢 Easy
-Equipping the Iron Shortsword puts the attack cooldown indicator permanently at 0 — it never fills and the player can never land a registered RPG attack. The `generic.attack_speed` attribute is likely being set to an extremely low or negative value, or the `AttackCooldown` field in the item YAML is being parsed/applied incorrectly.
+### ~~Iron Shortsword: Attack Cooldown Stuck at Infinite (`rpg-core`)~~ ✅ Fixed in `rpg-core 1.0.3`
+`CoreRpgItem.toItemStack()` now removes vanilla attribute modifiers (`ATTACK_SPEED`, `ATTACK_DAMAGE`, `ARMOR`, etc.) from every custom item's `ItemMeta`. Previously `HIDE_ATTRIBUTES` only hid them from the tooltip — the modifiers still applied, causing `setBaseValue(2.0) + vanilla(-2.4) = -0.4` (bar never filled).
 
 ---
 
@@ -85,7 +85,7 @@ The ability configured on `testmob` (and likely other mobs) fires and runs its a
 
 ---
 
-### Coin Drops Not Depositing to Player Economy (`rpg-core`) — 🟢 Easy
-Custom mob kills that define coin drops in their loot table drop items on the ground rather than depositing currency directly into the player's economy balance. `LootTableRegistry` likely calls `depositPlayer` or spawns a coin item, but the deposit path to `CoreEconomy` via `RpgServices.economy()` is probably not wired. Confirm whether the loot roller calls `RpgServices.economy().deposit()` on coin-type entries or just spawns item entities.
+### ~~Coin Drops Not Depositing to Player Economy (`rpg-core`)~~ ✅ Fixed in `rpg-core 1.0.3`
+Added `currency-rolls:` section to the mob loot table schema. `CoreLootTable.rollCurrency()` returns per-player coin amounts; `MobLootListener` deposits them via `RpgServices.economy()` immediately on mob death instead of spawning item entities. Requires `rpg-economy`; silently no-ops if not loaded. Schema: `currency-rolls: [{ chance: 80.0, min: 50, max: 150 }]`.
 
 ---

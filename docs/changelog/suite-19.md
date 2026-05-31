@@ -4,6 +4,15 @@
 
 ---
 
+### rpg-core `1.0.3`
+- **Attack cooldown fix**: `CoreRpgItem.toItemStack()` now explicitly removes vanilla attribute modifiers (`ATTACK_DAMAGE`, `ATTACK_SPEED`, `ARMOR`, `ARMOR_TOUGHNESS`, `KNOCKBACK_RESISTANCE`) from every custom item's `ItemMeta`. Previously `HIDE_ATTRIBUTES` hid them from the tooltip but they still applied — holding an iron-based sword applied a `-2.4` ADDITION to `generic.attack_speed`, making our `setBaseValue()` resolve to a negative value and the attack bar never fill.
+- **Currency drops from mob loot tables**: `CoreLootTable` now supports a `currency-rolls:` section (`{ chance, min, max }` entries). `MobLootListener` calls `rollCurrency()` after item rolls and deposits the result via `RpgServices.economy()` directly to the player's balance. Requires `rpg-economy`; silently skipped if not loaded. Update mob YAMLs to use `currency-rolls:` for coin drops instead of spawning coin item entities.
+
+### rpg-mining `0.2.1`
+- **Mining fatigue suppression fix**: default amplifier changed from `1` (Fatigue II — slows but doesn't prevent mining) to `255` (effectively infinite break time). Vanilla blocks can no longer be mined at all while holding an RPG gathering tool. Configurable in `plugins/rpg-mining/config.yml` under `mining-fatigue.amplifier`.
+
+---
+
 ### rpg-trade `0.1.0` *(new plugin)*
 - **`/trade <player>`** — sends a trade invite (30s expiry, configurable). Target accepts with `/trade accept`, declines with `/trade deny`. Either party can cancel at any time with `/trade cancel`.
 - **Trade GUI** (54-slot): your 3×3 item offer on the left, the other player's items on the right (read-only). Coin amount set by clicking the sunflower button and typing in chat. Both players must click **Confirm Trade**; a configurable countdown (default 5s) then fires before items and coins swap atomically. Either player can click the button again during countdown to cancel.

@@ -206,7 +206,20 @@ public final class MobLoader {
                 logger.warning("mob '" + mobId + "' guaranteed bad: " + ex.getMessage());
             }
         }
-        return new CoreLootTable(mobId, attribution, rollMode, rolls, guaranteed);
+
+        List<CoreLootTable.CurrencyRoll> currencyRolls = new ArrayList<>();
+        for (Map<?, ?> raw : s.getMapList("currency-rolls")) {
+            try {
+                double chance = raw.get("chance") instanceof Number n ? n.doubleValue() : 0;
+                long min = raw.get("min") instanceof Number n ? n.longValue() : 1;
+                long max = raw.get("max") instanceof Number n ? n.longValue() : min;
+                currencyRolls.add(new CoreLootTable.CurrencyRoll(chance, min, max));
+            } catch (Exception ex) {
+                logger.warning("mob '" + mobId + "' currency-roll bad: " + ex.getMessage());
+            }
+        }
+
+        return new CoreLootTable(mobId, attribution, rollMode, rolls, guaranteed, currencyRolls);
     }
 
     private static Attribution parseAttribution(String s) {

@@ -36,6 +36,9 @@
 - Global region in `/region` commands
 - All 20 config.yml files annotated with examples
 - Docs pass: missing plugin pages (trade, admin, mining, farming, fishing, accessories, chat), stale status fixes, stat formulas, ability context table, status label standardization, design intent paragraphs, quickstart guide, patterns page, progression guide, dependency table, backlog redirect, planned/README
+- Iron Shortsword attack cooldown fix — removed vanilla attribute modifiers from custom items (`rpg-core 1.0.3`)
+- Mining fatigue amplifier fix — bumped to 255 to fully suppress vanilla breaking (`rpg-mining 0.2.1`)
+- Coin drops deposit fix — added `currency-rolls:` loot table section that deposits via economy (`rpg-core 1.0.3`)
 
 ---
 
