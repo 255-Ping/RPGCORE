@@ -25,9 +25,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Cooking GUI mirroring the brewing one: 3 ingredient slots + 7 recipe tiles. Clicking a tile
- * cooks instantly if the player meets the level + has the inputs. The {@code CookTicks} field is
- * not used in this synchronous version; queue-and-walk-away can layer on later.
+ * Cooking GUI: 3 ingredient slots + recipe tiles. Clicking a tile cooks instantly if the player
+ * meets the level requirement and has the required inputs.
+ *
+ * <p><b>Per-player isolation</b>: every call to {@link #open} creates a brand-new
+ * {@link Inventory} object for that specific player. Two players clicking the same station
+ * block simultaneously each get their own independent inventory — they cannot see or interfere
+ * with each other's ingredients.
  */
 public final class CookingGui implements Listener {
 

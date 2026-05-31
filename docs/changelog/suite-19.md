@@ -4,6 +4,10 @@
 
 ---
 
+### rpg-core `1.0.0`
+- **Block holograms**: custom block definitions now support an optional `Hologram: "&6Text"` field (and `HologramYOffset: 1.2`). A `TextDisplay` entity is spawned above every placed instance of that block type, centered over the block, at the configured Y offset above its top surface. Holograms despawn when the block is broken and re-spawn after respawn cycles. On plugin enable, stale entities from the previous session are swept before fresh ones are created. Add to any block YAML: `Hologram: "&6⚗ Brewing Station"`.
+- **Per-player GUI isolation confirmed**: `CookingGui`, `BrewingGui`, and `StationGui` each create a brand-new `Inventory` object per `open()` call. Two players clicking the same station block simultaneously receive independent inventories — no shared state, no interference. Added clarifying Javadoc to all three GUIs.
+
 ### rpg-regions `0.5.0`
 - **Global region in `/region` commands**: `/region list` now shows `[global]` as the first entry (with its current flag count). `/region flag __global__ <flag> <value|clear>` is a new alias for `/region global flag` — admins can manage the world-wide region using the same flag command they use for named regions. Tab-complete on `/region flag` now suggests `__global__` as the first option.
 

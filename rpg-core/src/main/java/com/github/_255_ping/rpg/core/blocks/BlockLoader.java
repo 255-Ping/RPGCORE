@@ -72,9 +72,12 @@ public final class BlockLoader {
 
         List<String> dropSpecs = s.getStringList("Drops");
         long xp = s.getLong("XP", 0);
+        String hologramText = s.getString("Hologram", "");
+        double hologramYOffset = s.getDouble("HologramYOffset", 1.2);
 
         return new CoreBlock(id, material, toughness, requiredPower, tool,
-                respawnTicks, placeholder, interactable, stationType, dropSpecs, xp);
+                respawnTicks, placeholder, interactable, stationType, dropSpecs, xp,
+                hologramText, hologramYOffset);
     }
 
     private static RequiredToolType parseTool(String s) {

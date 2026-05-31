@@ -28,6 +28,11 @@ import java.util.UUID;
  * Brewing GUI: player drops ingredients into the 3 input slots (10,11,12) and clicks a recipe
  * tile to brew. We resolve the first recipe whose inputs match the contents (matters: id +
  * minimum amount). On confirm, inputs are consumed and the output potion is given to the player.
+ *
+ * <p><b>Per-player isolation</b>: every call to {@link #open} creates a brand-new
+ * {@link Inventory} object for that specific player. Two players clicking the same station
+ * block simultaneously each get their own independent inventory — they cannot see or interfere
+ * with each other's ingredients.
  */
 public final class BrewingGui implements Listener {
 

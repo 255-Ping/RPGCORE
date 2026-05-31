@@ -28,10 +28,15 @@ import java.util.UUID;
 /**
  * Two-mode GUI:
  * <ul>
- *   <li><b>Enchanting</b> (slot 11 = item, slot 13 = options panel, slot 15 = result)</li>
+ *   <li><b>Enchanting</b> (slot 11 = item, slot 15 = result)</li>
  *   <li><b>Anvil</b> (slot 11 = item, slots 19-25 = reforge options, slots 28-34 = upgrade options)</li>
  * </ul>
  * On close, any item still in slot 11 is returned to the player's inventory.
+ *
+ * <p><b>Per-player isolation</b>: every call to {@link #open} creates a brand-new
+ * {@link Inventory} object for that specific player. Two players using the same station
+ * block simultaneously each get their own independent input slot — they cannot see or
+ * interfere with each other's item.
  */
 public final class StationGui implements Listener {
 

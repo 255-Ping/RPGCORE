@@ -1,20 +1,25 @@
 # Sample custom blocks. Each top-level key is a block ID. Reload with /rpg reloadall.
 #
-# Place by running:
+# Place by running either:
+#   /rpg block give <blockId>         — gives an admin item that auto-registers on place
 #   /rpg block convert <radius> <fromMaterial> <toBlockId>
-# which scans vanilla blocks of <fromMaterial> within <radius> of you and tags them
-# as the custom block. They look the same as the base Material until broken.
+#     — scans vanilla blocks of <fromMaterial> within <radius> and bulk-tags them.
 #
 # Fields:
-#   MinecraftBlock   — base Material (block placed in world)
-#   Toughness        — block HP (mining-speed slice will tick this down; v1 = instant break)
-#   RequiredPower    — BREAKING_POWER stat must be >= this to break the block
-#   RequiredToolType — pickaxe | axe | shovel | hoe | any | none
-#   RespawnTicks     — ticks until the block regenerates (0 = no respawn)
-#   RespawnPlaceholder — what's shown at the location while respawning
-#   Interactable     — reserved for right-click handling (stations); v1 unused at runtime
-#   StationType      — crafting | cooking | brewing | enchanting | anvil
-#   Drops            — list of "[file] <itemId> <min>[-<max>]" — file token is optional/decorative
+#   MinecraftBlock     — base Material placed in the world (REDSTONE_ORE, GOLD_BLOCK, etc.)
+#   Toughness          — block HP; MINING_SPEED stat drains this per-tick while held-click
+#   RequiredPower      — BREAKING_POWER stat must be >= this value to break the block
+#   RequiredToolType   — pickaxe | axe | shovel | hoe | any | none
+#   RespawnTicks       — ticks until the block regenerates after being broken (0 = no respawn)
+#   RespawnPlaceholder — Material shown at the location while the block is regenerating
+#   Interactable       — true if right-click opens a station GUI (requires StationType)
+#   StationType        — cooking | brewing | enchanting | anvil (opens the corresponding GUI)
+#   Drops              — list of "[file] <itemId> <min>[-<max>]"; file token optional/decorative
+#   XP                 — skill XP awarded on break (0 = fall back to the skill addon's default-xp)
+#   Hologram           — optional text displayed above every placed instance of this block.
+#                        Supports & color codes. Omit or leave empty for no hologram.
+#                        Example: Hologram: "&6⚗ Brewing Station"
+#   HologramYOffset    — Y offset in blocks above the block's top surface (default 1.2)
 
 red_gem_block:
   MinecraftBlock: redstone_ore

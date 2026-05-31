@@ -47,13 +47,16 @@ public final class BlockBreakHandler implements Listener {
     private final RpgCorePlugin plugin;
     private final CoreBlockRegistry registry;
     private final DropManager dropManager;
+    private final BlockHologramService hologramService;
     private final Map<UUID, BlockBreakProgress> active = new HashMap<>();
     private BukkitTask tickTask;
 
-    public BlockBreakHandler(RpgCorePlugin plugin, CoreBlockRegistry registry, DropManager dropManager) {
+    public BlockBreakHandler(RpgCorePlugin plugin, CoreBlockRegistry registry,
+                             DropManager dropManager, BlockHologramService hologramService) {
         this.plugin = plugin;
         this.registry = registry;
         this.dropManager = dropManager;
+        this.hologramService = hologramService;
     }
 
     public void start() {
@@ -114,6 +117,7 @@ public final class BlockBreakHandler implements Listener {
         if (event.getPlayer().getGameMode() == GameMode.CREATIVE
                 && event.getPlayer().hasPermission("rpg.admin")
                 && plugin.getConfig().getBoolean("creative-mode-bypass.break-time", true)) {
+            hologramService.despawnAt(loc);
             registry.untagLocation(loc);
             event.setDropItems(false);
             return;
@@ -144,7 +148,10 @@ public final class BlockBreakHandler implements Listener {
     @EventHandler
     public void onDestroy(BlockDestroyEvent event) {
         Location loc = event.getBlock().getLocation();
-        if (registry.hasTag(loc)) registry.untagLocation(loc);
+        if (registry.hasTag(loc)) {
+            hologramService.despawnAt(loc);
+            registry.untagLocation(loc);
+        }
     }
 
     // ----- Tick loop -----
@@ -210,6 +217,7 @@ public final class BlockBreakHandler implements Listener {
         plugin.getServer().getPluginManager().callEvent(rpgEvent);
         if (rpgEvent.isCancelled()) return;
 
+        hologramService.despawnAt(loc);
         registry.untagLocation(loc);
 
         // Break the world block — set to air, then roll our drops.
@@ -225,6 +233,7 @@ public final class BlockBreakHandler implements Listener {
                 if (loc.getWorld() == null) return;
                 loc.getBlock().setType(block.material());
                 registry.tagLocation(loc, block.id());
+                hologramService.spawnAt(loc, block);   // re-spawn hologram after block respawns
             }, block.respawnTicks());
         }
     }

@@ -17,5 +17,7 @@ public record CoreBlock(
         boolean interactable,
         String stationType,
         List<String> dropSpecs,
-        long xp
+        long xp,
+        String hologramText,
+        double hologramYOffset
 ) implements Block {}

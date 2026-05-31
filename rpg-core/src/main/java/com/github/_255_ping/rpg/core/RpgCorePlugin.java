@@ -5,6 +5,7 @@ import com.github._255_ping.rpg.core.abilities.AbilityLoader;
 import com.github._255_ping.rpg.core.abilities.CoreAbilityRegistry;
 import com.github._255_ping.rpg.core.abilities.ItemAbilityListener;
 import com.github._255_ping.rpg.core.blocks.BlockBreakHandler;
+import com.github._255_ping.rpg.core.blocks.BlockHologramService;
 import com.github._255_ping.rpg.core.blocks.BlockInteractListener;
 import com.github._255_ping.rpg.core.blocks.BlockPlaceListener;
 import com.github._255_ping.rpg.core.blocks.BlockLoader;
@@ -105,6 +106,7 @@ public final class RpgCorePlugin extends JavaPlugin {
     private CoreBlockRegistry blockRegistry;
     private BlockLoader blockLoader;
     private BlockPersistence blockPersistence;
+    private BlockHologramService blockHologramService;
     private NamespacedKey blockItemKey;
     private DamagerTracker damagerTracker;
     private CoreCurrencyRegistry currencyRegistry;
@@ -232,6 +234,9 @@ public final class RpgCorePlugin extends JavaPlugin {
         blockPersistence = new BlockPersistence(dataStore, blockRegistry);
         blockPersistence.load();
 
+        blockHologramService = new BlockHologramService(this);
+        blockHologramService.initAll(blockRegistry);
+
         getServer().getPluginManager().registerEvents(new VanillaSuppressionListener(this), this);
         getServer().getPluginManager().registerEvents(new DurabilityListener(getConfig()), this);
         getServer().getPluginManager().registerEvents(new BowListener(this), this);
@@ -251,12 +256,12 @@ public final class RpgCorePlugin extends JavaPlugin {
         ParticleManager particleManager = new ParticleManager(this);
         particleManager.start();
 
-        BlockBreakHandler blockBreakHandler = new BlockBreakHandler(this, blockRegistry, dropManager);
+        BlockBreakHandler blockBreakHandler = new BlockBreakHandler(this, blockRegistry, dropManager, blockHologramService);
         getServer().getPluginManager().registerEvents(blockBreakHandler, this);
         blockBreakHandler.start();
         getServer().getPluginManager().registerEvents(new BlockInteractListener(blockRegistry), this);
         getServer().getPluginManager().registerEvents(
-                new BlockPlaceListener(blockRegistry, blockPersistence, blockItemKey), this);
+                new BlockPlaceListener(blockRegistry, blockPersistence, blockItemKey, blockHologramService), this);
         getServer().getPluginManager().registerEvents(damagerTracker, this);
         getServer().getPluginManager().registerEvents(new MobLootListener(damagerTracker, dropManager), this);
 
@@ -342,6 +347,9 @@ public final class RpgCorePlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (blockHologramService != null) {
+            blockHologramService.despawnAll();
+        }
         if (blockPersistence != null) {
             try {
                 blockPersistence.save();
@@ -371,6 +379,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         mobLoader.loadAll();
         abilityLoader.loadAll();
         blockLoader.loadAll();
+        blockHologramService.initAll(blockRegistry);   // re-spawn with updated definitions
         skillsService.onReload();
         if (recipeLoader != null) recipeLoader.reload();
         if (smeltingLoader != null) smeltingLoader.reload();

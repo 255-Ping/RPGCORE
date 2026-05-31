@@ -45,4 +45,18 @@ public interface Block {
      * configured {@code default-xp} value instead. Set {@code XP: N} in the block YAML.
      */
     default long xp() { return 0; }
+
+    /**
+     * Optional hologram text displayed above every placed instance of this block.
+     * Supports {@code &} legacy color codes. Empty / null = no hologram.
+     * Set via {@code Hologram: "&6My Station"} in the block YAML.
+     */
+    default String hologramText() { return ""; }
+
+    /**
+     * Vertical offset (in blocks) above the block's top surface where the hologram appears.
+     * Default is {@code 1.2} — a comfortable reading height just above the block.
+     * Set via {@code HologramYOffset: 1.2} in the block YAML.
+     */
+    default double hologramYOffset() { return 1.2; }
 }

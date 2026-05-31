@@ -2,6 +2,7 @@ package com.github._255_ping.rpg.core.blocks;
 
 import com.github._255_ping.rpg.api.RpgServices;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -34,12 +35,14 @@ public final class BlockPlaceListener implements Listener {
     private final CoreBlockRegistry registry;
     private final BlockPersistence persistence;
     private final NamespacedKey blockItemKey;
+    private final BlockHologramService hologramService;
 
     public BlockPlaceListener(CoreBlockRegistry registry, BlockPersistence persistence,
-                              NamespacedKey blockItemKey) {
+                              NamespacedKey blockItemKey, BlockHologramService hologramService) {
         this.registry = registry;
         this.persistence = persistence;
         this.blockItemKey = blockItemKey;
+        this.hologramService = hologramService;
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -61,8 +64,11 @@ public final class BlockPlaceListener implements Listener {
         // Verify the block definition still exists.
         if (RpgServices.blocks().get(blockId).isEmpty()) return;
 
-        registry.tagLocation(event.getBlock().getLocation(), blockId);
+        Location loc = event.getBlock().getLocation();
+        registry.tagLocation(loc, blockId);
         persistence.save();
+        // Spawn hologram above the newly-tagged block if the definition has one.
+        RpgServices.blocks().get(blockId).ifPresent(def -> hologramService.spawnAt(loc, def));
         player.sendActionBar(net.kyori.adventure.text.Component.text(
                 "§aRegistered §e" + blockId + " §aat this location."));
     }
