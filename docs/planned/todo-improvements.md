@@ -4,6 +4,73 @@ _These systems exist and partially work, but have significant gaps._
 
 ---
 
+### Expand Example Content — Mobs, Abilities, and Items (`rpg-core`)
+The current example files are thin: 3 abilities, 2 mobs, and items that don't cover many interaction patterns. Need a richer out-of-the-box set so new server owners can see the full range of the system.
+
+**New abilities to add (`abilities/example.yml`):**
+- `fireball_barrage` — fire 3 delayed fireballs in a spread (beam × 3 with short delays between)
+- `death_nova` — on-death explosion that damages all nearby players (uses `~onDeath` trigger)
+- `enrage` — applies a self-buff status effect on hurt, making the mob hit harder when low HP (`~onHurt`)
+- `ground_slam` — melee AoE: particles + explode in radius around caster, knocking targets back
+- `soul_drain` — beam that deals damage and heals the caster for a % of damage dealt (beam + heal chained)
+- `warp_strike` — teleports caster to target then immediately damages (needs `teleport` effect — see new effects below)
+- `chain_lightning` — chains damage to multiple nearby targets (needs `chain` effect — see below)
+- `zone_of_pain` — creates a lingering zone that pulses a status effect on everything inside (needs `zone` effect)
+- `player_shield` — absorbs incoming damage for a short window (needs `shield` effect)
+- `blink_forward` — short-range dash in look direction (needs `blink` effect)
+
+**New mobs to add (`mobs/example.yml`):**
+- `forest_sprite` — passive mob, flees combat, drops rare herbs; demonstrates `passive` AI + `~onHurt` flee ability
+- `goblin` — fast, low-HP melee mob; uses `aggressive` AI, enrage ability `~onHurt`, small loot table
+- `skeleton_archer` — ranged mob (skeleton base); uses `~onTimer` ranged ability, moderate HP
+- `cave_troll` — tank mob (iron_golem base); high HP/armor, `ground_slam ~onTimer:60`, slow movement, rich loot
+- `corrupted_mage` — caster mob (witch base); uses `soul_drain ~onTimer:40`, `chain_lightning ~onTimer:80`, mana-themed
+- `dungeon_boss` — showcase boss: multiple abilities on different timers, `death_nova ~onDeath`, large loot pool, named with health bar
+
+**New items to add (`items/example.yml`):**
+- `goblin_fang` — material drop from goblin, used in recipes
+- `troll_hide` — material drop from cave_troll
+- `void_crystal` — epic material, rare drop, used in high-tier crafting
+- `mages_robes` (4-piece set) — caster armor set demonstrating full intelligence/mana stats
+- `shadow_dagger` — fast sword (low AttackCooldown), high crit stats, demonstrates ferocity
+- `berserker_axe` — AXE type weapon, demonstrates strength + ferocity, uses `ground_slam` ability
+- `soul_staff` — WAND using `soul_drain` ability, lifesteal stats
+- `rangers_shortbow` — lighter bow, faster fire rate, `ammo_usage_reduction`, demonstrates BOW type fully
+- `mana_potion` — CONSUMABLE that restores mana (new `restore_mana` OnConsume effect)
+- `stamina_crystal` — ACCESSORY with `health_regen` + `mana_regen` + `vitality`
+
+---
+
+### New Built-in Ability Effects (`rpg-core`)
+The current effect set (`damage`, `heal`, `beam`, `explode`, `particles`, `sound`, `delay`, `apply_status`, `mana_cost`, `cooldown`) covers the basics but needs more building blocks for interesting abilities. Proposed additions:
+
+| Effect | Parameters | Description |
+|---|---|---|
+| `knockback` | `force=`, `direction=away/toward/up` | Push or pull the target. `away` = repel from caster, `toward` = pull in, `up` = launch upward. Works on both player→mob and mob→player. |
+| `teleport` | `mode=to_target/behind_target/random_near`, `distance=` | Teleport the caster. `to_target` = land on top of target, `behind_target` = appear behind, `random_near` = random point within `distance`. |
+| `blink` | `distance=` | Teleport the caster forward in their look direction by up to `distance` blocks, stopping at the first solid block. |
+| `chain` | `targets=`, `range=`, `damage_multiplier=`, `particle=` | Bounce a damage hit to up to `targets` additional entities within `range` of each successive target. Damage decays per bounce. |
+| `zone` | `radius=`, `duration_ticks=`, `interval_ticks=`, `effect_id=`, `effect_level=` | Spawn a persistent zone at the cast location. Every `interval_ticks`, applies `effect_id` at `effect_level` to all entities inside the radius. Despawns after `duration_ticks`. |
+| `shield` | `amount=`, `duration_ticks=`, `target=caster/target` | Apply a damage-absorb shield that blocks up to `amount` HP of incoming damage, expiring after `duration_ticks`. |
+| `drain` | `amount=`, `steal_percent=`, `target=caster/target` | Deal `amount` damage to the target and heal the caster for `steal_percent`% of the damage dealt. Stacks with `lifesteal` stat. |
+| `mark` | `duration_ticks=`, `damage_amplify=` | Mark the target; all damage they receive is multiplied by `damage_amplify` while the mark is active. Visual: a particle ring around the target. |
+| `restore_mana` | `amount=`, `target=caster/target` | Restore `amount` mana to caster or target. Counterpart to `mana_cost`. |
+| `launch` | `force=`, `direction=up/away/toward`, `target=caster/target` | Apply velocity to caster or target. Softer than `knockback` — suitable for mobility abilities rather than combat disruption. |
+| `freeze` | `duration_ticks=`, `target=caster/target` | Severely slow the target (apply a high-amplifier slowness + mining fatigue equivalent). Not the same as `apply_status slow` — `freeze` is much stronger and visually distinct (ice particle burst). |
+
+---
+
+### Consolidate `backend.yml` + `config.yml` Persistence Setting (`rpg-core`)
+**Why there are two files — document this clearly:**
+- `config.yml → persistence.backend` is the **admin's desired setting** (what the server owner configured).
+- `backend.yml` is a **runtime state file written by `BackendMigrator`** at startup. It records which backend was actually active last session so the migrator can detect a YAML↔MySQL switch and auto-migrate data before anything reads it.
+
+They intentionally serve different purposes and must stay separate. The risk of merging them is that if `config.yml` were both the setting AND the last-active record, a partial migration crash would corrupt the desired setting.
+
+**Action:** Add a comment block near the `persistence:` section in `config.yml` explaining this, and add a similar comment at the top of `backend.yml` when it is first generated. Also document it in `docs/core/persistence.md` so admins don't think it's a bug or duplicate.
+
+---
+
 ### Timed Cooking + Brewing with Persistent Progress (`rpg-cooking` / `rpg-alchemy`)
 Currently recipes complete instantly when the player clicks the output slot. Add configurable craft time:
 

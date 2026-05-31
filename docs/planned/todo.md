@@ -40,20 +40,24 @@
 
 1. 🐛 **Fix all confirmed bugs first** — see [Bugs](todo-bugs.md)
 2. 🔵 **GUI redesigns** (brewing/cooking/enchanting pagination + layouts) — high visibility
-3. 🟠 **Loot pool system** — needed by mobs, dungeons, and enchanting XP all at once
-4. 🟠 **Enchanting: Minecraft XP cost** — requires loot pool XP drops first
-5. 🟠 **Timed cooking + brewing** — QoL improvement, self-contained
-6. 🟠 **Mob death animation** — polish, self-contained
-7. 🟠 **Damage indicators: float down + shrink** — polish, self-contained
-8. 🟠 **Dungeon flesh-out** — entry requirements + loot grants
-9. 🟠 **Stats GUI redesign** — highest-visibility player feature
-10. 🔴 **Sign-entry utility** — needed before AH, Bazaar, or Guild Bank GUI
-11. 🟠 **HUD improvements** — scoreboard, tablist, PAPI support
-12. 🟠 **Fishing content slice**
-13. 🟠 **Quest log GUI**
-14. 🟠 **Guild bank + rank GUI**
-15. 🟠 **RPG-Farming redesign**
-16. 🔴 **Auction House** (needs sign-entry first)
-17. 🔴 **Bazaar**
-18. 🔵 **Party / Guild / Quest GUI conversions**
-19. 📄 **Docs pass** — fill stubs, add missing plugin pages
+3. 🟠 **New built-in ability effects** — unlocks all the interesting new ability content
+4. 🟠 **Expand example mobs, abilities, items** — depends on new effects
+5. 🟠 **Loot pool system** — needed by mobs, dungeons, and enchanting XP all at once
+6. 🟠 **Enchanting: Minecraft XP cost** — requires loot pool XP drops first
+7. 🟠 **Timed cooking + brewing** — QoL improvement, self-contained
+8. 🟠 **Mob death animation** — polish, self-contained
+9. 🟠 **Damage indicators: float down + shrink** — polish, self-contained
+10. 🔴 **Extract smelting + crafting to own plugins** — cleanup, low risk
+11. 🟠 **Document `backend.yml` vs `config.yml`** — quick doc note, no code change
+12. 🟠 **Dungeon flesh-out** — entry requirements + loot grants
+13. 🟠 **Stats GUI redesign** — highest-visibility player feature
+14. 🔴 **Sign-entry utility** — needed before AH, Bazaar, or Guild Bank GUI
+15. 🟠 **HUD improvements** — scoreboard, tablist, PAPI support
+16. 🟠 **Fishing content slice**
+17. 🟠 **Quest log GUI**
+18. 🟠 **Guild bank + rank GUI**
+19. 🟠 **RPG-Farming redesign**
+20. 🔴 **Auction House** (needs sign-entry first)
+21. 🔴 **Bazaar**
+22. 🔵 **Party / Guild / Quest GUI conversions**
+23. 📄 **Docs pass** — fill stubs, add missing plugin pages

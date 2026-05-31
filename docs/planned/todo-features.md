@@ -4,6 +4,25 @@ _Full features or systems that don't exist at all yet._
 
 ---
 
+### Extract Smelting → `rpg-smelting` Plugin (`rpg-core` / new `rpg-smelting`)
+Smelting recipe loading (`SmeltingLoader.java`) currently lives in `rpg-core`. It should be its own addon plugin so servers that don't need custom smelting don't load it, and so it can be expanded independently later.
+
+- Create a new blank `rpg-smelting` module (same pattern as `rpg-cooking` / `rpg-alchemy`)
+- Move `SmeltingLoader` and any smelting-specific YAML content out of `rpg-core` into the new plugin
+- The `smelting: true` vanilla-suppression flag stays in `rpg-core/config.yml` — it's a world-toggle, not addon-specific
+- `rpg-core` soft-depends on `rpg-smelting`; if the plugin isn't loaded, smelting suppression still applies but no custom recipes are registered
+- Stub out a `config.yml` and `recipes/example.yml` the same way cooking does; flesh out further functionality later
+
+### Extract Crafting → `rpg-crafting` Plugin (`rpg-core` / new `rpg-crafting`)
+Same rationale as smelting. `RecipeLoader.java` (shaped/shapeless crafting) currently lives in `rpg-core`.
+
+- Create a new blank `rpg-crafting` module
+- Move `RecipeLoader` and crafting YAML content out of `rpg-core` into the new plugin
+- The `crafting: true` vanilla-suppression flag stays in `rpg-core/config.yml`
+- Stub out `config.yml` and `recipes/example.yml`; flesh out further later
+
+---
+
 ### Sign-Entry Number Input (`rpg-core`)
 **Required before:** Auction House, Bazaar, Guild Bank GUI, any other GUI that takes a currency or quantity input from the player.
 
