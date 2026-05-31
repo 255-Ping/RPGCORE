@@ -91,9 +91,68 @@ flame_helmet:
     max_health: 30
 ```
 
-### `SWORD` / `BOW` / `WAND`
+### `SWORD`
 
-Standard items. `Abilities:` is most useful here. `WAND` items may scale ability damage with `intelligence`.
+```yaml
+iron_slayer:
+  MinecraftItem: iron_sword
+  Type: SWORD
+  DisplayName: "&fIron Slayer"
+  Rarity: "&f&lCOMMON"
+  Stats:
+    damage: 40
+    strength: 10
+    crit_chance: 5
+  Abilities:
+  - cleave{}                     # inline DSL, or reference a custom ability by ID
+```
+
+### `BOW`
+
+Bows consume an ammo item from the player's inventory on each shot. **`AmmoType` must reference a valid item ID** — without it the bow fires for free and any ammo item you defined is never consumed.
+
+```yaml
+forest_bow:
+  MinecraftItem: bow
+  Type: BOW
+  DisplayName: "&aForest Bow"
+  Rarity: "&a&lUNCOMMON"
+  Stats:
+    damage: 35
+    crit_chance: 8
+  AmmoType: iron_arrow           # item ID of the required ammo — must also be defined
+  InfiniteAmmo: false            # true = fires without consuming ammo (quiver, ability effect, etc.)
+  Abilities:
+  - arrow_shot{}                 # ability fires on bow release; projectile{} + damage{} is the typical pattern
+
+iron_arrow:
+  MinecraftItem: arrow
+  Type: MATERIAL
+  DisplayName: "&7Iron Arrow"
+  Rarity: "&f&lCOMMON"
+```
+
+> The `AmmoType` / ammo item relationship is a two-part wiring: define the ammo item **and** reference it with `AmmoType:` on the bow. Missing either half leaves one end dead.
+
+### `WAND`
+
+Wands scale ability damage with `intelligence` (configurable). The `max_mana` stat (not `mana`) sets the caster's mana pool.
+
+```yaml
+apprentice_wand:
+  MinecraftItem: blaze_rod
+  Type: WAND
+  DisplayName: "&aApprentice Wand"
+  Rarity: "&a&lUNCOMMON"
+  Stats:
+    damage: 30
+    intelligence: 25
+    max_mana: 50                 # ← correct ID; "mana: 50" is silently dropped
+  Abilities:
+  - arcane_bolt{}
+```
+
+Mana cost is enforced by the `mana_cost{}` effect at the top of the ability sequence — **not** by a `ManaCost:` field on the item or ability YAML. See [Abilities](abilities.md).
 
 ## Lookup & PDC tagging
 

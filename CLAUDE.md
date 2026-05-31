@@ -216,7 +216,7 @@ When `suiteVersion` bumps:
 | Module | Property | Current |
 |---|---|---|
 | rpg-api | `apiVersion` | 0.3.0 |
-| rpg-core | `coreVersion` | 1.0.3 |
+| rpg-core | `coreVersion` | 1.0.4 |
 | rpg-mining | `miningVersion` | 0.2.1 |
 | rpg-combat | `combatVersion` | 0.2.0 |
 | rpg-economy | `economyVersion` | 0.1.0 |

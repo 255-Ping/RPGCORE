@@ -4,6 +4,9 @@
 
 ---
 
+### rpg-core `1.0.4`
+- **AbilityLoader unknown-field warning**: loading an ability YAML that contains an unrecognized top-level field (e.g. `ManaCost: 50`, `CombatXpMultiplier: 1.0`) now logs a console warning naming the field and pointing to the correct pattern (`mana_cost{amount=N}` in `AbilitySequence`). Previously these fields were silently ignored — abilities appeared to have a mana cost in config but never deducted any mana at runtime.
+
 ### rpg-npcs `0.5.1`
 - **NPC click fix — orphan sweep**: `NpcManager.loadAll()` now calls `sweepOrphanedEntities()` before `despawnAll()`, scanning every loaded world for entities carrying the `rpg_npc_id` PDC key and removing them. Previously, NPCs with `setPersistent(true)` survived server restarts and plugin reloads; each reload stacked a new copy on top, causing visual overlap and unreliable interaction resolution.
 - **NPC click fix — entity type default**: changed default `display.body-entity` from `VILLAGER` to `ZOMBIE`. Paper's villager trade GUI can interfere with right-click handling even when `PlayerInteractEntityEvent` is cancelled.

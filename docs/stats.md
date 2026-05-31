@@ -10,6 +10,23 @@ Stats whose owning addon isn't loaded are hidden from menus via per-stat config 
 
 ---
 
+## ⚠ Stat IDs ≠ display names
+
+The **ID** column is what you write in YAML. The **Display** column is what players see in item lore. They are often different — use the wrong one and the loader silently drops the stat with a console warning, leaving the player's sheet unchanged.
+
+The two most common mistakes:
+
+| ❌ Wrong (display name) | ✅ Correct (stat ID) |
+|---|---|
+| `health: 50` | `max_health: 50` |
+| `mana: 50` | `max_mana: 50` |
+
+**How to check:** run `/rpg item give <id>` after reload and watch the console. A line like `"item 'X' references unknown stat 'mana'"` means the stat ID is wrong.
+
+---
+
+---
+
 ## Combat
 
 | ID | Display | Percent | Description |

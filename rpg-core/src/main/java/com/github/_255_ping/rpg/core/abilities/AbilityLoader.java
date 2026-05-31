@@ -70,7 +70,23 @@ public final class AbilityLoader {
         }
     }
 
+    /** Fields the loader actually reads. Anything else is silently ignored — warn admins. */
+    private static final java.util.Set<String> KNOWN_KEYS = java.util.Set.of(
+            "AbilitySequence", "Cooldown", "Name", "Description"
+    );
+
     private CompositeAbilityEffect parse(String id, ConfigurationSection s) {
+        // Warn on unrecognized top-level fields so admins catch docs-vs-loader drift early.
+        // Common false positives: "ManaCost" (use mana_cost{} in AbilitySequence instead),
+        // "CombatXpMultiplier" (not yet implemented).
+        for (String key : s.getKeys(false)) {
+            if (!KNOWN_KEYS.contains(key)) {
+                logger.warning("ability '" + id + "' has unrecognized field '" + key
+                        + "' — it will be ignored. Known fields: " + KNOWN_KEYS
+                        + ". For mana cost use '- mana_cost{amount=N}' in AbilitySequence.");
+            }
+        }
+
         List<String> seq = s.getStringList("AbilitySequence");
         long cooldown = s.getLong("Cooldown", 0);
         String displayName = s.getString("Name");
