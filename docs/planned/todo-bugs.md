@@ -43,12 +43,14 @@ Equipping the Iron Shortsword puts the attack cooldown indicator permanently at 
 
 ---
 
-### Arrows: No Damage, No Knockback, Cancelled on Hit (`rpg-core` / `rpg-combat`)
-When an arrow hits a mob:
-- No RPG damage is applied
-- No knockback occurs
-- It looks like the arrow hit is cancelled before Minecraft's own damage gets a chance to run
+### Arrows: Weird Visual Behaviour on Hit (`rpg-core` / `rpg-combat`)
+Arrows **do** deal damage (confirmed in testing), but the hit visuals are wrong — the arrow appears to pass through or be cancelled visually before the hit registers. Investigate whether the arrow entity is being removed too early or whether the hit event is firing out of order with the damage pipeline.
 
 **Also:** Bows, swords, and wands should all apply knockback. All example weapons and wands in the default item YAML files are missing a `knockback` stat entry — add one to every example item so the behaviour is demonstrated out of the box.
+
+---
+
+### Mob Ability Deals No Damage (`rpg-core`)
+The ability configured on `testmob` (and likely other mobs) fires and runs its animation/effects, but no damage is applied to the target player. The `DamageEffect` inside the ability pipeline is either not executing or resolving to 0. Check whether `AbilityContext` is correctly carrying the caster entity and whether `DamageEffect` falls back to a null or zero stat value when cast from a mob rather than a player.
 
 ---

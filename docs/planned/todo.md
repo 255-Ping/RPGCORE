@@ -39,16 +39,21 @@
 ## Suggested Priority Order
 
 1. 🐛 **Fix all confirmed bugs first** — see [Bugs](todo-bugs.md)
-2. 🔵 **GUI redesigns** (brewing, cooking, enchanting pagination) — high visibility
-3. 🟠 **Dungeon flesh-out** — entry requirements + loot grants
-4. 🟠 **Stats GUI redesign** — highest-visibility player feature
-5. 🔴 **Sign-entry utility** — needed before AH, Bazaar, or Guild Bank GUI
-6. 🟠 **HUD improvements** — scoreboard, tablist, PAPI support
-7. 🟠 **Fishing content slice**
-8. 🟠 **Quest log GUI**
-9. 🟠 **Guild bank + rank GUI**
-10. 🟠 **RPG-Farming redesign**
-11. 🔴 **Auction House** (needs sign-entry first)
-12. 🔴 **Bazaar**
-13. 🔵 **Party / Guild / Quest GUI conversions**
-14. 📄 **Docs pass** — fill stubs, add missing plugin pages
+2. 🔵 **GUI redesigns** (brewing/cooking/enchanting pagination + layouts) — high visibility
+3. 🟠 **Loot pool system** — needed by mobs, dungeons, and enchanting XP all at once
+4. 🟠 **Enchanting: Minecraft XP cost** — requires loot pool XP drops first
+5. 🟠 **Timed cooking + brewing** — QoL improvement, self-contained
+6. 🟠 **Mob death animation** — polish, self-contained
+7. 🟠 **Damage indicators: float down + shrink** — polish, self-contained
+8. 🟠 **Dungeon flesh-out** — entry requirements + loot grants
+9. 🟠 **Stats GUI redesign** — highest-visibility player feature
+10. 🔴 **Sign-entry utility** — needed before AH, Bazaar, or Guild Bank GUI
+11. 🟠 **HUD improvements** — scoreboard, tablist, PAPI support
+12. 🟠 **Fishing content slice**
+13. 🟠 **Quest log GUI**
+14. 🟠 **Guild bank + rank GUI**
+15. 🟠 **RPG-Farming redesign**
+16. 🔴 **Auction House** (needs sign-entry first)
+17. 🔴 **Bazaar**
+18. 🔵 **Party / Guild / Quest GUI conversions**
+19. 📄 **Docs pass** — fill stubs, add missing plugin pages

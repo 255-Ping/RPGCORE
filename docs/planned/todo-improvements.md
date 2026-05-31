@@ -4,6 +4,68 @@ _These systems exist and partially work, but have significant gaps._
 
 ---
 
+### Timed Cooking + Brewing with Persistent Progress (`rpg-cooking` / `rpg-alchemy`)
+Currently recipes complete instantly when the player clicks the output slot. Add configurable craft time:
+
+- Each recipe YAML gains an optional `CraftTime` field (in seconds; 0 or absent = instant, same as now)
+- When a player starts a recipe in the GUI a progress bar fills over the configured duration
+- **If the player closes the GUI mid-craft**, the in-progress state is saved to `DataStore` per-player per-station-block: which recipe is being crafted, how much time has elapsed, and the ingredients that were consumed
+- **When the player reopens that station GUI**, it restores the in-progress state — shows the recipe filling up from where it left off (not restarting)
+- On completion the output appears in the output slot as normal; the persisted state is cleared
+- Applies to both cooking stations (`rpg-cooking`) and brewing stations (`rpg-alchemy`)
+
+---
+
+### Enchanting: Costs Minecraft XP (`rpg-enchanting`)
+Currently enchanting costs in-game currency only. Add Minecraft (vanilla) XP cost:
+
+- Each enchant YAML gains an optional `XpCost` field (levels or points; admins choose unit in config)
+- The cost is deducted from the player's vanilla XP bar on apply; if they don't have enough the apply is blocked with a message
+- **Mob XP drops** — admins should be able to configure how much vanilla XP custom mobs drop in the mob YAML (separate from skill XP). This feeds the pool players spend on enchanting.
+- **Loot pool XP** — loot pool entries (see below) should also support an `Exp` field that drops vanilla XP orbs
+
+---
+
+### Loot Pool System (`rpg-core`)
+Admins need a way to define reusable named loot pools and assign them to mobs (and dungeons, chests, etc.) rather than embedding loot inline everywhere. Design:
+
+- New content folder: `plugins/rpg-core/loot-pools/<file>.yml`
+- Each pool has a list of entries, each with:
+  - `Item` — custom item id or vanilla material
+  - `Chance` — drop chance (0.0–100.0)
+  - `Amount` / `MinAmount` / `MaxAmount` — quantity range
+  - `Exp` — vanilla XP to drop (orbs) on this entry rolling
+  - `CombatExp` — skill XP to award to the killer's combat skill
+  - `MagicFindAffected` — boolean, scales chance by killer's `MAGIC_FIND` stat
+- Pools are referenced by id from mob YAML (`LootPool: my_pool_id`), dungeon loot chest config, etc.
+- Multiple pools can be assigned to one mob (all roll independently)
+- This is an extension of / replacement for the current inline loot table system — external `LootTable: <id>` references that currently don't work (see [Improvements — Loot Tables](todo-improvements.md)) should be consolidated into this
+
+---
+
+### Damage Indicators: Float Down + Shrink (`rpg-holograms`)
+Current behaviour: damage numbers appear and stay in place until their duration expires.
+
+New behaviour:
+- Numbers **float downward** (not upward) over their lifetime
+- Numbers **scale down** (shrink) continuously as they age via `TextDisplay` transformation
+- When they reach minimum scale (configurable `min-scale` in config), they are removed immediately rather than waiting for `duration-ticks`
+- All motion/scale parameters should be configurable: `float-speed`, `start-scale`, `min-scale`, `duration-ticks`
+
+---
+
+### Mob Death Animation (`rpg-core`)
+Currently mobs play Minecraft's default death animation (fall to side, then despawn). Replace this with a custom death sequence:
+
+- When a custom mob's HP reaches 0, **cancel the vanilla death animation** (remove the entity before it can play the fall)
+- Spawn configured **particles** at the death location (admin-configurable particle type, count, spread)
+- Play a configured **sound** at the death location (admin-configurable sound, volume, pitch)
+- Both `Particles` and `DeathSound` fields go on the mob YAML definition
+- Loot still drops as normal (triggered by the RPG death event, not the vanilla entity death)
+- Example in `mobs/example.yml` should demonstrate both fields
+
+---
+
 ### Dungeon System Flesh-out (`rpg-dungeons`)
 > ⚠️ Fix the enter bug (see [Bugs](todo-bugs.md)) before working on anything below.
 
