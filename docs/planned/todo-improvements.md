@@ -276,6 +276,46 @@ Current: inline loot tables on mob YAML work. External `LootTable: <id>` referen
 
 ---
 
+### NPC Command Overhaul + In-Game Editing (`rpg-npcs`)
+The `/npc` command is bare-bones and requires YAML editing for almost everything. Multiple gaps:
+
+**Per-NPC entity type (currently missing entirely):**
+- `NpcDef` has no per-NPC entity type field — all entity-style NPCs share a single global `display.body-entity` setting in `config.yml`. If you have a blacksmith NPC and a quest giver, they're both the same entity type.
+- Add an `EntityType` field to `NpcDef` YAML and the parser
+- Add `/npc setentitytype <id> <VILLAGER|ZOMBIE|IRON_GOLEM|...>` command with tab-complete for entity type names
+- Default to the global config value if not specified per-NPC
+
+**Style + skin commands (data model exists, no commands):**
+- `EntityStyle` (ENTITY vs PLAYER) and `SkinDef` are in `NpcDef` but can only be set by editing YAML directly
+- Add `/npc setstyle <id> entity|player` — switches between a vanilla entity body and a fake-player skin
+- Add `/npc setskin <id> <playerName>` — fetches the Mojang skin for `<playerName>` and applies it (calls `SkinFetcher` which already exists)
+- Add `/npc setskin <id> raw <value> <signature>` — for custom skins via raw texture data
+
+**In-game dialogue editing (currently: YAML only):**
+- `/npc setbehavior dialogue <id> <line>` overwrites all dialogue with one line — no way to add/remove individual lines
+- Add `/npc dialogue add <id> <line...>` — appends a line
+- Add `/npc dialogue set <id> <index> <line...>` — replaces line at index
+- Add `/npc dialogue remove <id> <index>` — removes line at index
+- Add `/npc dialogue clear <id>` — removes all lines
+- Add `/npc dialogue list <id>` — shows all current lines with indices
+
+**In-game shop editing (currently: YAML only + "edit npcs/all.yml" message):**
+- When `setbehavior shop` is set, the only instruction is "Edit npcs/all.yml to add items." — completely unusable for non-technical admins
+- Add `/npc shop add <id> <itemId> <buyPrice> <sellPrice>` — adds an item to the shop
+- Add `/npc shop remove <id> <index>` — removes item at index
+- Add `/npc shop list <id>` — shows current shop items with indices, prices, and whether the item exists in the registry
+- Add `/npc shop clear <id>` — removes all shop items
+
+**In-game quest assignment (partial — no tab-complete):**
+- `/npc setbehavior quest <id> <questId>` works but offers no tab-complete for quest IDs
+- Add tab-complete for the fourth argument pulling from the quest registry (soft-dep lookup)
+
+**General help + info:**
+- `/npc` with no args shows a one-liner — should show a formatted list of all subcommands with brief descriptions
+- Add `/npc info <id>` — shows all current settings: location, entity style, entity type, skin, behavior type, dialogue line count, shop item count, quest ID
+
+---
+
 ### Region: Enter/Exit Messages + More Flags (`rpg-regions`)
 Current regions only enforce `pvp`, `no-break`, `no-place`. A lot of standard use-cases are missing:
 

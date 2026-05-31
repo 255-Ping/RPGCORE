@@ -40,6 +40,7 @@
 
 1. 🐛 **Fix all confirmed bugs first** — see [Bugs](todo-bugs.md)
 2. 🐛 **Wire up silent stats** (speed, ferocity, swing_range) — showing stats that do nothing is misleading
+3. 🟠 **NPC command overhaul + in-game editing** — per-NPC entity type, style/skin commands, dialogue/shop editing in-game
 3. 🔵 **GUI redesigns** (brewing/cooking/enchanting pagination + layouts) — high visibility
 4. 🟠 **New built-in ability effects** — unlocks all the interesting new ability content
 5. 🟠 **Expand example mobs, abilities, items** — depends on new effects
