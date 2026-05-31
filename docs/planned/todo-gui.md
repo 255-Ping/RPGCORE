@@ -70,9 +70,50 @@ These replace or supplement existing command interfaces. All are in `docs/planne
 - Changes saved on close
 
 ### Hologram Editor GUI (`/holograms`) — 🟡 Medium
-- Line slots: click line slot → chat-entry for line text
-- Add / remove / reorder lines in GUI
-- Click-action support on lines (run command, open shop)
+Opened via `/holograms edit <id>`. Two-tab layout within the same 54-slot inventory:
+
+**Tab bar (row 1):**
+- Slot 0: ✏️ `Lines` tab (active = lime glass, inactive = gray glass)
+- Slot 1: ⚙️ `Settings` tab
+- Slot 8: ✖ Close (save + close on click)
+
+---
+
+**Lines tab (54 slots):**
+- Slots 10–43: line entries (up to 34 lines). Each slot shows a written book named `Line N: <text preview>`. Lore shows the full line.
+  - Left-click → chat-entry to edit that line's text (supports `&` color codes)
+  - Right-click → delete that line (with a confirm prompt on the same click)
+  - Shift-left-click → move line up; Shift-right-click → move line down (swap with neighbour)
+- Slot 45: ➕ `Add Line` — appends a new empty line, immediately opens chat-entry for it
+- Slot 53: 🔄 `Reload Preview` — despawns and respawns the TextDisplay entity with current settings so admin can see changes in-world without closing
+
+---
+
+**Settings tab (54 slots):**
+Each property is a named item. Left-click cycles the value (for enums/booleans) or opens sign-entry / chat-entry (for numerics/colors). Current value always shown in the item name or lore.
+
+| Slot | Icon | Property | Interaction |
+|---|---|---|---|
+| 10 | PAPER | Billboard | Left-click cycles: CENTER → FIXED → VERTICAL → HORIZONTAL |
+| 11 | GLASS | Background | Left-click cycles: `transparent → default → custom`; custom opens sign-entry for `r,g,b,a` |
+| 12 | TORCH | Shadowed | Left-click toggles true/false |
+| 13 | ENDER_EYE | See-Through | Left-click toggles true/false |
+| 14 | INK_SAC | Text Opacity | Left-click opens sign-entry (0–255) |
+| 15 | OAK_SIGN | Alignment | Left-click cycles: CENTER → LEFT → RIGHT |
+| 16 | STRING | Line Width | Left-click opens sign-entry (pixels, default 200) |
+| 19 | SPYGLASS | View Range | Left-click opens sign-entry (float multiplier) |
+| 20 | GLOWSTONE_DUST | Brightness | Left-click cycles: `world lighting → always lit (15/15) → custom`; custom opens sign-entry for block/sky |
+| 21 | DIAMOND | Scale | Left-click opens sign-entry for `x y z` floats |
+| 22 | COMPASS | Offset | Left-click opens sign-entry for `x y z` floats (sub-block translation) |
+| 23 | GRAY_DYE | Shadow Radius | Left-click opens sign-entry (float) |
+| 24 | BLACK_DYE | Shadow Strength | Left-click opens sign-entry (0.0–1.0) |
+| 28 | GLOWING_ITEM_FRAME | Glowing | Left-click toggles true/false |
+| 29 | MAGENTA_DYE | Glow Color | Left-click opens sign-entry for `r g b`; grayed out if Glowing = false |
+| 31 | CLOCK | Interpolation | Left-click opens sign-entry for `delay_ticks duration_ticks` |
+| 32 | MINECART | Teleport Duration | Left-click opens sign-entry (ticks) |
+| 37 | RECOVERY_COMPASS | Animated | Left-click toggles true/false (see Animated Holograms) |
+| 38 | REPEATER | Frame Interval | Left-click opens sign-entry (ticks); grayed out if not animated |
+| 53 | LIME_CONCRETE | Apply & Preview | Saves all settings + respawns the display entity in-world |
 
 ### NPC Editor GUI (`/npc`) — 🔴 Hard
 Long-form alternative to the command-based editing for non-technical admins:

@@ -352,11 +352,97 @@ Current: `/quest list` prints to chat. Planned 54-slot inventory GUI:
 
 ---
 
-### Hologram Editor GUI (`rpg-holograms`) — 🟡 Medium
-Current: `/holograms create|delete|list|tp|move|line` commands and persistence work. GUI editor deferred:
-- Line-by-line editor (click slot → chat-entry for line text)
-- Add / remove / reorder lines
-- Click-action support on lines (run command, open shop, etc.)
+### Holograms: Tab Completions + Full TextDisplay Control + GUI (`rpg-holograms`) — 🟡 Medium
+Current: `/holograms create|delete|list|tp|move|line` commands and persistence work. Three things missing:
+
+#### 1. Tab completions — 🟢 Easy
+Every argument of every `/holograms` subcommand should tab-complete:
+
+| Argument position | Completions |
+|---|---|
+| Subcommand | `create delete list tp move line set info` |
+| `<id>` on any command | All existing hologram IDs |
+| `/holograms line <id>` | `add set remove list` |
+| `/holograms line <id> set\|remove` | Current line index numbers (0, 1, 2...) |
+| `/holograms set <id>` | All property names (see list below) |
+| Boolean properties | `true false` |
+| `billboard` | `FIXED VERTICAL HORIZONTAL CENTER` |
+| `alignment` | `LEFT CENTER RIGHT` |
+| `background` | `transparent default` then r/g/b/a hint |
+
+#### 2. Full TextDisplay property control — 🟡 Medium
+Add a `/holograms set <id> <property> [values...]` command family covering every `TextDisplay` (and parent `Display`) API field. All properties should also be serialised to the hologram's YAML so they survive reload.
+
+**Text content:**
+| Property | Command syntax | Notes |
+|---|---|---|
+| `text` | `/holograms line ...` (existing) | Multi-line via `\n` in YAML |
+| `alignment` | `set <id> alignment LEFT\|CENTER\|RIGHT` | Default: CENTER |
+| `linewidth` | `set <id> linewidth <pixels>` | Default: 200px; controls word-wrap |
+
+**Visual appearance:**
+| Property | Command syntax | Notes |
+|---|---|---|
+| `background` | `set <id> background <r> <g> <b> <a>` or `transparent` or `default` | ARGB 0–255 each. `transparent` = `0,0,0,0`. `default` = vanilla translucent dark panel. |
+| `opacity` | `set <id> opacity <0-255>` | Text opacity. 255 = fully visible. |
+| `shadowed` | `set <id> shadowed true\|false` | Text drop shadow. |
+| `seethrough` | `set <id> seethrough true\|false` | Visible through solid blocks. |
+
+**Display orientation + distance:**
+| Property | Command syntax | Notes |
+|---|---|---|
+| `billboard` | `set <id> billboard FIXED\|VERTICAL\|HORIZONTAL\|CENTER` | `CENTER` = always faces camera (most common). `FIXED` = world-locked, doesn't rotate. |
+| `viewrange` | `set <id> viewrange <float>` | Render-distance multiplier. 1.0 ≈ 64 blocks. 2.0 = 128 blocks. |
+| `brightness` | `set <id> brightness <block 0-15> <sky 0-15>` | Override local lighting. `15 15` = always fully lit regardless of darkness. |
+
+**Scale, offset, shadow:**
+| Property | Command syntax | Notes |
+|---|---|---|
+| `scale` | `set <id> scale <x> <y> <z>` | Floats. 1.0 = normal. Applied via `Transformation`. |
+| `offset` | `set <id> offset <x> <y> <z>` | Sub-block translation without teleporting the entity. Useful for stacking multiple displays. |
+| `shadowradius` | `set <id> shadowradius <float>` | Ground shadow circle size. 0 = no shadow. |
+| `shadowstrength` | `set <id> shadowstrength <0.0-1.0>` | Ground shadow opacity. |
+
+**Glow:**
+| Property | Command syntax | Notes |
+|---|---|---|
+| `glow` | `set <id> glow true\|false` | Outline glow visible through blocks. |
+| `glowcolor` | `set <id> glowcolor <r> <g> <b>` | Override glow outline color. |
+
+**Smooth interpolation (for animated holograms):**
+| Property | Command syntax | Notes |
+|---|---|---|
+| `interpolation` | `set <id> interpolation <delay_ticks> <duration_ticks>` | Smoothly interpolates transformation changes (scale, offset). `delay=0 duration=0` = instant (default). |
+| `teleportduration` | `set <id> teleportduration <ticks>` | Smooth movement when the entity is teleported (e.g., via `/holograms move`). |
+
+**YAML schema** — all properties optional, sane defaults apply if absent:
+```yaml
+my_hologram:
+  Location: {world: world, x: 100.5, y: 65.0, z: 200.5}
+  Lines:
+    - "&6Welcome to the Server!"
+    - "&7Right-click to open shop"
+  Billboard: CENTER
+  Background: transparent       # transparent | default | r,g,b,a
+  Shadowed: true
+  SeeThrough: false
+  Opacity: 255
+  Alignment: CENTER
+  LineWidth: 200
+  ViewRange: 1.0
+  Brightness: null              # null = use world lighting; or {block: 15, sky: 15}
+  Scale: {x: 1.0, y: 1.0, z: 1.0}
+  Offset: {x: 0.0, y: 0.0, z: 0.0}
+  ShadowRadius: 0.0
+  ShadowStrength: 1.0
+  Glowing: false
+  GlowColor: null
+  Animated: false
+  FrameInterval: 20
+```
+
+#### 3. GUI editor — 🟡 Medium
+See [GUI Redesigns](todo-gui.md) for the full layout spec. The GUI replaces manual `/holograms set` typing for non-technical admins and shows all settings at a glance.
 
 ---
 
