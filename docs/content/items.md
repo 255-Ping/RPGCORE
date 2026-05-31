@@ -107,6 +107,8 @@ iron_slayer:
   - cleave{}                     # inline DSL, or reference a custom ability by ID
 ```
 
+![A COMMON sword with Strength, Crit Chance, and Damage stats rendered in lore](../assets/screenshots/item_recruit_sword.PNG){ .screenshot }
+
 ### `BOW`
 
 Bows consume an ammo item from the player's inventory on each shot. **`AmmoType` must reference a valid item ID** — without it the bow fires for free and any ammo item you defined is never consumed.
@@ -153,6 +155,8 @@ apprentice_wand:
 ```
 
 Mana cost is enforced by the `mana_cost{}` effect at the top of the ability sequence — **not** by a `ManaCost:` field on the item or ability YAML. See [Abilities](abilities.md).
+
+![An Apprentice Wand showing Mana, Intelligence, and Damage stats with the ability description in lore](../assets/screenshots/item_apprentice_wand.PNG){ .screenshot }
 
 ## Lookup & PDC tagging
 

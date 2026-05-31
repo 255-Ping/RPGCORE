@@ -4,6 +4,8 @@
 
 Custom mobs are defined in YAML under `plugins/rpg-core/mobs/`. Any number of files; many mobs per file.
 
+![A custom mob with a name tag and health bar rendered above its head](../assets/screenshots/mob_test_zombie.PNG){ .screenshot }
+
 ## Schema
 
 ```yaml

@@ -20,6 +20,8 @@ zombie_talisman:
     Family: zombie_talisman      # see "Stacking"
 ```
 
+![An Adventurer's Ring tooltip — stats from accessories in the bag aggregate with armor and base stats](../assets/screenshots/item_adventurers_ring.PNG){ .screenshot }
+
 ## The bag
 
 A per-player inventory tab opened via `/accessories` (alias `/bag`). Default size 27 slots (3 rows); upgradeable.

@@ -63,6 +63,8 @@ Enchants fall into four patterns — they can be mixed on a single enchant:
 | **Ability enchant** | Grants or replaces an ability on the item | `levels: N: { abilities: [fireball{}] }` |
 | **Utility enchant** | Changes a gameplay flag (infinite ammo, etc.) | Not yet wired — planned |
 
+![The Enchanting Table GUI — selecting an enchant shows its description, coin cost, and a click-to-enchant prompt](../assets/screenshots/gui_enchanting_table.PNG){ .screenshot }
+
 ### Stat enchant example
 
 ```yaml
@@ -101,6 +103,8 @@ flame_blade:
       abilities:
         - "projectile{speed=2.5, particle=FLAME, damage_multiplier=1.2} apply_status{id=burn, duration=60}"
 ```
+
+![Sharpness II applied to a sword — the enchant lore shows stacked stat bonuses in red alongside base stats](../assets/screenshots/item_aspect_of_test_sharp_2.PNG){ .screenshot }
 
 > Ability enchants **replace** any ability granted by the previous level of the same enchant — they do not stack. If you want the enchant to add a second ability on top of the item's existing ones, reference the item's original ability ID in the lower-level entries too.
 
@@ -203,6 +207,8 @@ fortified:
       defense: 20
       max_health: 50
 ```
+
+![The Custom Anvil GUI — hovering a reforge option shows stat changes, required enchanting level, and a click-to-apply prompt](../assets/screenshots/gui_anvil.PNG){ .screenshot }
 
 The physical reforge stone items (e.g. `sharp_reforge_stone`) are `UPGRADE`-type items defined in your `items/` YAML — they appear in the anvil GUI alongside the target item. Use `/enchanting give reforge <id>` to hand them to players for testing.
 

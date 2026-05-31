@@ -4,6 +4,8 @@
 
 Configurable scoreboard, tablist, action bar, and player nametags. All formats are templates with placeholders resolved by core's `MessageFormatter`.
 
+![The RPG sidebar showing Health, Mana, Defense, skill levels, and coin balance](../assets/screenshots/scoreboard_initial_design.PNG){ .screenshot }
+
 ## Config
 
 `plugins/rpg-hud/config.yml`:
