@@ -16,14 +16,7 @@ Items collected from testing and review, sorted by complexity. Pull into a sessi
 
 ## Phase 3 — Major features
 
-### /trade command
-Full player-to-player trade system.
-- `/trade <player>` — sends a trade invite
-- Target can do `/trade accept` or click the chat message to open the trade GUI
-- Trade GUI: each player has a 3×3 item grid + a coin input area (use the sign-entry pattern from SurvivalCore)
-- Configurable countdown (e.g. `trade.countdown-seconds: 5`) before items are swapped
-- Items can be marked `tradeable: false` in their item definition — affects trade AND future bazaar/AH
-- Permission: `rpg.trade.use`
+### ~~`/trade` command~~ ✅ Done — rpg-trade 0.1.0, rpg-api 0.3.0, rpg-core 1.0.1
 
 ### Stats GUI redesign
 The stats screen should show:

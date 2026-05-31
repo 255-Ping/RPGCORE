@@ -43,20 +43,21 @@ public final class CoreRpgItem implements RpgItem {
     private final String ammoType;
     private final boolean infiniteAmmo;
     private final String projectileType;
+    private final boolean tradeable;
     private final NamespacedKey itemIdKey;
 
     public CoreRpgItem(String id, String displayName, ItemType type, Rarity rarity,
                        Material material, int customModelData,
                        Map<Stat, Double> stats, List<AbilityInvocation> abilities,
                        List<String> extraLore, NamespacedKey itemIdKey) {
-        this(id, displayName, type, rarity, material, customModelData, stats, abilities, extraLore, List.of(), 0, 0, null, false, "ARROW", itemIdKey);
+        this(id, displayName, type, rarity, material, customModelData, stats, abilities, extraLore, List.of(), 0, 0, null, false, "ARROW", true, itemIdKey);
     }
 
     public CoreRpgItem(String id, String displayName, ItemType type, Rarity rarity,
                        Material material, int customModelData,
                        Map<Stat, Double> stats, List<AbilityInvocation> abilities,
                        List<String> extraLore, List<ConsumeEffect> consumeEffects, NamespacedKey itemIdKey) {
-        this(id, displayName, type, rarity, material, customModelData, stats, abilities, extraLore, consumeEffects, 0, 0, null, false, "ARROW", itemIdKey);
+        this(id, displayName, type, rarity, material, customModelData, stats, abilities, extraLore, consumeEffects, 0, 0, null, false, "ARROW", true, itemIdKey);
     }
 
     public CoreRpgItem(String id, String displayName, ItemType type, Rarity rarity,
@@ -66,6 +67,17 @@ public final class CoreRpgItem implements RpgItem {
                        int attackCooldownTicks, int itemCooldownTicks,
                        String ammoType, boolean infiniteAmmo, String projectileType,
                        NamespacedKey itemIdKey) {
+        this(id, displayName, type, rarity, material, customModelData, stats, abilities, extraLore, consumeEffects,
+                attackCooldownTicks, itemCooldownTicks, ammoType, infiniteAmmo, projectileType, true, itemIdKey);
+    }
+
+    public CoreRpgItem(String id, String displayName, ItemType type, Rarity rarity,
+                       Material material, int customModelData,
+                       Map<Stat, Double> stats, List<AbilityInvocation> abilities,
+                       List<String> extraLore, List<ConsumeEffect> consumeEffects,
+                       int attackCooldownTicks, int itemCooldownTicks,
+                       String ammoType, boolean infiniteAmmo, String projectileType,
+                       boolean tradeable, NamespacedKey itemIdKey) {
         this.id = id;
         this.displayName = displayName;
         this.type = type;
@@ -81,6 +93,7 @@ public final class CoreRpgItem implements RpgItem {
         this.ammoType = ammoType;
         this.infiniteAmmo = infiniteAmmo;
         this.projectileType = projectileType != null ? projectileType : "ARROW";
+        this.tradeable = tradeable;
         this.itemIdKey = itemIdKey;
     }
 
@@ -99,6 +112,7 @@ public final class CoreRpgItem implements RpgItem {
     @Override public String ammoType() { return ammoType; }
     @Override public boolean infiniteAmmo() { return infiniteAmmo; }
     @Override public String projectileType() { return projectileType; }
+    @Override public boolean tradeable() { return tradeable; }
 
     @Override
     public ItemStack toItemStack() {
@@ -156,6 +170,10 @@ public final class CoreRpgItem implements RpgItem {
             }
         }
 
+        if (!tradeable) {
+            if (!lore.isEmpty()) lore.add(Component.empty());
+            lore.add(noItalic(LEGACY.deserialize("&c✘ Not Tradeable")));
+        }
         if (rarity != null) {
             if (!lore.isEmpty()) lore.add(Component.empty());
             lore.add(noItalic(LEGACY.deserialize(rarity.coloredDisplay())));

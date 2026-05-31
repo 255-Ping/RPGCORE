@@ -128,11 +128,12 @@ public final class ItemLoader {
         String ammoType     = s.getString("AmmoType");
         boolean infiniteAmmo = s.getBoolean("InfiniteAmmo", false);
         String projectileType = s.getString("ProjectileType", "ARROW");
+        boolean tradeable   = s.getBoolean("Tradeable", true);
 
         return new CoreRpgItem(id, displayName, type, rarity, material, customModelData,
                 stats, abilities, lore, consumeEffects,
                 attackCooldown, itemCooldown, ammoType, infiniteAmmo, projectileType,
-                itemIdKey);
+                tradeable, itemIdKey);
     }
 
     private static ItemType parseType(String s) {

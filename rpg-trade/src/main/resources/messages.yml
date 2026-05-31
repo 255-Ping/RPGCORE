@@ -1,0 +1,32 @@
+# rpg-trade messages — supports & color codes and {placeholder} tokens.
+
+# Invite flow
+invite-sent:        "&aYou sent a trade request to &e{player}&a. They have &e{seconds}s &ato accept."
+invite-received:    "&e{player} &7wants to trade with you. Use &e/trade accept &7or &e/trade deny&7."
+invite-expired:     "&cYour trade request to &e{player} &cexpired."
+invite-expired-other: "&cThe trade request from &e{player} &cexpired."
+invite-denied:      "&e{player} &cdeclined your trade request."
+invite-denied-self: "&cYou declined the trade request."
+no-pending-invite:  "&cYou have no pending trade invite."
+already-in-trade:   "&cYou are already in a trade."
+target-in-trade:    "&c{player} is already in a trade."
+cannot-trade-self:  "&cYou cannot trade with yourself."
+player-not-found:   "&cPlayer not found: &7{player}"
+no-permission:      "&cYou don't have permission to trade."
+
+# Coin input
+coins-prompt:       "&eType how many coins to offer (or &6cancel&e):"
+coins-set:          "&aCoins set to &e{amount}&a."
+coins-invalid:      "&cInvalid amount — enter a whole number."
+coins-negative:     "&cAmount must be positive."
+coins-exceed-max:   "&cYou can only offer up to &e{max} &ccoins in a single trade."
+coins-no-economy:   "&cEconomy is not available — coin trades disabled."
+
+# Trade GUI
+not-tradeable:      "&cThat item cannot be traded."
+
+# Completion
+trade-complete:     "&aTrade complete!"
+trade-cancelled:    "&cTrade cancelled."
+trade-cancelled-by-other: "&e{player} &ccancelled the trade."
+trade-failed-coins: "&cTrade failed — a player had insufficient coins. Items returned."

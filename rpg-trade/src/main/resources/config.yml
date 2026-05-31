@@ -1,0 +1,16 @@
+# rpg-trade configuration
+
+trade:
+  # Seconds both players must wait after both click Confirm before the swap executes.
+  # Either player can click the button again during this window to cancel.
+  # Range: 1-30, default 5
+  countdown-seconds: 5
+
+  # Seconds a trade invite stays open before it expires automatically.
+  # Range: 10-120, default 30
+  invite-expiry-seconds: 30
+
+  # Maximum number of coins a player can offer in a single trade.
+  # Set to 0 to disable the coin limit (any amount up to the player's balance).
+  # Default: 0 (unlimited)
+  max-coins: 0

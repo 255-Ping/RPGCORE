@@ -4,6 +4,23 @@
 
 ---
 
+### rpg-trade `0.1.0` *(new plugin)*
+- **`/trade <player>`** — sends a trade invite (30s expiry, configurable). Target accepts with `/trade accept`, declines with `/trade deny`. Either party can cancel at any time with `/trade cancel`.
+- **Trade GUI** (54-slot): your 3×3 item offer on the left, the other player's items on the right (read-only). Coin amount set by clicking the sunflower button and typing in chat. Both players must click **Confirm Trade**; a configurable countdown (default 5s) then fires before items and coins swap atomically. Either player can click the button again during countdown to cancel.
+- **Bait-and-switch prevention**: modifying your offer after clicking Confirm resets your confirmation state.
+- **Coin safety**: balances are checked and deducted atomically at swap time; if either player can't afford their offer, all items are returned and the trade fails.
+- **Item return on cancel**: all items in the GUI are returned to their owners on close, disconnect, or `/trade cancel`.
+- **Permission**: `rpg.trade.use` (default: true).
+- **Config**: `trade.countdown-seconds`, `trade.invite-expiry-seconds`, `trade.max-coins`.
+
+### rpg-api `0.3.0`
+- **`RpgItem.tradeable()`**: new default interface method returning `true`. Items with `Tradeable: false` in their YAML return `false`; the trade GUI rejects them with a message.
+
+### rpg-core `1.0.1`
+- **`Tradeable: false` item flag**: `CoreRpgItem` and `ItemLoader` support the new `Tradeable` field. Non-tradeable items show `&c✘ Not Tradeable` at the bottom of their lore.
+
+---
+
 ### rpg-cooking `0.3.0`
 - **GUI formatting pass**: title is now bold (`&6&l`). Background panes read from `rpg-core` `gui.background-material` config via `GuiConfig` instead of being hardcoded orange. Recipe tiles now suppress italic on all lore lines and show a `&8▶ &7Left-click to cook` action hint when the recipe is satisfiable.
 

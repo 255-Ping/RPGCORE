@@ -227,16 +227,17 @@ When `suiteVersion` bumps:
 | rpg-parties | `partiesVersion` | 0.2.0 |
 | rpg-foraging | `foragingVersion` | 0.1.0 |
 | rpg-fishing | `fishingVersion` | 0.0.1 |
-| rpg-regions | `regionsVersion` | 0.4.0 |
+| rpg-regions | `regionsVersion` | 0.5.0 |
 | rpg-farming | `farmingVersion` | 0.1.0 |
 | rpg-guilds | `guildsVersion` | 0.1.0 |
-| rpg-enchanting | `enchantingVersion` | 0.1.0 |
-| rpg-alchemy | `alchemyVersion` | 0.1.0 |
-| rpg-npcs | `npcsVersion` | 0.3.0 |
+| rpg-enchanting | `enchantingVersion` | 0.3.0 |
+| rpg-alchemy | `alchemyVersion` | 0.3.0 |
+| rpg-npcs | `npcsVersion` | 0.4.0 |
 | rpg-quests | `questsVersion` | 0.0.3 |
 | rpg-dungeons | `dungeonsVersion` | 0.0.2 |
-| rpg-cooking | `cookingVersion` | 0.2.0 |
+| rpg-cooking | `cookingVersion` | 0.3.0 |
 | rpg-admin | `adminVersion` | 0.1.0 |
+| rpg-trade | `tradeVersion` | 0.1.0 |
 | suite-wide suffix | `suiteVersion` | 19 |
 
 **Keep this table in sync** — update it in the same commit as any version bump.
@@ -397,6 +398,8 @@ stored per player. When adding new persistent player fields, update both the sav
 7. `StatRecalcEvent` — addons inject transient bonuses (e.g. guild perks via `holder().add()`)
 
 - `rpg-admin` — standalone admin utility addon (`depend: [rpg-core]`). Provides `/gmc /gms /gma /gmsp /fly /god /tp /tphere /heal /feed /speed /clear /broadcast /sudo`. Every command individually enable/disable-able via `config.yml`; permission nodes configurable per command. God mode hooks into `PreDamageEvent` to cancel RPG damage. Heal integrates with `RpgServices.health()` and falls back to vanilla.
+
+- `rpg-trade` — player-to-player item + coin trading (`depend: [rpg-core]`). `TradeManager` holds pending invites (with expiry) and active sessions. `TradeGui` renders two separate 54-slot inventories (each player sees their 3×3 offer on the left, the other player's on the right read-only). Confirmation requires both players to click Confirm; a configurable countdown then fires before the atomic swap. Bait-and-switch prevention: modifying the offer after confirming resets the confirmation state. Items with `Tradeable: false` are rejected at insertion time. No service registered in `RpgServices` — trade is self-contained.
 
 ### Key systems in rpg-core
 

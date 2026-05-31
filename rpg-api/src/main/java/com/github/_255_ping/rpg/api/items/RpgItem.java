@@ -57,4 +57,10 @@ public interface RpgItem {
      * {@code SMALL_FIREBALL}, {@code TRIDENT}. Defaults to {@code ARROW}.
      */
     default String projectileType() { return "ARROW"; }
+
+    /**
+     * Whether this item can be offered in player-to-player trades, the Bazaar, or the
+     * Auction House. Set via {@code Tradeable: false} in item YAML. Defaults to {@code true}.
+     */
+    default boolean tradeable() { return true; }
 }

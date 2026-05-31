@@ -1,0 +1,19 @@
+name: rpg-trade
+version: '${version}'
+main: com.github._255_ping.rpg.trade.RpgTradePlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Player-to-player item and coin trading with GUI confirmation.
+depend: [rpg-core]
+commands:
+  trade:
+    description: Trade items and coins with another player
+    usage: /trade <player|accept|deny|cancel>
+permissions:
+  rpg.trade.use:
+    description: Send and receive trade requests
+    default: true
+  rpg.trade.admin.reload:
+    description: Reload rpg-trade config
+    default: op
