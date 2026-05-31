@@ -1,6 +1,6 @@
 # Master stat reference
 
-> **Status:** Planned
+> **Status:** Working — stat registry, lore rendering, and aggregation from gear/accessories/status effects all active. **Four stats are defined but not yet wired to gameplay logic:** `speed`, `ferocity`, `swing_range`, and `pristine` show on item lore but currently have no effect — avoid putting them on items until the wire-up is done (tracked in [Bugs](planned/todo-bugs.md)).
 
 Every stat in the framework. Built-in stats are part of `rpg-api`'s `BuiltinStat` enum so any addon can reference them. Custom stats can be registered at runtime via `StatRegistry.register(new CustomStat(...))`.
 
@@ -20,7 +20,7 @@ Stats whose owning addon isn't loaded are hidden from menus via per-stat config 
 | `crit_damage` | Crit Damage | yes | Crit multiplier |
 | `ability_damage` | Ability Damage | no | % bonus to ability damage (separate channel from strength) |
 | `attack_speed` | Attack Speed | yes | Reduces melee swing cooldown |
-| `ferocity` | Ferocity | yes | % chance per hit for an extra strike (can roll multiple) |
+| `ferocity` | Ferocity | yes | % chance per hit for an extra strike (can roll multiple) — **⚠ not yet wired** |
 | `lifesteal` | Lifesteal | yes | % of dealt damage healed |
 
 ## Survival
@@ -46,15 +46,15 @@ Stats whose owning addon isn't loaded are hidden from menus via per-stat config 
 
 | ID | Display | Percent | Description |
 |---|---|---|---|
-| `speed` | Speed | no | Walk speed |
-| `swing_range` | Swing Range | no | Melee reach in blocks |
+| `speed` | Speed | no | Walk speed — **⚠ not yet wired** |
+| `swing_range` | Swing Range | no | Melee reach in blocks — **⚠ not yet wired** |
 
 ## Loot
 
 | ID | Display | Percent | Description |
 |---|---|---|---|
 | `magic_find` | Magic Find | yes | Multiplies rare-loot chance on flagged drops |
-| `pristine` | Pristine | yes | Gemstone / rare drop quality (reserved for future) |
+| `pristine` | Pristine | yes | Gemstone / rare drop quality (reserved for future) — **⚠ not yet wired** |
 
 ## Breaking & gathering — universal
 

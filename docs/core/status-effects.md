@@ -1,6 +1,6 @@
 # Status effects
 
-> **Status:** In progress — framework working: YAML-loaded effect content, stacking strategies, stat modifiers (flat + percent), tick actions (`damage`, `heal`), and `on-apply` / `on-expire` sound + particle hooks. Ability-based tick actions are pending the ability framework impl. Default sample effects (`poison`, `regen`, `strength_boost`, `slow`) ship in `plugins/rpg-core/status-effects/example.yml`.
+> **Status:** Working — YAML-loaded effect content, stacking strategies, stat modifiers (flat + percent), `damage`/`heal` tick primitives, and `on-apply`/`on-expire` sound + particle hooks all active. Full ability-sequence tick actions (running an arbitrary `AbilitySequence` on each tick) are not yet wired — currently only `damage` and `heal` primitives are supported in the `tick` block. Default sample effects (`poison`, `regen`, `strength_boost`, `slow`) ship in `plugins/rpg-core/status-effects/example.yml`.
 
 A fully custom (de)buff framework. Vanilla `PotionEffect`s on entities are cancelled (per [vanilla suppression](vanilla-suppression.md)) — only our `StatusEffect` system applies.
 
