@@ -276,6 +276,77 @@ Current: inline loot tables on mob YAML work. External `LootTable: <id>` referen
 
 ---
 
+### Region: Enter/Exit Messages + More Flags (`rpg-regions`)
+Current regions only enforce `pvp`, `no-break`, `no-place`. A lot of standard use-cases are missing:
+
+**New flags to add:**
+- `enter-message` / `leave-message` — show a title (or action bar message) when a player crosses the boundary. Configurable text with `{player}` and `{region}` placeholders.
+- `no-mob-spawn` — prevent mob spawners and natural spawning inside the region
+- `no-damage` — players inside take no damage (safe zones, spawn areas)
+- `fly` — allow flight inside the region even without `/fly` permission
+- `no-item-drop` — items dropped inside the region are immediately returned to the player (useful for arenas)
+- `keep-inventory` — death inside this region doesn't drop items (overrides global death rules)
+
+**Also:**
+- Region priority field — when regions overlap, higher priority wins for conflicting flags
+
+---
+
+### Quest: Chains + Repeatable Quests (`rpg-quests`)
+Currently all quests are one-shot and independent. Missing:
+
+1. **Quest chains** — `Requires: [quest_id, ...]` field on a quest definition. The quest is not offerable until all prerequisites are completed.
+2. **Repeatable quests** — `Repeatable: true` + `CooldownSeconds: 86400` (e.g., daily quests). After completion, the quest becomes available again after the cooldown. Per-player last-completion timestamp tracked in `DataStore`.
+
+---
+
+### Animated Holograms (`rpg-holograms`)
+Static holograms only cycle when edited. Add support for cycling text:
+
+- Optional `Animated: true` + `FrameInterval: 20` on a hologram definition
+- Multiple entries under `Lines` become animation frames — the displayed text cycles through them at `FrameInterval` ticks
+- Useful for animated signs, status displays, countdown timers
+
+---
+
+### Party: HP/Status Display (`rpg-parties`)
+Players in a party have no way to see their teammates' health or status. Options:
+
+- Boss bars (one per party member, shown to all other members) — simple but uses up boss bar slots fast
+- Action bar or scoreboard sidebar section showing compact party HP (preferred)
+- Configurable on/off in party settings; don't force it on everyone
+
+---
+
+### HUD: Ability Cooldown Display (`rpg-hud` / `rpg-core`)
+There's currently no way for a player to see how long is left on an ability cooldown. Options:
+
+- Dedicated scoreboard section listing active cooldowns (`testability: 2.3s`)
+- Action bar suffix showing the currently-on-cooldown abilities
+- Configurable placeholder `{cooldowns}` that resolves to a compact list
+
+---
+
+### Player Profile Command (`rpg-core`)
+No way to view another player's public info. Add:
+
+- `/profile [player]` — shows level, guild, party, top stats, recent achievements
+- Opens an inventory GUI (head item for the target player, gear slots if desired)
+- Respects privacy: can hide certain info via permission (`rpg.profile.private`)
+
+---
+
+### Unit Test Coverage (all plugins)
+Almost no automated tests exist — only `QuestObjectiveTest.java`. For a codebase this size, untested code means regressions are invisible until they hit the live server. Priority areas:
+
+- `DamageMath` — formula correctness (crit, defense reduction, level scaling)
+- `SlotResolver` / `StationGui` — recipe matching logic
+- `ExpressionEvaluator` — skill curve calculations
+- `QuestManager` — objective progression and completion
+- `BossBarService` / `SignEntryService` once built
+
+---
+
 ### Vanilla Suppression Remaining Flags (`rpg-core`)
 Audit `VanillaSuppression.java` for any flags that are accepted in config but have no event handler yet and add the missing handlers.
 

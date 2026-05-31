@@ -50,6 +50,22 @@ Arrows **do** deal damage (confirmed in testing), but the hit visuals are wrong 
 
 ---
 
+### Stats Shown in Lore That Do Nothing (`rpg-core` / `rpg-combat`)
+Several `BuiltinStat` entries appear on example items and show up in lore, but are never read by any system. Players see the stat and get nothing from it:
+
+| Stat | Defined | Used | Notes |
+|---|---|---|---|
+| `speed` | ✅ | ❌ | `EquipmentListener` only sets `generic.attack_speed`, never touches `generic.movement_speed`. Windwalker Boots shows `+12 Speed` — does nothing. |
+| `ferocity` | ✅ | ❌ | Intended as "% chance for an extra swing." Voidblade shows `+60 Ferocity` — does nothing. No extra-swing logic exists in the damage pipeline. |
+| `swing_range` | ✅ | ❌ | Intended to expand melee reach. Voidblade shows `+2 Swing Range` — the player's hit box is never modified. |
+| `pristine` | ✅ | ❌ | Intended to improve item quality rolls. Pristine Talisman shows `+25 Pristine` — no quality roll system exists. |
+| `enchanting_luck` | ✅ | ❓ | Shown on several items. Verify whether `StationGui` actually reads it during enchant application or just ignores it. |
+| `pet_luck` | ✅ | ❌ | Irrelevant until `rpg-pets` exists, but shows on lore. Consider hiding it until the system is built. |
+
+Fix approach: either implement the missing behaviour for each stat, or suppress it from lore display until the system is ready (add a `hidden: true` flag or a dedicated "not yet active" lore note).
+
+---
+
 ### Mob Ability Deals No Damage (`rpg-core`)
 The ability configured on `testmob` (and likely other mobs) fires and runs its animation/effects, but no damage is applied to the target player. The `DamageEffect` inside the ability pipeline is either not executing or resolving to 0. Check whether `AbilityContext` is correctly carrying the caster entity and whether `DamageEffect` falls back to a null or zero stat value when cast from a mob rather than a player.
 
