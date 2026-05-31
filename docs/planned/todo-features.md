@@ -2,9 +2,11 @@
 
 _Full features or systems that don't exist at all yet._
 
+> **Difficulty scale:** 🟢 Easy (< 1 day) · 🟡 Medium (1–2 days) · 🔴 Hard (several days) · ⚫ Very Hard (week+)
+
 ---
 
-### Player Homes + Server Warps (`rpg-admin`)
+### Player Homes + Server Warps (`rpg-admin`) — 🟢 Easy
 Conspicuously absent from the suite. Every RPG server needs these.
 
 - `/sethome [name]`, `/home [name]`, `/delhome [name]`, `/homes` — per-player saved locations, configurable max homes per permission group
@@ -15,7 +17,7 @@ Conspicuously absent from the suite. Every RPG server needs these.
 
 ---
 
-### Achievement System (`rpg-core` or new `rpg-achievements`)
+### Achievement System (`rpg-core` or new `rpg-achievements`) — 🔴 Hard
 No achievement tracking exists anywhere in the suite.
 
 **Achievement YAML** (`plugins/rpg-core/achievements/<file>.yml`):
@@ -54,7 +56,7 @@ first_kill:
 
 ---
 
-### Boss Bar System (`rpg-core`)
+### Boss Bar System (`rpg-core`) — 🟡 Medium
 No boss bar support exists. Needed by dungeons, world events, and world boss mobs.
 
 **API surface** (`BossBarService` component on the Game object):
@@ -74,7 +76,7 @@ No boss bar support exists. Needed by dungeons, world events, and world boss mob
 
 ---
 
-### World Events + World Boss (`rpg-core` or new `rpg-events`)
+### World Events + World Boss (`rpg-core` or new `rpg-events`) — ⚫ Very Hard
 Periodic server-wide events add communal engagement that solo play can't. Planned:
 
 - Admin-configurable event schedule (cron-like interval or manual `/event start <id>`)
@@ -84,7 +86,7 @@ Periodic server-wide events add communal engagement that solo play can't. Planne
 
 ---
 
-### Salvaging System (`rpg-enchanting`)
+### Salvaging System (`rpg-enchanting`) — 🟡 Medium
 Players break down unwanted RPG items into materials at a salvage station (custom block type with `StationType: salvage`). Lives in `rpg-enchanting` since it's part of the item-modification workflow alongside enchanting and reforging.
 
 **GUI (27 slots):**
@@ -104,7 +106,7 @@ Players break down unwanted RPG items into materials at a salvage station (custo
 
 ---
 
-### Starter Kit System (`rpg-admin`)
+### Starter Kit System (`rpg-admin`) — 🟢 Easy
 New players joining for the first time should receive a configured starting set of items.
 
 - Admin defines kit contents in `config.yml` (list of item ids + amounts)
@@ -114,7 +116,7 @@ New players joining for the first time should receive a configured starting set 
 
 ---
 
-### Item Set Bonuses (`rpg-core`)
+### Item Set Bonuses (`rpg-core`) — 🟡 Medium
 Wearing multiple pieces of the same named set grants additional stat bonuses. Very standard RPG feature.
 
 - Items in a set share a `Set` YAML field (e.g., `Set: mages_robes`)
@@ -125,7 +127,7 @@ Wearing multiple pieces of the same named set grants additional stat bonuses. Ve
 
 ---
 
-### Leaderboards (`rpg-core`)
+### Leaderboards (`rpg-core`) — 🟡 Medium
 No `/top` or leaderboard command exists anywhere in the suite.
 
 - `/top [category]` — categories: `money`, `level` (overall), and one per skill (`combat`, `mining`, etc.)
@@ -141,7 +143,7 @@ No `/top` or leaderboard command exists anywhere in the suite.
 
 ---
 
-### Elite / Champion Mob Variants (`rpg-core`)
+### Elite / Champion Mob Variants (`rpg-core`) — 🟡 Medium
 Randomly enhanced mob spawns that are rarer, stronger, and drop better loot. Standard RPG engagement mechanic.
 
 - Configurable chance per-mob-spawn that it becomes an "elite" variant (e.g., 5%)
@@ -153,7 +155,7 @@ Randomly enhanced mob spawns that are rarer, stronger, and drop better loot. Sta
 
 ---
 
-### Extract Smelting → `rpg-smelting` Plugin (`rpg-core` / new `rpg-smelting`)
+### Extract Smelting → `rpg-smelting` Plugin (`rpg-core` / new `rpg-smelting`) — 🟢 Easy
 Smelting recipe loading (`SmeltingLoader.java`) currently lives in `rpg-core`. It should be its own addon plugin so servers that don't need custom smelting don't load it, and so it can be expanded independently later.
 
 - Create a new blank `rpg-smelting` module (same pattern as `rpg-cooking` / `rpg-alchemy`)
@@ -162,7 +164,7 @@ Smelting recipe loading (`SmeltingLoader.java`) currently lives in `rpg-core`. I
 - `rpg-core` soft-depends on `rpg-smelting`; if the plugin isn't loaded, smelting suppression still applies but no custom recipes are registered
 - Stub out a `config.yml` and `recipes/example.yml` the same way cooking does; flesh out further functionality later
 
-### Extract Crafting → `rpg-crafting` Plugin (`rpg-core` / new `rpg-crafting`)
+### Extract Crafting → `rpg-crafting` Plugin (`rpg-core` / new `rpg-crafting`) — 🟢 Easy
 Same rationale as smelting. `RecipeLoader.java` (shaped/shapeless crafting) currently lives in `rpg-core`.
 
 - Create a new blank `rpg-crafting` module
@@ -172,7 +174,7 @@ Same rationale as smelting. `RecipeLoader.java` (shaped/shapeless crafting) curr
 
 ---
 
-### Sign-Entry Number Input (`rpg-core`)
+### Sign-Entry Number Input (`rpg-core`) — 🟡 Medium
 **Required before:** Auction House, Bazaar, Guild Bank GUI, any other GUI that takes a currency or quantity input from the player.
 
 Needed everywhere a player types a numeric value (currency amount, quantity, price) inside a GUI. Build once as a shared `SignEntryService` in `rpg-core` so every addon can call it — don't re-implement per-plugin.
@@ -187,7 +189,7 @@ Needed everywhere a player types a numeric value (currency amount, quantity, pri
 
 ---
 
-### PlaceholderAPI Support (`rpg-hud` / `rpg-core`)
+### PlaceholderAPI Support (`rpg-hud` / `rpg-core`) — 🟡 Medium
 Allow PlaceholderAPI placeholders (e.g., `%player_name%`, `%vault_balance%`) anywhere RPGCORE reads a template string — scoreboard lines, tablist header/footer, nametag format, action bar format, etc.
 
 **Integration (two directions):**
@@ -203,13 +205,77 @@ Allow PlaceholderAPI placeholders (e.g., `%player_name%`, `%vault_balance%`) any
 
 ---
 
-### Auction House (`rpg-auction-house`)
+### Offline Mail / Inbox System (`rpg-core`) — 🔴 Hard
+Several future systems need to deliver items or messages to players who are offline — most notably Auction House sale proceeds, achievement rewards, and admin broadcasts. Without a mail system, these are either silently lost or require the player to be online.
+
+- Per-player inbox stored in `DataStore` (list of mail entries: type, sender, message, attached items, timestamp)
+- Mail types: `item_delivery` (AH sale return / expired listing), `currency_delivery` (AH sold proceeds), `system_message` (server announcement), `achievement_reward` (if player was offline when triggered)
+- On join: notify player if they have unread mail (`&eYou have N unread mail items!`)
+- `/mail` or `/inbox` command — opens a GUI showing all messages, click to claim items, mark-as-read on view
+- Admin command: `/mail send <player> <message>` for system messages
+- Mail entries expire after a configurable duration (default 7 days) to prevent DataStore bloat
+- Items in mail slots are stored serialized (Base64 ItemStack) so they survive server restarts
+
+---
+
+### Resource Pack Auto-Delivery (`rpg-core`) — 🟢 Easy
+Server resource packs need to be sent to players on join for custom model data and fonts to work. Currently players must manually apply a resource pack or be sent one through server.properties (which applies to all players with no server-side control).
+
+- Add `resource-pack.url` and `resource-pack.hash` to `rpg-core/config.yml`
+- On `PlayerJoinEvent`, call `player.setResourcePack(url, hash, true, Component)` (the last boolean = required)
+- Configurable prompt message shown to players
+- If `resource-pack.enabled: false`, skip the send (for servers that manage the pack through `server.properties` instead)
+
+---
+
+### Custom Enchantment Effects — Ability Triggers (`rpg-enchanting`) — 🔴 Hard
+Currently enchantments only add stat modifiers (e.g., `+5 Strength`). A natural extension is ability-trigger enchantments — enchants that fire an ability effect when specific conditions are met.
+
+**Enchant YAML extension:**
+```yaml
+vampiric_edge:
+  DisplayName: "&4Vampiric Edge"
+  Description: "Drain life from every strike."
+  Rarity: RARE
+  Triggers:
+    - Event: on_hit          # on_hit | on_kill | on_hurt | on_use
+      Chance: 25.0           # % chance per event
+      Ability: drain         # ability effect id from rpg-core
+      Level: 3
+```
+
+- Trigger events: `on_hit` (melee attack lands), `on_kill` (killing blow), `on_hurt` (player takes damage), `on_use` (right-click with item)
+- Chance per trigger is configurable per-enchant
+- The ability effect fires the same pipeline as regular ability effects — uses the same `DamageEffect`, `HealEffect`, etc.
+- Multiple triggers allowed per enchant (e.g., on_hit fires drain + on_kill fires a death nova)
+- Needs an `EnchantTriggerListener` in `rpg-enchanting` that intercepts the relevant events and checks equipped item enchants
+
+---
+
+### Pets System (`rpg-pets`) — ⚫ Very Hard
+Referenced in several other systems (`pet_luck` stat, `pet slot` in Stats GUI, companion slot in profile GUI) but no plugin exists yet. This is a large standalone feature — placeholder entry to track it.
+
+**High-level planned scope:**
+- Egg/capture system: pets obtained via loot drops or special items
+- Pet entity that follows the player (either a real entity or a passenger entity on the player)
+- Pets level up separately from the player; gain XP from kills the player makes
+- Pet abilities: configurable list of abilities that fire on timers or combat events
+- Pet stats: contribute `pet_luck`, passive HP/damage bonuses to the owner
+- Pet storage: `/pets` GUI to view, equip, and release pets
+- Multiple pets owned per player, one active at a time
+- Persisted via `DataStore` (pet species, level, XP, name, equipped status)
+
+This is a large plugin — build in phases. Phase 1: pet item + summon + follow AI. Phase 2: levelling + stats. Phase 3: abilities. Phase 4: GUI.
+
+---
+
+### Auction House (`rpg-auction-house`) — ⚫ Very Hard
 **New plugin — nothing exists yet.**
 
 - Player-posted item listings with custom price (uses sign-entry for price input)
 - Browse GUI: filterable by name, category, or seller
 - `/ah` command: main browser, my listings, create listing, expired returns
-- Listing expiry — unsold listings return the item after a configurable duration
+- Listing expiry — unsold listings return the item after a configurable duration (delivered via mail system)
 - Configurable listing fee (% of sale), max listings per player
 - Admin commands: `/ah list <player>`, `/ah remove <id>`, `/ah wipe`
 - Non-tradeable items blocked from listing
@@ -217,7 +283,7 @@ Allow PlaceholderAPI placeholders (e.g., `%player_name%`, `%vault_balance%`) any
 
 ---
 
-### Bazaar (`rpg-bazaar`)
+### Bazaar (`rpg-bazaar`) — 🔴 Hard
 **New plugin — nothing exists yet.**
 
 - Admin-defined fixed-price buy/sell listings organized in categories

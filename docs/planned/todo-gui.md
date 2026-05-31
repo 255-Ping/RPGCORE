@@ -2,24 +2,26 @@
 
 _Layout changes, pagination, and brand new inventory-based screens._
 
+> **Difficulty scale:** 🟢 Easy (< 1 day) · 🟡 Medium (1–2 days) · 🔴 Hard (several days) · ⚫ Very Hard (week+)
+
 ---
 
 ## Redesigns — Existing GUIs
 
-### Brewing Station GUI Redesign (`rpg-alchemy`)
+### Brewing Station GUI Redesign (`rpg-alchemy`) — 🟡 Medium
 Current layout puts ingredients inline with recipes which gets cluttered. New layout:
 - **Ingredient slots** move to the **top middle** of the GUI (row 1, centred)
 - **Recipes** start at the **far left of row 2** and fill left-to-right, row by row
 - **Pagination** — if recipes exceed one page, add Previous / Next buttons (bottom corners or bottom centre). Page indicator in the middle of the bottom row.
 - Same ingredient-slot position as the cooking station redesign below (consistent across both stations)
 
-### Cooking Station GUI Redesign (`rpg-cooking`)
+### Cooking Station GUI Redesign (`rpg-cooking`) — 🟡 Medium
 Current ingredient slots need to move one slot to the left. New layout:
 - **Ingredient slots** shifted one column to the left from their current position
 - **Ingredient slot position** should match the brewing station (both stations feel consistent)
 - **Pagination** — if recipes exceed one page, add Previous / Next buttons. Same style as brewing.
 
-### Enchanting Table GUI: Pagination (`rpg-enchanting`)
+### Enchanting Table GUI: Pagination (`rpg-enchanting`) — 🟢 Easy
 The enchant-selection screen (ENCHANTING mode in `StationGui`) currently shows all applicable enchants as a fixed grid. If an item has many applicable enchants the grid fills and there's no overflow. Add:
 - **Pagination** — Previous / Next buttons when enchants exceed one page (14 slots per page matching the current grid size)
 - Page indicator in a fixed slot
@@ -34,42 +36,45 @@ These replace or supplement existing command interfaces. All are in `docs/planne
 - **Chat-entry** — close GUI → prompt in chat → `AsyncChatEvent` capture → reopen. For player names, search terms.
 - **Sign-entry** — virtual sign for numeric input (prices, quantities). See [New Features](todo-features.md) — must be built first.
 
-| GUI | Plugin | Current state |
-|---|---|---|
-| Party GUI (`/party`) | `rpg-parties` | All commands work; no GUI |
-| Guild GUI (`/guild`) | `rpg-guilds` | All commands work; no GUI |
-| Quest log GUI (`/quests`) | `rpg-quests` | Chat-list only |
-| Admin Spawner GUI (`/spawner`) | `rpg-core` | Fields set via `/spawner set`; GUI planned |
-| Hologram Editor GUI (`/holograms`) | `rpg-holograms` | Commands work; GUI editor deferred |
-| NPC Editor GUI (`/npc`) | `rpg-npcs` | All commands work; GUI editor deferred |
+| GUI | Plugin | Current state | Difficulty |
+|---|---|---|---|
+| Party GUI (`/party`) | `rpg-parties` | All commands work; no GUI | 🟡 Medium |
+| Guild GUI (`/guild`) | `rpg-guilds` | All commands work; no GUI | 🔴 Hard |
+| Quest log GUI (`/quests`) | `rpg-quests` | Chat-list only | 🔴 Hard |
+| Admin Spawner GUI (`/spawner`) | `rpg-core` | Fields set via `/spawner set`; GUI planned | 🟡 Medium |
+| Hologram Editor GUI (`/holograms`) | `rpg-holograms` | Commands work; GUI editor deferred | 🟡 Medium |
+| NPC Editor GUI (`/npc`) | `rpg-npcs` | All commands work; GUI editor deferred | 🔴 Hard |
+| Achievements GUI (`/achievements`) | `rpg-core` | Not built yet — needed alongside achievement system | 🟡 Medium |
+| Leaderboard GUI (`/top`) | `rpg-core` | Not built yet — needed alongside leaderboard feature | 🟡 Medium |
+| Inbox / Mail GUI (`/inbox`) | `rpg-core` | Not built yet — needed alongside mail system | 🟡 Medium |
 
-### Party GUI (`/party`)
+### Party GUI (`/party`) — 🟡 Medium
 - Member list with roles, online/offline status, combat status
 - Invite: chat-entry for player name → invite sent → target sees clickable accept/deny in chat
 - Kick / Leave: confirmation dialog
 - Promote / Demote: click role indicator
 
-### Guild GUI (`/guild`)
+### Guild GUI (`/guild`) — 🔴 Hard
 - Tabs: Members, Info, Bank (when bank is built), Settings (officer+)
 - Invite: chat-entry for player name
 - Kick / Promote / Demote: click member → action menu
 - Edit description / name: chat-entry (officer+)
 
-### Quest Log GUI (`/quests`)
+### Quest Log GUI (`/quests`) — 🔴 Hard
 - Available / Active / Completed tabs
 - Click quest → detail view: objectives with progress bars, rewards, accept / abandon button
 
-### Admin Spawner GUI (`/spawner`)
+### Admin Spawner GUI (`/spawner`) — 🟡 Medium
 - All spawner fields shown as named items (max-alive, cooldown, radius, continuous)
 - Click field → sign-entry (numeric) or chat-entry (string ID)
 - Changes saved on close
 
-### Hologram Editor GUI (`/holograms`)
+### Hologram Editor GUI (`/holograms`) — 🟡 Medium
 - Line slots: click line slot → chat-entry for line text
 - Add / remove / reorder lines in GUI
 - Click-action support on lines (run command, open shop)
 
-### NPC Editor GUI (`/npc`)
+### NPC Editor GUI (`/npc`) — 🔴 Hard
 Long-form alternative to the command-based editing for non-technical admins:
 - Open with `/npc edit <id>`
 - Shows current settings: entity style, entity type, skin name, behavior type, look-at-players toggle
@@ -81,5 +86,22 @@ Long-form alternative to the command-based editing for non-technical admins:
   - **Quest:** shows current quest id; click → chat-entry for quest id
   - **Banker:** shows bank name and interest %; click each → sign-entry or chat-entry
 - Confirm / Discard buttons; changes saved immediately on confirm
+
+### Achievements GUI (`/achievements`) — 🟡 Medium
+_(Companion to the Achievement System feature — build together)_
+- 54-slot grid, category tabs in the top row (Combat, Gathering, Economy, Exploration, Social, Secret)
+- Locked achievements shown as gray barriers with "???" name if `Hidden: false`, invisible if `Hidden: true`
+- Unlocked achievements shown with their display item + colored name
+- Lore on each: description, reward summary, unlock date
+- Progress-based achievements show a progress bar in lore
+
+### Inbox / Mail GUI (`/inbox`) — 🟡 Medium
+_(Companion to the Mail/Inbox System feature — build together)_
+- 54-slot list: each slot is a mail entry item
+- Item name = sender + type icon (📦 item, 💰 currency, 📜 message)
+- Item lore = preview of message + attached items/amount + expiry date
+- Click = claim items into inventory (or prompt if inventory full), mark as read
+- Red border on unread mail; gray on read
+- Delete button (bottom right) to clear read messages
 
 ---

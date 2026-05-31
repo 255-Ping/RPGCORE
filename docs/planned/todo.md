@@ -2,6 +2,8 @@
 
 > This is the single reference point before starting any session. Every known bug, missing feature, improvement, GUI redesign, and doc gap lives here or in one of the linked sub-pages below. Update this when things get done or new issues are found.
 
+> **Difficulty scale used throughout:** 🟢 Easy (< 1 day) · 🟡 Medium (1–2 days) · 🔴 Hard (several days) · ⚫ Very Hard (week+)
+
 ---
 
 ## Sub-pages
@@ -38,39 +40,51 @@
 
 ## Suggested Priority Order
 
-1. 🐛 **Fix all confirmed bugs first** — see [Bugs](todo-bugs.md)
-2. 🐛 **Wire up silent stats** (speed, ferocity, swing_range) — showing stats that do nothing is misleading
-3. 🟠 **NPC command overhaul + in-game editing** — per-NPC entity type, style/skin commands, dialogue/shop editing, look-at-player
-4. 🔵 **GUI redesigns** (brewing/cooking/enchanting pagination + layouts) — high visibility
-5. 🟠 **New built-in ability effects** — unlocks all the interesting new ability content
-6. 🟠 **Expand example mobs, abilities, items** — depends on new effects
-6. 🟠 **Loot pool system** — needed by mobs, dungeons, and enchanting XP all at once
-7. 🟠 **Enchanting: Minecraft XP cost** — requires loot pool XP drops first
-8. 🟠 **Timed cooking + brewing** — QoL, self-contained
-9. 🟠 **Mob death animation** — polish, self-contained
-10. 🟠 **Damage indicators: float down + shrink** — polish, self-contained
-11. 🔴 **Player homes + warps** — expected baseline for any server
-12. 🔴 **Starter kits** — new player experience
-13. 🔴 **Extract smelting + crafting to own plugins** — cleanup, low risk
-14. 🟠 **Document `backend.yml` vs `config.yml`** — quick doc note only
-15. 🟠 **Region enter/exit messages + more flags** — high-value QoL
-16. 🟠 **Dungeon flesh-out** — entry requirements + loot grants
-17. 🟠 **Stats GUI redesign** — highest-visibility player feature
-18. 🔴 **Achievement system** — player retention + milestone tracking
-19. 🔴 **Leaderboards** — community engagement
-20. 🔴 **Boss bar system** — needed by dungeons + world events
-21. 🔴 **Sign-entry utility** — needed before AH, Bazaar, or Guild Bank GUI
-22. 🟠 **HUD improvements** — scoreboard, tablist, PAPI support, ability cooldowns
-23. 🟠 **Item set bonuses**
-24. 🟠 **Fishing content slice**
-25. 🟠 **Quest log GUI + chains + repeatable quests**
-26. 🟠 **Guild bank + rank GUI**
-27. 🟠 **RPG-Farming redesign**
-28. 🔴 **Elite/champion mob variants**
-29. 🔴 **World events + world boss**
-30. 🔴 **Salvaging system**
-31. 🔴 **Auction House** (needs sign-entry first)
-32. 🔴 **Bazaar**
-33. 🔵 **Party / Guild / Quest GUI conversions**
-34. 🟠 **Unit test coverage** — ongoing, add tests alongside any new system
-35. 📄 **Docs pass** — fill stubs, add missing plugin pages
+1. 🐛 🟡 **Fix all confirmed bugs first** — see [Bugs](todo-bugs.md)
+2. 🐛 🔴 **Wire up silent stats** (speed, ferocity, swing_range) — showing stats that do nothing is misleading
+3. 🟠 🔴 **NPC command overhaul + in-game editing** — per-NPC entity type, style/skin commands, dialogue/shop editing, look-at-player
+4. 🔵 🟡 **GUI redesigns** (brewing/cooking/enchanting pagination + layouts) — high visibility
+5. 🟠 🔴 **New built-in ability effects** — unlocks all the interesting new ability content
+6. 🟠 🟡 **Expand example mobs, abilities, items** — depends on new effects
+7. 🟠 🔴 **Loot pool system** — needed by mobs, dungeons, and enchanting XP all at once
+8. 🟠 🟡 **Enchanting: Minecraft XP cost** — requires loot pool XP drops first
+9. 🟠 🟡 **Ability trigger types expansion** (`~onAttack`, `~onKill`, `~onBlock`, `~onJump`) — small but unlocks good mob/item designs
+10. 🟠 🟡 **Timed cooking + brewing** — QoL, self-contained
+11. 🟠 🟡 **Mob death animation** — polish, self-contained
+12. 🟠 🟢 **Damage indicators: float down + shrink** — polish, self-contained
+13. 🔴 🟢 **Player homes + warps** — expected baseline for any server
+14. 🔴 🟢 **Starter kits** — new player experience
+15. 🔴 🟢 **Resource pack auto-delivery** — practical baseline, 30-minute job
+16. 🔴 🟢 **Extract smelting + crafting to own plugins** — cleanup, low risk
+17. 🟠 🟢 **Document `backend.yml` vs `config.yml`** — quick doc note only
+18. 🟠 🟢 **Vault provider bridge** — quick adapter, enables third-party plugin compatibility
+19. 🟠 🟢 **Vanilla suppression remaining flags** — audit + wire missing handlers
+20. 🟠 🟡 **Region enter/exit messages + more flags** — high-value QoL
+21. 🟠 ⚫ **Dungeon flesh-out** — entry requirements + loot grants (fix enter bug first)
+22. 🟠 🔴 **Stats GUI redesign** — highest-visibility player feature
+23. 🔴 🔴 **Achievement system** — player retention + milestone tracking
+24. 🔴 🟡 **Leaderboards** — community engagement
+25. 🔴 🟡 **Boss bar system** — needed by dungeons + world events
+26. 🔴 🟡 **Sign-entry utility** — needed before AH, Bazaar, or Guild Bank GUI
+27. 🔴 🔴 **Offline mail / inbox system** — needed before AH and offline achievement rewards
+28. 🟠 🟡 **HUD improvements** — scoreboard, tablist, PAPI support, ability cooldowns
+29. 🔴 🟡 **PlaceholderAPI support** — integrates with HUD improvements
+30. 🟠 🟡 **MagicFind stat implementation** — wire up the `MagicFindAffected` loot pool flag
+31. 🟠 🟡 **Economy transaction log** — admin debugging + player history
+32. 🟠 🟡 **Item set bonuses**
+33. 🟠 🟡 **Fishing content slice**
+34. 🟠 🟡 **Quest log GUI + chains + repeatable quests**
+35. 🟠 🔴 **Guild bank + rank GUI**
+36. 🔴 🔴 **Custom enchantment ability triggers** — ability-fire enchants (on_hit, on_kill, etc.)
+37. 🟠 🔴 **RPG-Farming redesign**
+38. 🔴 🟡 **Elite/champion mob variants**
+39. 🟠 🔴 **Mob AI profiles flesh-out** (ranged_kiter, boss, swarming, pack_hunter)
+40. 🟠 🔴 **Mob patrol waypoints** — admin-defined walk paths for mobs + NPCs
+41. 🔴 ⚫ **World events + world boss**
+42. 🔴 🟡 **Salvaging system**
+43. 🔴 ⚫ **Auction House** (needs sign-entry + mail first)
+44. 🔴 🔴 **Bazaar**
+45. 🔵 🟡 **Party / Guild / Quest GUI conversions**
+46. 🔴 ⚫ **Pets system** (`rpg-pets`) — long-term, build in phases
+47. 🟠 🟡 **Unit test coverage** — ongoing, add tests alongside any new system
+48. 📄 🟢 **Docs pass** — fill stubs, add missing plugin pages
