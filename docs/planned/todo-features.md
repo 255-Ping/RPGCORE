@@ -6,6 +6,28 @@ _Full features or systems that don't exist at all yet._
 
 ---
 
+### Main Menu Item (`rpg-core`) — 🟡 Medium
+
+A persistent hotbar item that acts as a hub into all major player-facing GUIs. Every player always has it; it cannot be removed, dropped, or moved.
+
+**Item behaviour:**
+- Placed in **hotbar slot 8** (last slot) on join and on respawn
+- If missing from slot 8 for any reason (edgecases, plugin restart): restored silently on the next inventory interaction
+- `/menu` command re-gives it if somehow lost (no permission required)
+- The item itself is configurable in `config.yml` — material, name, custom model data (for a resource-pack icon)
+
+**Protected interactions — all cancelled silently:**
+- Drop (Q key) → cancelled, item stays in slot 8
+- Move to offhand (F key / swap key) → cancelled
+- Drag out of hotbar via inventory screen → cancelled, item snaps back
+- Death → item is not added to the death drop list; restored to slot 8 on respawn
+
+**Right-click** → opens the [Main Menu GUI](#main-menu-gui-rpg-core----medium) (see [GUI Redesigns](todo-gui.md) for the full layout spec)
+
+Implementation: `PlayerInteractEvent` for right-click, `InventoryClickEvent` + `InventoryDragEvent` for click-cancel, `PlayerDropItemEvent` for Q-key cancel, `PlayerDeathEvent` to strip it from drops, `PlayerRespawnEvent` to restore. Tag the item with PDC key `rpg_menu_item` so it can be identified reliably regardless of name/material changes.
+
+---
+
 ### Player Homes + Server Warps (`rpg-admin`) — 🟢 Easy
 Conspicuously absent from the suite. Every RPG server needs these.
 

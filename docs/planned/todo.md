@@ -92,3 +92,5 @@
 50. 🔴 ⚫ **Pets system** (`rpg-pets`) — long-term, build in phases
 51. 🟠 🟡 **Unit test coverage** — ongoing, add tests alongside any new system
 52. 📄 🟢 **Docs pass** — fill stubs, add missing plugin pages
+53. 🔵 🟡 **Main Menu Item + GUI** — persistent item locked to hotbar slot 8, right-click opens a hub GUI with buttons to every major player-facing feature; see [GUI Redesigns](todo-gui.md)
+54. 🔵 🟢 **GUI Navigation Standard** — all GUIs get a bottom-bar close button; nested GUIs (opened from inside another GUI) also get a back button that returns to the previous screen; see [GUI Redesigns](todo-gui.md)

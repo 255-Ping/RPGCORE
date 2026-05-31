@@ -6,6 +6,23 @@ _Layout changes, pagination, and brand new inventory-based screens._
 
 ---
 
+## GUI Navigation Standard
+
+**This rule applies to every GUI in the suite — existing and future.**
+
+Every inventory GUI must have a navigation row along the bottom (row 6, slots 45–53). What goes there depends on whether the GUI is nested (opened from inside another GUI) or top-level (opened directly from a command or the menu item).
+
+| GUI type | Back button | Close button |
+|---|---|---|
+| **Top-level** (main menu, or opened directly by command/item) | — | Slot 49 (centre bottom), red barrier or dye, `❌ Close` |
+| **Nested** (opened from a button inside another GUI) | Slot 45 (far left), arrow or compass, `← Back` — returns to the immediately previous GUI | Slot 53 (far right), red barrier or dye, `❌ Close` — closes everything entirely |
+
+**Back context** — when opening a nested GUI, pass the parent GUI instance so the Back button can reopen it. A simple `@Nullable JavaPlugin openedFrom` or a `GUIContext` record is enough. Do not rely on re-constructing the parent from scratch; reopen the exact instance so state is preserved (e.g. the page number the player was on in the parent).
+
+**Retrofit rule** — when touching any existing GUI for any other reason, add the bottom-bar buttons as part of that same change. Don't leave a GUI without them after editing it.
+
+---
+
 ## Redesigns — Existing GUIs
 
 ### Brewing Station GUI Redesign (`rpg-alchemy`) — 🟡 Medium
@@ -38,6 +55,7 @@ These replace or supplement existing command interfaces. All are in `docs/planne
 
 | GUI | Plugin | Current state | Difficulty |
 |---|---|---|---|
+| Main Menu GUI (menu item right-click) | `rpg-core` | Not built yet — hub for all major player GUIs | 🟡 Medium |
 | Party GUI (`/party`) | `rpg-parties` | All commands work; no GUI | 🟡 Medium |
 | Guild GUI (`/guild`) | `rpg-guilds` | All commands work; no GUI | 🔴 Hard |
 | Quest log GUI (`/quests`) | `rpg-quests` | Chat-list only | 🔴 Hard |
@@ -48,6 +66,48 @@ These replace or supplement existing command interfaces. All are in `docs/planne
 | Achievements GUI (`/achievements`) | `rpg-core` | Not built yet — needed alongside achievement system | 🟡 Medium |
 | Leaderboard GUI (`/top`) | `rpg-core` | Not built yet — needed alongside leaderboard feature | 🟡 Medium |
 | Inbox / Mail GUI (`/inbox`) | `rpg-core` | Not built yet — needed alongside mail system | 🟡 Medium |
+
+### Main Menu GUI (`rpg-core`) — 🟡 Medium
+
+Opened by right-clicking the [Main Menu Item](todo-features.md). This is a **top-level GUI** — no Back button, Close button only (slot 49, centre of bottom row).
+
+**Layout (54 slots, 6 rows):**
+
+```
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [  Title ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+[ Glass ] [ Stats ] [Skills ] [Quests ] [ Achieve] [ Party ] [ Guild ] [ Glass ] [ Glass ]
+[ Glass ] [Warps  ] [ Mail  ] [Economy] [        ] [        ] [        ] [ Glass ] [ Glass ]
+[ Glass ] [        ] [        ] [        ] [        ] [        ] [        ] [ Glass ] [ Glass ]
+[ Glass ] [        ] [        ] [        ] [        ] [        ] [        ] [ Glass ] [ Glass ]
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Close  ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+```
+
+**Feature buttons** — each opens the relevant GUI as a nested screen (so that GUI gets Back → Main Menu + Close):
+
+| Slot | Icon | Label | Opens | Notes |
+|---|---|---|---|---|
+| 10 | PLAYER_HEAD (of viewer) | `⚔ Stats` | Stats/Profile GUI | Always available |
+| 11 | DIAMOND_SWORD | `✦ Skills` | Skills GUI | Always available |
+| 12 | WRITABLE_BOOK | `📜 Quests` | Quest Log GUI | Grayed out with `[Coming Soon]` until quest log GUI is built |
+| 13 | DIAMOND | `🏆 Achievements` | Achievements GUI | Grayed out until achievement system is built |
+| 14 | IRON_SWORD | `⚑ Party` | Party GUI | Grayed out until party GUI is built |
+| 15 | SHIELD | `🛡 Guild` | Guild GUI | Grayed out until guild GUI is built |
+| 19 | COMPASS | `⌂ Warps` | Warps list GUI (simple paginated list of `/warp` destinations) | Grayed out until warps are built |
+| 20 | PAPER | `✉ Mail` | Inbox GUI | Shows unread count in item name if > 0; grayed out until mail system is built |
+| 21 | EMERALD | `💰 Economy` | Economy / wallet summary GUI | Always available |
+| 4 | NETHER_STAR | `✦ RPGCORE ✦` | — | Decorative title item, not clickable |
+
+**"Grayed out" placeholder style:** `GRAY_DYE`, name in gray (`&7<Label>`), lore line `&8[Not yet available]`. Clicking does nothing (event cancelled).
+
+**Bottom bar:**
+- Slot 49: `❌ Close` — BARRIER, closes the GUI (top-level, no Back button)
+- All other bottom-row slots: dark gray stained glass panes (decorative filler)
+
+**Building notes:**
+- The PLAYER_HEAD for Stats uses `SkullMeta` with the viewer's own `PlayerProfile` — call `Bukkit.createPlayerProfile(player.getUniqueId())` and `skullMeta.setOwnerProfile(...)`.
+- As new GUIs are built, swap their placeholder items for the real buttons — no other changes needed.
+
+---
 
 ### Party GUI (`/party`) — 🟡 Medium
 - Member list with roles, online/offline status, combat status
