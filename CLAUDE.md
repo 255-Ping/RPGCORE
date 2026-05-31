@@ -45,7 +45,7 @@ Two things must stay accurate at all times:
 | New content type (item/mob/ability/block) | `docs/content/<type>.md` |
 | New command or permission | `docs/commands.md` + `docs/permissions.md` |
 | `gradle.properties` keys / build | `docs/configuration.md` |
-| Any version bump in `gradle.properties` | `docs/changelog.md` (see Rule 6) |
+| Any version bump in `gradle.properties` | `docs/changelog/suite-<N>.md` (see Rule 6) |
 | Any new GUI or message format | `docs/formatting.md` (see Rule 7) |
 
 If you add a feature without updating the relevant doc page, it **does not count as done**.
@@ -115,9 +115,12 @@ structural constants that are not observable by players.
 Within a single conversation, bump each plugin's version **at most once** — at the very end after
 all changes are accumulated. Never bump the same plugin twice in one session.
 
-**Every version bump requires a matching entry in `docs/changelog.md`.** No exceptions.
+**Every version bump requires a matching entry in the current suite's changelog page.** No exceptions.
 
-Format: add a section under the current suite heading (or a new suite heading if `suiteVersion` bumped), one bullet per notable change:
+The changelog is split into per-suite pages. The index is `docs/changelog.md`; each suite lives at
+`docs/changelog/suite-<N>.md`. Always write new entries to the **current** suite page.
+
+Format: add a section under the current suite page, one bullet per notable change:
 
 ```markdown
 ### rpg-<name> `X.Y.Z`
@@ -128,8 +131,9 @@ Format: add a section under the current suite heading (or a new suite heading if
 Changelog entry checklist:
 - One `### rpg-<name> X.Y.Z` block per plugin bumped
 - Each bullet is 1–2 sentences: what changed + brief context (not a git log line)
-- If `suiteVersion` bumped, add a new `## Suite <N>` heading above all the plugin blocks
+- If `suiteVersion` bumped: create `docs/changelog/suite-<N>.md`, add a row to the `docs/changelog.md` index table
 - Update the changelog **in the same commit** as the version bump
+- **Page-size rule**: if a suite's changelog page grows beyond ~150 lines, split it (close the old one, open a new sub-page or a new suite) and update the index. This keeps pages scannable.
 
 If you finish a session and realise the changelog is missing an entry, add it before pushing.
 
@@ -212,7 +216,7 @@ When `suiteVersion` bumps:
 | Module | Property | Current |
 |---|---|---|
 | rpg-api | `apiVersion` | 0.2.0 |
-| rpg-core | `coreVersion` | 0.7.0 |
+| rpg-core | `coreVersion` | 0.8.0 |
 | rpg-mining | `miningVersion` | 0.2.0 |
 | rpg-combat | `combatVersion` | 0.2.0 |
 | rpg-economy | `economyVersion` | 0.1.0 |
@@ -228,10 +232,10 @@ When `suiteVersion` bumps:
 | rpg-guilds | `guildsVersion` | 0.1.0 |
 | rpg-enchanting | `enchantingVersion` | 0.1.0 |
 | rpg-alchemy | `alchemyVersion` | 0.1.0 |
-| rpg-npcs | `npcsVersion` | 0.2.0 |
+| rpg-npcs | `npcsVersion` | 0.3.0 |
 | rpg-quests | `questsVersion` | 0.0.2 |
 | rpg-dungeons | `dungeonsVersion` | 0.0.2 |
-| rpg-cooking | `cookingVersion` | 0.1.0 |
+| rpg-cooking | `cookingVersion` | 0.2.0 |
 | rpg-admin | `adminVersion` | 0.1.0 |
 | suite-wide suffix | `suiteVersion` | 19 |
 
