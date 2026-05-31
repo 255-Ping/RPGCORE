@@ -28,15 +28,16 @@ For mob abilities, append a trigger: `effectName{...} ~onTimer:100`. See [mobs.m
 ```yaml
 testability: #abilityid
   AbilitySequence:
-  - beam{range=5.0,damage_multiplier=1.0,particle=crit}
+  - mana_cost{amount=50}         # deduct mana first; chain aborts here if insufficient
+  - beam{range=5.0,damage_multiplier=1.0,particle=CRIT}
   - explode{radius=3.0,damage_multiplier=0.5}
   Cooldown: 20                   # ticks; HARD FLOOR — can't be lowered by items using this ability
-  ManaCost: 50                   # optional
-  CombatXpMultiplier: 1.0        # how much combat XP the damage from this ability awards (0 to opt out)
   Name: "Beam Burst"             # optional display name
   Description:                   # optional, used in lore / GUIs
   - "&7Fires a beam, then explodes at the endpoint"
 ```
+
+> **Mana cost goes in the sequence, not as a YAML key.** Use `- mana_cost{amount=N}` as the first effect to gate the ability on mana. A top-level `ManaCost:` field is not read by the loader.
 
 `AbilitySequence` is a list of effect invocations in DSL form. The example above fires a beam from the caster in look-direction, then explodes at the beam's endpoint.
 
