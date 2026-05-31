@@ -1,19 +1,52 @@
-# Sample items shipped with rpg-core. Each top-level key is an item ID.
-# Reload with /rpg reloadall.
+# Example items shipped with rpg-core. Each top-level key is an item ID.
+# Reload live with /rpg reloadall.
 #
-# Fields:
-#   MinecraftItem   — base Material (e.g. stone, iron_sword)
-#   Type            — SWORD | WAND | BOW | ARMOR | MATERIAL | QUEST |
-#                     CONSUMABLE | UPGRADE | ACCESSORY
-#   DisplayName     — optional; legacy &-codes
-#   Lore            — list of extra lore lines (after stats, before rarity)
-#   Rarity          — colored display string used as the bottom lore line
-#   CustomModelData — optional int, see docs/resource-pack.md ranges
-#   Stats           — map of stat-id -> number (rendered in lore;
-#                     equipment aggregation arrives in a future slice)
-#   Abilities       — list of ability DSL invocations (stored on the item;
-#                     execution arrives with the ability impl)
-#   ArmorSlot       — for Type: ARMOR — HELMET | CHEST | LEGS | BOOTS
+# ── All supported fields ────────────────────────────────────────────────────
+#   MinecraftItem    — base Material (stone, iron_sword, leather_helmet, ...)
+#   Type             — SWORD | BOW | CROSSBOW | WAND | ARMOR | MATERIAL |
+#                      CONSUMABLE | UPGRADE | QUEST | ACCESSORY
+#                      Any other string becomes a CustomItemType (e.g. PICKAXE, ROD)
+#   DisplayName      — optional; legacy &-codes; defaults to the item ID
+#   Lore             — list of extra lore lines (shown after stats, before rarity)
+#   Rarity           — full colored bottom-of-lore line, e.g. '&6&lLEGENDARY'
+#   CustomModelData  — integer; use your resource-pack model range
+#   ArmorSlot        — HELMET | CHESTPLATE | LEGGINGS | BOOTS  (for Type: ARMOR)
+#   Tradeable        — true (default) | false → blocks /trade, Bazaar, AH
+#   AttackCooldown   — ticks between full-charge melee attacks (0 = Minecraft default)
+#   ItemCooldown     — ticks before the item can be used again (wands/consumables/bows)
+#   AmmoType         — custom item ID required in inventory to fire a bow; omit for vanilla arrows
+#   InfiniteAmmo     — true → bow fires without consuming any ammo at all
+#   ProjectileType   — entity type the bow/crossbow launches; default ARROW
+#                      Valid: ARROW | SPECTRAL_ARROW | SNOWBALL | EGG | SMALL_FIREBALL | TRIDENT
+#   Stats            — map of stat-id: value (see all stat IDs below)
+#   Abilities        — list of ability IDs defined in abilities/*.yml
+#   OnConsume        — right-click consumable effects:
+#     Effects:
+#     - effect: <status-effect-id>   # defined in status-effects/*.yml
+#       level: 1
+#       duration: 200                # ticks (200 = 10 s)
+#
+# ── Stat IDs (grouped) ──────────────────────────────────────────────────────
+#   Combat:    damage  strength  crit_chance  crit_damage  ability_damage
+#              attack_speed  ferocity  lifesteal  knockback
+#              ammo_usage_reduction  projectile_speed  auto_loot
+#   Survival:  max_health  health_regen  vitality  defense  true_defense
+#   Caster:    max_mana  mana_regen  intelligence  cooldown_reduction
+#   Mobility:  speed  swing_range
+#   Loot:      magic_find  pristine  auto_loot  enchanting_luck  pet_luck
+#   Gathering: breaking_power
+#   Skills:    mining_speed  mining_fortune  foraging_speed  foraging_fortune
+#              farming_fortune  fishing_speed  fishing_fortune  sea_creature_chance
+#   Wisdom:    combat_wisdom  mining_wisdom  foraging_wisdom  farming_wisdom
+#              fishing_wisdom  cooking_wisdom  alchemy_wisdom  enchanting_wisdom
+#
+# ── Rarity color codes ──────────────────────────────────────────────────────
+#   Common &7&l  Uncommon &a&l  Rare &9&l  Epic &5&l
+#   Legendary &6&l  Mythic &d&l  Special &e&l
+
+# ════════════════════════════════════════════════════════════════════════════
+#  ORIGINAL TEST ITEMS (referenced by abilities/example.yml — keep as-is)
+# ════════════════════════════════════════════════════════════════════════════
 
 testitem:
   MinecraftItem: stone
@@ -76,3 +109,393 @@ red_gem:
   Lore:
   - '&7Refined from red gem ore.'
   Rarity: '&c&lUNCOMMON'
+
+# ════════════════════════════════════════════════════════════════════════════
+#  SWORDS  — melee weapon stats, AttackCooldown, multiple abilities
+# ════════════════════════════════════════════════════════════════════════════
+
+iron_shortsword:
+  MinecraftItem: iron_sword
+  Type: SWORD
+  DisplayName: '&fIron Shortsword'
+  # AttackCooldown: ticks between full-power attacks (20 = 1 s). 0 = Minecraft default.
+  AttackCooldown: 10
+  Stats:
+    damage: 18
+    strength: 8
+    crit_chance: 5       # % — shown as +5%
+    crit_damage: 30      # % — shown as +30%
+    lifesteal: 2         # %
+  Lore:
+  - '&7A reliable shortsword forged from iron ingots.'
+  Rarity: '&7&lCOMMON'
+
+voidblade:
+  MinecraftItem: netherite_sword
+  Type: SWORD
+  DisplayName: '&5&lVoidblade'
+  AttackCooldown: 14
+  # Tradeable: false → rejected by /trade, Bazaar, AH; shows &c✘ Not Tradeable in lore
+  Tradeable: false
+  Stats:
+    damage: 120
+    strength: 90
+    crit_chance: 30
+    crit_damage: 180
+    ferocity: 60         # % extra swings
+    lifesteal: 20
+    ability_damage: 80
+    swing_range: 2       # extra reach in blocks
+  # Multiple ability IDs — each fires in sequence on right-click
+  Abilities:
+  - testability
+  - poison_dart
+  Lore:
+  - '&7A blade forged in the void between worlds.'
+  - '&7&oIt hungers for souls.'
+  Rarity: '&d&lMYTHIC'
+
+# ════════════════════════════════════════════════════════════════════════════
+#  BOWS  — ranged stats, AmmoType, ammo_usage_reduction
+# ════════════════════════════════════════════════════════════════════════════
+
+hunters_bow:
+  MinecraftItem: bow
+  Type: BOW
+  DisplayName: '&aHunter''s Longbow'
+  # ItemCooldown: ticks before this item can be right-clicked again
+  ItemCooldown: 5
+  # AmmoType: custom item ID that must be in the player's inventory to fire.
+  # Omit (or leave blank) to require vanilla arrows.
+  # AmmoType: enchanted_arrow
+  Stats:
+    damage: 35
+    crit_chance: 18
+    crit_damage: 90
+    projectile_speed: 25     # flat bonus to launch speed
+    ammo_usage_reduction: 20 # % chance to not consume an arrow
+  Lore:
+  - '&7Carved from a single branch of ancient oak.'
+  - '&7Has a small chance to conserve ammo on each shot.'
+  Rarity: '&9&lRARE'
+
+# ════════════════════════════════════════════════════════════════════════════
+#  CROSSBOWS  — InfiniteAmmo, ProjectileType
+# ════════════════════════════════════════════════════════════════════════════
+
+snowstorm_crossbow:
+  MinecraftItem: crossbow
+  Type: CROSSBOW
+  DisplayName: '&bSnowstorm Crossbow'
+  # InfiniteAmmo: fires without consuming any ammo at all
+  InfiniteAmmo: true
+  # ProjectileType: entity spawned on fire. Options:
+  #   ARROW | SPECTRAL_ARROW | SNOWBALL | EGG | SMALL_FIREBALL | TRIDENT
+  ProjectileType: SNOWBALL
+  Stats:
+    damage: 30
+    knockback: 4          # flat knockback force
+    crit_chance: 12
+    crit_damage: 60
+  Abilities:
+  - poison_dart           # on-hit: fires a poison beam at target
+  Lore:
+  - '&7Launches an endless volley of magical snowballs.'
+  - '&7Each hit has a chance to chill the target.'
+  Rarity: '&5&lEPIC'
+
+# ════════════════════════════════════════════════════════════════════════════
+#  WANDS  — full caster stats, cooldown_reduction
+# ════════════════════════════════════════════════════════════════════════════
+
+glacial_staff:
+  MinecraftItem: blaze_rod
+  Type: WAND
+  DisplayName: '&b&lGlacial Staff'
+  ItemCooldown: 8
+  Stats:
+    intelligence: 120        # flat mana pool + ability scaling
+    max_mana: 80
+    mana_regen: 5
+    ability_damage: 60
+    cooldown_reduction: 15   # % shorter cooldowns on all abilities
+  Abilities:
+  - testability
+  Lore:
+  - '&7Channelling arctic energy, this staff can conjure'
+  - '&7devastating ice formations from thin air.'
+  Rarity: '&6&lLEGENDARY'
+
+# ════════════════════════════════════════════════════════════════════════════
+#  ARMOR — ArmorSlot, survival + caster stats, all four pieces
+# ════════════════════════════════════════════════════════════════════════════
+
+reinforced_helmet:
+  MinecraftItem: iron_helmet
+  Type: ARMOR
+  ArmorSlot: HELMET         # used by equipment system to assign to the correct slot
+  DisplayName: '&fReinforced Helmet'
+  Stats:
+    defense: 30
+    max_health: 25
+    health_regen: 2
+  Lore:
+  - '&7Sturdy iron plates reinforced with leather padding.'
+  Rarity: '&a&lUNCOMMON'
+
+arcane_chestplate:
+  MinecraftItem: diamond_chestplate
+  Type: ARMOR
+  ArmorSlot: CHESTPLATE
+  DisplayName: '&9Arcane Chestplate'
+  Stats:
+    defense: 55
+    true_defense: 10         # blocks % of damage that bypasses normal defense
+    max_mana: 60
+    intelligence: 40
+    mana_regen: 3
+  Lore:
+  - '&7Inscribed with runes that fortify both body and mind.'
+  Rarity: '&9&lRARE'
+
+shadow_leggings:
+  MinecraftItem: leather_leggings
+  Type: ARMOR
+  ArmorSlot: LEGGINGS
+  DisplayName: '&8Shadow Leggings'
+  Stats:
+    defense: 25
+    speed: 5                 # flat movement speed bonus
+    crit_chance: 8
+    vitality: 5              # % max health bonus
+  Lore:
+  - '&7Woven from shadow-thread; light as air, tough as iron.'
+  Rarity: '&a&lUNCOMMON'
+
+windwalker_boots:
+  MinecraftItem: leather_boots
+  Type: ARMOR
+  ArmorSlot: BOOTS
+  DisplayName: '&eWindwalker Boots'
+  Stats:
+    defense: 20
+    speed: 12
+    magic_find: 15           # % bonus chance for rare drops
+  Lore:
+  - '&7Those who wear these never seem to slow down.'
+  Rarity: '&a&lUNCOMMON'
+
+# ════════════════════════════════════════════════════════════════════════════
+#  GATHERING TOOLS  — custom Type strings, skill-specific stats, breaking_power
+# ════════════════════════════════════════════════════════════════════════════
+
+# Type accepts any string. Non-builtin types become a CustomItemType.
+# Use these types as filters in mob/block loot tables, station recipes, etc.
+
+miners_pickaxe:
+  MinecraftItem: iron_pickaxe
+  Type: PICKAXE            # custom type — not a builtin; treated as "pickaxe"
+  DisplayName: '&7Miner''s Pickaxe'
+  Stats:
+    breaking_power: 2      # must be >= block's RequiredPower to break it
+    mining_speed: 12       # drains block Toughness faster
+    mining_fortune: 10     # % extra drop rolls
+    mining_wisdom: 5       # % more skill XP from mining
+  Lore:
+  - '&7A reliable pickaxe for ore veins up to Breaking Power 2.'
+  Rarity: '&a&lUNCOMMON'
+
+forest_axe:
+  MinecraftItem: golden_axe
+  Type: AXE
+  DisplayName: '&2Forest Axe'
+  Stats:
+    breaking_power: 1
+    foraging_speed: 10
+    foraging_fortune: 8
+    foraging_wisdom: 5
+  Lore:
+  - '&7Enchanted with the spirit of the old forest.'
+  Rarity: '&7&lCOMMON'
+
+farmers_hoe:
+  MinecraftItem: diamond_hoe
+  Type: HOE
+  DisplayName: '&eFarmer''s Hoe'
+  Stats:
+    farming_fortune: 20
+    farming_wisdom: 8
+  Lore:
+  - '&7Blesses the soil with every strike.'
+  Rarity: '&7&lCOMMON'
+
+golden_fishing_rod:
+  MinecraftItem: fishing_rod
+  Type: ROD
+  DisplayName: '&6Golden Fishing Rod'
+  Stats:
+    fishing_speed: 15          # shortens bite wait time
+    fishing_fortune: 25        # % extra loot rolls
+    sea_creature_chance: 8     # % chance to hook a sea creature instead
+    fishing_wisdom: 10
+  Lore:
+  - '&7Cast into deep water and await the extraordinary.'
+  Rarity: '&9&lRARE'
+
+# ════════════════════════════════════════════════════════════════════════════
+#  CONSUMABLES  — OnConsume effects, ItemCooldown
+# ════════════════════════════════════════════════════════════════════════════
+
+strength_elixir:
+  MinecraftItem: potion
+  Type: CONSUMABLE
+  DisplayName: '&cStrength Elixir'
+  # ItemCooldown: 1200 ticks = 60 s before the item can be used again (per player)
+  ItemCooldown: 1200
+  # OnConsume.Effects list: each entry applies a status effect on right-click.
+  # effect   → status effect ID from status-effects/*.yml
+  # level    → scales stat-modifier values and tick-action amounts
+  # duration → ticks the effect lasts (20 ticks = 1 second)
+  OnConsume:
+    Effects:
+    - effect: strength_boost
+      level: 1
+      duration: 1200     # 60 seconds
+    - effect: regen
+      level: 2
+      duration: 400      # 20 seconds
+  Lore:
+  - '&7A crimson draught that surges with raw power.'
+  - '&7Grants &cStrength Boost &7and &aRegeneration&7.'
+  Rarity: '&a&lUNCOMMON'
+
+antidote_flask:
+  MinecraftItem: glass_bottle
+  Type: CONSUMABLE
+  DisplayName: '&2Antidote Flask'
+  ItemCooldown: 200          # 10-second cooldown
+  OnConsume:
+    Effects:
+    - effect: regen
+      level: 3
+      duration: 600          # 30 seconds of fast healing
+  Lore:
+  - '&7Clears poison and restores vitality over time.'
+  Rarity: '&7&lCOMMON'
+
+# ════════════════════════════════════════════════════════════════════════════
+#  UPGRADES  — UPGRADE type, Tradeable: false (bound to one item)
+# ════════════════════════════════════════════════════════════════════════════
+
+enchanted_upgrade_crystal:
+  MinecraftItem: amethyst_shard
+  Type: UPGRADE
+  DisplayName: '&5Enchanted Upgrade Crystal'
+  # Tradeable: false — cannot be traded to other players or listed on Bazaar / AH
+  Tradeable: false
+  Stats:
+    enchanting_luck: 15    # % bonus to enchanting success (when used on anvil station)
+  Lore:
+  - '&7Apply at the &5Enchanting Anvil &7to attempt an upgrade.'
+  - '&7This crystal is &cbound &7and cannot be traded.'
+  Rarity: '&9&lRARE'
+
+# ════════════════════════════════════════════════════════════════════════════
+#  ACCESSORIES  — rings, amulets, talismans, CustomModelData, loot/wisdom stats
+# ════════════════════════════════════════════════════════════════════════════
+
+adventurers_ring:
+  MinecraftItem: gold_ingot
+  Type: ACCESSORY
+  DisplayName: '&6Adventurer''s Ring'
+  # CustomModelData: integer used by a resource pack to select a custom model.
+  # This example assumes model ID 1001 in your pack displays a ring texture.
+  CustomModelData: 1001
+  Stats:
+    max_health: 20
+    strength: 10
+    mining_speed: 8
+    speed: 3
+  Lore:
+  - '&7A simple ring worn by countless adventurers.'
+  - '&7Balanced bonuses for any profession.'
+  Rarity: '&a&lUNCOMMON'
+
+scholars_pendant:
+  MinecraftItem: book
+  Type: ACCESSORY
+  DisplayName: '&3Scholar''s Pendant'
+  CustomModelData: 1002
+  Stats:
+    # Full wisdom suite — all eight skill wisdom stats in one item
+    combat_wisdom: 5
+    mining_wisdom: 5
+    foraging_wisdom: 5
+    farming_wisdom: 5
+    fishing_wisdom: 5
+    cooking_wisdom: 5
+    alchemy_wisdom: 5
+    enchanting_wisdom: 5
+    # Bonus caster stats
+    intelligence: 50
+    max_mana: 40
+  Lore:
+  - '&7Worn by the most dedicated scholars of the realm.'
+  - '&7Increases all skill XP gains by &b+5% &7each.'
+  Rarity: '&6&lLEGENDARY'
+
+pristine_talisman:
+  MinecraftItem: nether_star
+  Type: ACCESSORY
+  DisplayName: '&d&lPristine Talisman'
+  Stats:
+    magic_find: 40         # % bonus rare-drop chance
+    pristine: 25           # % bonus to item quality rolls
+    pet_luck: 20           # % bonus pet drop chance
+    auto_loot: 1           # automatically picks up nearby drops (flat radius bonus)
+    enchanting_luck: 10    # % enchanting success bonus
+  Lore:
+  - '&7A talisman of extraordinary fortune.'
+  - '&7All the luck of the cosmos, bound into one gem.'
+  Rarity: '&5&lEPIC'
+
+# ════════════════════════════════════════════════════════════════════════════
+#  QUEST ITEMS  — QUEST type, Tradeable: false, SPECIAL rarity
+# ════════════════════════════════════════════════════════════════════════════
+
+ancient_queststone:
+  MinecraftItem: emerald
+  Type: QUEST
+  DisplayName: '&e&lAncient Queststone'
+  # Quest items are soulbound by convention — cannot be traded
+  Tradeable: false
+  Lore:
+  - '&7An artefact of immense historical significance.'
+  - '&7Return this to &eElder Varos &7in the capital city.'
+  - ''
+  - '&8Quest: &eThe Lost Relics'
+  Rarity: '&e&lSPECIAL'
+
+# ════════════════════════════════════════════════════════════════════════════
+#  MATERIALS  — crafting ingredients, Tradeable: false for soulbound drops
+# ════════════════════════════════════════════════════════════════════════════
+
+crude_iron_ingot:
+  MinecraftItem: iron_ingot
+  Type: MATERIAL
+  DisplayName: '&7Crude Iron Ingot'
+  Lore:
+  - '&7Smelted from raw iron ore. A basic crafting component.'
+  Rarity: '&7&lCOMMON'
+
+soulbound_fragment:
+  MinecraftItem: echo_shard
+  Type: MATERIAL
+  DisplayName: '&5Soulbound Fragment'
+  # Tradeable: false — bound to the player who looted it; cannot change hands
+  Tradeable: false
+  Lore:
+  - '&7A fragment of condensed soul energy.'
+  - '&7It resonates only with the one who found it.'
+  - '&c✘ &7Soulbound — cannot be traded or auctioned.'
+  Rarity: '&9&lRARE'
