@@ -1,12 +1,14 @@
 # upgrades/<file>.yml — each top-level key is one item upgrade tier.
 # Upgrades stack additively on the item; max tier is enforced per upgrade.
+# Upgrade books are physical items given via /enchanting give upgrade <player> <id>.
 #
 #   <upgrade_id>:
 #     DisplayName: "&6Hot Potato Book"
 #     AppliesTo: [sword, armor]
-#     MaxTier: 10                     # how many times this upgrade can be applied
-#     CurrencyCost: 2000              # per tier
-#     RequiredLevel: 3
+#     MaxTier: 10                      # how many times this upgrade can be applied
+#     CurrencyCost: 2000               # cost per tier (informational — not charged on apply)
+#     RequiredLevel: 3                 # min Enchanting skill level needed to apply
+#     Reagent: some_item_id            # optional — player must have this RPG item to apply
 #     StatsPerTier:
 #       strength: 2
 #       max_health: 4

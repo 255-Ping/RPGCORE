@@ -10,5 +10,7 @@ public record UpgradeDef(
         int maxTier,
         double currencyCost,
         int requiredSkillLevel,
-        Map<String, Double> statsPerTier
+        Map<String, Double> statsPerTier,
+        /** Optional RPG item id the player must have in inventory when applying. Null = no reagent. */
+        String reagent
 ) {}

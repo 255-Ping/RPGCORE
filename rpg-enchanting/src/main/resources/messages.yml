@@ -4,9 +4,15 @@ enchant:
   no-enchant: "&cNo enchant available"
   at-max: "&eEnchant is already at max level."
 reforge:
-  applied: "&aReforge applied."
+  applied: "&aReforge applied!"
 upgrade:
-  applied: "&aUpgrade applied."
+  applied: "&aUpgrade applied!"
   at-max: "&eAlready at max tier."
+stone:
+  missing: "&cPlace a reforge stone or upgrade book in the center slot first."
+  incompatible: "&cThis stone can't be applied to that item type."
+  not-a-stone: "&cThat item is not a reforge stone or upgrade book."
+  unknown: "&cUnknown stone — this reforge/upgrade no longer exists. Try reloading."
+  reagent-missing: "&cMissing reagent: &f{reagent}&c."
 requires-level: "&eRequires Enchanting level {level}."
 not-enough-currency: "&cNot enough currency."

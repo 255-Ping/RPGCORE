@@ -29,15 +29,19 @@ public final class RpgEnchantingPlugin extends JavaPlugin {
         modifier = new ItemModifier(
                 new NamespacedKey(this, "rpg_enchants"),
                 new NamespacedKey(this, "rpg_reforge"),
-                new NamespacedKey(this, "rpg_upgrades"));
+                new NamespacedKey(this, "rpg_upgrades"),
+                new NamespacedKey(this, "rpg_reforge_stone"),
+                new NamespacedKey(this, "rpg_upgrade_book"));
 
         StationGui gui = new StationGui(this, registry, modifier);
         getServer().getPluginManager().registerEvents(gui, this);
         getServer().getPluginManager().registerEvents(new StationInteractListener(this, gui), this);
         getServer().getPluginManager().registerEvents(new StatInjectionListener(registry, modifier), this);
 
-        Objects.requireNonNull(getCommand("enchanting"), "command 'enchanting' missing from plugin.yml")
-                .setExecutor(new EnchantingCommand(this));
+        var enchCmd = Objects.requireNonNull(getCommand("enchanting"), "command 'enchanting' missing from plugin.yml");
+        var enchCmdHandler = new EnchantingCommand(this);
+        enchCmd.setExecutor(enchCmdHandler);
+        enchCmd.setTabCompleter(enchCmdHandler);
 
         StationBlockInstaller.installInto(this);
 

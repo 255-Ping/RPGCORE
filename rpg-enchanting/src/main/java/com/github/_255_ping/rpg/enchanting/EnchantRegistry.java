@@ -71,6 +71,7 @@ public final class EnchantRegistry {
             List<String> appliesTo = lower(s.getStringList("AppliesTo"));
             double currencyCost = s.getDouble("CurrencyCost", 0);
             int reqLevel = s.getInt("RequiredLevel", 1);
+            String reagent = s.getString("Reagent", null);
             ConfigurationSection sbr = s.getConfigurationSection("StatsByRarity");
             Map<String, Map<String, Double>> byRarity = new HashMap<>();
             if (sbr != null) {
@@ -80,7 +81,7 @@ public final class EnchantRegistry {
                 }
             }
             reforges.put(id, new ReforgeDef(id, displayName, appliesTo,
-                    currencyCost, reqLevel, byRarity));
+                    currencyCost, reqLevel, byRarity, reagent));
         });
     }
 
@@ -91,9 +92,10 @@ public final class EnchantRegistry {
             int maxTier = s.getInt("MaxTier", 1);
             double currencyCost = s.getDouble("CurrencyCost", 0);
             int reqLevel = s.getInt("RequiredLevel", 1);
+            String reagent = s.getString("Reagent", null);
             Map<String, Double> stats = readDoubleMap(s.getConfigurationSection("StatsPerTier"));
             upgrades.put(id, new UpgradeDef(id, displayName, appliesTo,
-                    maxTier, currencyCost, reqLevel, stats));
+                    maxTier, currencyCost, reqLevel, stats, reagent));
         });
     }
 

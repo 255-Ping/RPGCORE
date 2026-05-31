@@ -52,11 +52,18 @@ public final class ItemModifier {
     private final NamespacedKey enchantsKey;
     private final NamespacedKey reforgeKey;
     private final NamespacedKey upgradesKey;
+    /** PDC key that marks a physical item as a reforge stone; value = reforge id. */
+    private final NamespacedKey reforgeStoneKey;
+    /** PDC key that marks a physical item as an upgrade book; value = upgrade id. */
+    private final NamespacedKey upgradeBookKey;
 
-    public ItemModifier(NamespacedKey enchantsKey, NamespacedKey reforgeKey, NamespacedKey upgradesKey) {
+    public ItemModifier(NamespacedKey enchantsKey, NamespacedKey reforgeKey, NamespacedKey upgradesKey,
+                        NamespacedKey reforgeStoneKey, NamespacedKey upgradeBookKey) {
         this.enchantsKey = enchantsKey;
         this.reforgeKey = reforgeKey;
         this.upgradesKey = upgradesKey;
+        this.reforgeStoneKey = reforgeStoneKey;
+        this.upgradeBookKey = upgradeBookKey;
     }
 
     public NamespacedKey enchantsKey() { return enchantsKey; }
@@ -92,6 +99,109 @@ public final class ItemModifier {
         if (cur >= maxTier) return;
         map.put(id, cur + 1);
         write(stack, upgradesKey, encodeLevelMap(map));
+    }
+
+    // ── Physical stones / books ───────────────────────────────────────────────
+
+    /**
+     * Creates a physical reforge stone {@link ItemStack} tagged with the given reforge id.
+     * Give to players via the admin {@code /enchanting give} command or loot tables.
+     */
+    public org.bukkit.inventory.ItemStack createReforgeStone(ReforgeDef def) {
+        org.bukkit.inventory.ItemStack stone = new org.bukkit.inventory.ItemStack(org.bukkit.Material.AMETHYST_SHARD);
+        ItemMeta meta = stone.getItemMeta();
+        if (meta == null) return stone;
+        meta.displayName(noItalic(LEGACY.deserialize("&d" + def.displayName() + " &5Reforge Stone")));
+        List<Component> lore = new ArrayList<>();
+        // Show stats for each defined rarity tier
+        if (!def.statsByRarity().isEmpty()) {
+            for (Map.Entry<String, Map<String, Double>> rarityEntry : def.statsByRarity().entrySet()) {
+                if (rarityEntry.getValue().isEmpty()) continue;
+                lore.add(noItalic(LEGACY.deserialize("&8" + capitalize(rarityEntry.getKey()) + ":")));
+                for (Map.Entry<String, Double> statEntry : rarityEntry.getValue().entrySet()) {
+                    Stat stat = RpgServices.stats().get(statEntry.getKey()).orElse(null);
+                    if (stat == null) continue;
+                    lore.add(noItalic(LEGACY.deserialize("  " + stat.colorCode() + stat.displayName()
+                            + ": " + fmtVal(statEntry.getValue(), stat.percent()))));
+                }
+            }
+            lore.add(Component.empty());
+        }
+        if (def.appliesTo() != null && !def.appliesTo().isEmpty() && !def.appliesTo().contains("any")) {
+            lore.add(noItalic(LEGACY.deserialize("&7Applies to: &f" + String.join(", ", def.appliesTo()))));
+        }
+        if (def.reagent() != null) {
+            lore.add(noItalic(LEGACY.deserialize("&7Reagent: &f" + def.reagent())));
+        }
+        if (def.requiredSkillLevel() > 1) {
+            lore.add(noItalic(LEGACY.deserialize("&7Requires Enchanting Lv &e" + def.requiredSkillLevel())));
+        }
+        lore.add(Component.empty());
+        lore.add(noItalic(LEGACY.deserialize("&8▶ &7Place in anvil to reforge an item")));
+        meta.lore(lore);
+        meta.getPersistentDataContainer().set(reforgeStoneKey, PersistentDataType.STRING, def.id());
+        stone.setItemMeta(meta);
+        return stone;
+    }
+
+    /**
+     * Creates a physical upgrade book {@link ItemStack} tagged with the given upgrade id.
+     */
+    public org.bukkit.inventory.ItemStack createUpgradeBook(UpgradeDef def) {
+        org.bukkit.inventory.ItemStack book = new org.bukkit.inventory.ItemStack(org.bukkit.Material.ENCHANTED_BOOK);
+        ItemMeta meta = book.getItemMeta();
+        if (meta == null) return book;
+        meta.displayName(noItalic(LEGACY.deserialize("&6" + def.displayName() + " &eUpgrade Book")));
+        List<Component> lore = new ArrayList<>();
+        if (!def.statsPerTier().isEmpty()) {
+            lore.add(noItalic(LEGACY.deserialize("&8Stats per tier:")));
+            for (Map.Entry<String, Double> e : def.statsPerTier().entrySet()) {
+                Stat stat = RpgServices.stats().get(e.getKey()).orElse(null);
+                if (stat == null) continue;
+                lore.add(noItalic(LEGACY.deserialize("  " + stat.colorCode() + stat.displayName()
+                        + ": " + fmtVal(e.getValue(), stat.percent()))));
+            }
+            lore.add(Component.empty());
+        }
+        lore.add(noItalic(LEGACY.deserialize("&7Max Tier: &e" + def.maxTier())));
+        if (def.appliesTo() != null && !def.appliesTo().isEmpty() && !def.appliesTo().contains("any")) {
+            lore.add(noItalic(LEGACY.deserialize("&7Applies to: &f" + String.join(", ", def.appliesTo()))));
+        }
+        if (def.reagent() != null) {
+            lore.add(noItalic(LEGACY.deserialize("&7Reagent: &f" + def.reagent())));
+        }
+        if (def.requiredSkillLevel() > 1) {
+            lore.add(noItalic(LEGACY.deserialize("&7Requires Enchanting Lv &e" + def.requiredSkillLevel())));
+        }
+        lore.add(Component.empty());
+        lore.add(noItalic(LEGACY.deserialize("&8▶ &7Place in anvil to upgrade an item")));
+        meta.lore(lore);
+        meta.getPersistentDataContainer().set(upgradeBookKey, PersistentDataType.STRING, def.id());
+        book.setItemMeta(meta);
+        return book;
+    }
+
+    /** Returns the reforge id if this stack is a reforge stone, else empty. */
+    public Optional<String> reforgeIdFromStone(org.bukkit.inventory.ItemStack stack) {
+        if (stack == null) return Optional.empty();
+        ItemMeta meta = stack.getItemMeta();
+        if (meta == null) return Optional.empty();
+        String val = meta.getPersistentDataContainer().get(reforgeStoneKey, PersistentDataType.STRING);
+        return val == null ? Optional.empty() : Optional.of(val);
+    }
+
+    /** Returns the upgrade id if this stack is an upgrade book, else empty. */
+    public Optional<String> upgradeIdFromBook(org.bukkit.inventory.ItemStack stack) {
+        if (stack == null) return Optional.empty();
+        ItemMeta meta = stack.getItemMeta();
+        if (meta == null) return Optional.empty();
+        String val = meta.getPersistentDataContainer().get(upgradeBookKey, PersistentDataType.STRING);
+        return val == null ? Optional.empty() : Optional.of(val);
+    }
+
+    private static String capitalize(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 
     // ── Lore rewrite ──────────────────────────────────────────────────────────

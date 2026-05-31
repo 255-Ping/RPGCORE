@@ -1,12 +1,14 @@
 # reforges/<file>.yml — each top-level key is one reforge.
 # A reforge replaces any previous reforge on the item; it adds stats per item-Rarity tier.
+# Reforge stones are physical items given via /enchanting give reforge <player> <id>.
 #
 #   <reforge_id>:
 #     DisplayName: "&dGiant"
 #     AppliesTo: [armor]
-#     CurrencyCost: 1000
-#     RequiredLevel: 1
-#     StatsByRarity:                  # rarity_id -> stat map
+#     CurrencyCost: 1000               # cost to purchase the reforge stone (informational — not charged on apply)
+#     RequiredLevel: 1                 # min Enchanting skill level needed to apply
+#     Reagent: some_item_id            # optional — player must have this RPG item in inventory to apply
+#     StatsByRarity:                   # rarity_id -> stat map (falls back to "common" if exact rarity missing)
 #       common:    { max_health: 50 }
 #       uncommon:  { max_health: 100 }
 #       rare:      { max_health: 200 }
