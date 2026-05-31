@@ -196,9 +196,10 @@ public final class VanillaSuppressionListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onPotionEffectApply(EntityPotionEffectEvent e) {
-        if (!flag("potions")) return;
-        // BEACON, AREA_EFFECT_CLOUD, POTION_DRINK, POTION_SPLASH are the vanilla pipelines;
-        // PLUGIN means an addon (status-effect framework) wrote it -> let through.
+        // Default false: vanilla potions work normally until a proper RPG potion→status-effect
+        // converter is built. Set vanilla-suppression.potions: true in config to re-enable suppression.
+        if (!plugin.getConfig().getBoolean("vanilla-suppression.potions", false)) return;
+        // PLUGIN means an addon (status-effect framework) wrote it -> always let through.
         if (e.getCause() == EntityPotionEffectEvent.Cause.PLUGIN) return;
         e.setCancelled(true);
     }

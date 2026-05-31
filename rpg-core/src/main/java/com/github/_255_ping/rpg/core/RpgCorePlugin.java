@@ -6,6 +6,7 @@ import com.github._255_ping.rpg.core.abilities.CoreAbilityRegistry;
 import com.github._255_ping.rpg.core.abilities.ItemAbilityListener;
 import com.github._255_ping.rpg.core.blocks.BlockBreakHandler;
 import com.github._255_ping.rpg.core.blocks.BlockInteractListener;
+import com.github._255_ping.rpg.core.blocks.BlockPlaceListener;
 import com.github._255_ping.rpg.core.blocks.BlockLoader;
 import com.github._255_ping.rpg.core.blocks.BlockPersistence;
 import com.github._255_ping.rpg.core.blocks.CoreBlockRegistry;
@@ -104,6 +105,7 @@ public final class RpgCorePlugin extends JavaPlugin {
     private CoreBlockRegistry blockRegistry;
     private BlockLoader blockLoader;
     private BlockPersistence blockPersistence;
+    private NamespacedKey blockItemKey;
     private DamagerTracker damagerTracker;
     private CoreCurrencyRegistry currencyRegistry;
     private CoreLootTableRegistry lootTableRegistry;
@@ -157,6 +159,7 @@ public final class RpgCorePlugin extends JavaPlugin {
 
         NamespacedKey itemIdKey = new NamespacedKey(this, "item_id");
         NamespacedKey mobIdKey = new NamespacedKey(this, "mob_id");
+        blockItemKey = new NamespacedKey(this, "rpg_block_id");
 
         dataStore = openDataStore(dataDir);
         CoreGuiConfig guiCfg = new CoreGuiConfig(getConfig());
@@ -252,6 +255,8 @@ public final class RpgCorePlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(blockBreakHandler, this);
         blockBreakHandler.start();
         getServer().getPluginManager().registerEvents(new BlockInteractListener(blockRegistry), this);
+        getServer().getPluginManager().registerEvents(
+                new BlockPlaceListener(blockRegistry, blockPersistence, blockItemKey), this);
         getServer().getPluginManager().registerEvents(damagerTracker, this);
         getServer().getPluginManager().registerEvents(new MobLootListener(damagerTracker, dropManager), this);
 
@@ -379,6 +384,7 @@ public final class RpgCorePlugin extends JavaPlugin {
     public CoreWandService wandService() { return wandService; }
     public ParticleManager particleManager() { return particleManager; }
     public LootChestRegistry lootChestRegistry() { return lootChestRegistry; }
+    public NamespacedKey blockItemKey() { return blockItemKey; }
 
     private DataStore openDataStore(File dataDir) {
         String backend = getConfig().getString("persistence.backend", "yaml").toLowerCase();

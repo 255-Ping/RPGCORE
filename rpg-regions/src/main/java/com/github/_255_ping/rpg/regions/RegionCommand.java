@@ -229,13 +229,29 @@ public final class RegionCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (args.length == 1) return filter(args[0], List.of("define", "delete", "list", "info", "flag", "global", "reload"));
+        if (args.length == 1)
+            return filter(args[0], List.of("define", "delete", "list", "info", "flag", "global", "reload"));
         String sub = args[0].toLowerCase(Locale.ROOT);
-        if (args.length == 2 && List.of("delete", "flag", "info").contains(sub)) {
-            return filterRegions(args[1]);
+
+        // arg2: suggest region ids only where a region id is actually needed
+        if (args.length == 2) {
+            if (sub.equals("delete") || sub.equals("flag")) return filterRegions(args[1]);
+            // "info" and "list" take no id; "global" takes a sub-subcommand
+            if (sub.equals("global")) return filter(args[1], List.of("info", "flag"));
         }
+
+        // /region flag <id> <flagName>
         if (sub.equals("flag") && args.length == 3) return filter(args[2], KNOWN_FLAGS);
-        if (sub.equals("flag") && args.length == 4) return filter(args[3], List.of("true", "false"));
+        // /region flag <id> <flagName> <value>
+        if (sub.equals("flag") && args.length == 4) return filter(args[3], List.of("true", "false", "clear"));
+
+        // /region global flag <flagName>
+        if (sub.equals("global") && args.length == 3 && args[1].equalsIgnoreCase("flag"))
+            return filter(args[2], KNOWN_FLAGS);
+        // /region global flag <flagName> <value>
+        if (sub.equals("global") && args.length == 4 && args[1].equalsIgnoreCase("flag"))
+            return filter(args[3], List.of("true", "false", "clear"));
+
         return List.of();
     }
 

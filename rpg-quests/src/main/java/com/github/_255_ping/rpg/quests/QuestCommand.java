@@ -113,9 +113,17 @@ public final class QuestCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) return List.of("list", "accept", "abandon", "progress", "complete", "reload");
-        if (args.length == 2 && (args[0].equalsIgnoreCase("accept") || args[0].equalsIgnoreCase("abandon"))) {
-            return plugin.registry().all().stream().map(QuestDef::id).toList();
+        String sub = args[0].toLowerCase(Locale.ROOT);
+        if (args.length == 2) {
+            if (sub.equals("accept") || sub.equals("abandon"))
+                return plugin.registry().all().stream().map(QuestDef::id).toList();
+            if (sub.equals("complete"))
+                return org.bukkit.Bukkit.getOnlinePlayers().stream()
+                        .map(org.bukkit.entity.Player::getName).toList();
         }
+        if (args.length == 3 && sub.equals("complete"))
+            return plugin.registry().all().stream().map(QuestDef::id)
+                    .filter(id -> id.startsWith(args[2].toLowerCase(Locale.ROOT))).toList();
         return List.of();
     }
 }

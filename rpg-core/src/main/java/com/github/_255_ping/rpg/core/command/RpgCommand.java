@@ -246,8 +246,11 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
                     .decoration(TextDecoration.ITALIC, false));
             meta.lore(List.of(
                     Component.text("Block ID: " + block.id(), NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false),
-                    Component.text("Place then /rpg block convert to register", NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false)
+                    Component.text("Place to auto-register as custom block (admin+creative required)", NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false)
             ));
+            // Tag with block id so BlockPlaceListener can auto-register on placement.
+            meta.getPersistentDataContainer().set(
+                    plugin.blockItemKey(), org.bukkit.persistence.PersistentDataType.STRING, block.id());
             stack.setItemMeta(meta);
         }
         player.getInventory().addItem(stack);
@@ -555,25 +558,55 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                       @NotNull String alias, @NotNull String[] args) {
         if (args.length == 1) {
-            return filtered(args[0], List.of("version", "reload", "item", "mob", "block"));
+            return filtered(args[0], List.of(
+                    "help", "version", "reload",
+                    "item", "mob", "block",
+                    "wand", "loot-chest", "effects", "particle"));
         }
+        String sub = args[0].toLowerCase();
         if (args.length == 2) {
-            if (args[0].equalsIgnoreCase("item")) return filtered(args[1], List.of("give"));
-            if (args[0].equalsIgnoreCase("mob")) return filtered(args[1], List.of("spawn"));
-            if (args[0].equalsIgnoreCase("block")) return filtered(args[1], List.of("give", "convert"));
+            return switch (sub) {
+                case "item" -> filtered(args[1], List.of("give"));
+                case "mob"  -> filtered(args[1], List.of("spawn"));
+                case "block" -> filtered(args[1], List.of("give", "convert"));
+                case "wand" -> filtered(args[1], List.of("give", "mode"));
+                case "loot-chest" -> filtered(args[1], List.of("define", "delete", "count"));
+                case "effects" -> filtered(args[1], onlinePlayerNames());
+                case "particle" -> filtered(args[1], List.of("create", "delete", "list", "move"));
+                default -> List.of();
+            };
         }
         if (args.length == 3) {
-            if (args[0].equalsIgnoreCase("block") && args[1].equalsIgnoreCase("give")) {
+            if (sub.equals("block") && args[1].equalsIgnoreCase("give")) {
                 return filtered(args[2], RpgServices.blocks().all().stream().map(Block::id).toList());
             }
-            if (args[0].equalsIgnoreCase("item") && args[1].equalsIgnoreCase("give")) {
+            if (sub.equals("item") && args[1].equalsIgnoreCase("give")) {
                 return filtered(args[2], RpgServices.items().all().stream().map(RpgItem::id).toList());
             }
-            if (args[0].equalsIgnoreCase("mob") && args[1].equalsIgnoreCase("spawn")) {
+            if (sub.equals("mob") && args[1].equalsIgnoreCase("spawn")) {
                 return filtered(args[2], RpgServices.mobs().all().stream().map(RpgMob::id).toList());
+            }
+            if (sub.equals("wand") && args[1].equalsIgnoreCase("mode")) {
+                return filtered(args[2], List.of("region", "loot-chest", "dungeon", "spawner", "entrance"));
+            }
+            if (sub.equals("loot-chest") && args[1].equalsIgnoreCase("define")) {
+                return filtered(args[2], RpgServices.lootTables().all().stream()
+                        .map(com.github._255_ping.rpg.api.loot.LootTable::id).toList());
+            }
+            if (sub.equals("particle") && List.of("delete", "move").contains(args[1].toLowerCase())) {
+                var pm = plugin.particleManager();
+                if (pm != null) return filtered(args[2],
+                        pm.all().stream()
+                          .map(com.github._255_ping.rpg.core.particles.ParticleManager.ParticleEntry::id)
+                          .toList());
             }
         }
         return List.of();
+    }
+
+    private static List<String> onlinePlayerNames() {
+        return org.bukkit.Bukkit.getOnlinePlayers().stream()
+                .map(org.bukkit.entity.Player::getName).toList();
     }
 
     private static List<String> filtered(String prefix, List<String> candidates) {
