@@ -84,8 +84,8 @@ Members' personal skill XP also flows into the guild (at `rate-percent`). The gu
 | `/guild list` | `rpg.guilds.list` | |
 | `/guild deposit <amount>` | `rpg.guilds.bank` | Any member; deducted from personal balance |
 | `/guild withdraw <amount>` | `rpg.guilds.bank` | Officer/owner only |
-| `/guild bank upgrade` | `rpg.guilds.bank.upgrade` | Rank-gated, planned |
-| `/guild ranks` | `rpg.guilds.ranks` | Rename rank slots, planned |
+| `/guild bank upgrade` | `rpg.guilds.bank` | _(planned — not yet implemented)_ |
+| `/guild ranks` | _(planned)_ | _(planned — not yet implemented)_ |
 | `/guild reload` | `rpg.guilds.admin.reload` | Op only |
 | `/chat guild` | `rpg.chat.use.guild` | Registered by rpg-chat if loaded |
 

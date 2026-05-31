@@ -40,6 +40,7 @@ xp-sharing:
 | `/party leave` | `rpg.parties.leave` | Anyone |
 | `/party disband` | `rpg.parties.disband` | Owner only |
 | `/party list` | `rpg.parties.list` | Anyone in party |
+| `/party reload` | `rpg.parties.admin.reload` | Op only |
 | `/chat party` | `rpg.chat.use.party` | Registered with rpg-chat if loaded |
 
 ## XP sharing

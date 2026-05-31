@@ -1,6 +1,6 @@
 # Resource pack & CustomModelData ranges
 
-> **Status:** Planned
+> **Status:** Working
 
 The plugin suite does not ship a resource pack. Admins author their own. To prevent CMD collisions across addons, the following integer ranges are reserved per-addon. Admin custom content should use `10000+`.
 

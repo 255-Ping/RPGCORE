@@ -1,6 +1,6 @@
 # Selection wand
 
-> **Status:** Planned
+> **Status:** Working
 
 A single admin tool for selecting locations, volumes, and regions across the suite. Modes are switched via `/rpg wand <mode>`.
 

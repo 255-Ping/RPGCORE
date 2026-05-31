@@ -2,6 +2,10 @@
 
 > **Status:** In Progress — Built-in effects library (damage, heal, beam, explode, particles, sound, delay, apply_status, mana_cost, cooldown), custom ability YAML loader, item right-click cast, **and full mob ability trigger system** (`~onTimer:N`, `~onHit`, `~onHurt`, `~onSpawn`, `~onDeath`) all working. Items and mobs share the same ability registry, so custom abilities defined in `abilities/*.yml` are usable from both.
 
+## Design intent
+
+A sequence model is used instead of a monolithic "ability" type because **composability** lets you build complex behaviors from simple primitives without writing Java. A fireball is `projectile{} → explode{}`; a poison lance is `beam{} → apply_status{id=poison}`; a charge-up burst is `particles{} → delay{} → explode{}`. Each primitive does one thing and passes a shared context forward. Adding a new primitive (one Java class) unlocks a combinatorial space of new abilities without touching existing code.
+
 The ability system has two layers:
 
 1. **Built-in effects** — primitive operations like `damage`, `explode`, `beam`, `heal`. Registered by `rpg-core` and addons. Invoked from item / mob YAML via a DSL.

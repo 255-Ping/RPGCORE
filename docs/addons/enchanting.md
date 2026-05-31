@@ -4,6 +4,10 @@
 
 One addon bundling four related "improve your gear" features. Each sub-feature is individually toggleable.
 
+## Design intent
+
+Enchants, reforges, and upgrades are three separate systems intentionally: **enchants** are tiered per-slot progressions that build up over time (you apply more, you get stronger); **reforges** are identity modifiers — one per item, they define the item's archetype (a "Sharp" sword vs a "Heavy" one); **upgrades** are consumable stacks that compound a single progression path. Keeping them separate means players make meaningful choices about *how* to develop an item rather than just piling on buffs.
+
 1. **Enchanting skill** — XP from applying enchants
 2. **Enchanting mechanic** — custom enchants applied at a custom enchanting block
 3. **Reforge mechanic** — apply a reforge to an item for stat bundles (random or via consumable stones)

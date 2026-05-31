@@ -1,6 +1,6 @@
 # Installation
 
-> **Status:** Planned
+> **Status:** Working
 
 ## Requirements
 
@@ -36,3 +36,36 @@ Each addon generates its own `plugins/<addon>/config.yml` plus relevant content 
 ## Verifying
 
 After install: `/rpg version` should print every loaded module and its version. Permission `rpg.core.version` (default true).
+
+---
+
+## Plugin dependency table
+
+Hard dependencies must be present or the plugin won't load. Soft dependencies are optional — features requiring them are skipped if the plugin is absent.
+
+| Plugin | Hard requires | Soft requires |
+|---|---|---|
+| `rpg-core` | _(none)_ | LuckPerms (prefix/suffix in chat/tab) |
+| `rpg-combat` | `rpg-core` | — |
+| `rpg-economy` | `rpg-core` | — |
+| `rpg-accessories` | `rpg-core` | — |
+| `rpg-alchemy` | `rpg-core` | — |
+| `rpg-admin` | `rpg-core` | — |
+| `rpg-chat` | `rpg-core` | — |
+| `rpg-cooking` | `rpg-core` | — |
+| `rpg-enchanting` | `rpg-core` | — |
+| `rpg-farming` | `rpg-core` | — |
+| `rpg-fishing` | `rpg-core` | — |
+| `rpg-foraging` | `rpg-core` | — |
+| `rpg-holograms` | `rpg-core` | — |
+| `rpg-hud` | `rpg-core` | — |
+| `rpg-mining` | `rpg-core` | — |
+| `rpg-npcs` | `rpg-core` | `rpg-economy`, `rpg-quests` |
+| `rpg-parties` | `rpg-core` | — |
+| `rpg-regions` | `rpg-core` | — |
+| `rpg-trade` | `rpg-core` | — |
+| `rpg-dungeons` | `rpg-core` | `rpg-parties` |
+| `rpg-guilds` | `rpg-core` | `rpg-economy` |
+| `rpg-quests` | `rpg-core` | `rpg-npcs`, `rpg-economy` |
+
+**Recommended install order:** `rpg-core` → `rpg-economy` → `rpg-npcs` → everything else (Paper resolves load order automatically via `depend`/`softdepend`, so manual ordering is only needed if you're troubleshooting missing-service errors on startup).

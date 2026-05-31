@@ -38,10 +38,20 @@ channel-prefix-guild: "&8[&aGuild&8] "
 | Command | Permission |
 |---|---|
 | `/chat <global\|party\|guild>` | `rpg.chat.use.<channel>` |
-| `/msg <player> <message>` | `rpg.chat.msg` |
-| `/reply <message>` | `rpg.chat.reply` |
-| `/clearchat` | `rpg.chat.clearchat` |
-| `/mutechat` | `rpg.chat.mutechat` |
+| `/msg <player> <message>` | `rpg.chat.msg` (default true; aliases: `/tell`, `/w`, `/whisper`) |
+| `/reply <message>` | `rpg.chat.reply` (default true; alias: `/r`) |
+| `/clearchat` | `rpg.chat.clearchat` (op; alias: `/cc`) |
+| `/mutechat` | `rpg.chat.mutechat` (op; alias: `/mc`) |
+| `/chat reload` | `rpg.chat.admin.reload` (op) |
+
+### Additional permissions
+
+| Permission | Default | Notes |
+|---|---|---|
+| `rpg.chat.mute.bypass` | op | Allows chatting even when mutechat is active |
+| `rpg.chat.use.global` | true | Access global channel |
+| `rpg.chat.use.party` | true | Access party channel |
+| `rpg.chat.use.guild` | true | Access guild channel |
 
 ## Channels
 

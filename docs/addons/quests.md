@@ -72,14 +72,18 @@ Progress toward each objective is displayed in the action bar as `"Kill 3 goblin
 
 ## Commands
 
+Aliases: `/q`, `/quests`
+
 | Command | Permission | Notes |
 |---|---|---|
-| `/quest` | `rpg.quests.open` | Open quest log (GUI deferred; lists active quests in chat) |
-| `/quest <id>` | `rpg.quests.open` | Show details for a specific quest |
-| `/quest give <id> [player]` | `rpg.quests.admin.give` | Force-accept a quest for a player |
-| `/quest reset <id> [player]` | `rpg.quests.admin.reset` | Clear progress and remove from active |
-| `/quest complete <id> [player]` | `rpg.quests.admin.complete` | Force all objectives complete and award rewards |
+| `/quest list` | `rpg.quests.use.list` | List available + active quests in chat |
+| `/quest accept <id>` | `rpg.quests.use.accept` | Accept a quest by ID |
+| `/quest abandon <id>` | `rpg.quests.use.abandon` | Abandon an active quest |
+| `/quest progress` | `rpg.quests.use.progress` | Show progress on all active quests |
+| `/quest complete <id> [player]` | `rpg.quests.admin.complete` | Force-complete a quest and award rewards |
 | `/quest reload` | `rpg.quests.admin.reload` | Reload quest YAML files |
+
+> **Planned:** `/quest give <id> [player]` (force-accept for a player) and `/quest reset <id> [player]` (clear progress) are not yet implemented.
 
 ## Persistence
 

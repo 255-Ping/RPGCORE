@@ -1,5 +1,11 @@
 # RPGCore Backlog
 
+> _This file has been superseded by [todo.md](todo.md) and the linked sub-pages. New items go there. This file is kept for historical reference only — the strikethrough items below record completed work._
+
+---
+
+# ~~Old Backlog~~ (archived)
+
 Items collected from testing and review, sorted by complexity. Pull into a session when ready.
 
 ---

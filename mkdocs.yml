@@ -52,8 +52,11 @@ nav:
     - Vanilla Suppression: core/vanilla-suppression.md
   - Content Creation:
     - Overview: content/README.md
-    - Quickstart: content/first-mob.md
+    - Quick-Start Guide: content/quickstart.md
+    - First Mob Walkthrough: content/first-mob.md
     - Cookbook: content/cookbook.md
+    - Common Patterns: content/patterns.md
+    - Progression Guide: content/progression-guide.md
     - Items: content/items.md
     - Mobs: content/mobs.md
     - Abilities: content/abilities.md
@@ -91,13 +94,14 @@ nav:
   - Development:
     - Developer Guide: development.md
     - Roadmap:
-      - Overview: planned/todo.md
+      - Overview: planned/README.md
+      - Master Todo: planned/todo.md
       - Bugs: planned/todo-bugs.md
       - Features: planned/todo-features.md
       - Improvements: planned/todo-improvements.md
       - GUI: planned/todo-gui.md
       - Docs: planned/todo-docs.md
-    - Backlog: planned/backlog.md
+    - Backlog (archived): planned/backlog.md
     - Planned Features:
       - Auction House: planned/auction-house.md
       - Bazaar: planned/bazaar.md

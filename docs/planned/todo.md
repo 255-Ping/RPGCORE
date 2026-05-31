@@ -35,6 +35,7 @@
 - Shift-click prevention in GUIs
 - Global region in `/region` commands
 - All 20 config.yml files annotated with examples
+- Docs pass: missing plugin pages (trade, admin, mining, farming, fishing, accessories, chat), stale status fixes, stat formulas, ability context table, status label standardization, design intent paragraphs, quickstart guide, patterns page, progression guide, dependency table, backlog redirect, planned/README
 
 ---
 

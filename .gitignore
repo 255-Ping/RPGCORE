@@ -5,3 +5,6 @@ build/
 out/
 .DS_Store
 *.log
+
+# Claude Code local state — do not commit
+.claude/last-docs-check

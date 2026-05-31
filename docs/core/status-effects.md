@@ -4,6 +4,10 @@
 
 A fully custom (de)buff framework. Vanilla `PotionEffect`s on entities are cancelled (per [vanilla suppression](vanilla-suppression.md)) — only our `StatusEffect` system applies.
 
+## Design intent
+
+Status effects exist as a separate system from abilities because they model things abilities can't do cleanly: **duration**, **stacking rules** (refresh vs stack-power vs independent), and **persistent stat modifiers** that remain active across multiple damage events. An ability fires once and resolves; a status effect sits on the entity, modifies its stats, and ticks independently until it expires. Using abilities to replicate "burning for 5 seconds" would require a chain of delayed effects with shared state — this system handles all of that declaratively in YAML.
+
 ## What a status effect is
 
 Each effect is defined in YAML (planned location: `plugins/rpg-core/status-effects/<file>.yml`, or shipped with addons like `rpg-alchemy`). An effect has:

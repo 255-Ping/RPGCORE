@@ -71,6 +71,7 @@ If an accessory item is removed from the bag (placed in normal inventory, droppe
 |---|---|
 | `/accessories` (`/bag`) | `rpg.accessories.open` |
 | `/accessories upgrade` | `rpg.accessories.upgrade` |
+| `/accessories reload` | `rpg.accessories.admin.reload` (op) |
 
 ## Persistence
 
