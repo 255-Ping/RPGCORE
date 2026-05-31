@@ -154,3 +154,16 @@
 .md-search__input {
   color: #ddd0b8;
 }
+
+/* ── Layout — wider content, narrower sidebars ────────────────────────── */
+.md-grid {
+  max-width: 90rem;
+}
+
+.md-sidebar {
+  width: 10.5rem;
+}
+
+.md-content {
+  max-width: none;
+}
