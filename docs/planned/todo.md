@@ -30,18 +30,20 @@ Each item is tagged with the plugin it lives in, a rough size estimate, and its 
 - See `docs/planned/bazaar.md` for full spec
 
 ### Sign-Entry Number Input
-**Shared utility needed by Auction House, Bazaar, and potentially Guild Bank.**
+**Needed everywhere a player types a currency amount into a GUI** — not just AH/Bazaar. This includes Guild Bank deposit/withdraw, any future trade-offer amount fields, and any other GUI that takes a numeric currency input. Reference implementation is in the SurvivalCore repo.
 - Open virtual sign via `PacketPlayOutOpenSignEditor`
 - Line 1 = prompt label (e.g., `Enter Price:`)
 - Parse `PacketPlayInUpdateSign`; invalid → re-open with error hint
-- Likely a utility class in `rpg-core` (as a service or static helper)
+- Build as a reusable utility in `rpg-core` (e.g., `SignEntryService`) so every plugin can call it — don't re-implement per-plugin
 
 ---
 
 ## 🟠 In Progress — Major Missing Chunks
 
 ### Dungeon System Flesh-out (`rpg-dungeons`)
-**Core paste + enter + leave + death handling all work. Missing:**
+> ⚠️ **Confirmed broken in testing** — `/dungeon enter <id>` sends the "Preparing dungeon..." chat message but the player is never teleported and nothing else happens. The async paste callback in `DungeonManager.enter()` is likely never firing (template world lookup fails silently, or the `TemplatePaster` callback is dropped). Needs debugging before any other dungeon work. Even a newly created dungeon with `setentrance/setexit/setspawn` all set exhibits this behaviour.
+
+**Missing beyond the bug:**
 
 1. **Entry requirements not enforced** — `DungeonDef.requiredLevel`, item consumption on entry, currency cost, and party-size min/max gates are stored in YAML but `DungeonManager.enter()` never checks them. Any player can enter any dungeon with no gating.
 
