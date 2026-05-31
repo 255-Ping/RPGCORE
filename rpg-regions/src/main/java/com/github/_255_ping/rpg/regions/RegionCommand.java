@@ -178,7 +178,9 @@ public final class RegionCommand implements CommandExecutor, TabCompleter {
     private void handleList(CommandSender sender) {
         if (!sender.hasPermission("rpg.regions.admin.list")) { sender.sendMessage(msg("&cNo permission.")); return; }
         var all = regions.all();
-        sender.sendMessage(msg("&6&l=== Regions (" + all.size() + ") ==="));
+        var globalFlags = regions.globalFlags();
+        sender.sendMessage(msg("&6&l=== Regions (" + (all.size() + 1) + ") ==="));
+        sender.sendMessage(msg("&7- &6[global] &7(world-wide, " + globalFlags.size() + " flag(s)) &8— /region global"));
         for (Region r : all) {
             sender.sendMessage(msg("&7- &e" + r.id()
                     + " &7(" + r.world().getName() + " "
@@ -208,7 +210,30 @@ public final class RegionCommand implements CommandExecutor, TabCompleter {
     private void handleFlag(CommandSender sender, String[] args) {
         if (!sender.hasPermission("rpg.regions.admin.flag")) { sender.sendMessage(msg("&cNo permission.")); return; }
         if (args.length < 4) {
-            sender.sendMessage(msg("&7Usage: &e/region flag <id> <flag> <value>")); return;
+            sender.sendMessage(msg("&7Usage: &e/region flag <id|__global__> <flag> <value|clear>")); return;
+        }
+        // __global__ is a reserved alias for the world-wide global region.
+        if (args[1].equalsIgnoreCase("__global__")) {
+            if (!sender.hasPermission("rpg.regions.admin.global")) {
+                sender.sendMessage(msg("&cNo permission.")); return;
+            }
+            String flag = args[2].toLowerCase(Locale.ROOT);
+            String rawValue = args[3];
+            if (rawValue.equalsIgnoreCase("clear") || rawValue.equalsIgnoreCase("remove")) {
+                regions.removeGlobalFlag(flag);
+                sender.sendMessage(msg("&aCleared global flag &e" + flag + "&a."));
+            } else {
+                Object value;
+                if (rawValue.equalsIgnoreCase("true") || rawValue.equalsIgnoreCase("false")) {
+                    value = Boolean.parseBoolean(rawValue);
+                } else {
+                    try { value = Integer.parseInt(rawValue); }
+                    catch (NumberFormatException ex) { value = rawValue; }
+                }
+                regions.setGlobalFlag(flag, value);
+                sender.sendMessage(msg("&aSet global &e" + flag + " &7= &f" + value));
+            }
+            return;
         }
         var opt = regions.get(args[1]);
         if (opt.isEmpty()) { sender.sendMessage(msg("&cNo region with id &7" + args[1])); return; }
@@ -235,7 +260,13 @@ public final class RegionCommand implements CommandExecutor, TabCompleter {
 
         // arg2: suggest region ids only where a region id is actually needed
         if (args.length == 2) {
-            if (sub.equals("delete") || sub.equals("flag")) return filterRegions(args[1]);
+            if (sub.equals("delete")) return filterRegions(args[1]);
+            if (sub.equals("flag")) {
+                // __global__ is the reserved alias for the world-wide region.
+                List<String> ids = new ArrayList<>(filterRegions(args[1]));
+                if ("__global__".startsWith(args[1].toLowerCase())) ids.add(0, "__global__");
+                return ids;
+            }
             // "info" and "list" take no id; "global" takes a sub-subcommand
             if (sub.equals("global")) return filter(args[1], List.of("info", "flag"));
         }

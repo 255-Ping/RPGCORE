@@ -1,11 +1,15 @@
 # rpg-cooking config.
+# Recipes are defined in plugins/rpg-cooking/recipes/*.yml.
+# The cooking station is any custom block with StationType: cooking in its YAML.
 
 features:
-  cooking: true
+  cooking: true   # set false to fully disable the cooking station (no GUI will open)
 
-# Default ticks-per-craft if a recipe doesn't override.
+# Default ticks-per-craft if a recipe doesn't specify its own cook-ticks.
+# 200 ticks = 10 seconds. Each recipe can override this individually.
 default-cook-ticks: 200
 
-# Skill XP awarded on successful cook.
+# Skill XP awarded to the player on each successful cook.
+# Scaled by the player's COOKING_WISDOM stat if that stat is defined.
 xp:
-  per-cook: 20
+  per-cook: 20   # XP per successful recipe completion

@@ -1,18 +1,20 @@
 # rpg-foraging — XP from breaking log blocks.
-# Scaled by (1 + FORAGING_WISDOM / 100).
+# XP awarded = (per-material XP, falling back to default-xp) * (1 + FORAGING_WISDOM / 100).
+# Example: oak_log XP 3, FORAGING_WISDOM 100 → 3 * 2.0 = 6 XP.
 
-default-xp: 3
+default-xp: 3   # XP for any log material not explicitly listed in xp-per-block
 
 # Per-material XP. Match exact Material names (uppercase or lowercase both fine).
+# Nether wood (stems) awards more XP since it is harder to reach.
 xp-per-block:
   oak_log: 3
   spruce_log: 3
   birch_log: 3
-  jungle_log: 4
+  jungle_log: 4          # slightly more XP for less common wood types
   acacia_log: 4
   dark_oak_log: 4
-  mangrove_log: 5
+  mangrove_log: 5        # rarer biome wood
   cherry_log: 5
   pale_oak_log: 5
-  crimson_stem: 8
+  crimson_stem: 8        # nether wood — harder to get, higher reward
   warped_stem: 8

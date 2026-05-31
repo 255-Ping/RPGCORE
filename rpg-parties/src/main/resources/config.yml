@@ -1,33 +1,39 @@
 # rpg-parties.
+# Players form parties with /party create, invite others with /party invite <player>.
+# Party chat: /party chat (or /pc as shorthand).
 
-max-size: 5
+max-size: 5   # maximum number of players in a party (including the owner); range: 2–100
 
-# True = disband the party automatically when the owner disconnects.
-# False = transfer ownership to the next-highest-rank member.
+# true  = party disbands automatically when the owner goes offline
+# false = ownership transfers to the next-highest-rank member (recommended for persistence)
 disband-on-owner-leave: false
 
-# Seconds before a pending invite expires.
-invite-timeout-seconds: 60
+# Seconds before a pending /party invite expires.
+# Players who don't accept within this window must be re-invited.
+invite-timeout-seconds: 60   # range: 10–3600
 
 # ── XP sharing ────────────────────────────────────────────────────────────────
 xp-sharing:
-  enabled: false
+  enabled: false   # true = party members near the XP earner also receive bonus XP
 
   # Which skills share XP.
-  #   all-skills  — every skill shares
+  #   all-skills  — every skill shares XP
   #   combat-only — only the "combat" skill shares
   #   list        — only the skills listed under `skills:` share
   scope: all-skills
-  skills: []
+  skills: []   # only used when scope: list
   #  - combat
   #  - mining
 
   # Maximum distance (in blocks) between the earner and a party member for that
   # member to receive shared XP.  0 = unlimited (same world only).
-  range-blocks: 64
+  range-blocks: 64   # 0 = no distance limit (same world); positive number = block radius
 
   # Expression for the XP each *other* member receives.
   # Variables:  amount     — the original XP award
   #             party_size — number of in-range members (including the earner)
   # The earner keeps their full XP; this amount is credited as a bonus to others.
+  # Examples:
+  #   "amount / party_size"  — split the XP evenly (earner + others each get 1/N)
+  #   "amount * 0.5"         — each other member gets 50% of the original award (no split)
   split-formula: "amount / party_size"

@@ -1,19 +1,23 @@
-# rpg-farming — XP from harvesting mature crops. Scaled by FARMING_WISDOM.
-# Drop multiplier from FARMING_FORTUNE: every 100 pts = +1 guaranteed extra multiply;
-# fractional part is probabilistic (50 fortune → 50 % chance of ×2 vs ×1).
-# Fortune only triggers for blocks listed in xp-per-block at maximum crop age.
+# rpg-farming — XP from harvesting mature crops.
+# Scaled by FARMING_WISDOM: XP = base * (1 + FARMING_WISDOM / 100).
+#
+# Drop multiplier from FARMING_FORTUNE stat:
+#   Every 100 points = +1 guaranteed extra drop multiply.
+#   Fractional part is probabilistic (e.g. 50 fortune → 50% chance of ×2 vs ×1 drop).
+#   Fortune only triggers for blocks listed in xp-per-block at maximum crop age.
 
-default-xp: 3
+default-xp: 3   # XP for any crop not explicitly listed in xp-per-block
 
-# Per-material XP. Only awarded when the crop is at maximum age.
+# Per-material XP. Only awarded when the crop is at maximum age (fully grown).
+# Material names are vanilla Minecraft block names (uppercase or lowercase both fine).
 xp-per-block:
   wheat: 3
   carrots: 3
   potatoes: 3
-  beetroots: 4
-  nether_wart: 5
+  beetroots: 4        # slightly more XP; beetroots grow more slowly than wheat
+  nether_wart: 5      # nether crop — more rare, higher reward
   cocoa: 4
-  pumpkin: 6
+  pumpkin: 6          # stem crops take longer; higher XP
   melon: 6
-  sugar_cane: 2
-  bamboo: 1
+  sugar_cane: 2       # fast-growing, lower XP to balance
+  bamboo: 1           # very fast-growing, minimal XP

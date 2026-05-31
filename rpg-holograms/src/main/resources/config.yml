@@ -1,22 +1,29 @@
 # rpg-holograms — damage indicators (v1).
 # Full hologram editor + click-actions land in a future slice.
+# Damage indicators appear as floating text above entities when they take damage.
 
 damage-indicators:
   enabled: true
-  duration-ticks: 25            # how long the number floats before despawning
-  rise-blocks: 0.8              # how far it floats upward
-  random-offset: 0.4            # XZ scatter to avoid stacking
+  duration-ticks: 25            # how long the number floats before despawning (25 = 1.25 sec)
+  rise-blocks: 0.8              # how far the indicator floats upward before fading (in blocks)
+  random-offset: 0.4            # XZ scatter radius to avoid all indicators stacking at the same point
+
+  # Text format for each damage type. Supports & color codes.
+  # Placeholder: {amount} — the damage/heal number (always a positive integer)
   formats:
-    normal:    "&f{amount}"
-    crit:      "&e&l✧ {amount} ✧"
-    true:      "&f&l⚡ {amount} ⚡"
-    lifesteal: "&c+{amount}"
-    healed:    "&a+{amount} ❤"
+    normal:    "&f{amount}"            # white: standard physical hit
+    crit:      "&e&l✧ {amount} ✧"     # gold bold: critical hit
+    true:      "&f&l⚡ {amount} ⚡"    # white bold: true damage (bypasses defense)
+    lifesteal: "&c+{amount}"           # red: HP drained from target and given to attacker
+    healed:    "&a+{amount} ❤"         # green: healing received
+
+  # Who can see the damage indicator? Limiting to attacker reduces packet spam on busy servers.
   show-to:
-    attacker: true
-    victim-if-player: true
-    bystanders: false
+    attacker: true              # the player who dealt the damage always sees it
+    victim-if-player: true      # if the victim is a player, they also see their own damage taken
+    bystanders: false           # other nearby players do NOT see indicators (set true to enable)
 
 # Admin holograms (TextDisplay-based; one entity per line).
+# These are static holograms placed in-world with /hologram commands (not yet fully implemented).
 hologram:
-  line-spacing: 0.3              # vertical block spacing between lines
+  line-spacing: 0.3              # vertical block gap between lines of a multi-line hologram

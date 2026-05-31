@@ -1,14 +1,22 @@
 # rpg-quests config.
+# Quest definitions: plugins/rpg-quests/quests/*.yml
+# Player quest state is stored in the core DataStore under the repository named below.
 
 # Persistence repository name used in core's DataStore. Quest state is per-player.
+# Change this only if you have a namespace conflict with another plugin.
 data-repository: quests
 
-# Display the "Quest progressed" action bar on objective ticks.
+# Display the "Quest progressed" action bar message when an objective advances.
+# true = players see real-time feedback as they complete objectives (recommended)
+# false = silent; players must check /quest progress manually
 progress-action-bar: true
 
 # Auto-complete quests when all objectives finish (vs. requiring /quest complete).
+# true  = quest completes and rewards are given automatically when the last objective is met
+# false = player must talk to an NPC or use /quest complete to claim the reward
 auto-complete: true
 
-# When auto-completing a quest hand-off (e.g., NPC turn-in), allow it to be repeated this many
-# times per real-world day. -1 = unlimited.
+# When auto-completing a quest hand-off (e.g., NPC turn-in), allow it to be repeated
+# this many times per real-world day. -1 = unlimited repeats per day.
+# Example: 3 = player can complete this quest up to 3 times per day
 repeat-limit-per-day: -1

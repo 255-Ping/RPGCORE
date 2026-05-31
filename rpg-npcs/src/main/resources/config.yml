@@ -1,15 +1,22 @@
 # rpg-npcs config.
+# NPCs are defined in plugins/rpg-npcs/npcs/*.yml.
+# See docs/addons/npcs.md for the full YAML schema.
 
 # How NPCs render in-world.
 display:
-  use-text-display-for-name: true   # floating name tag above the body
-  body-entity: VILLAGER             # vanilla type used as the clickable body (EntityStyle: ENTITY NPCs only)
-  click-range-blocks: 4.5
+  use-text-display-for-name: true   # true = floating TextDisplay name tag above the body (recommended)
+                                     # false = vanilla entity name tag (shows on hover, looks different)
+  body-entity: VILLAGER              # vanilla entity type used as the clickable body for ENTITY-style NPCs
+                                     # any valid EntityType name: VILLAGER, ZOMBIE, ARMOR_STAND, etc.
+  click-range-blocks: 4.5           # how far away (in blocks) a player can click to interact with an NPC
 
 # Whether new NPCs auto-save to YAML the moment they're created/moved.
+# true = safe; false = only saves on server shutdown or /npc save.
 autosave: true
 
-# Banker NPC settings.
+# Banker NPC settings. Applies to any NPC with Behavior.Type: banker.
 banker:
-  default-daily-interest-percent: 0.5   # interest rate applied to savings once per interval
-  interest-interval-hours: 24           # how often interest accrues (real-time hours at 20 ticks/sec)
+  default-daily-interest-percent: 0.5   # % interest accrued on savings per interval (0.5 = 0.5%/day)
+                                         # Example: 100 coins saved × 0.5% = 0.5 coins interest per cycle
+  interest-interval-hours: 24           # real-time hours between interest accruals (24 = once per real day)
+                                         # Note: this uses real-world time, not game time

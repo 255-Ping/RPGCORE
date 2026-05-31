@@ -4,6 +4,20 @@
 
 ---
 
+### rpg-regions `0.5.0`
+- **Global region in `/region` commands**: `/region list` now shows `[global]` as the first entry (with its current flag count). `/region flag __global__ <flag> <value|clear>` is a new alias for `/region global flag` — admins can manage the world-wide region using the same flag command they use for named regions. Tab-complete on `/region flag` now suggests `__global__` as the first option.
+
+### rpg-alchemy `0.2.0`
+- **Brewing shift-click fix**: shift-clicking an ingredient from the player's inventory into the Brewing Station GUI now routes it to the first free input slot (same pattern as CookingGui). Previously the click was silently ignored.
+
+### rpg-enchanting `0.2.0`
+- **Enchanting/Anvil station shift-click fix**: shift-clicking an item from the player's inventory into the Enchanting Table or Custom Anvil GUI now places it directly into the input slot if it's empty. Previously the click passed through without being routed.
+
+### All plugins (config docs)
+- **Config examples everywhere**: added inline YAML comments with descriptions, valid ranges, and examples to every configurable field across all 20 `config.yml` files (rpg-core, rpg-combat, rpg-regions, rpg-economy, rpg-npcs, rpg-cooking, rpg-alchemy, rpg-enchanting, rpg-mining, rpg-foraging, rpg-fishing, rpg-farming, rpg-hud, rpg-chat, rpg-parties, rpg-guilds, rpg-accessories, rpg-holograms, rpg-quests, rpg-dungeons, rpg-admin). No behavior changes — docs only.
+
+---
+
 ### rpg-core `0.9.0`
 - **Potions fix**: `VanillaSuppressionListener` now defaults `vanilla-suppression.potions` to `false` — vanilla potions work correctly (effects apply, items consumed as expected). Previously the default `true` silently swallowed every potion effect while still consuming the item. Set to `true` in config to re-enable suppression when a proper RPG potion→status-effect converter is added.
 - **Custom block auto-registration on place**: `/rpg block give` items now carry a `rpg_block_id` PDC tag. New `BlockPlaceListener` fires on `BlockPlaceEvent` (admin+creative only) and automatically calls `tagLocation()` + saves persistence — no more needing `/rpg block convert` after placing. Action bar confirmation shown on successful registration.

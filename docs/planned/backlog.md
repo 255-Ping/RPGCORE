@@ -6,14 +6,9 @@ Items collected from testing and review, sorted by complexity. Pull into a sessi
 
 ## Phase 2 — Medium complexity
 
-### Global region in /region commands
-The global region (applies world-wide before any child region) should appear in `/region list` and be editable via the same `/region` commands. Currently it is invisible to the command system.
-
-### Config examples everywhere
-Go through `config.yml` in every plugin and add in-line YAML comments with example values for every configurable field. Make it obvious what each key does and what range/format is expected.
-
-### Shift-click in other GUIs
-Several GUIs (shop, banker, accessories, etc.) do not correctly handle shift-click from player inventory. Add a standard shift-click → first available slot routing pattern to every GUI that has input slots, similar to the fix applied to CookingGui.
+### ~~Global region in /region commands~~ ✅ Fixed in rpg-regions 0.5.0
+### ~~Config examples everywhere~~ ✅ Done — all 20 config.yml files annotated
+### ~~Shift-click in other GUIs~~ ✅ Fixed in rpg-alchemy 0.2.0 (BrewingGui) + rpg-enchanting 0.2.0 (StationGui); BankerGui has no input slots (buttons only, correctly blocks all bottom-inv clicks)
 
 ### GUI formatting consistency pass
 All GUIs should follow the formatting rules in `docs/formatting.md`. Do a sweep: pane colors, title colors, lore format, button naming conventions.

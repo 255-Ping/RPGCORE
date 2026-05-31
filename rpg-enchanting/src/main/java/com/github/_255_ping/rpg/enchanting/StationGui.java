@@ -74,7 +74,22 @@ public final class StationGui implements Listener {
         if (mode == null) return;
 
         int raw = e.getRawSlot();
-        if (raw >= e.getView().getTopInventory().getSize()) return; // bottom inv — let normal click
+        int topSize = e.getView().getTopInventory().getSize();
+        if (raw >= topSize) {
+            // Shift-click from bottom inventory → place item into the input slot if empty.
+            if (!e.isShiftClick()) return;
+            ItemStack clicked = e.getCurrentItem();
+            if (clicked == null || clicked.getType().isAir()) return;
+            Inventory top = e.getView().getTopInventory();
+            ItemStack existing = top.getItem(INPUT_SLOT);
+            if (existing == null || existing.getType().isAir()) {
+                e.setCancelled(true);
+                top.setItem(INPUT_SLOT, clicked.clone());
+                clicked.setAmount(0);
+                plugin.getServer().getScheduler().runTask(plugin, () -> refresh(p, mode));
+            }
+            return;
+        }
 
         // Slots that are interactive:
         if (raw == INPUT_SLOT) {

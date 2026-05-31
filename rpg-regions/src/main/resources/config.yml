@@ -1,12 +1,42 @@
 # rpg-regions config.
+# Regions are defined with /region define and stored in plugins/rpg-regions/regions/*.yml.
+# The global region applies world-wide and is overridden by any matching child region.
+# View the global region: /region global info
+# View all regions:       /region list
 
 # Default flag values used when no region overrides them.
+# These apply as if the global region had these flags set, but with lower priority
+# than any explicit global flag set via /region global flag <key> <value>.
 default-flags:
-  pvp: true
-  no-break: false
-  no-place: false
-  no-ability-use: false
-  no-mob-spawning: false
+  pvp: true              # allow player-vs-player combat (false = no PvP anywhere by default)
+  no-break: false        # prevent block breaking (false = breaking allowed by default)
+  no-place: false        # prevent block placing (false = placing allowed by default)
+  no-ability-use: false  # prevent ability activation (false = abilities allowed by default)
+  no-mob-spawning: false # prevent mob spawning in this region (false = spawning allowed)
 
-# Tick interval for player region-transition detection.
+# Known flag reference (for /region flag tab-complete):
+# pvp                    — true/false: enable player-vs-player combat
+# no-break               — true/false: block all block breaking
+# no-break-vanilla       — true/false: block only vanilla block breaking (custom blocks still allowed)
+# no-place               — true/false: block all block placing
+# no-mob-spawning        — true/false: prevent mobs spawning within the region
+# no-natural-spawning    — true/false: prevent natural spawns only (admin spawners still work)
+# mob-spawning           — true/false: explicitly allow mob spawning (overrides global no-mob-spawning)
+# mob-damage             — true/false: allow mobs to deal damage to players in this region
+# fall-damage            — true/false: enable fall damage (false = no fall damage in region)
+# fire-damage            — true/false: enable fire/lava damage
+# explosion-damage       — true/false: enable explosion damage to entities
+# no-ability-use         — true/false: prevent players from using RPG abilities
+# damage-multiplier      — number: multiplies all damage dealt in this region (e.g. 2.0 = double damage)
+# health-regen-multiplier— number: multiplies HP regen rate in this region (e.g. 0 = no regen in PvP zone)
+# entry                  — permission node: block entry unless the player has this permission
+# exit                   — permission node: block exit unless the player has this permission
+# fly                    — true/false: allow flight in this region
+# god                    — true/false: players take no damage in this region
+# greeting               — text: message sent when a player enters (supports & color codes)
+# farewell               — text: message sent when a player exits
+# apply-status           — status-effect-id: apply this status effect to all players in the region
+
+# How often the plugin checks whether a player has moved into/out of a region.
+# Lower = more responsive but more CPU. 5 ticks (0.25 sec) is a good balance.
 move-poll-ticks: 5

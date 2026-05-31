@@ -1,22 +1,27 @@
 # rpg-combat config — XP from PostDamageEvent.
 # Combat XP awarded = dealtDamage * xp-per-damage * combat_wisdom_multiplier
+# (COMBAT_WISDOM stat is a percentage bonus, e.g. 50 WISDOM = 1.5× XP earned)
 
+# Base XP per point of damage dealt. 1.0 means 100 damage = 100 XP before wisdom.
+# Raise this if levels feel too slow; lower it to slow progression.
 xp-per-damage: 1.0
+
 # When the damage source is an ability (source starts with "ability"), this multiplier
-# layers on top of any per-ability CombatXpMultiplier (currently not yet stored on
-# items — pending an item-side enrichment).
+# layers on top of any per-ability CombatXpMultiplier.
+# 1.0 = no bonus for abilities; 2.0 = double XP from abilities.
 combat-xp-multiplier-from-abilities: 1.0
 
 # Only award XP if the victim is a "real" combat target (avoids leveling on the test
 # zombie-rabbit). The base type must match one of these vanilla entity types, or set
 # to ["any"] to award for any LivingEntity damage.
+# Example: ["zombie", "skeleton", "spider"] — only those mobs grant XP.
 victim-whitelist: ["any"]
 
 # ── Kill XP ───────────────────────────────────────────────────────────────────
 # Flat XP awarded when the player lands the killing blow. Scaled by COMBAT_WISDOM.
 # Use the mob's rpg-id (from plugins/rpg-core/mobs/*.yml) for per-mob overrides.
 # Falls back to default-kill-xp when no entry matches.
-default-kill-xp: 10
+default-kill-xp: 10   # XP granted for any kill not listed in xp-per-kill below
 
 xp-per-kill: {}
   # zombie: 15

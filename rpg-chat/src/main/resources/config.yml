@@ -1,14 +1,31 @@
 # rpg-chat — chat formatting + moderation.
-# Placeholders: {prefix} {name} {suffix} {message} {world}
+#
+# Placeholders available in all format strings:
+#   {prefix}   — LuckPerms prefix (empty string if LuckPerms is not installed)
+#   {name}     — player's display name
+#   {suffix}   — LuckPerms suffix (empty string if LuckPerms is not installed)
+#   {message}  — the chat message content
+#   {world}    — the world the player is in
+#   {sender}   — message sender name (for direct messages)
+#   {target}   — message recipient name (for direct messages)
+# Color codes: & followed by 0-9 / a-f for color, l/o/n/m/k/r for formatting.
 
+# Format for public chat messages. Example output: "[Admin] Steve: Hello!"
 chat-format: "{prefix}{name}{suffix} &7» &f{message}"
+
+# Format for /msg direct messages. Example: "Steve -> Alex: hey"
 message-format: "&d{sender} &7-> &d{target}&7: &f{message}"
+
+# Number of blank lines sent to push old chat off-screen on /clearchat.
+# 100 is enough to clear a standard chat window.
 clearchat-lines: 100
 
-# When mutechat is on, only players with rpg.chat.mute.bypass can talk.
-mutechat-default: false
+# When mutechat is active, only players with rpg.chat.mute.bypass can talk.
+# Toggle at runtime with /mutechat (requires rpg.chat.mute permission).
+mutechat-default: false   # false = chat open by default; true = chat muted until an admin enables it
 
-# Per-channel prefix prepended to the rendered chat line. Empty = no prefix.
-channel-prefix-global: ""
-channel-prefix-party: "&8[&dParty&8] "
-channel-prefix-guild: "&8[&aGuild&8] "
+# Channel prefixes prepended to the formatted chat line when using party/guild chat.
+# Empty string = no prefix (players won't see which channel a message is from).
+channel-prefix-global: ""              # global chat has no prefix by default
+channel-prefix-party: "&8[&dParty&8] "  # example: "[Party] Steve: hello"
+channel-prefix-guild: "&8[&aGuild&8] "  # example: "[Guild] Steve: hello"

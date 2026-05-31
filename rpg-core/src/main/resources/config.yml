@@ -2,7 +2,7 @@
 # Full documentation: docs/configuration.md and docs/core/vanilla-suppression.md
 
 persistence:
-  # backend: yaml (default) | mysql
+  # Storage backend: yaml (flat-file, default) | mysql (recommended for multi-server)
   # If 'mysql' fails to connect, rpg-core falls back to YAML with a warning.
   backend: yaml
   mysql:
@@ -11,7 +11,7 @@ persistence:
     database: rpg
     user: rpg
     password: ""
-    pool-size: 8
+    pool-size: 8         # HikariCP connection pool size; 8 is fine for a single-server setup
     use-ssl: false
 
 # Total-vanilla-replacement master toggles.
@@ -29,7 +29,7 @@ vanilla-suppression:
   enchanting-table: true      # cancel vanilla enchant table
   anvil: true                 # cancel vanilla anvil
   brewing-stand: true         # cancel vanilla brewing
-  potions: true               # cancel vanilla potion effects on entities
+  potions: true               # cancel vanilla potion effects on entities (true = suppress; false = allow vanilla potions)
   smelting: true              # cancel vanilla furnace recipes
   crafting: true              # cancel vanilla crafting recipes
   fishing: true               # cancel vanilla fishing loot
@@ -43,46 +43,52 @@ vanilla-suppression:
   durability: false           # cancel item durability loss (items never wear out); false by default
 
 # Creative players bypass our custom systems (so admins can build freely).
+# Requires the rpg.admin permission in addition to creative mode.
 creative-mode-bypass:
-  break-time: true
-  damage: true
-  economy: true
-  region-flags: true
+  break-time: true     # instant-break custom blocks in creative (still requires rpg.admin)
+  damage: true         # creative players deal/take no RPG damage
+  economy: true        # creative players can purchase anything for free
+  region-flags: true   # creative players ignore entry/exit/no-break/pvp region flags
 
 # Repurposed vanilla bars.
-vanilla-xp-bar: most-recent   # most-recent | pinned | hidden
-hunger-bar: hidden            # hidden | frozen-visible
-armor-bar: hidden             # hidden | visible
+# Options:
+#   vanilla-xp-bar: most-recent (shows most-recently-gained skill XP) | pinned (always one skill) | hidden
+#   hunger-bar:     hidden | frozen-visible (bar stays full, still visible)
+#   armor-bar:      hidden | visible
+vanilla-xp-bar: most-recent
+hunger-bar: hidden
+armor-bar: hidden
 
 # Health display (see docs/core/health-display.md).
 health:
-  default-max: 100
-  bukkit-max-health: 40.0
-  resync-interval-ticks: 1
+  default-max: 100           # default maximum HP for new players (can be raised by stats/milestones)
+  bukkit-max-health: 40.0    # internal Bukkit max-health attribute; never set below 2.0. RPG HP is mapped
+                              # into this range for hearts display. 40.0 = 20 hearts shown when at max RPG HP.
+  resync-interval-ticks: 1   # how often Bukkit HP is resynced to RPG HP (1 = every tick, safest)
 
 # Starting state for a freshly-joined player.
 # Stats here seed each player's base stats; armor / accessories / status
 # effects / skill milestones layer on top once those systems ship.
 starting-state:
-  hp: 100
-  mana: 100
+  hp: 100       # starting current HP (must be ≤ base-stats.max_health)
+  mana: 100     # starting current mana (must be ≤ base-stats.max_mana)
   base-stats:
-    max_health: 100
-    max_mana: 100
-    health_regen: 2
-    mana_regen: 5
-    damage: 1
-    defense: 0
-    speed: 0
-    crit_chance: 10
-    crit_damage: 50
-    mining_speed: 10
-    foraging_speed: 10
-    breaking_power: 1
+    max_health: 100      # total HP pool
+    max_mana: 100        # total mana pool
+    health_regen: 2      # HP restored per regen tick (see regen.interval-ticks)
+    mana_regen: 5        # mana restored per regen tick
+    damage: 1            # base outgoing damage multiplier (weapon stats add on top)
+    defense: 0           # reduces incoming damage (each point ~ 0.5% reduction, formula in DamageMath)
+    speed: 0             # movement speed bonus (each point = +1% walk speed above vanilla default)
+    crit_chance: 10      # % chance to land a critical hit (0–100; can exceed 100 with diminishing returns)
+    crit_damage: 50      # % bonus damage on a crit (50 = 1.5× base damage)
+    mining_speed: 10     # custom block break speed (higher = faster; 100 = instant)
+    foraging_speed: 10   # log-break speed equivalent
+    breaking_power: 1    # minimum tier required to break custom blocks (1 = tier-1+, 2 = tier-2+ etc.)
 
 # Regen tick rate (HP and mana regen both run on this schedule).
 regen:
-  interval-ticks: 20             # 20 ticks = 1 second
+  interval-ticks: 20    # 20 ticks = 1 second; lower values = smoother but more CPU
 
 # Skill framework (per-skill addons layer their own configs on top).
 # Each skill uses the default curve unless overridden under its own key here.
@@ -102,29 +108,31 @@ regen:
 #       10: { ferocity: 5, max_health: 10 }
 #       25: { ferocity: 10 }
 skills:
-  default-max-level: 50
-  default-curve: "100 * level ^ 1.5"
+  default-max-level: 50        # cap applied to all skills that don't define their own max-level
+  default-curve: "100 * level ^ 1.5"  # XP required to reach 'level'; e.g. level 10 needs 3162 XP
 
 # Status-effect tick scheduler. One task scans active effects every tick.
 status-effects:
-  scheduler-interval-ticks: 1
+  scheduler-interval-ticks: 1  # 1 = every tick. Raise to 2–4 if you have many concurrent players
 
 # Natural mob spawning rules under plugins/rpg-core/natural-spawning/*.yml.
 # Disabled by default — admin spawners are the canonical source until the world
 # is built out enough that natural waves make sense.
 natural-spawning:
   enabled: false
-  interval-ticks: 20
+  interval-ticks: 20    # how often the spawner checks / spawns; 20 = once per second
 
 # Mob AI overrides — how often the AI tick task runs (10 ticks = twice/sec).
 mob-ai:
-  interval-ticks: 10
+  interval-ticks: 10    # lower = more responsive AI, higher CPU cost; 10 is a good balance
 
 # Combat tagging (see docs/core/damage.md).
+# A player is "tagged" for N seconds after dealing or receiving damage.
+# Vitality reduction: tagged players have reduced effective max-HP (simulates injury pressure).
 combat-tag:
-  duration-seconds: 8
-  vitality-reduction-percent-per-point: 1
-  vitality-reduction-cap-percent: 50
+  duration-seconds: 8                          # seconds of combat tag after last damage event
+  vitality-reduction-percent-per-point: 1      # % max-HP reduced per combat-tag stack
+  vitality-reduction-cap-percent: 50           # maximum HP reduction from tagging (50 = can't go below 50% max-HP)
 
 # Death rules — ordered list, first permission held wins.
 # drop-coins-amount: a number, "all", or "<n>percent" (e.g. "50percent").
@@ -132,23 +140,23 @@ combat-tag:
 # keep-xp: keep skill XP since last level (true) or zero it (false).
 death-rules:
   enabled: true
-  coin-pile-pickup-radius: 1.5
-  coin-pile-lifetime-seconds: 300
+  coin-pile-pickup-radius: 1.5    # blocks; coin piles within this radius merge on pickup
+  coin-pile-lifetime-seconds: 300 # seconds before unclaimed coin piles despawn (300 = 5 min)
   tiers:
     - permission: rpg.death.vip
-      drop-items-percent: 0
+      drop-items-percent: 0       # VIPs keep everything
       drop-coins-amount: 0
       keep-xp: true
     - permission: rpg.death.default
-      drop-items-percent: 100
-      drop-coins-amount: "50percent"
+      drop-items-percent: 100     # 100% chance to drop each inventory slot
+      drop-coins-amount: "50percent"  # drop half your wallet on death
       keep-xp: false
 
 # Chat name format defaults (used by NameFormatter — LuckPerms is a soft-dep).
 chat-name-format:
-  use-luckperms-prefix: true
-  use-luckperms-suffix: true
-  fallback-format: "{name}"
+  use-luckperms-prefix: true    # prepend LuckPerms prefix before the player name
+  use-luckperms-suffix: true    # append LuckPerms suffix after the player name
+  fallback-format: "{name}"     # used when LuckPerms is not installed; supports {name}
 
 # Locale for messages.yml selection (en is shipped; others come later).
 locale: en
@@ -156,13 +164,13 @@ locale: en
 # Floating damage indicators (TextDisplay entities above the hit mob).
 damage-indicators:
   enabled: true
-  duration-ticks: 30       # total life of the indicator
+  duration-ticks: 30       # total life of the indicator (30 = 1.5 seconds)
   rise-blocks: 1.5         # how far the number floats upward before fading
 
 # Mob health bar shown in the mob's display name after each hit.
 mob-health-bar:
   enabled: true
-  bar-length: 10           # number of segments in the █░ bar
+  bar-length: 10           # number of segments in the █░ bar (10 looks good in most fonts)
 
 # Level scaling — reduces damage when players are much higher level than a mob.
 # Applies to both player→mob and mob→player directions.
@@ -172,20 +180,20 @@ mob-health-bar:
 #   defense:        effective defense points added per level (reduces incoming damage)
 level-scaling:
   enabled: true
-  threshold: 5             # level difference before scaling kicks in
-  reduction-per-level: 0.08  # damage multiplier reduction per level above threshold
-  min-damage-factor: 0.10  # floor: never reduce below 10% of base damage
+  threshold: 5              # level difference before scaling kicks in (e.g. player 10 vs mob 5 = 5 diff)
+  reduction-per-level: 0.08 # damage multiplier reduction per level above threshold (0.08 = −8%/level)
+  min-damage-factor: 0.10   # floor: never reduce below 10% of base damage
   per-level-gains:
-    health: 5.0            # flat HP per level above 1
-    damage-percent: 5.0    # % outgoing damage increase per level above 1
-    defense: 2.0           # defense points per level above 1
+    health: 5.0             # flat HP per level above 1
+    damage-percent: 5.0     # % outgoing damage increase per level above 1
+    defense: 2.0            # defense points per level above 1
 
 # Attack cooldown — Minecraft's built-in attack charge system integration.
 # Items can set AttackCooldown: N (ticks) to control their swing speed via the
 # generic.attack_speed attribute. scale-damage applies the same formula Minecraft uses
 # for the charge indicator: damage * (0.2 + 0.8 * charge^2).
 attack-cooldown:
-  scale-damage: true    # Scale melee damage by charge level (false = always full damage)
+  scale-damage: true    # true = penalise spam-clicking; false = always full damage regardless of charge
 
 # Per-player item drops — tags each dropped item with the player who earned it.
 # Only the assigned player can pick it up until release-seconds elapses (then public).
@@ -193,15 +201,15 @@ attack-cooldown:
 # runs with built-in TextDisplay entities if not loaded.
 per-player-drops:
   enabled: true
-  release-seconds: 30   # seconds before drop becomes public
+  release-seconds: 30   # seconds before drop becomes public and anyone can pick it up
 
 # GUI styling — see docs/formatting.md for the full layout convention.
 # All inventory GUIs in the suite read their pane materials/names from here.
 # Changing these values reskins every GUI at once.
 gui:
-  background-material: GRAY_STAINED_GLASS_PANE  # fills empty/background slots
+  background-material: GRAY_STAINED_GLASS_PANE  # fills empty/background slots (any Material name)
   border-material: BLACK_STAINED_GLASS_PANE      # bottom border row (extra space)
-  background-name: " "                           # supports & color codes
+  background-name: " "                           # supports & color codes; " " = invisible name
   border-name: " "
 
 # Debug logging per-system. Verbose builds are noisy — leave off in prod.

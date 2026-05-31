@@ -1,3 +1,7 @@
-# rpg-fishing — XP from catches. Scaled by (1 + FISHING_WISDOM / 100).
+# rpg-fishing — XP from catches.
+# XP awarded = xp-per-catch * (1 + FISHING_WISDOM / 100).
+# Example: xp-per-catch 10, FISHING_WISDOM 50 → 10 * 1.5 = 15 XP per catch.
+# Loot table for catches is defined in plugins/rpg-core/loot-tables/fishing.yml (if present),
+# otherwise vanilla loot is used unless fishing suppression is enabled in rpg-core.
 
-xp-per-catch: 10
+xp-per-catch: 10   # base XP awarded when a player reels in a catch

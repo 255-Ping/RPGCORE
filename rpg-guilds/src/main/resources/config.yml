@@ -1,32 +1,37 @@
 # rpg-guilds — persistent guilds.
+# Guilds persist between sessions and have owner / officer / member ranks.
+# Players create a guild with /guild create <name> (costs creation.cost coins).
 
-# v1: simple owner / officer / member ranks. Custom rank renaming arrives later.
+max-members: 50   # maximum players in a guild (including the owner); range: 2–500
 
-max-members: 50
-
-# Currency cost to create a guild (charged via rpg-economy if loaded; otherwise free).
+# Currency cost to create a guild (charged via rpg-economy if loaded; free otherwise).
 creation:
-  cost: 10000
+  cost: 10000   # coins deducted from the creating player's wallet; 0 = free to create
 
-# Seconds before a pending invite expires.
-invite-timeout-seconds: 60
+# Seconds before a pending /guild invite expires.
+# Players who don't accept within this window must be re-invited.
+invite-timeout-seconds: 60   # range: 10–3600
 
 # Guild XP — a fraction of each member's earned skill XP flows into the guild's total XP pool.
+# This lets guilds level up passively as members play, without a separate grind.
 xp-sharing:
   enabled: true
-  rate-percent: 10    # percent (0-100) of each member's skill XP that flows to the guild
+  rate-percent: 10    # percent (0–100) of each member's skill XP that flows to the guild pool
+                       # Example: member earns 100 XP → 10 XP goes to the guild (member keeps 100)
 
 # XP cost to advance the guild from 'level' to 'level+1'. Uses the expression evaluator.
 # Variable available: level (current level, 1-based).
+# Example: level=5 → 5 * 5 * 1000 = 25,000 guild XP to reach level 6.
 guild-curve: "level * level * 1000"
 
-# Maximum attainable guild level.
-guild-max-level: 25
+# Maximum attainable guild level. Guild perks stop scaling at this level.
+guild-max-level: 25   # range: 1–1000
 
 # Stat bonuses granted to every guild member, scaling with guild level.
 # Each key is a stat ID; the value is an expression with 'level' as a variable.
 # Remove or comment out any entry to disable that perk.
+# Example: max_health "level * 5" → +5 max HP per guild level (25 levels = +125 HP max)
 guild-perks:
-  max_health: "level * 5"
-  strength: "level * 2"
-  defense: "level"
+  max_health: "level * 5"   # bonus max HP scaling with guild level
+  strength: "level * 2"     # bonus strength scaling with guild level
+  defense: "level"          # bonus defense equal to guild level (1 per level)

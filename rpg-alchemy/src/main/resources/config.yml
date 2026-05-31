@@ -1,13 +1,17 @@
 # rpg-alchemy config.
+# Potion definitions: plugins/rpg-alchemy/potions/*.yml
+# Brew recipes:       plugins/rpg-alchemy/recipes/*.yml
+# The brewing station is any custom block with StationType: brewing in its YAML.
 
 features:
-  brewing: true       # brewing station block + recipe-driven brewing
-  drinking: true      # right-click custom potions to consume
+  brewing: true    # enable the brewing station GUI and recipe-driven potion crafting
+  drinking: true   # allow right-clicking custom potion items to consume them and gain effects
 
-# Brewing duration in ticks per recipe; can be overridden per recipe.
+# Default brew duration in ticks if a recipe doesn't specify its own brew-ticks.
+# 200 ticks = 10 seconds. Individual recipes can override this value.
 default-brew-ticks: 200
 
-# Skill XP awards.
+# Skill XP awards. Scaled by ALCHEMY_WISDOM stat if defined.
 xp:
-  per-brew: 30
-  per-drink: 0
+  per-brew: 30    # XP awarded on successful brew (consuming inputs + producing output)
+  per-drink: 0    # XP awarded when a player drinks a custom potion (0 = disabled)

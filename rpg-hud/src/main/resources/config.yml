@@ -10,11 +10,12 @@
 #   {skill:<id>:level}                — skill level (e.g., {skill:combat:level})
 #   {skill:<id>:total_xp}             — total skill XP
 #   {skill:<id>:to_next}              — XP needed to reach next level
+# Color codes: & followed by 0-9 or a-f for color, l/o/n/m/k/r for formatting.
 
 scoreboard:
   enabled: true
-  title: "&6&lRPG"
-  update-ticks: 10
+  title: "&6&lRPG"         # scoreboard title; shown at the top of the sidebar
+  update-ticks: 10         # how often the scoreboard refreshes (10 = twice per second)
   lines:
   - "&7&m                  "
   - "&7Health: &c{health}&7/&c{max_health}"
@@ -28,7 +29,7 @@ scoreboard:
 
 tablist:
   enabled: true
-  update-ticks: 40
+  update-ticks: 40         # tab list refreshes less often to save CPU (40 = every 2 seconds)
   header:
   - "&6&lRPG SERVER"
   - "&7Players online: &f{online}"
@@ -37,14 +38,16 @@ tablist:
 
 action-bar:
   enabled: true
-  update-ticks: 5
+  update-ticks: 5          # action bar refreshes frequently for smooth stat display (5 = 4/sec)
   idle-format: "&c❤ {health}/{max_health}  &b✦ {mana}/{max_mana}  &a✤ {defense}"
+  # idle-format shows when no other system is pushing a higher-priority action bar message.
+  # Other systems (combat, skills) override this with their own messages temporarily.
 
 # Nametag above the player's head. Uses a TextDisplay entity riding the player; supports the
 # same placeholders as the rest of the HUD. Hides when sneaking by default.
 nametag:
   enabled: true
-  format: "{prefix} {name} {suffix}"
-  hide-when-sneaking: true
-  y-offset: 0.5                  # blocks above the player's head (applied as Display translation)
-  update-ticks: 10
+  format: "{prefix} {name} {suffix}"   # supports & color codes and all HUD placeholders
+  hide-when-sneaking: true              # true = nametag disappears while player is sneaking
+  y-offset: 0.5                         # blocks above the player's head (applied as Display translation)
+  update-ticks: 10                      # how often the nametag re-renders (10 = twice per second)

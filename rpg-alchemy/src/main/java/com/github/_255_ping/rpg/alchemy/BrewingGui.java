@@ -60,7 +60,26 @@ public final class BrewingGui implements Listener {
         if (!(e.getWhoClicked() instanceof Player p)) return;
         if (open.get(p.getUniqueId()) == null) return;
         int raw = e.getRawSlot();
-        if (raw >= e.getView().getTopInventory().getSize()) return;
+        int topSize = e.getView().getTopInventory().getSize();
+
+        // Shift-click from bottom inventory → route to first free input slot.
+        if (raw >= topSize) {
+            if (!e.isShiftClick()) return;
+            ItemStack clicked = e.getCurrentItem();
+            if (clicked == null || clicked.getType().isAir()) return;
+            e.setCancelled(true);
+            Inventory top = e.getView().getTopInventory();
+            for (int slot : INPUT_SLOTS) {
+                ItemStack existing = top.getItem(slot);
+                if (existing == null || existing.getType().isAir()) {
+                    top.setItem(slot, clicked.clone());
+                    clicked.setAmount(0);
+                    plugin.getServer().getScheduler().runTask(plugin, () -> refreshRecipes(top));
+                    return;
+                }
+            }
+            return;
+        }
 
         // Inputs: 10..12 — allow drop. Recipes: 19..25.
         if (isInputSlot(raw)) {

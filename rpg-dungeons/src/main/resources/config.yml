@@ -1,27 +1,32 @@
 # rpg-dungeons config.
+# Dungeon definitions: plugins/rpg-dungeons/dungeons/*.yml
+# Each dungeon has a template region and an entrance block. Players enter with /dungeon enter <id>.
 
 # Auto-bootstrap a void world for instances on first enable.
+# The world is created as a flat void (no terrain) so instances can be pasted cleanly.
 instance-world:
-  name: rpg_dungeon_instances
-  auto-create: true
+  name: rpg_dungeon_instances   # Bukkit world name — do not change after instances have been created
+  auto-create: true             # true = create the world automatically if it doesn't exist; false = admin creates it manually
 
-# Instance placement strategy. Each instance takes a (width, depth) block reservation; we lay
-# them out on a grid in the instance world with this spacing.
+# Instance placement strategy.
+# Each instance occupies a (width × depth) block reservation in the instance world,
+# laid out on a grid so instances never overlap.
 instance:
-  grid-spacing-blocks: 256
-  y-base: 64
-  # Block-copy throughput when starting a run. Lower to reduce per-tick lag on huge templates.
+  grid-spacing-blocks: 256      # block distance between instance origins; must be > your largest dungeon template
+  y-base: 64                    # Y level where instance floors are pasted; keep above 0 to avoid void issues
+  # Block-copy throughput when starting a run. Lower values reduce per-tick lag on huge templates,
+  # but make the startup slower. 4096 is fast enough for most templates.
   paste-blocks-per-tick: 4096
 
 # Default behavior when entering with a party (requires rpg-parties).
 party-enter:
-  enabled: true
-  whole-party-required: false   # if true, players not in a party get rejected
+  enabled: true                  # true = parties enter the dungeon together; false = solo only
+  whole-party-required: false    # true = all party members must be at the entrance; false = enter with whoever is there
 
-# Death handling:
-#   solo:        kick player + normal death (drops + respawn)
-#   party-some:  spectator-leashed to a remaining party member
-#   party-all:   kick everyone + normal death
+# Death handling inside dungeons:
+#   solo:            solo players are kicked from the dungeon and respawn normally (drops + respawn)
+#   party-spectator: dead party members spectate a living member until the run ends or fails
+#   party-all:       if all party members die, everyone is kicked and respawns normally
 death:
-  solo: true
-  party-spectator: true
+  solo: true             # kick and respawn when a solo player dies in a dungeon
+  party-spectator: true  # dead party members spectate rather than being kicked immediately

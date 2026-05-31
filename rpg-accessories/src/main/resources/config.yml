@@ -1,21 +1,26 @@
 # rpg-accessories — accessory bag.
+# Players open their accessory bag with /accessories (or right-clicking the designated item).
+# Items with Type: ACCESSORY in their YAML definition provide stat bonuses while equipped here.
 
 bag:
-  title: "&5&lAccessory Bag"
+  title: "&5&lAccessory Bag"   # inventory title shown when the bag is open; supports & color codes
 
 # If true, ACCESSORY items anywhere in the player's main inventory (hotbar, storage)
 # also contribute their stats, not just items in the dedicated bag.
 # This makes accessories work like talismans — carry them to get the bonus.
+# false (default) = only items in the dedicated bag slots count.
 inventory-accessories:
   enabled: false
 
-# Ordered tier list. tier 1 is the starting size for new players.
-# rows is 1..6; cost is in primary currency; the player upgrades from tier N to N+1
-# by paying the cost listed on tier N+1.
+# Ordered tier list. Tier 1 is the starting size for new players.
+# rows: 1–6 (number of inventory rows in the bag)
+# cost: coins charged to upgrade from the previous tier to this tier (via rpg-economy)
+# Players upgrade with /accessories upgrade (costs the price of the next tier).
+# Example flow: new player starts with 1 row (9 slots); pays 1000 to unlock 2 rows, etc.
 tiers:
-  - { tier: 1, rows: 1, cost: 0 }
-  - { tier: 2, rows: 2, cost: 1000 }
-  - { tier: 3, rows: 3, cost: 5000 }
-  - { tier: 4, rows: 4, cost: 25000 }
-  - { tier: 5, rows: 5, cost: 100000 }
-  - { tier: 6, rows: 6, cost: 500000 }
+  - { tier: 1, rows: 1, cost: 0 }          # starting tier — free; 9 accessory slots
+  - { tier: 2, rows: 2, cost: 1000 }       # +9 slots; costs 1,000 coins to unlock
+  - { tier: 3, rows: 3, cost: 5000 }       # +9 slots; costs 5,000 coins
+  - { tier: 4, rows: 4, cost: 25000 }      # +9 slots; costs 25,000 coins
+  - { tier: 5, rows: 5, cost: 100000 }     # +9 slots; costs 100,000 coins
+  - { tier: 6, rows: 6, cost: 500000 }     # +9 slots (54 total); costs 500,000 coins

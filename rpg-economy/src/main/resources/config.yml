@@ -1,19 +1,19 @@
 # rpg-economy config — currency & balance limits.
 
 currency:
-  id: coins
-  display-singular: "coin"
-  display-plural: "coins"
-  prefix: ""
-  suffix: " coins"
-  decimals: 0
-  starting-balance: 100
-  max-balance: 1000000000   # 1 billion default cap
+  id: coins                  # internal identifier used by other plugins to look up this currency
+  display-singular: "coin"   # shown when amount = 1 (e.g. "You earned 1 coin")
+  display-plural: "coins"    # shown when amount ≠ 1 (e.g. "You earned 5 coins")
+  prefix: ""                 # prepended to formatted amounts (e.g. "$" → "$100 coins")
+  suffix: " coins"           # appended to formatted amounts (e.g. "100 coins")
+  decimals: 0                # decimal places shown in UI (0 = whole numbers only; 2 = cents)
+  starting-balance: 100      # coins given to a brand-new player on first join
+  max-balance: 1000000000    # hard cap — transactions that would exceed this are rejected (1B default)
 
 pay:
-  allow-self: false
-  min-amount: 1
-  cooldown-seconds: 5       # via core CooldownService
+  allow-self: false          # whether /pay <self> is permitted (false prevents a trivial exploit)
+  min-amount: 1              # minimum coins per /pay transaction; prevents dust spam
+  cooldown-seconds: 5        # seconds between /pay commands per player (via CooldownService)
 
 baltop:
-  page-size: 10
+  page-size: 10              # how many players shown per page of /baltop

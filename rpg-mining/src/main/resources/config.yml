@@ -1,16 +1,20 @@
 # rpg-mining config.
 # XP awarded = (per-block-id from xp-per-block, falling back to default-xp) * (1 + MINING_WISDOM / 100).
+# Example: default-xp 5, MINING_WISDOM 50 → 5 * 1.5 = 7.5 XP (rounded down).
+# Custom blocks must have their block id listed under xp-per-block to award non-default XP.
+# Custom block ids come from plugins/rpg-core/blocks/*.yml.
 
-default-xp: 5
+default-xp: 5   # XP for any custom block not explicitly listed in xp-per-block
 
-# Mining fatigue applied while holding a gathering tool (item with mining_speed, breaking_power, or foraging_speed).
-# This prevents vanilla blocks from being mined quickly with custom tools.
-# Amplifier: 0 = Fatigue I (10% slower), 1 = Fatigue II (60% slower), 2 = Fatigue III (even slower)
+# Mining fatigue applied while holding a gathering tool (item with mining_speed, breaking_power,
+# or foraging_speed stat). This prevents vanilla blocks from being mined quickly with custom tools.
+# Amplifier: 0 = Fatigue I (slight slowdown), 1 = Fatigue II (60% slower), 2 = Fatigue III (very slow)
 mining-fatigue:
   enabled: true
-  amplifier: 1  # Mining Fatigue II — severely slows vanilla block mining
+  amplifier: 1   # Fatigue II — severely slows vanilla block mining while holding RPG tools
 
 # Per-block-id XP overrides. Match the block id from plugins/rpg-core/blocks/*.yml.
+# Blocks not listed here fall back to default-xp.
 xp-per-block:
-  red_gem_block: 20
-  iron_node: 15
+  red_gem_block: 20   # example custom ore block; higher XP for rare nodes
+  iron_node: 15       # example iron ore node

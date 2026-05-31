@@ -1,34 +1,39 @@
 # rpg-enchanting config.
+# Enchant definitions: plugins/rpg-enchanting/enchants/*.yml
+# Reforge definitions: plugins/rpg-enchanting/reforges/*.yml
+# Upgrade definitions: plugins/rpg-enchanting/upgrades/*.yml
 
 # Per-feature toggles. Set false to fully disable that sub-feature.
 features:
   enchanting: true   # custom enchants applied at the enchanting station block
-  reforges: true     # reforges applied at the anvil block
-  upgrades: true     # tier-upgrades applied at the anvil block
+  reforges: true     # reforges applied at the anvil block (one reforge per item)
+  upgrades: true     # tier-upgrades applied at the anvil block (stackable per item)
 
 # Station block IDs to listen on (legacy — prefer setting StationType in block YAML instead).
+# These block IDs trigger the corresponding GUI when right-clicked.
 stations:
-  enchanting-block: rpg_enchanting_table
-  anvil-block: rpg_custom_anvil
+  enchanting-block: rpg_enchanting_table   # block id from plugins/rpg-core/blocks/*.yml
+  anvil-block: rpg_custom_anvil            # block id from plugins/rpg-core/blocks/*.yml
 
 # Whether to also intercept the vanilla enchanting table / anvil.
-# true (default) means players can use a vanilla enchanting table and get the custom GUI.
-# Set false if you want players to use only custom station blocks.
+# true  = players can right-click a vanilla enchanting table/anvil and get the custom GUI
+# false = only the station blocks defined above open the GUI
 intercept-vanilla-enchanting: true
 intercept-vanilla-anvil: true
 
 # Skill XP awarded on successful operation. Set 0 to disable.
 xp:
-  per-enchant: 25
-  per-reforge: 15
-  per-upgrade: 40
+  per-enchant: 25    # XP when an enchantment level is successfully applied
+  per-reforge: 15    # XP when a reforge is applied to an item
+  per-upgrade: 40    # XP when an upgrade tier is applied (higher XP since upgrades are rarer)
 
 # Whether enchants/reforges/upgrades require currency (rpg-economy) in addition to materials.
 # Each YAML entry can specify its own cost; this is the global on/off switch.
+# false = all operations are free regardless of per-entry costs
 charge-currency: true
 
 # Vanilla suppression mirror. Set false here to allow the vanilla mechanic (rpg-core's
 # vanilla-suppression block holds the canonical flags; these are convenience overrides).
 suppress:
-  enchanting-table: true
-  anvil: true
+  enchanting-table: true   # true = block the vanilla enchant screen (open custom GUI instead)
+  anvil: true              # true = block the vanilla anvil screen (open custom GUI instead)

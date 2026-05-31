@@ -1,11 +1,13 @@
-# rpg-admin configuration
-# All commands can be individually disabled by setting enabled: false.
-# Permission nodes are fully configurable per command.
+# rpg-admin configuration.
+# Provides quality-of-life admin commands. Each command can be individually disabled
+# or have its permission node overridden here.
+# All commands require the listed permission node (default: op-only unless LuckPerms is configured).
 
 commands:
+  # Gamemode shortcuts: /gmc (creative), /gms (survival), /gma (adventure), /gmsp (spectator)
   gmc:
     enabled: true
-    permission: rpg.admin.gamemode
+    permission: rpg.admin.gamemode   # permission required to use /gmc
   gms:
     enabled: true
     permission: rpg.admin.gamemode
@@ -16,14 +18,17 @@ commands:
     enabled: true
     permission: rpg.admin.gamemode
 
+  # /fly — toggle flight for yourself or another player
   fly:
     enabled: true
     permission: rpg.admin.fly
 
+  # /god — toggle god mode (no damage taken)
   god:
     enabled: true
     permission: rpg.admin.god
 
+  # /tp <player> and /tphere <player>
   tp:
     enabled: true
     permission: rpg.admin.tp
@@ -31,33 +36,39 @@ commands:
     enabled: true
     permission: rpg.admin.tp
 
+  # /heal [player] — restore HP and mana to max
   heal:
     enabled: true
     permission: rpg.admin.heal
-    others-permission: rpg.admin.heal.others
+    others-permission: rpg.admin.heal.others   # extra permission required to heal other players
 
+  # /feed [player] — fill the hunger bar
   feed:
     enabled: true
     permission: rpg.admin.feed
     others-permission: rpg.admin.feed.others
 
+  # /speed <value> [player] — set walk or fly speed
   speed:
     enabled: true
     permission: rpg.admin.speed
-    max-walk-speed: 1.0   # 0.0 – 1.0; Bukkit default is 0.2
-    max-fly-speed: 1.0    # 0.0 – 1.0; Bukkit default is 0.1
+    max-walk-speed: 1.0   # 0.0 – 1.0; Bukkit default walk speed is 0.2
+    max-fly-speed: 1.0    # 0.0 – 1.0; Bukkit default fly speed is 0.1
 
+  # /clear [player] — clear inventory (with confirmation prompt)
   clear:
     enabled: true
     permission: rpg.admin.clear
     others-permission: rpg.admin.clear.others
 
+  # /broadcast <message> — send a server-wide announcement
   broadcast:
     enabled: true
     permission: rpg.admin.broadcast
-    # {message} is replaced with the broadcast text
+    # {message} is replaced with the broadcast text. Supports & color codes.
     format: "&c[&lANNOUNCEMENT&c] &f{message}"
 
+  # /sudo <player> <command> — run a command as another player
   sudo:
     enabled: true
     permission: rpg.admin.sudo
