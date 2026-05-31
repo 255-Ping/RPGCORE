@@ -7,6 +7,9 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.util.Transformation;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
@@ -146,17 +149,24 @@ public final class DropManager implements Listener {
 
     private UUID spawnHologram(Item item, Player owner) {
         if (item.getWorld() == null) return null;
-        Location loc = item.getLocation().add(0, 0.6, 0);
-        TextDisplay td = (TextDisplay) loc.getWorld().spawnEntity(loc, EntityType.TEXT_DISPLAY);
+        TextDisplay td = (TextDisplay) item.getWorld().spawnEntity(item.getLocation(), EntityType.TEXT_DISPLAY);
         td.setBillboard(Display.Billboard.CENTER);
         td.setPersistent(false);
-        td.setViewRange(0.5f); // only visible up close — 8 blocks
+        td.setViewRange(0.5f); // only visible up close — ~8 blocks
         td.setSeeThrough(false);
+        // Float the label above the item via translation offset; making it a passenger
+        // of the item entity so it tracks wherever the item entity moves.
+        td.setTransformation(new Transformation(
+                new Vector3f(0f, 0.5f, 0f),
+                new Quaternionf(),
+                new Vector3f(1f, 1f, 1f),
+                new Quaternionf()));
 
         String itemName = getItemName(item.getItemStack());
         Component text = Component.text("§e" + itemName + "\n§7→ §b" + owner.getName())
                 .decoration(TextDecoration.ITALIC, false);
         td.text(text);
+        item.addPassenger(td);
         return td.getUniqueId();
     }
 

@@ -30,6 +30,9 @@ scoreboard:
 tablist:
   enabled: true
   update-ticks: 40         # tab list refreshes less often to save CPU (40 = every 2 seconds)
+  # Format for each player's name entry in the tab list. LuckPerms prefixes typically
+  # include surrounding spaces already (e.g. "[Admin] "), so no space between tokens by default.
+  player-name-format: "{prefix}{name}{suffix}"
   header:
   - "&6&lRPG SERVER"
   - "&7Players online: &f{online}"

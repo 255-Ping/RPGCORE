@@ -69,7 +69,7 @@ public final class BlockBreakHandler implements Listener {
 
     // ----- Event entry points -----
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = false)
     public void onDamage(BlockDamageEvent event) {
         Location loc = event.getBlock().getLocation();
         Optional<Block> opt = registry.at(loc);

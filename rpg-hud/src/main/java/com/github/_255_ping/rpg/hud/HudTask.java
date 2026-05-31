@@ -146,6 +146,11 @@ public final class HudTask implements Runnable {
         Component h = joinLegacy(player, header);
         Component f = joinLegacy(player, footer);
         player.sendPlayerListHeaderAndFooter(h, f);
+
+        // Set this player's display name in every other player's tab list.
+        String nameFmt = plugin.getConfig().getString("tablist.player-name-format", "{prefix}{name}{suffix}");
+        Component listName = LEGACY.deserialize(PlaceholderResolver.resolve(player, nameFmt));
+        player.playerListName(listName);
     }
 
     private void updateActionBar(Player player) {
