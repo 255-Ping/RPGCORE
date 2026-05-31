@@ -80,5 +80,15 @@ nav:
     - Suite 16: changelog/suite-16.md
   - Development:
     - Developer Guide: development.md
-    - Roadmap: planned/todo.md
+    - Roadmap:
+      - Overview: planned/todo.md
+      - Bugs: planned/todo-bugs.md
+      - Features: planned/todo-features.md
+      - Improvements: planned/todo-improvements.md
+      - GUI: planned/todo-gui.md
+      - Docs: planned/todo-docs.md
     - Backlog: planned/backlog.md
+    - Planned Features:
+      - Auction House: planned/auction-house.md
+      - Bazaar: planned/bazaar.md
+      - GUI Overhaul: planned/gui-overhaul.md
