@@ -6,8 +6,8 @@ Each suite is its own page — click to expand.
 
 | Suite | Highlights |
 |-------|-----------|
-| [Suite 19 (current)](changelog/suite-19.md) | Damage NPE fix, fake player NPCs, banker NPC, cooking GUI redesign, NPC protection |
-| [Suite 18](changelog/suite-18.md) | Per-player drops, stations API, enchanting rework, accessories, attack cooldown, bows |
+| [Suite 19 (current)](changelog/suite-19.md) | Trade plugin (new), attack cooldown fix, coin drops (`currency-rolls:`), mining fatigue fix, GUI formatting pass (cooking/alchemy/enchanting/NPCs), config docs pass, fake player NPCs, banker NPC |
+| [Suite 18](changelog/suite-18.md) | Per-player drops, global region, vanilla enchanting intercept, accessories, HUD effects placeholder |
 | [Suite 16](changelog/suite-16.md) | Initial ship — core pipeline, mining, combat, guilds, dungeons, NPCs, quests, HUD |
 
 ---

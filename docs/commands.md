@@ -1,6 +1,6 @@
 # Master command reference
 
-> **Status:** Planned
+> **Status:** Working (synced with plugin.ymls as of suite 19)
 
 Every command across every module. Permissions follow `rpg.<module>.<command>[.<sub>]`. Self-use commands default to true; admin commands default to op; moderation commands declared per-command.
 
@@ -44,19 +44,25 @@ Every command across every module. Permissions follow `rpg.<module>.<command>[.<
 | `/eco reset <player>` | `rpg.economy.admin.reset` | op | Reset balance to starting amount |
 | `/baltop [page]` | `rpg.economy.baltop` | true | View richest players |
 
+## Trade (`rpg-trade`)
+
+| Command | Permission | Default | Description |
+|---|---|---|---|
+| `/trade <player>` | `rpg.trade.use` | true | Send a trade request (30 s expiry) |
+| `/trade accept` | `rpg.trade.use` | true | Accept incoming trade request |
+| `/trade deny` | `rpg.trade.use` | true | Decline incoming trade request |
+| `/trade cancel` | `rpg.trade.use` | true | Cancel an in-progress trade |
+
 ## Chat (`rpg-chat`)
 
 | Command | Permission | Default | Description |
 |---|---|---|---|
-| `/chat <channel>` | `rpg.chat.use.<channel>` | per-channel | Switch active channel |
+| `/chat <global\|party\|guild>` | `rpg.chat.use.<channel>` | per-channel | Switch active chat channel |
+| `/chat reload` | `rpg.chat.admin.reload` | op | Reload rpg-chat config |
 | `/msg <player> <msg>` (`/tell`, `/w`) | `rpg.chat.msg` | true | Direct message |
 | `/reply <msg>` (`/r`) | `rpg.chat.reply` | true | Reply to last DM |
-| `/clearchat` | `rpg.chat.clearchat` | op | Clear chat for everyone |
-| `/mutechat [on\|off]` | `rpg.chat.mutechat` | op | Toggle global chat mute |
-| `/mute <player> [duration] [reason]` | `rpg.chat.mute` | op | Mute a player |
-| `/unmute <player>` | `rpg.chat.unmute` | op | Unmute a player |
-| `/slowmode <seconds>` | `rpg.chat.slowmode` | op | Enable chat slowmode |
-| `/socialspy` | `rpg.chat.socialspy` | op | Toggle viewing of all DMs |
+| `/clearchat` (`/cc`) | `rpg.chat.clearchat` | op | Clear chat for everyone |
+| `/mutechat` (`/mc`) | `rpg.chat.mutechat` | op | Toggle global chat mute on/off |
 
 ## HUD (`rpg-hud`)
 
@@ -78,6 +84,7 @@ Every command across every module. Permissions follow `rpg.<module>.<command>[.<
 | `/party leave` | `rpg.parties.leave` | true | Leave party |
 | `/party disband` | `rpg.parties.disband` | true (owner only) | Disband |
 | `/party list` | `rpg.parties.list` | true | Show member list |
+| `/party reload` | `rpg.parties.admin.reload` | op | Reload rpg-parties config |
 | `/chat party` | `rpg.chat.use.party` | true | Switch to party channel |
 
 ## Guilds (`rpg-guilds`)
@@ -139,25 +146,30 @@ Every command across every module. Permissions follow `rpg.<module>.<command>[.<
 |---|---|---|---|
 | `/accessories` (`/bag`) | `rpg.accessories.open` | true | Open your accessory bag |
 | `/accessories upgrade` | `rpg.accessories.upgrade` | true | Upgrade bag tier |
+| `/accessories reload` | `rpg.accessories.admin.reload` | op | Reload rpg-accessories config |
 
 ## Enchanting (`rpg-enchanting`)
 
+Admin commands only — the station blocks open GUIs on right-click without a command.
+
 | Command | Permission | Default | Description |
 |---|---|---|---|
-| `/enchant` | `rpg.enchanting.open` | true | Open enchanting GUI (also via custom block) |
-| `/reforge` | `rpg.enchanting.reforge` | true | Open reforge GUI |
-| `/anvil` | `rpg.enchanting.anvil` | true | Open anvil GUI |
+| `/enchanting reload` | `rpg.enchanting.admin.reload` | op | Reload all enchant/reforge/upgrade YAML |
+| `/enchanting list` | `rpg.enchanting.admin.list` | op | List registered enchant/reforge IDs |
+| `/enchanting give enchant <id>` | `rpg.enchanting.admin.give` | op | Give an enchant book |
+| `/enchanting give reforge <id>` | `rpg.enchanting.admin.give` | op | Give the reforge stone item |
+| `/enchanting give upgrade <id>` | `rpg.enchanting.admin.give` | op | Give the upgrade book item |
 
 ## NPCs (`rpg-npcs`)
 
 | Command | Permission | Default | Description |
 |---|---|---|---|
-| `/npc create <id>` | `rpg.npcs.admin.create` | op | Create at your location |
-| `/npc edit <id>` | `rpg.npcs.admin.edit` | op | Open NPC editor GUI |
-| `/npc delete <id>` | `rpg.npcs.admin.delete` | op | Delete |
-| `/npc list [world]` | `rpg.npcs.admin.list` | op | List NPCs |
-| `/npc tp <id>` | `rpg.npcs.admin.tp` | op | TP to NPC |
+| `/npc create <id>` | `rpg.npcs.admin.create` | op | Create NPC at your location |
+| `/npc delete <id>` | `rpg.npcs.admin.delete` | op | Delete an NPC |
 | `/npc move <id>` | `rpg.npcs.admin.move` | op | Move NPC to your location |
+| `/npc list` | `rpg.npcs.admin.list` | op | List all NPCs |
+| `/npc reload` | `rpg.npcs.admin.reload` | op | Reload NPC YAMLs |
+| `/npc setbehavior <id> <type>` | `rpg.npcs.admin.setbehavior` | op | Change NPC behavior type (`dialogue`/`shop`/`quest`/`banker`) |
 
 ## Holograms (`rpg-holograms`)
 
@@ -174,10 +186,12 @@ Every command across every module. Permissions follow `rpg.<module>.<command>[.<
 
 | Command | Permission | Default | Description |
 |---|---|---|---|
-| `/quest [id]` | `rpg.quests.open` | true | Open quest log or specific quest |
-| `/quest give <id> [player]` | `rpg.quests.admin.give` | op | Force-give a quest |
-| `/quest reset <id> [player]` | `rpg.quests.admin.reset` | op | Reset quest progress |
-| `/quest complete <id> [player]` | `rpg.quests.admin.complete` | op | Force-complete |
+| `/quest list` | `rpg.quests.use.list` | true | List available and active quests |
+| `/quest accept <id>` | `rpg.quests.use.accept` | true | Accept a quest |
+| `/quest abandon <id>` | `rpg.quests.use.abandon` | true | Abandon an active quest |
+| `/quest progress` | `rpg.quests.use.progress` | true | Show progress on active quests |
+| `/quest complete <questId> [player]` | `rpg.quests.admin.complete` | op | Force-complete a quest |
+| `/quest reload` | `rpg.quests.admin.reload` | op | Reload quest YAMLs |
 
 ## Skill addons
 

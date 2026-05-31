@@ -32,12 +32,9 @@ Everything else in the original stub list now has content. Status headers on `in
 
 ## Content Quality — Remaining Items
 
-### Enchanting docs — ability enchant example — 🟢 Easy
+### ~~Enchanting docs — ability enchant example~~ ✅ Done
 
-`docs/addons/enchanting.md` still needs:
-
-- An **ability enchant** example (enchant that grants or modifies an ability on the item, not just a proc chance)
-- A note clarifying that `levels: N: { triggers: [...] }` proc enchants require the Custom Enchantment Ability Triggers feature (item 39 in todo.md) before they'll work
+Added ability enchant example YAML block to `docs/addons/enchanting.md` + prominent ⚠️ callout on proc enchants noting they require the Custom Enchantment Ability Triggers feature.
 
 ---
 
@@ -47,12 +44,17 @@ Added to `enchanting.md`, `status-effects.md`, `content/abilities.md`.
 
 ---
 
-### General Consistency Pass — 🟡 Medium
+### ~~General Consistency Pass~~ ✅ Done (this session)
 
-- The **Changelog** (`docs/changelog.md`) is behind — recent releases aren't all reflected in the main summary.
+- Changelog summary table updated — Suite 19 highlights now accurate (trade plugin, cooldown fix, currency drops, GUI pass, config docs).
+- `docs/commands.md` — status fixed to Working; quests, enchanting, NPC, chat sections rewritten to match actual plugin.ymls; trade section added; accessories/parties reload commands added.
+- `docs/permissions.md` — status fixed; quests, enchanting, NPC, chat permissions rewritten from plugin.ymls; trade section added; fake permissions (chat.mute, chat.unmute, chat.slowmode, chat.socialspy, chat.use.staff, enchanting.open, enchanting.reforge, enchanting.anvil, npcs.admin.edit, npcs.admin.tp, quests.open, quests.admin.give, quests.admin.reset) removed.
+
+### Still open
+
 - Add a `docs/core/loot-pools.md` alongside the Loot Pool System feature (item 7 in todo.md).
-- Cross-link related pages more aggressively: e.g., the enchanting page should link to the items page (for `Enchantable: true`), and the stats page should link to the items page (for stat field names).
-- `docs/permissions.md` and `docs/commands.md` — master reference pages for the whole suite; currently thin. Flesh out alongside the Permission System Consistency Audit (item 18 in todo.md).
+- Cross-link related pages more aggressively (e.g. enchanting ↔ items for `Enchantable: true`; stats ↔ items for stat field names).
+- `docs/permissions.md` and `docs/commands.md` — flesh out further alongside Permission System Consistency Audit (item 18 in todo.md).
 
 ---
 

@@ -1,6 +1,6 @@
 # Master permission reference
 
-> **Status:** Stable (synced with shipped plugin.ymls as of suite-16)
+> **Status:** Working (synced with plugin.ymls as of suite 19)
 
 Permission nodes follow `rpg.<module>.<command>[.<sub>]`. Self-use defaults to true; admin defaults to op; moderator-tier nodes are noted explicitly.
 
@@ -62,23 +62,26 @@ These names are illustrative — actual node names come from your `core/config.y
 | `rpg.economy.admin.reset` | op | Reset balance |
 | `rpg.economy.admin.reload` | op | Reload rpg-economy config |
 
+## Trade
+
+| Node | Default | Description |
+|---|---|---|
+| `rpg.trade.use` | true | Send and receive trade requests |
+| `rpg.trade.admin.reload` | op | Reload rpg-trade config |
+
 ## Chat
 
 | Node | Default | Description |
 |---|---|---|
 | `rpg.chat.use.global` | true | Use global channel |
-| `rpg.chat.use.staff` | op | Use staff channel |
 | `rpg.chat.use.party` | true | Use party channel |
 | `rpg.chat.use.guild` | true | Use guild channel |
 | `rpg.chat.msg` | true | Direct message |
 | `rpg.chat.reply` | true | Reply |
-| `rpg.chat.clearchat` | op | Clear chat |
-| `rpg.chat.mutechat` | op | Toggle global chat |
-| `rpg.chat.mute` | op | Mute a player |
-| `rpg.chat.unmute` | op | Unmute |
-| `rpg.chat.mute.bypass` | op | Bypass mutechat |
-| `rpg.chat.slowmode` | op | Slowmode toggle |
-| `rpg.chat.socialspy` | op | View DMs |
+| `rpg.chat.clearchat` | op | Clear chat for everyone |
+| `rpg.chat.mutechat` | op | Toggle global chat mute |
+| `rpg.chat.mute.bypass` | op | Bypass mutechat restriction |
+| `rpg.chat.admin.reload` | op | Reload rpg-chat config |
 
 ## HUD
 
@@ -168,20 +171,23 @@ These names are illustrative — actual node names come from your `core/config.y
 
 | Node | Default | Description |
 |---|---|---|
-| `rpg.enchanting.open` | true | Open enchant GUI |
-| `rpg.enchanting.reforge` | true | Reforge GUI |
-| `rpg.enchanting.anvil` | true | Anvil GUI |
+| `rpg.enchanting.use.enchant` | true | Use the enchanting table block |
+| `rpg.enchanting.use.anvil` | true | Use the anvil block |
+| `rpg.enchanting.admin.reload` | op | Reload all enchant/reforge/upgrade YAML |
+| `rpg.enchanting.admin.list` | op | List registered enchants/reforges |
+| `rpg.enchanting.admin.give` | op | Give enchant book / reforge stone / upgrade book |
 
 ## NPCs
 
 | Node | Default | Description |
 |---|---|---|
+| `rpg.npcs.use` | true | Click NPCs to interact |
 | `rpg.npcs.admin.create` | op | Create NPC |
-| `rpg.npcs.admin.edit` | op | Edit NPC |
 | `rpg.npcs.admin.delete` | op | Delete |
+| `rpg.npcs.admin.move` | op | Move to player location |
 | `rpg.npcs.admin.list` | op | List |
-| `rpg.npcs.admin.tp` | op | TP |
-| `rpg.npcs.admin.move` | op | Move |
+| `rpg.npcs.admin.reload` | op | Reload NPC YAMLs |
+| `rpg.npcs.admin.setbehavior` | op | Set NPC behavior type |
 
 ## Holograms
 
@@ -198,10 +204,12 @@ These names are illustrative — actual node names come from your `core/config.y
 
 | Node | Default | Description |
 |---|---|---|
-| `rpg.quests.open` | true | Open quest log |
-| `rpg.quests.admin.give` | op | Force-give |
-| `rpg.quests.admin.reset` | op | Reset |
-| `rpg.quests.admin.complete` | op | Force-complete |
+| `rpg.quests.use.list` | true | List available + active quests |
+| `rpg.quests.use.accept` | true | Accept a quest |
+| `rpg.quests.use.abandon` | true | Abandon an active quest |
+| `rpg.quests.use.progress` | true | Show quest progress |
+| `rpg.quests.admin.complete` | op | Force-complete a quest for a player |
+| `rpg.quests.admin.reload` | op | Reload quest YAMLs |
 
 ## Skill addons
 

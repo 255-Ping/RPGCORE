@@ -81,7 +81,34 @@ sharpness:
   conflicts: []                  # list of enchant IDs that cannot coexist with this one
 ```
 
-### Proc enchant example (requires Ability Trigger Types feature)
+### Ability enchant example
+
+Grants an ability directly on the item. Higher levels upgrade the ability's parameters. The ability fires with the item's default trigger (right-click for swords/wands, on-fire for bows).
+
+```yaml
+flame_blade:
+  display: "&cFlame Blade"
+  applies-to: [SWORD]
+  max-level: 3
+  levels:
+    1:
+      abilities:
+        - "projectile{speed=1.5, particle=FLAME, damage_multiplier=0.5}"
+    2:
+      abilities:
+        - "projectile{speed=2.0, particle=FLAME, damage_multiplier=0.8}"
+    3:
+      abilities:
+        - "projectile{speed=2.5, particle=FLAME, damage_multiplier=1.2} apply_status{id=burn, duration=60}"
+```
+
+> Ability enchants **replace** any ability granted by the previous level of the same enchant — they do not stack. If you want the enchant to add a second ability on top of the item's existing ones, reference the item's original ability ID in the lower-level entries too.
+
+---
+
+### Proc enchant example
+
+> ⚠️ **Proc enchants (`triggers:`) are not yet functional.** The `triggers:` field is parsed but the Custom Enchantment Ability Triggers system (item 39 in [todo.md](../planned/todo.md)) is not yet implemented. Define proc enchants now for future compatibility, but they will not fire until that feature ships.
 
 ```yaml
 thunderstrike:
