@@ -87,7 +87,8 @@
 45. 🔴 🟡 **Salvaging system**
 46. 🔴 ⚫ **Auction House** (needs sign-entry + mail first)
 47. 🔴 🔴 **Bazaar**
-48. 🔵 🟡 **Party / Guild / Quest GUI conversions**
-49. 🔴 ⚫ **Pets system** (`rpg-pets`) — long-term, build in phases
-50. 🟠 🟡 **Unit test coverage** — ongoing, add tests alongside any new system
-51. 📄 🟢 **Docs pass** — fill stubs, add missing plugin pages
+48. 🟠 🔴 **Display entity suite** (`rpg-holograms`) — ItemDisplay, BlockDisplay, physical `/de` editor with inventory replacement, fine-detail GUI, YAML persistence for all types
+49. 🔵 🟡 **Party / Guild / Quest GUI conversions**
+50. 🔴 ⚫ **Pets system** (`rpg-pets`) — long-term, build in phases
+51. 🟠 🟡 **Unit test coverage** — ongoing, add tests alongside any new system
+52. 📄 🟢 **Docs pass** — fill stubs, add missing plugin pages

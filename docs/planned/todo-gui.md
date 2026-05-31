@@ -43,6 +43,7 @@ These replace or supplement existing command interfaces. All are in `docs/planne
 | Quest log GUI (`/quests`) | `rpg-quests` | Chat-list only | 🔴 Hard |
 | Admin Spawner GUI (`/spawner`) | `rpg-core` | Fields set via `/spawner set`; GUI planned | 🟡 Medium |
 | Hologram Editor GUI (`/holograms`) | `rpg-holograms` | Commands work; GUI editor deferred | 🟡 Medium |
+| Display Entity Editor GUI (`/de edit`) | `rpg-holograms` | Not built yet — DEE-style physical editor + fine-detail GUI | 🔴 Hard |
 | NPC Editor GUI (`/npc`) | `rpg-npcs` | All commands work; GUI editor deferred | 🔴 Hard |
 | Achievements GUI (`/achievements`) | `rpg-core` | Not built yet — needed alongside achievement system | 🟡 Medium |
 | Leaderboard GUI (`/top`) | `rpg-core` | Not built yet — needed alongside leaderboard feature | 🟡 Medium |
@@ -144,5 +145,99 @@ _(Companion to the Mail/Inbox System feature — build together)_
 - Click = claim items into inventory (or prompt if inventory full), mark as read
 - Red border on unread mail; gray on read
 - Delete button (bottom right) to clear read messages
+
+---
+
+### Display Entity Editor — Fine-Detail GUI (`/de edit`) — 🔴 Hard
+Opened from editor mode via the `Open GUI` book item (hotbar slot 6). A 54-slot multi-page GUI for editing exact numeric values of every display entity property. Complements the physical editor (which is good for rough positioning) — this is for precise values.
+
+The GUI has **three pages** accessible from a fixed navigation row at the bottom (row 6). Current page shown in the navigation button name.
+
+---
+
+**Page 1 — Transform**
+
+Controls the `Transformation` object (scale, translation, left/right rotation). All values are exact — clicking opens sign-entry for the relevant float(s).
+
+```
+[ Scale X  ] [ Scale Y  ] [ Scale Z  ] [  ----  ] [ Trans X  ] [ Trans Y  ] [ Trans Z  ] [  ----  ] [ Reset All ]
+[ L.Rot X  ] [ L.Rot Y  ] [ L.Rot Z  ] [ L.Rot W] [ R.Rot X  ] [ R.Rot Y  ] [ R.Rot Z  ] [ R.Rot W] [  ----    ]
+[ Euler L→ ] [  ----   ] [  ----   ] [  ----  ] [ Euler R→ ] [  ----   ] [  ----   ] [  ----  ] [  ----    ]
+[ BG pane  ] [ BG pane  ] [ BG pane  ] [ BG pane] [ BG pane  ] [ BG pane  ] [ BG pane  ] [ BG pane] [ BG pane  ]
+[ ◀ Prev  ] [ BG pane  ] [ BG pane  ] [ Page 1 ] [ BG pane  ] [ BG pane  ] [ BG pane  ] [ BG pane] [ Next ▶   ]
+```
+
+| Slot group | Items | Notes |
+|---|---|---|
+| Scale X/Y/Z | RED/GREEN/BLUE_DYE | Show current value in name. Click → sign-entry for float. Shift-click scale X/Y/Z simultaneously (uniform scale). |
+| Translation X/Y/Z | RED/GREEN/BLUE_WOOL | Sub-block offset. Click → sign-entry. |
+| Left Rotation X/Y/Z/W | ORANGE items | Raw quaternion components. 99% of the time admins won't touch this directly — see Euler buttons below. |
+| Right Rotation X/Y/Z/W | PURPLE items | Raw quaternion. |
+| Euler L→ | WRITABLE_BOOK | Converts current left rotation to Euler angles (pitch/yaw/roll in degrees), opens a sign-entry for three space-separated degree values, then converts back to quaternion. Much more intuitive than raw XYZW. |
+| Euler R→ | WRITABLE_BOOK | Same for right rotation. |
+| Reset All | BARRIER | Resets entire Transformation to identity (scale 1/1/1, no translation, no rotation). Requires confirmation (click once = glow red + tooltip "Click again to confirm"; click again = apply). |
+
+---
+
+**Page 2 — Display Properties**
+
+Controls all the `Display` class properties that apply to all entity types.
+
+```
+[ Billboard ] [ Brightness] [ ViewRange ] [ Disp.W  ] [ Disp.H  ] [  ----   ] [  ----   ] [  ----   ] [  ----   ]
+[ Shadow R  ] [ Shadow St ] [  ----     ] [  ----   ] [  ----   ] [  ----   ] [  ----   ] [  ----   ] [  ----   ]
+[ Interp.D  ] [ Interp.Dur] [ Tele.Dur  ] [  ----   ] [  ----   ] [  ----   ] [  ----   ] [  ----   ] [  ----   ]
+[ Glowing   ] [ GlowColor ] [  ----     ] [  ----   ] [  ----   ] [  ----   ] [  ----   ] [  ----   ] [  ----   ]
+[ ◀ Prev   ] [ BG pane   ] [ BG pane   ] [ Page 2  ] [ BG pane ] [ BG pane ] [ BG pane ] [ BG pane ] [ Next ▶  ]
+```
+
+| Item | Property | Interaction |
+|---|---|---|
+| PAPER — Billboard | `BillboardConstraint` | Cycle: CENTER → FIXED → VERTICAL → HORIZONTAL |
+| GLOWSTONE — Brightness | Block + sky light override | Click → sign-entry `<block 0-15> <sky 0-15>`. Shows `World` if no override. |
+| SPYGLASS — View Range | Render multiplier | Click → sign-entry float. |
+| GRAY_CONCRETE — Display W/H | Culling box | Click → sign-entry `<width> <height>`. Shows `0×0 (no culling)` if unset. |
+| GRAY_DYE — Shadow Radius | Ground shadow size | Click → sign-entry float. 0 = off. |
+| BLACK_DYE — Shadow Strength | Shadow opacity | Click → sign-entry 0.0–1.0 |
+| CLOCK — Interp. Delay | Ticks before tween starts | Click → sign-entry int. |
+| REPEATER — Interp. Duration | Tween duration ticks | Click → sign-entry int. 0 = instant. |
+| MINECART — Teleport Duration | Smooth movement ticks | Click → sign-entry int. |
+| GLOWING_ITEM_FRAME — Glowing | Outline glow | Toggle true/false. |
+| MAGENTA_DYE — Glow Color | Glow RGB | Click → sign-entry `r g b`. Grayed out if Glowing = false. |
+
+---
+
+**Page 3 — Entity-Type Properties**
+
+Contents change depending on the entity type being edited.
+
+**If TextDisplay:**
+Mirrors the existing [Hologram Editor GUI](#hologram-editor-gui-holograms----medium) Settings tab — all the same slots and interactions. The two GUIs share a single implementation; opening from `/de edit` and from `/holograms edit` both open the same class, passing the entity.
+
+**If ItemDisplay:**
+
+```
+[ Item     ] [ Transform] [  ----   ] [  ----   ] [  ----   ] [  ----   ] [  ----   ] [  ----   ] [  ----   ]
+[ BG pane  ] ...
+```
+
+| Item | Property | Interaction |
+|---|---|---|
+| Shows actual item — Item | Which item to display | Click → chat-entry for RPG item id or `vanilla:<MATERIAL>`. Preview updates live. |
+| COMPASS — Display Transform | `ItemDisplayTransform` preset | Cycle: FIXED → GUI → GROUND → HEAD → FIRSTPERSON_RIGHTHAND → FIRSTPERSON_LEFTHAND → THIRDPERSON_RIGHTHAND → THIRDPERSON_LEFTHAND → NONE |
+
+**If BlockDisplay:**
+
+| Item | Property | Interaction |
+|---|---|---|
+| Shows actual block — Block | Which block to display | Click → chat-entry for block type string (e.g., `oak_stairs[facing=north]`). Preview updates live. |
+
+---
+
+**General GUI behaviour:**
+- All sign-entry values validate on input; out-of-range values reopen the sign with an error hint on line 2
+- Every change applies to the live entity **immediately** on confirm — admin sees the effect in-world without closing the GUI
+- The GUI is not a separate mode — the physical editor items are still in the hotbar while the GUI is open on a chest (player can close GUI to get back to click-mode, or click Done from the GUI navigation)
+- Closing the GUI via ESC does **not** exit editor mode — the player still holds their editor items. Only `/de done` or the Done button exits.
 
 ---

@@ -579,6 +579,140 @@ Static holograms only cycle when edited. Add support for cycling text:
 
 ---
 
+### Display Entity Suite: ItemDisplay, BlockDisplay + Physical Editor (`rpg-holograms`) — 🔴 Hard
+Expand `rpg-holograms` beyond text holograms into a full display entity toolkit covering all four Minecraft display entity types. The headline feature is a **DEE-style physical editor** (inspired by the Display Entity Editor plugin): a `/de` command that clears the player's inventory, gives them a set of manipulation tools, and lets them push/scale/rotate the selected entity in real-time by clicking with those items. A second `/de` call restores their saved inventory.
+
+---
+
+#### New entity types and creation commands
+
+| Command | Creates | Notes |
+|---|---|---|
+| `/de createtext [id]` | `TextDisplay` | Same as current holograms; bridges to existing `/holograms` system |
+| `/de createitem <itemId> [id]` | `ItemDisplay` | Floating RPG item or vanilla material |
+| `/de createblock <blockType> [id]` | `BlockDisplay` | Floating block |
+| `/de list` | — | Lists all managed display entities (all types) with type tag + location |
+| `/de delete <id>` | — | Removes entity + persisted data |
+| `/de info <id>` | — | Chat dump of all current property values |
+| `/de copy <id> [newId]` | — | Duplicates a display entity at the same location |
+| `/de tp <id>` | — | Teleports player to the entity |
+| `/de select` | — | Selects the display entity the player is looking at (within 10 blocks); required before `/de edit` |
+| `/de edit` | — | Enters editor mode on the currently selected entity (saves + replaces inventory) |
+| `/de edit <id>` | — | Selects by id and enters editor mode in one step |
+
+All created entities are persisted to `plugins/rpg-holograms/displays/<type>/<id>.yml` and re-spawned on reload.
+
+---
+
+#### Physical editor mode (inventory replacement)
+
+When a player runs `/de edit`, the plugin:
+1. **Serialises the player's entire inventory** (all 36 slots + armor + offhand) to `DataStore` keyed by `player UUID`
+2. **Clears the inventory** and fills it with the editor items below
+3. Entering a new `/de edit` while already in editor mode is blocked with a warning — run `/de done` or `/de cancel` first
+
+The player exits editor mode with:
+- `/de done` — saves all changes + restores inventory
+- `/de cancel` — reverts all transformations to entry state + restores inventory
+- If the player disconnects mid-edit: their saved inventory is restored on next login; changes since last save are discarded
+
+**Editor item layout (hotbar slots 1–9):**
+
+| Slot | Item | Name | Function |
+|---|---|---|---|
+| 1 | RED_CONCRETE | `X Axis` | Active axis = X (red). Right-click = +step, Left-click = −step in current mode |
+| 2 | GREEN_CONCRETE | `Y Axis` | Active axis = Y (green) |
+| 3 | BLUE_CONCRETE | `Z Axis` | Active axis = Z (blue) |
+| 4 | COMPARATOR | `Step Size` | Cycles step size: 0.001 → 0.01 → 0.1 → 0.5 → 1.0. Current size shown in item name. |
+| 5 | COMPASS | `Mode` | Cycles manipulation mode: `Translate → Scale → Rotate → Left Rotation → Right Rotation`. Current mode shown in name. |
+| 6 | BOOK | `Open GUI` | Opens the fine-detail GUI editor (see GUI spec in [GUI Redesigns](todo-gui.md)) |
+| 7 | ENDER_PEARL | `Undo` | Reverts the last single manipulation step (up to 20 undo steps) |
+| 8 | LIME_CONCRETE | `Done` | Save + exit editor mode |
+| 9 | RED_CONCRETE | `Cancel` | Discard + exit editor mode |
+
+**How manipulation works:**
+- Player holds an axis item (slot 1/2/3) in their main hand and right/left-clicks
+- Right-click = add current step in the active axis; Left-click = subtract
+- The manipulation applied depends on the active **mode**:
+  - `Translate` — moves the entity's transformation **translation** (offset from its world position) by the step along the chosen axis
+  - `Scale` — multiplies the chosen axis scale component by `(1 + step)` or `(1 - step)` (left = shrink)
+  - `Rotate` — rotates the entity's **right rotation** quaternion around the chosen axis by `step` radians
+  - `Left Rotation` — same but modifies the **left rotation** component (applied before scale)
+  - `Right Rotation` — explicit right rotation (same as Rotate — kept separate so admins can isolate which component they're touching)
+- The axis color overlay on the entity flashes briefly on each step (particle burst in the corresponding color) as confirmation
+- Entity updates immediately each click — no need to confirm each step
+
+---
+
+#### Entity-type-specific properties
+
+**ItemDisplay:**
+- `Item` — which item to show. In YAML: an RPG item id OR a vanilla Material name
+- `ItemDisplayTransform` — controls which model transform preset applies. Options:
+  - `NONE`, `GUI` (flat icon style), `GROUND` (flat on ground), `FIXED` (item-frame style), `HEAD` (worn-on-head style), `FIRSTPERSON_RIGHTHAND`, `FIRSTPERSON_LEFTHAND`, `THIRDPERSON_RIGHTHAND`, `THIRDPERSON_LEFTHAND`
+  - Default: `FIXED` for most decorative uses; `GUI` for floating icon style
+- Commands: `/de setitem <id> <itemId>`, `/de settransform <id> <preset>`
+
+**BlockDisplay:**
+- `Block` — which block data to show. In YAML: a Bukkit `BlockData` string (e.g., `minecraft:oak_stairs[facing=north,half=bottom]`)
+- Commands: `/de setblock <id> <blockType> [blockState...]`
+
+**TextDisplay:**
+- Delegates to the `/holograms` command and editor GUI — the `/de` system treats existing hologram IDs as TextDisplay entities and vice versa. The same persistence file is shared.
+
+---
+
+#### Common Display properties (all entity types)
+
+All properties from the existing TextDisplay spec also apply here. Key additions relevant to ItemDisplay/BlockDisplay that weren't emphasized before:
+
+- **`DisplayWidth` / `DisplayHeight`** — the entity's culling box. If the box is outside the player's view frustum the entity is hidden. Default is 0×0 (never culled). For large block displays or multi-display builds, set this to encompass the visual size so culling works correctly.
+- **`InterpolationDuration`** — crucial for animated display rigs: setting a duration then immediately changing Transformation causes a smooth tween. Setting to 0 = instant snap.
+
+---
+
+#### YAML schema (ItemDisplay example)
+
+```yaml
+# plugins/rpg-holograms/displays/item/floating_sword.yml
+floating_sword:
+  Type: ITEM
+  Location: {world: world, x: 100.5, y: 65.0, z: 200.5}
+  Item: iron_shortsword            # RPG item id or vanilla material
+  ItemDisplayTransform: FIXED
+  Billboard: FIXED
+  Scale: {x: 1.5, y: 1.5, z: 1.5}
+  Offset: {x: 0.0, y: 0.3, z: 0.0}
+  LeftRotation:  {x: 0.0, y: 0.0, z: 0.0, w: 1.0}  # quaternion
+  RightRotation: {x: 0.0, y: 0.7071, z: 0.0, w: 0.7071}
+  Brightness: {block: 15, sky: 15}
+  ViewRange: 1.5
+  Glowing: false
+  Animated: false
+```
+
+```yaml
+# plugins/rpg-holograms/displays/block/floating_chest.yml
+floating_chest:
+  Type: BLOCK
+  Location: {world: world, x: 50.5, y: 70.0, z: 80.5}
+  Block: "minecraft:chest[facing=south,type=single,waterlogged=false]"
+  Billboard: FIXED
+  Scale: {x: 0.5, y: 0.5, z: 0.5}
+  Offset: {x: 0.0, y: 0.0, z: 0.0}
+  LeftRotation:  {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  RightRotation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  Brightness: null
+```
+
+---
+
+#### See also
+- [GUI Redesigns](todo-gui.md) — full slot layout for the fine-detail GUI editor
+- The existing TextDisplay/hologram entries above for text-specific properties
+
+---
+
 ### Party: HP/Status Display (`rpg-parties`) — 🟡 Medium
 Players in a party have no way to see their teammates' health or status. Options:
 
