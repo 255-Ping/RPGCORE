@@ -238,6 +238,58 @@ Currently mobs play Minecraft's default death animation (fall to side, then desp
 3. **Dungeon editor GUI** — `/dungeon edit <id>` is described in docs but the command doesn't exist. Currently admins hand-edit YAML.
 4. **Time limits** — no timer in `DungeonInstance`; no eviction when time expires.
 5. **Composite win conditions** — only `KILL_ALL_MOBS` and `REACH_EXIT_BLOCK` work. `ADMIN_END` does nothing.
+6. **Display entity instancing** — see dedicated section below.
+
+---
+
+### Dungeon Display Entity Instancing (`rpg-dungeons` + `rpg-holograms`) — 🟡 Medium
+> ⚠️ Requires the Display Entity Suite (rpg-holograms) to be built first. Also requires the dungeon enter bug to be fixed.
+
+When a dungeon instance is created via schematic paste, the paste only copies **blocks** — entities are not included. Any `TextDisplay`, `ItemDisplay`, or `BlockDisplay` entities the admin placed in the template region (e.g. floating boss name labels, decorative item floats, room description text) are silently absent from the instance. This needs an explicit capture-and-respawn system.
+
+**Admin workflow:**
+1. Admin builds the dungeon template with display entities placed using `/de create*` / `/de edit` as normal
+2. Admin runs **`/dungeon capturedisplays <id>`** — scans the template region (the same bounding box used for the schematic paste), finds all entities tagged with the `rpg_display_id` PDC key, records each one's **position relative to the template origin** and its full display entity definition (same YAML fields as `plugins/rpg-holograms/displays/`), and writes them into the dungeon YAML under a `DisplayEntities:` block
+3. From this point, the template-world entities are only needed for re-capture — the dungeon YAML is the authoritative source, so the template world can be unloaded or the entities deleted without affecting instance spawning
+
+**Instance spawn/despawn lifecycle:**
+- When `DungeonManager.enter()` creates a new `DungeonInstance`, after the schematic paste completes it reads `DungeonDef.displayEntities`, computes `instanceOrigin + relativeOffset` for each entry, and spawns a fresh display entity at that world position in the instance world
+- These entities are tagged with a `rpg_dungeon_instance_id` PDC key so they can be batch-removed
+- They are **never written to the persistent `displays/` YAML files** — they are ephemeral, existing only for the lifetime of the instance
+- When the instance is cleaned up (`DungeonManager.finishInstance()` / timeout / all players leave), all entities carrying the `rpg_dungeon_instance_id` tag for that instance UUID are removed
+
+**`/dungeon capturedisplays` command in detail:**
+- Requires `rpg.dungeons.admin` permission
+- Reports how many display entities were found and saved: `&aCaptured 7 display entities for dungeon 'crypt_of_doom'.`
+- Re-running it overwrites the previous `DisplayEntities:` block (so admins can update after making changes)
+- `/dungeon listdisplays <id>` — prints the captured display entity list (type, relative offset, id) so admins can verify without re-entering the template world
+
+**YAML schema (inside the dungeon definition):**
+```yaml
+crypt_of_doom:
+  TemplateWorld: dungeon_templates
+  # ... other fields ...
+  DisplayEntities:
+    - Id: boss_nameplate        # original display entity id from rpg-holograms
+      Type: TEXT
+      Offset: {x: 0.5, y: 3.2, z: 0.5}   # relative to template origin corner
+      Definition:               # full display entity YAML, same fields as displays/text/*.yml
+        Lines: ["&4&lThe Lich King"]
+        Billboard: CENTER
+        Shadowed: true
+        Scale: {x: 1.5, y: 1.5, z: 1.5}
+        Brightness: {block: 15, sky: 15}
+    - Id: entry_skull
+      Type: ITEM
+      Offset: {x: 4.0, y: 1.5, z: 8.0}
+      Definition:
+        Item: "vanilla:SKELETON_SKULL"
+        ItemDisplayTransform: HEAD
+        Billboard: FIXED
+        Scale: {x: 2.0, y: 2.0, z: 2.0}
+```
+
+**Cross-plugin dependency:** `rpg-dungeons` soft-depends on `rpg-holograms`. If `rpg-holograms` is not loaded, the `capturedisplays` command and the instance-spawn step are silently skipped — dungeons still work without display entities.
 
 ---
 
@@ -710,6 +762,7 @@ floating_chest:
 #### See also
 - [GUI Redesigns](todo-gui.md) — full slot layout for the fine-detail GUI editor
 - The existing TextDisplay/hologram entries above for text-specific properties
+- **Dungeon Display Entity Instancing** (below) — how display entities placed in dungeon templates get captured and re-spawned per-instance
 
 ---
 
