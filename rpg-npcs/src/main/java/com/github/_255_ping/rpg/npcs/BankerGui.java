@@ -4,6 +4,7 @@ import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.economy.Economy;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -66,11 +67,11 @@ public final class BankerGui implements Listener {
         }
 
         Inventory inv = Bukkit.createInventory(null, 27,
-            Component.text("⚑ " + stripColor(bankName)).color(NamedTextColor.GOLD));
+            Component.text("⚑ " + stripColor(bankName)).color(NamedTextColor.GOLD)
+                .decorate(TextDecoration.BOLD));
 
-        // Row 0: info pane
+        // Row 0: info pane (remaining slots filled by guiConfig below)
         setInfo(inv, 4, "&6Bank Balance: &e" + fmt(savings), "&7Wallet: &f" + fmt(wallet));
-        fillGlass(inv, new int[]{0,1,2,3,5,6,7,8}, Material.CYAN_STAINED_GLASS_PANE);
 
         // Row 1: deposit
         setAmount(inv, 9,  Material.LIME_STAINED_GLASS_PANE, "&aDeposit &f100",       "deposit", 100);
@@ -78,7 +79,6 @@ public final class BankerGui implements Listener {
         setAmount(inv, 11, Material.LIME_STAINED_GLASS_PANE, "&aDeposit &f10,000",    "deposit", 10_000);
         setAmount(inv, 12, Material.LIME_STAINED_GLASS_PANE, "&aDeposit &f100,000",   "deposit", 100_000);
         setAction(inv, 13, Material.LIME_DYE,               "&aDeposit All",          "deposit_all");
-        fillGlass(inv, new int[]{14,15,16,17}, Material.GRAY_STAINED_GLASS_PANE);
 
         // Row 2: withdraw
         setAmount(inv, 18, Material.RED_STAINED_GLASS_PANE, "&cWithdraw &f100",       "withdraw", 100);
@@ -86,7 +86,9 @@ public final class BankerGui implements Listener {
         setAmount(inv, 20, Material.RED_STAINED_GLASS_PANE, "&cWithdraw &f10,000",    "withdraw", 10_000);
         setAmount(inv, 21, Material.RED_STAINED_GLASS_PANE, "&cWithdraw &f100,000",   "withdraw", 100_000);
         setAction(inv, 22, Material.RED_DYE,                "&cWithdraw All",          "withdraw_all");
-        fillGlass(inv, new int[]{23,24,25,26}, Material.GRAY_STAINED_GLASS_PANE);
+
+        // Fill all remaining empty slots with the configured background pane
+        RpgServices.guiConfig().fillBackground(inv);
 
         p.openInventory(inv);
         openBank.put(p.getUniqueId(), def.id());
@@ -220,9 +222,9 @@ public final class BankerGui implements Listener {
     private void setInfo(Inventory inv, int slot, String... lines) {
         ItemStack item = new ItemStack(Material.GOLD_INGOT);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(LEGACY.deserialize(lines[0]));
+        meta.displayName(LEGACY.deserialize(lines[0]).decoration(TextDecoration.ITALIC, false));
         if (lines.length > 1) {
-            meta.lore(List.of(LEGACY.deserialize(lines[1])));
+            meta.lore(List.of(LEGACY.deserialize(lines[1]).decoration(TextDecoration.ITALIC, false)));
         }
         item.setItemMeta(meta);
         inv.setItem(slot, item);
@@ -231,7 +233,11 @@ public final class BankerGui implements Listener {
     private void setAmount(Inventory inv, int slot, Material mat, String label, String actionType, double amount) {
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(LEGACY.deserialize(label));
+        meta.displayName(LEGACY.deserialize(label).decoration(TextDecoration.ITALIC, false));
+        meta.lore(List.of(
+                Component.empty(),
+                LEGACY.deserialize("&8▶ &7Left-click to " + actionType)
+                        .decoration(TextDecoration.ITALIC, false)));
         meta.getPersistentDataContainer().set(
             new org.bukkit.NamespacedKey("rpg", "banker_action"),
             org.bukkit.persistence.PersistentDataType.STRING,
@@ -243,21 +249,18 @@ public final class BankerGui implements Listener {
     private void setAction(Inventory inv, int slot, Material mat, String label, String action) {
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(LEGACY.deserialize(label));
+        meta.displayName(LEGACY.deserialize(label).decoration(TextDecoration.ITALIC, false));
+        String verb = action.startsWith("deposit") ? "deposit all" : "withdraw all";
+        meta.lore(List.of(
+                Component.empty(),
+                LEGACY.deserialize("&8▶ &7Left-click to " + verb)
+                        .decoration(TextDecoration.ITALIC, false)));
         meta.getPersistentDataContainer().set(
             new org.bukkit.NamespacedKey("rpg", "banker_action"),
             org.bukkit.persistence.PersistentDataType.STRING,
             action);
         item.setItemMeta(meta);
         inv.setItem(slot, item);
-    }
-
-    private void fillGlass(Inventory inv, int[] slots, Material mat) {
-        ItemStack pane = new ItemStack(mat);
-        ItemMeta meta = pane.getItemMeta();
-        meta.displayName(Component.empty());
-        pane.setItemMeta(meta);
-        for (int s : slots) inv.setItem(s, pane);
     }
 
     private String getAction(ItemStack item) {

@@ -10,8 +10,7 @@ Items collected from testing and review, sorted by complexity. Pull into a sessi
 ### ~~Config examples everywhere~~ ✅ Done — all 20 config.yml files annotated
 ### ~~Shift-click in other GUIs~~ ✅ Fixed in rpg-alchemy 0.2.0 (BrewingGui) + rpg-enchanting 0.2.0 (StationGui); BankerGui has no input slots (buttons only, correctly blocks all bottom-inv clicks)
 
-### GUI formatting consistency pass
-All GUIs should follow the formatting rules in `docs/formatting.md`. Do a sweep: pane colors, title colors, lore format, button naming conventions.
+### ~~GUI formatting consistency pass~~ ✅ Done — rpg-cooking 0.3.0, rpg-alchemy 0.3.0, rpg-enchanting 0.3.0, rpg-npcs 0.4.0
 
 ---
 

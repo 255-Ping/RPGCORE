@@ -1,10 +1,13 @@
 package com.github._255_ping.rpg.alchemy;
 
 import com.github._255_ping.rpg.api.RpgServices;
+import com.github._255_ping.rpg.api.gui.GuiConfig;
 import com.github._255_ping.rpg.api.items.RpgItem;
 import com.github._255_ping.rpg.api.skills.BuiltinSkill;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -36,6 +39,8 @@ import java.util.UUID;
  */
 public final class BrewingGui implements Listener {
 
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
+
     private static final int[] INPUT_SLOTS = {10, 11, 12};
 
     private final RpgAlchemyPlugin plugin;
@@ -51,9 +56,9 @@ public final class BrewingGui implements Listener {
 
     public void open(Player player) {
         Inventory inv = Bukkit.createInventory(player, 36,
-                Component.text("Brewing Station").color(NamedTextColor.LIGHT_PURPLE));
-        ItemStack pane = paneItem();
-        for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, pane);
+                Component.text("Brewing Station").color(NamedTextColor.LIGHT_PURPLE).decorate(TextDecoration.BOLD));
+        GuiConfig gui = RpgServices.guiConfig();
+        gui.fillAll(inv);
         for (int slot : INPUT_SLOTS) inv.setItem(slot, null);
         refreshRecipes(inv);
         player.openInventory(inv);
@@ -139,15 +144,21 @@ public final class BrewingGui implements Listener {
         if (meta != null) {
             meta.displayName(Component.text(satisfied ? "Brew: " : "Recipe: ")
                     .append(Component.text(r.id())).color(NamedTextColor.WHITE)
-                    .decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+                    .decoration(TextDecoration.ITALIC, false));
             java.util.List<Component> lore = new java.util.ArrayList<>();
-            lore.add(Component.text("Inputs:").color(NamedTextColor.GRAY));
+            lore.add(Component.text("Inputs:").color(NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
             for (BrewRecipeDef.Ingredient in : r.inputs()) {
-                lore.add(Component.text("  " + in.amount() + "x " + in.itemId()).color(NamedTextColor.GRAY));
+                lore.add(Component.text("  " + in.amount() + "x " + in.itemId())
+                        .color(NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
             }
             lore.add(Component.text("Output: " + r.output().amount() + "x " + r.output().itemId())
-                    .color(NamedTextColor.AQUA));
-            lore.add(Component.text("Level " + r.requiredLevel() + "+").color(NamedTextColor.YELLOW));
+                    .color(NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false));
+            lore.add(Component.text("Level " + r.requiredLevel() + "+")
+                    .color(NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false));
+            if (satisfied) {
+                lore.add(Component.empty());
+                lore.add(LEGACY.deserialize("&8▶ &7Left-click to brew").decoration(TextDecoration.ITALIC, false));
+            }
             meta.lore(lore);
             stack.setItemMeta(meta);
         }
@@ -247,12 +258,6 @@ public final class BrewingGui implements Listener {
     }
 
     private static ItemStack paneItem() {
-        ItemStack stack = new ItemStack(Material.PURPLE_STAINED_GLASS_PANE);
-        ItemMeta meta = stack.getItemMeta();
-        if (meta != null) {
-            meta.displayName(Component.text(" "));
-            stack.setItemMeta(meta);
-        }
-        return stack;
+        return RpgServices.guiConfig().backgroundItem();
     }
 }

@@ -2,10 +2,13 @@ package com.github._255_ping.rpg.enchanting;
 
 import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.economy.Economy;
+import com.github._255_ping.rpg.api.gui.GuiConfig;
 import com.github._255_ping.rpg.api.items.RpgItem;
 import com.github._255_ping.rpg.api.skills.BuiltinSkill;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -21,6 +24,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -42,6 +46,8 @@ public final class StationGui implements Listener {
 
     public enum Mode { ENCHANTING, ANVIL }
 
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
+
     private static final int INPUT_SLOT = 11;
     private static final int RESULT_SLOT = 15;
 
@@ -58,15 +64,11 @@ public final class StationGui implements Listener {
 
     public void open(Player player, Mode mode) {
         String title = mode == Mode.ENCHANTING ? "Enchanting Table" : "Custom Anvil";
-        Inventory inv = Bukkit.createInventory(player, 45, Component.text(title).color(NamedTextColor.DARK_PURPLE));
-        // Border fill
-        ItemStack pane = paneItem();
-        for (int i = 0; i < inv.getSize(); i++) {
-            if (i == INPUT_SLOT) continue;
-            if (mode == Mode.ENCHANTING && i == RESULT_SLOT) continue;
-            if (i == 22) continue; // info panel
-            inv.setItem(i, pane);
-        }
+        Inventory inv = Bukkit.createInventory(player, 45,
+                Component.text(title).color(NamedTextColor.DARK_PURPLE).decorate(TextDecoration.BOLD));
+        GuiConfig gui = RpgServices.guiConfig();
+        gui.fillAll(inv);
+        inv.setItem(INPUT_SLOT, null);   // leave input slot empty for the player's item
         inv.setItem(22, infoItem(mode));
         player.openInventory(inv);
         open.put(player.getUniqueId(), mode);
@@ -157,7 +159,7 @@ public final class StationGui implements Listener {
             int curLevel = modifier.enchants(target).getOrDefault(def.id(), 0);
             int nextLevel = Math.min(def.maxLevel(), curLevel + 1);
             String label = "&aApply " + def.displayName() + " " + nextLevel + " &7(" + (long) def.currencyCost() + ")";
-            inv.setItem(RESULT_SLOT, simple(Material.LIME_DYE, label));
+            inv.setItem(RESULT_SLOT, simpleWithHint(Material.LIME_DYE, label, "&8▶ &7Left-click to apply"));
         } else {
             // Anvil: populate reforge + upgrade option slots based on the input item.
             ItemStack target = inv.getItem(INPUT_SLOT);
@@ -170,16 +172,18 @@ public final class StationGui implements Listener {
             for (ReforgeDef def : registry.allReforges()) {
                 if (rIdx >= 7) break;
                 if (!appliesTo(def.appliesTo(), itemType)) continue;
-                inv.setItem(19 + rIdx, simple(Material.PINK_DYE,
-                        "&dReforge: " + def.displayName() + " &7(" + (long) def.currencyCost() + ")"));
+                inv.setItem(19 + rIdx, simpleWithHint(Material.PINK_DYE,
+                        "&dReforge: " + def.displayName() + " &7(" + (long) def.currencyCost() + ")",
+                        "&8▶ &7Left-click to reforge"));
                 rIdx++;
             }
             int uIdx = 0;
             for (UpgradeDef def : registry.allUpgrades()) {
                 if (uIdx >= 7) break;
                 if (!appliesTo(def.appliesTo(), itemType)) continue;
-                inv.setItem(28 + uIdx, simple(Material.ORANGE_DYE,
-                        "&6Upgrade: " + def.displayName() + " &7(" + (long) def.currencyCost() + ")"));
+                inv.setItem(28 + uIdx, simpleWithHint(Material.ORANGE_DYE,
+                        "&6Upgrade: " + def.displayName() + " &7(" + (long) def.currencyCost() + ")",
+                        "&8▶ &7Left-click to upgrade"));
                 uIdx++;
             }
         }
@@ -311,22 +315,27 @@ public final class StationGui implements Listener {
     }
 
     private static ItemStack paneItem() {
-        ItemStack stack = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta meta = stack.getItemMeta();
-        if (meta != null) {
-            meta.displayName(Component.text(" "));
-            stack.setItemMeta(meta);
-        }
-        return stack;
+        return RpgServices.guiConfig().backgroundItem();
     }
 
     private static ItemStack simple(Material mat, String legacyName) {
         ItemStack stack = new ItemStack(mat);
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
-            meta.displayName(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-                    .legacyAmpersand().deserialize(legacyName)
-                    .decoration(net.kyori.adventure.text.format.TextDecoration.ITALIC, false));
+            meta.displayName(LEGACY.deserialize(legacyName).decoration(TextDecoration.ITALIC, false));
+            stack.setItemMeta(meta);
+        }
+        return stack;
+    }
+
+    /** Like {@link #simple} but also adds a single action-hint lore line. */
+    private static ItemStack simpleWithHint(Material mat, String legacyName, String hint) {
+        ItemStack stack = simple(mat, legacyName);
+        ItemMeta meta = stack.getItemMeta();
+        if (meta != null) {
+            meta.lore(List.of(
+                    Component.empty(),
+                    LEGACY.deserialize(hint).decoration(TextDecoration.ITALIC, false)));
             stack.setItemMeta(meta);
         }
         return stack;

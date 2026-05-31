@@ -4,6 +4,20 @@
 
 ---
 
+### rpg-cooking `0.3.0`
+- **GUI formatting pass**: title is now bold (`&6&l`). Background panes read from `rpg-core` `gui.background-material` config via `GuiConfig` instead of being hardcoded orange. Recipe tiles now suppress italic on all lore lines and show a `&8▶ &7Left-click to cook` action hint when the recipe is satisfiable.
+
+### rpg-alchemy `0.3.0`
+- **GUI formatting pass**: title is now bold (`&d&l`). Background panes read from `GuiConfig` instead of hardcoded purple. Recipe tiles now suppress italic on all lore lines and show a `&8▶ &7Left-click to brew` action hint when satisfied.
+
+### rpg-enchanting `0.3.0`
+- **GUI formatting pass**: titles are now bold (`&5&l`). Background panes read from `GuiConfig`. The enchant result button, reforge options, and upgrade options each show a `&8▶ &7Left-click to …` action hint in lore. `simple()` cleaned up to use the shared `LEGACY` field; new `simpleWithHint()` helper added for the hint pattern.
+
+### rpg-npcs `0.4.0`
+- **BankerGui formatting pass**: title is now bold (`&6&l`). Hardcoded `CYAN`/`GRAY` `fillGlass` calls replaced with `RpgServices.guiConfig().fillBackground(inv)` — background pane material is now admin-configurable. Deposit and withdraw buttons suppress italic on their display names and show `&8▶ &7Left-click to deposit / withdraw` action hints in lore. Removed unused `fillGlass` helper.
+
+---
+
 ### rpg-core `1.0.0`
 - **Block holograms**: custom block definitions now support an optional `Hologram: "&6Text"` field (and `HologramYOffset: 1.2`). A `TextDisplay` entity is spawned above every placed instance of that block type, centered over the block, at the configured Y offset above its top surface. Holograms despawn when the block is broken and re-spawn after respawn cycles. On plugin enable, stale entities from the previous session are swept before fresh ones are created. Add to any block YAML: `Hologram: "&6⚗ Brewing Station"`.
 - **Per-player GUI isolation confirmed**: `CookingGui`, `BrewingGui`, and `StationGui` each create a brand-new `Inventory` object per `open()` call. Two players clicking the same station block simultaneously receive independent inventories — no shared state, no interference. Added clarifying Javadoc to all three GUIs.
