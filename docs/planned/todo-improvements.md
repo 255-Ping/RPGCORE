@@ -113,6 +113,19 @@ Currently recipes complete instantly when the player clicks the output slot. Add
 
 ---
 
+### Timed Smelting with Persistent Progress (`rpg-smelting`) — 🟡 Medium
+Same timed-crafting treatment as cooking and brewing — apply when building `rpg-smelting` rather than tacking it on later.
+
+- Each smelting recipe YAML gains an optional `CraftTime` field (seconds; 0 or absent = instant)
+- `rpg-smelting` should use a **custom station GUI** (same pattern as `rpg-cooking` / `rpg-alchemy`) rather than hooking into the vanilla furnace, so the same progress-bar slot approach works cleanly
+- In-progress state saved to `DataStore` keyed by `<playerUUID>:<stationBlockLocation>` — same persistence model as cooking and brewing
+- If the station block is destroyed mid-smelt, ingredients drop at the block location and state clears
+- On completion, output appears in the output slot with a sound cue
+- Ingredient slots lock during an active smelt — player cannot swap them mid-craft
+- All timing parameters configurable in `rpg-smelting/config.yml`
+
+---
+
 ### Enchanting: Costs Minecraft XP (`rpg-enchanting`) — 🟡 Medium
 Currently enchanting costs in-game currency only. Add Minecraft (vanilla) XP cost:
 
@@ -163,6 +176,34 @@ goblin:
 - `weighted-by-damage` — each damager's chance is proportional to % of damage dealt
 
 **Also applies to:** dungeon loot chests, loot chest blocks, future fishing loot, future farming loot drops.
+
+---
+
+### Telekinesis Effect — Drops Straight to Inventory (`rpg-enchanting` / `rpg-core`) — 🟡 Medium
+A `telekinesis` property that intercepts mob-drop and block-break item entities and delivers them directly into the player's inventory instead of spawning them on the ground. Needs to be usable as an **enchant**, a **reforge**, or an **upgrade book** — the delivery mechanism should be identical regardless of how the player obtained it.
+
+**Implementation:**
+- Add a `Telekinesis: true` flag to `RpgItem` (readable via PDC on the `ItemStack`) — set by the enchant/reforge/upgrade application path
+- In `EntityDeathListener` and `BlockBreakListener`, after computing drops, check the player's held item and full equipped set for the telekinesis flag
+- If present and the player's inventory has space: call `player.getInventory().addItem(drop)` and cancel the item entity spawn
+- If inventory is full: fall back to normal ground drop + send `&cInventory full — item dropped!` action bar message
+- Configurable in `config.yml` which drop sources it applies to: `telekinesis.applies-to: [mob_drops, block_drops, both]`
+
+**Three delivery paths (all mark the same PDC flag):**
+- **Enchant** — `telekinesis` enchant applicable to weapons and tools; added via the enchanting station
+- **Reforge** — a `Telekinetic Edge` reforge stone that applies the flag to a weapon or tool
+- **Upgrade** — a `Telekinesis Scroll` upgrade book applicable to any weapon/tool
+
+**Example YAML definitions to ship in defaults:**
+```yaml
+# enchants/example.yml
+telekinesis:
+  DisplayName: "&bTelekinesis"
+  Description: "Drops teleport straight to your inventory."
+  Rarity: RARE
+  AppliesTo: [SWORD, AXE, PICKAXE, SHOVEL, HOE, BOW, WAND]
+  MaxLevel: 1
+```
 
 ---
 
@@ -496,6 +537,51 @@ Admins and players have no visibility into their currency history. Add a transac
   - No `[player]` arg = view your own; with arg requires `rpg.economy.log.others`
 - Reason strings: calling systems should pass a human-readable tag (e.g., `"quest:first_kill reward"`, `"npc:shop purchase"`, `"auction:sale proceeds"`)
 - Useful for diagnosing currency duplication bugs and support tickets
+
+---
+
+### Permission System: Consistency Audit + Fill Gaps (all plugins) — 🟡 Medium
+Every command in the suite should have a declared permission node. Several commands (especially ones being added — `/sethome`, `/setwarp`, `/home`, `/warp`, `/kit`, `/inbox`, `/top`, etc.) and existing ones may be missing permissions entirely or have inconsistent naming.
+
+**Convention to adopt suite-wide:**
+```
+rpg.<plugin-short-name>.<verb>[.<qualifier>]
+```
+Plugin short names: `core`, `admin`, `npcs`, `enchanting`, `alchemy`, `cooking`, `mining`, `farming`, `fishing`, `quests`, `guilds`, `parties`, `trade`, `accessories`, `holograms`, `regions`, `dungeons`, `economy`, `hud`, `chat`
+
+Qualifiers: `.others` (viewing/editing another player's data), `.admin` (elevated admin version of a command), `.bypass` (skip a restriction)
+
+**Examples of what the convention produces:**
+| Command | Permission |
+|---|---|
+| `/sethome` | `rpg.admin.home.set` |
+| `/home` | `rpg.admin.home.use` |
+| `/delhome` | `rpg.admin.home.delete` |
+| `/homes` | `rpg.admin.home.list` |
+| `/setwarp` | `rpg.admin.warp.manage` |
+| `/warp` | `rpg.admin.warp.use` |
+| `/kit` | `rpg.admin.kit.use` |
+| `/npc` | `rpg.npcs.admin` |
+| `/stats <other>` | `rpg.core.stats.view.others` |
+| `/profile <other>` | `rpg.core.profile.view.others` |
+| `/money log <other>` | `rpg.economy.log.others` |
+| `/enchanting give` | `rpg.enchanting.admin.give` |
+| `/top` | `rpg.core.leaderboard.view` |
+| `/inbox` | `rpg.core.mail.use` |
+
+**Audit steps:**
+1. For every plugin, read `plugin.yml` → `commands` section and `permissions` section
+2. Identify commands with no permission declared
+3. Identify permissions that don't follow the naming convention above
+4. Rename inconsistent nodes (bump plugin versions appropriately)
+5. Ensure every permission has `default: true` for player-facing commands and `default: op` for admin commands
+6. Add a `docs/permissions.md` reference page listing every permission node in the suite in one place — the go-to for server admins setting up LuckPerms groups
+
+**Known existing inconsistencies to fix:**
+- `rpg.core.stats.other` → should be `rpg.core.stats.view.others` (singular vs plural + missing "view")
+- `rpg.profile.view.others` and `rpg.profile.private` use `rpg.profile.*` but should be `rpg.core.profile.*`
+- `rpg.economy.log.others` is correct format; verify it actually exists in `plugin.yml`
+- `rpg.chat.use.staff` is correct; verify others in `rpg-chat` match the pattern
 
 ---
 

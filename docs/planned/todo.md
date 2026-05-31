@@ -55,36 +55,39 @@
 13. 🔴 🟢 **Player homes + warps** — expected baseline for any server
 14. 🔴 🟢 **Starter kits** — new player experience
 15. 🔴 🟢 **Resource pack auto-delivery** — practical baseline, 30-minute job
-16. 🔴 🟢 **Extract smelting + crafting to own plugins** — cleanup, low risk
-17. 🟠 🟢 **Document `backend.yml` vs `config.yml`** — quick doc note only
-18. 🟠 🟢 **Vault provider bridge** — quick adapter, enables third-party plugin compatibility
-19. 🟠 🟢 **Vanilla suppression remaining flags** — audit + wire missing handlers
-20. 🟠 🟡 **Region enter/exit messages + more flags** — high-value QoL
-21. 🟠 ⚫ **Dungeon flesh-out** — entry requirements + loot grants (fix enter bug first)
-22. 🟠 🔴 **Stats GUI redesign** — highest-visibility player feature
-23. 🔴 🔴 **Achievement system** — player retention + milestone tracking
-24. 🔴 🟡 **Leaderboards** — community engagement
-25. 🔴 🟡 **Boss bar system** — needed by dungeons + world events
-26. 🔴 🟡 **Sign-entry utility** — needed before AH, Bazaar, or Guild Bank GUI
-27. 🔴 🔴 **Offline mail / inbox system** — needed before AH and offline achievement rewards
-28. 🟠 🟡 **HUD improvements** — scoreboard, tablist, PAPI support, ability cooldowns
-29. 🔴 🟡 **PlaceholderAPI support** — integrates with HUD improvements
-30. 🟠 🟡 **MagicFind stat implementation** — wire up the `MagicFindAffected` loot pool flag
-31. 🟠 🟡 **Economy transaction log** — admin debugging + player history
-32. 🟠 🟡 **Item set bonuses**
-33. 🟠 🟡 **Fishing content slice**
-34. 🟠 🟡 **Quest log GUI + chains + repeatable quests**
-35. 🟠 🔴 **Guild bank + rank GUI**
-36. 🔴 🔴 **Custom enchantment ability triggers** — ability-fire enchants (on_hit, on_kill, etc.)
-37. 🟠 🔴 **RPG-Farming redesign**
-38. 🔴 🟡 **Elite/champion mob variants**
-39. 🟠 🔴 **Mob AI profiles flesh-out** (ranged_kiter, boss, swarming, pack_hunter)
-40. 🟠 🔴 **Mob patrol waypoints** — admin-defined walk paths for mobs + NPCs
-41. 🔴 ⚫ **World events + world boss**
-42. 🔴 🟡 **Salvaging system**
-43. 🔴 ⚫ **Auction House** (needs sign-entry + mail first)
-44. 🔴 🔴 **Bazaar**
-45. 🔵 🟡 **Party / Guild / Quest GUI conversions**
-46. 🔴 ⚫ **Pets system** (`rpg-pets`) — long-term, build in phases
-47. 🟠 🟡 **Unit test coverage** — ongoing, add tests alongside any new system
-48. 📄 🟢 **Docs pass** — fill stubs, add missing plugin pages
+16. 🔴 🟢 **Extract smelting + crafting to own plugins** — cleanup, low risk; build timed crafting into `rpg-smelting` from day one
+17. 🟠 🟡 **Timed smelting** — same CraftTime + DataStore persistence model as cooking/brewing; goes in `rpg-smelting`
+18. 🟠 🟡 **Permission system consistency audit** — every command gets a permission, all nodes follow `rpg.<plugin>.<verb>[.<qualifier>]` convention, add `docs/permissions.md`
+19. 🟠 🟡 **Telekinesis effect** — drops → inventory enchant/reforge/upgrade; ships as enchant + reforge stone + upgrade scroll
+20. 🟠 🟢 **Document `backend.yml` vs `config.yml`** — quick doc note only
+21. 🟠 🟢 **Vault provider bridge** — quick adapter, enables third-party plugin compatibility
+22. 🟠 🟢 **Vanilla suppression remaining flags** — audit + wire missing handlers
+23. 🟠 🟡 **Region enter/exit messages + more flags** — high-value QoL
+24. 🟠 ⚫ **Dungeon flesh-out** — entry requirements + loot grants (fix enter bug first)
+25. 🟠 🔴 **Stats GUI redesign** — highest-visibility player feature
+26. 🔴 🔴 **Achievement system** — player retention + milestone tracking
+27. 🔴 🟡 **Leaderboards** — community engagement
+28. 🔴 🟡 **Boss bar system** — needed by dungeons + world events
+29. 🔴 🟡 **Sign-entry utility** — needed before AH, Bazaar, or Guild Bank GUI
+30. 🔴 🔴 **Offline mail / inbox system** — needed before AH and offline achievement rewards
+31. 🟠 🟡 **HUD improvements** — scoreboard, tablist, PAPI support, ability cooldowns
+32. 🔴 🟡 **PlaceholderAPI support** — integrates with HUD improvements
+33. 🟠 🟡 **MagicFind stat implementation** — wire up the `MagicFindAffected` loot pool flag
+34. 🟠 🟡 **Economy transaction log** — admin debugging + player history
+35. 🟠 🟡 **Item set bonuses**
+36. 🟠 🟡 **Fishing content slice**
+37. 🟠 🟡 **Quest log GUI + chains + repeatable quests**
+38. 🟠 🔴 **Guild bank + rank GUI**
+39. 🔴 🔴 **Custom enchantment ability triggers** — ability-fire enchants (on_hit, on_kill, etc.)
+40. 🟠 🔴 **RPG-Farming redesign**
+41. 🔴 🟡 **Elite/champion mob variants**
+42. 🟠 🔴 **Mob AI profiles flesh-out** (ranged_kiter, boss, swarming, pack_hunter)
+43. 🟠 🔴 **Mob patrol waypoints** — admin-defined walk paths for mobs + NPCs
+44. 🔴 ⚫ **World events + world boss**
+45. 🔴 🟡 **Salvaging system**
+46. 🔴 ⚫ **Auction House** (needs sign-entry + mail first)
+47. 🔴 🔴 **Bazaar**
+48. 🔵 🟡 **Party / Guild / Quest GUI conversions**
+49. 🔴 ⚫ **Pets system** (`rpg-pets`) — long-term, build in phases
+50. 🟠 🟡 **Unit test coverage** — ongoing, add tests alongside any new system
+51. 📄 🟢 **Docs pass** — fill stubs, add missing plugin pages

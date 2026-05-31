@@ -162,7 +162,8 @@ Smelting recipe loading (`SmeltingLoader.java`) currently lives in `rpg-core`. I
 - Move `SmeltingLoader` and any smelting-specific YAML content out of `rpg-core` into the new plugin
 - The `smelting: true` vanilla-suppression flag stays in `rpg-core/config.yml` — it's a world-toggle, not addon-specific
 - `rpg-core` soft-depends on `rpg-smelting`; if the plugin isn't loaded, smelting suppression still applies but no custom recipes are registered
-- Stub out a `config.yml` and `recipes/example.yml` the same way cooking does; flesh out further functionality later
+- Stub out a `config.yml` and `recipes/example.yml` the same way cooking does
+- **Build timed crafting in from the start** — `rpg-smelting` should support a `CraftTime` field on recipes (same model as cooking/alchemy). See [Timed Smelting](todo-improvements.md) in Improvements for the full spec. Don't ship the plugin without it — retrofitting timed crafting later is messier than including it upfront.
 
 ### Extract Crafting → `rpg-crafting` Plugin (`rpg-core` / new `rpg-crafting`) — 🟢 Easy
 Same rationale as smelting. `RecipeLoader.java` (shaped/shapeless crafting) currently lives in `rpg-core`.
