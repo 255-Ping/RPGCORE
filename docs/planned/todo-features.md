@@ -16,24 +16,61 @@ Conspicuously absent from the suite. Every RPG server needs these.
 ---
 
 ### Achievement System (`rpg-core` or new `rpg-achievements`)
-No achievement tracking exists anywhere in the suite. RPG servers rely on achievements heavily for progression milestones and player retention.
+No achievement tracking exists anywhere in the suite.
 
-- Admin-defined achievements in YAML: id, display name, description, hidden (secret) flag, rewards (currency, skill XP, items)
-- Trigger types: stat threshold (`money >= 1000000`), skill level (`mining >= 25`), kill count (`mob: goblin >= 100`), quest completion, item obtained, etc.
-- Per-player progress tracked via `DataStore`
-- Achievement unlock toast notification (title or action bar)
-- `/achievements` command — opens a GUI browser (locked/unlocked, categories)
-- Optional: link to `Bukkit.Achievements` or custom only
+**Achievement YAML** (`plugins/rpg-core/achievements/<file>.yml`):
+```yaml
+first_kill:
+  DisplayName: "&cFirst Blood"
+  Description: "Kill your first custom mob."
+  Category: combat
+  Hidden: false          # true = doesn't show until unlocked (secret achievement)
+  Rewards:
+    Currency: 500
+    SkillXp: { combat: 100 }
+    Items: [{ Item: strength_potion, Amount: 1 }]
+  Trigger:
+    Type: kill_count
+    Mob: any
+    Count: 1
+```
+
+**Trigger types:**
+| Type | Fields | Fires when |
+|---|---|---|
+| `kill_count` | `Mob: <id or any>`, `Count: N` | Player kills N of that mob type |
+| `skill_level` | `Skill: <id>`, `Level: N` | Skill reaches level N |
+| `money_earned` | `Amount: N` | Lifetime currency earned reaches N |
+| `quest_complete` | `Quest: <id>` | Specific quest is completed |
+| `item_obtain` | `Item: <id>` | Player picks up that item |
+| `stat_reach` | `Stat: <id>`, `Value: N` | Player's effective stat reaches N |
+| `manual` | — | Only unlockable via `/achievement give <id> <player>` |
+
+- Per-player progress for count-based triggers tracked in `DataStore`
+- On unlock: title toast + configurable broadcast (`&6<player> unlocked &e<achievement>!`), broadcast toggleable in config
+- `/achievements` — opens a 54-slot GUI browser with category tabs (locked achievements shown as gray locked items if not hidden; hidden ones invisible until unlocked)
+- Progress-based achievements show a progress bar in lore (e.g., `47/100 kills`)
+- Goes in `rpg-core` to avoid a new plugin dependency chain; can be split to `rpg-achievements` later
 
 ---
 
 ### Boss Bar System (`rpg-core`)
-No boss bar support exists. Needed for dungeons (progress/timer), world events, and large mobs.
+No boss bar support exists. Needed by dungeons, world events, and world boss mobs.
 
-- API: `BossBarService.show(player, text, progress, color, style)` / `hide(player, barId)`
-- Dungeon integration: show a "Mobs Remaining: X/Y" bar for all players in the instance
-- World boss integration (see World Events below)
-- Configurable per use-case; bars auto-hide on death / dungeon exit
+**API surface** (`BossBarService` component on the Game object):
+- `show(player, barId, text, progress, color, style)` — shows or updates a named bar for that player
+- `hide(player, barId)` — removes the bar
+- `update(player, barId, text, progress)` — update text/progress without recreating
+- `hideAll(player)` — removes all RPG-managed bars for that player on disconnect/death/exit
+
+**barId** is a string key (e.g., `"dungeon:instance-uuid"`, `"worldboss:kraken"`). Players can have multiple bars simultaneously (e.g., a dungeon timer bar + a world boss HP bar at the same time).
+
+**Usage:**
+- **Dungeons:** `"Mobs Remaining: X / Y"` bar shown to all players in an instance, updated on each mob kill. Removed on completion or player exit.
+- **World boss:** shared HP bar visible to all players in the event area. Title includes boss name + HP %.
+- **Timed events:** countdown bar (progress counts down from 1.0 to 0.0 over the event duration)
+
+**Reconnect behaviour:** boss bars are client-side and lost on reconnect. `BossBarService` must store the current active bar state per player and re-send them on `PlayerJoinEvent` / `PlayerRespawnEvent`.
 
 ---
 
@@ -47,14 +84,23 @@ Periodic server-wide events add communal engagement that solo play can't. Planne
 
 ---
 
-### Salvaging System (`rpg-core` or `rpg-enchanting`)
-Players break down unwanted RPG items into materials at a salvage station (custom block type).
+### Salvaging System (`rpg-enchanting`)
+Players break down unwanted RPG items into materials at a salvage station (custom block type with `StationType: salvage`). Lives in `rpg-enchanting` since it's part of the item-modification workflow alongside enchanting and reforging.
 
-- Right-clicking a salvage-station block opens a 1-slot GUI
-- Place an RPG item → shows preview of what you'll get
-- Confirm button → item consumed, materials given
-- Salvage yield configurable per rarity or per item YAML (`Salvage: [list]`)
-- Admins can mark items as non-salvageable (`Salvageable: false`)
+**GUI (27 slots):**
+- Slot 11: input slot — place the RPG item here
+- Slot 13: preview slot (read-only) — shows what materials will be returned. Updates live as the input changes.
+- Slot 15: Salvage button — green when valid, red/gray when not. Shows item name + rarity being salvaged.
+- Remaining slots: GUI background panes
+
+**Yield logic:**
+- Default yield by rarity: `Common → 1 common material`, `Uncommon → 2`, `Rare → 1 rare + 1 common`, etc. Configurable defaults in `config.yml`
+- Per-item override: `Salvage: [{ Item: iron_chunk, Amount: 3 }]` in item YAML
+- Non-RPG items (vanilla items without PDC tag) can optionally be salvaged if `allow-vanilla-salvage: true` in config (drops nothing by default)
+- Items marked `Salvageable: false` in YAML show an error on the button: `§cThis item cannot be salvaged`
+- Quest items (`Type: QUEST`) are always non-salvageable regardless of the YAML field
+
+**Admin commands:** `/salvage reload` to reload yield config.
 
 ---
 
@@ -82,10 +128,16 @@ Wearing multiple pieces of the same named set grants additional stat bonuses. Ve
 ### Leaderboards (`rpg-core`)
 No `/top` or leaderboard command exists anywhere in the suite.
 
-- `/top [skill|money|level]` — shows top N players for the chosen category
-- Reads from `DataStore` — either a live scan or a cached snapshot updated on configurable interval
-- Configurable number of entries shown, update interval
-- `/top` with no args opens a GUI with category tabs
+- `/top [category]` — categories: `money`, `level` (overall), and one per skill (`combat`, `mining`, etc.)
+- `/top` with no args opens a 54-slot GUI with category tabs across the top row
+- Each entry shows: rank number, player head, player name, value (formatted with Money.Format for currency, or level number for skills)
+
+**Performance note:** scanning all player records in `DataStore` on demand is O(n) over all players and will be slow on large servers. Use a **cached snapshot** approach:
+- A background task re-builds top-N lists on a configurable interval (`leaderboard-refresh-seconds: 300` in config)
+- The cache stores the top 10 (or configurable) entries per category
+- `/top` reads from the cache — always fast, potentially slightly stale
+- Cache is rebuilt on plugin enable and on schedule
+- New/offline players are included in snapshots since they're in `DataStore` regardless of online status
 
 ---
 
@@ -136,11 +188,18 @@ Needed everywhere a player types a numeric value (currency amount, quantity, pri
 ---
 
 ### PlaceholderAPI Support (`rpg-hud` / `rpg-core`)
-Allow PlaceholderAPI placeholders (e.g., `%player_name%`, `%vault_balance%`) to be used anywhere RPGCORE reads a template string — scoreboard lines, tablist header/footer, nametag format, action bar format, etc.
+Allow PlaceholderAPI placeholders (e.g., `%player_name%`, `%vault_balance%`) anywhere RPGCORE reads a template string — scoreboard lines, tablist header/footer, nametag format, action bar format, etc.
 
-- Soft-depend on PlaceholderAPI in `rpg-hud` and `rpg-core`
-- In `PlaceholderResolver.resolve()`, if PAPI is present, run `PlaceholderAPI.setPlaceholders(player, template)` before or after RPGCORE's own `{placeholder}` pass
-- Also register RPGCORE's own stats/skills/balance as a PAPI expansion so other plugins can read them
+**Integration (two directions):**
+
+1. **PAPI → RPGCORE** (consume external placeholders):
+   - Add `softdepend: [PlaceholderAPI]` to `rpg-hud/plugin.yml` and `rpg-core/plugin.yml`
+   - In `PlaceholderResolver.resolve()`, if PAPI is loaded, run `PlaceholderAPI.setPlaceholders(player, template)` as a second pass after RPGCORE's own `{...}` substitution (so both syntaxes work in the same template line)
+
+2. **RPGCORE → PAPI** (expose RPG stats to other plugins):
+   - Register a `PlaceholderExpansion` class in `rpg-core` (e.g., `RpgCorePlaceholders`) with identifier `rpgcore`
+   - Exposes: `%rpgcore_stat_<id>%`, `%rpgcore_skill_<id>_level%`, `%rpgcore_skill_<id>_xp%`, `%rpgcore_balance%`, `%rpgcore_health%`, `%rpgcore_mana%`, `%rpgcore_guild%`, `%rpgcore_party_size%`
+   - Register it on enable only if PAPI is present (soft-dep pattern: `Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")`)
 
 ---
 

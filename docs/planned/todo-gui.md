@@ -41,6 +41,7 @@ These replace or supplement existing command interfaces. All are in `docs/planne
 | Quest log GUI (`/quests`) | `rpg-quests` | Chat-list only |
 | Admin Spawner GUI (`/spawner`) | `rpg-core` | Fields set via `/spawner set`; GUI planned |
 | Hologram Editor GUI (`/holograms`) | `rpg-holograms` | Commands work; GUI editor deferred |
+| NPC Editor GUI (`/npc`) | `rpg-npcs` | All commands work; GUI editor deferred |
 
 ### Party GUI (`/party`)
 - Member list with roles, online/offline status, combat status
@@ -67,5 +68,18 @@ These replace or supplement existing command interfaces. All are in `docs/planne
 - Line slots: click line slot → chat-entry for line text
 - Add / remove / reorder lines in GUI
 - Click-action support on lines (run command, open shop)
+
+### NPC Editor GUI (`/npc`)
+Long-form alternative to the command-based editing for non-technical admins:
+- Open with `/npc edit <id>`
+- Shows current settings: entity style, entity type, skin name, behavior type, look-at-players toggle
+- Click style/type slots → cycle through options directly
+- Click skin slot → chat-entry for player name (triggers `SkinFetcher`)
+- Click behaviour slot → opens a sub-GUI:
+  - **Dialogue:** lists all current lines; click a line slot → chat-entry to edit; Add Line / Clear All buttons
+  - **Shop:** lists shop entries with buy/sell prices; Add Item (chat-entry for item id + sign-entry for prices); Remove buttons
+  - **Quest:** shows current quest id; click → chat-entry for quest id
+  - **Banker:** shows bank name and interest %; click each → sign-entry or chat-entry
+- Confirm / Discard buttons; changes saved immediately on confirm
 
 ---

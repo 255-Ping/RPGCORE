@@ -76,9 +76,11 @@ Currently recipes complete instantly when the player clicks the output slot. Add
 
 - Each recipe YAML gains an optional `CraftTime` field (in seconds; 0 or absent = instant, same as now)
 - When a player starts a recipe in the GUI a progress bar fills over the configured duration
-- **If the player closes the GUI mid-craft**, the in-progress state is saved to `DataStore` per-player per-station-block: which recipe is being crafted, how much time has elapsed, and the ingredients that were consumed
-- **When the player reopens that station GUI**, it restores the in-progress state — shows the recipe filling up from where it left off (not restarting)
-- On completion the output appears in the output slot as normal; the persisted state is cleared
+- **Visual progress feedback** — the output slot item cycles through a configurable set of `CustomModelData` values (e.g., empty flask → quarter full → half full → full) so players can see progress visually. Alternatively, show a dedicated progress-bar item in a fixed slot using filled/unfilled block items (e.g., lime vs gray glass panes). The approach should be consistent between cooking and brewing.
+- **If the player closes the GUI mid-craft**, the in-progress state is saved to `DataStore` keyed by `<playerUUID>:<stationBlockLocation>`: which recipe is being crafted, how much time has elapsed, and the ingredients that were consumed (so they can't be double-spent)
+- **When the player reopens that station GUI**, it restores the in-progress state — progress resumes from where it left off (not restarting). The ingredient slots show the items locked in for the current craft; players can't swap them out mid-craft.
+- On completion the output appears in the output slot with a sound cue; the persisted state is cleared
+- If the station block is destroyed mid-craft, the ingredients should be dropped at the block location and the persisted state cleared
 - Applies to both cooking stations (`rpg-cooking`) and brewing stations (`rpg-alchemy`)
 
 ---
@@ -86,27 +88,53 @@ Currently recipes complete instantly when the player clicks the output slot. Add
 ### Enchanting: Costs Minecraft XP (`rpg-enchanting`)
 Currently enchanting costs in-game currency only. Add Minecraft (vanilla) XP cost:
 
-- Each enchant YAML gains an optional `XpCost` field (levels or points; admins choose unit in config)
-- The cost is deducted from the player's vanilla XP bar on apply; if they don't have enough the apply is blocked with a message
-- **Mob XP drops** — admins should be able to configure how much vanilla XP custom mobs drop in the mob YAML (separate from skill XP). This feeds the pool players spend on enchanting.
-- **Loot pool XP** — loot pool entries (see below) should also support an `Exp` field that drops vanilla XP orbs
+- Each enchant YAML gains an optional `XpCost` field (integer levels; e.g., `XpCost: 5` costs 5 XP levels). The unit is always levels, not raw points, to match the mental model players have from vanilla enchanting.
+- The XP cost is shown on the **apply button** in the enchanting GUI — e.g., `&aApply &7| &b5 XP levels &7| &e250 coins`. Both costs must be met; if either is insufficient the button shows in red with the blocking reason.
+- The cost is deducted from the player's vanilla XP bar on apply; if they don't have enough XP the apply is blocked with a clear message
+- **Mob XP drops** — add an `Exp` field to mob YAML (separate from skill XP / `CombatExp`). This is vanilla XP orbs dropped on death. Currently custom mobs drop 0 XP. This feeds the enchanting economy.
+- **Loot pool XP** — loot pool entries (see Loot Pool System below) support an `Exp` field for vanilla XP orbs on that entry rolling
+- Admins can set `XpCost: 0` or omit the field to keep an enchant currency-only
 
 ---
 
 ### Loot Pool System (`rpg-core`)
-Admins need a way to define reusable named loot pools and assign them to mobs (and dungeons, chests, etc.) rather than embedding loot inline everywhere. Design:
+Admins need a way to define reusable named loot pools and assign them to mobs (and dungeons, chests, etc.) rather than embedding loot inline everywhere. This also fixes the broken external `LootTable: <id>` reference system (see Loot Tables entry below — both should be consolidated into this).
 
-- New content folder: `plugins/rpg-core/loot-pools/<file>.yml`
-- Each pool has a list of entries, each with:
-  - `Item` — custom item id or vanilla material
-  - `Chance` — drop chance (0.0–100.0)
-  - `Amount` / `MinAmount` / `MaxAmount` — quantity range
-  - `Exp` — vanilla XP to drop (orbs) on this entry rolling
-  - `CombatExp` — skill XP to award to the killer's combat skill
-  - `MagicFindAffected` — boolean, scales chance by killer's `MAGIC_FIND` stat
-- Pools are referenced by id from mob YAML (`LootPool: my_pool_id`), dungeon loot chest config, etc.
-- Multiple pools can be assigned to one mob (all roll independently)
-- This is an extension of / replacement for the current inline loot table system — external `LootTable: <id>` references that currently don't work (see [Improvements — Loot Tables](todo-improvements.md)) should be consolidated into this
+**Pool definition** — new content folder: `plugins/rpg-core/loot-pools/<file>.yml`
+
+```yaml
+goblin_drops:
+  Attribution: last-hit           # last-hit | top-damager | split-equal | weighted-by-damage
+  RollMode: per-player            # per-player | shared
+  Rolls:
+    - { Item: goblin_fang,    Chance: 60.0, Min: 1, Max: 2 }
+    - { Item: gold_nugget,    Chance: 40.0, Min: 1, Max: 5, MagicFindAffected: true }
+    - { Item: rare_goblin_hat, Chance: 1.0, Min: 1, Max: 1, MagicFindAffected: true }
+  Guaranteed:
+    - { Item: coin_pouch, Min: 1, Max: 1 }
+  Exp: 15              # vanilla XP orbs dropped on kill (separate from any entry-level Exp)
+  CombatExp: 50        # skill XP awarded to killer's combat skill
+```
+
+Each entry can also carry its own `Exp` field (vanilla XP orbs if *that specific entry* rolls).
+
+**Usage in mob YAML:**
+```yaml
+goblin:
+  LootPool: goblin_drops          # single pool by id
+  # or
+  LootPools:                      # multiple pools, all roll independently
+    - goblin_drops
+    - rare_event_pool
+```
+
+**Attribution modes** (same as inline — important to document clearly):
+- `last-hit` — loot goes to whoever landed the killing blow
+- `top-damager` — loot goes to whoever dealt the most damage
+- `split-equal` — every damager gets the same loot roll
+- `weighted-by-damage` — each damager's chance is proportional to % of damage dealt
+
+**Also applies to:** dungeon loot chests, loot chest blocks, future fishing loot, future farming loot drops.
 
 ---
 
@@ -145,13 +173,24 @@ Currently mobs play Minecraft's default death animation (fall to side, then desp
 ---
 
 ### Stats GUI Redesign (`rpg-core`)
-Currently `/stats` prints a chat dump. Planned inventory GUI:
-- 4 armor slots + main-hand slot showing actual worn items
-- Companion/pet slot placeholder
-- Accessories count from `rpg-accessories`
-- Stats grouped into categories on named items (Combat, Gathering, Economy, etc.)
-- "Send trade request" button → fires trade invite
-- "View auctions" button → filtered AH view (blocked until AH is built)
+Currently `/stats` prints a chat dump. Planned 54-slot (6-row) inventory GUI layout:
+
+```
+[ Helmet ]  [ Empty ]  [ Empty ]  [ Combat ]  [ Survival ]  [ Caster  ]  [ Empty ]  [ Empty ]  [ Empty ]
+[ Chest  ]  [ Empty ]  [ Empty ]  [ Gather ]  [ Loot     ]  [ Wisdom  ]  [ Empty ]  [ Empty ]  [ Empty ]
+[ Legs   ]  [ Empty ]  [ Empty ]  [  ...   ]  [   ...    ]  [  ...    ]  [ Empty ]  [ Empty ]  [ Empty ]
+[ Boots  ]  [ Empty ]  [ Empty ]  [ Empty ]  [ Empty ]  [ Empty ]  [ Empty ]  [ Empty ]  [ Empty ]
+[ Weapon ]  [ Offhand]  [ Pet ▫️]  [ Empty ]  [ Empty ]  [ Empty ]  [ Empty ]  [Trade⚔️]  [  AH 🏪]
+[ BG ][ BG ][ BG ][ BG ][ BG ][ BG ][ BG ][ BG ][ BG ]
+```
+
+- **Left column (rows 1–4):** actual worn gear items (helmet/chest/legs/boots) — clicking does nothing, just shows the item tooltip
+- **Row 5 left:** main-hand weapon + offhand + companion/pet slot placeholder (BARRIER item until rpg-pets exists)
+- **Centre columns:** stat category items — one named item per category (Combat, Survival, Caster, Mobility, Gathering, Loot, Wisdom). Hovering shows all stats in that category with current value
+- **Bottom-right:** "Send Trade Request" button (fires `/trade <player>` if viewing someone else; hidden when viewing self); "View Auctions" button (grayed out until AH is built)
+- **Active set bonuses** displayed as a named item in one of the centre slots if any sets are active
+- Title: `<PlayerName>'s Stats` (supports viewing other players — `/stats <player>`)
+- `/stats` with no args opens your own; `/stats <player>` opens theirs (requires `rpg.core.stats.other` permission)
 
 ---
 
@@ -223,10 +262,24 @@ Current: bag opens, only ACCESSORY items allowed, stats aggregate, persistence w
 ---
 
 ### Quest Log GUI (`rpg-quests`)
-Current: `/quest list` prints to chat. Planned inventory GUI:
-- Available / Active / Completed tabs
-- Click quest → detail view with objectives (progress bars), rewards, accept / abandon button
-- Quest progress action-bar messages already work
+Current: `/quest list` prints to chat. Planned 54-slot inventory GUI:
+
+**Main list view:**
+- Three tab buttons at the top: `Active`, `Available`, `Completed`
+- Quest entries fill the remaining slots — each is a named item (book for active, map for available, checkmark for completed)
+- Item lore shows: quest display name, brief description (first line), objective count or `Completed` tag
+- Pagination if more quests than slots (Previous/Next buttons in bottom corners)
+- `/quests` command opens it; `/quest <id>` opens directly to that quest's detail view
+
+**Detail view (click a quest):**
+- Quest display name as inventory title
+- Description lines shown on a named item in the top-left
+- Objectives listed as separate items with current/required count (e.g., `Kill Goblin: 3/10`)
+  - Completed objectives show a green checkmark; incomplete show a red X
+  - Progress bar in the item lore using filled/unfilled block characters
+- Rewards shown as a separate item listing currency, skill XP, and item rewards
+- Accept button (green) / Abandon button (red) / Back button
+- If a quest requires a prerequisite not yet completed, the accept button is grayed out and says which quest is blocking
 
 ---
 
@@ -310,9 +363,20 @@ The `/npc` command is bare-bones and requires YAML editing for almost everything
 - `/npc setbehavior quest <id> <questId>` works but offers no tab-complete for quest IDs
 - Add tab-complete for the fourth argument pulling from the quest registry (soft-dep lookup)
 
+**NPC look-at-player (new):**
+- NPCs should smoothly rotate to face the nearest player within a configurable radius, making them feel alive
+- Add a `LookAtPlayers: true` boolean field per NPC YAML (default from `config.yml → npc.look-at-players.enabled`)
+- Add `LookRadius: 8` (blocks) per NPC, also with a global default in `config.yml`
+- A repeating Bukkit task (interval configurable, e.g., every 2 ticks) scans all loaded NPC entities that have `LookAtPlayers: true`, finds the nearest online player within `LookRadius`, and rotates the entity to face them
+- For **entity-style NPCs**: update `yaw` via `entity.teleport(entity.getLocation().setDirection(dir))` — this is the cleanest way to rotate an entity without moving it
+- For **PLAYER-style NPCs**: requires sending a head-rotation packet (`ClientboundRotateHeadPacket` / `ClientboundMoveEntityPacket`) to all nearby players each tick — NMS, same pattern as `FakePlayerNpc`
+- If no player is within `LookRadius`, the NPC returns to its default facing direction (stored `yaw`/`pitch` from YAML)
+- Add `/npc setlook <id> true|false` command and include it in tab-complete
+- Add it to `/npc info <id>` output
+
 **General help + info:**
 - `/npc` with no args shows a one-liner — should show a formatted list of all subcommands with brief descriptions
-- Add `/npc info <id>` — shows all current settings: location, entity style, entity type, skin, behavior type, dialogue line count, shop item count, quest ID
+- Add `/npc info <id>` — shows all current settings: location, world, entity style, entity type, skin name, behavior type, look-at-players enabled, dialogue line count, shop item count, quest ID
 
 ---
 
@@ -368,11 +432,19 @@ There's currently no way for a player to see how long is left on an ability cool
 ---
 
 ### Player Profile Command (`rpg-core`)
-No way to view another player's public info. Add:
+No way to view another player's public info. Add `/profile [player]`:
 
-- `/profile [player]` — shows level, guild, party, top stats, recent achievements
-- Opens an inventory GUI (head item for the target player, gear slots if desired)
-- Respects privacy: can hide certain info via permission (`rpg.profile.private`)
+- No args = your own profile; with a player name = their profile (requires `rpg.profile.view.others`)
+- **GUI layout (27 or 54 slots):**
+  - Player head item (top-left) with name, guild tag, party status in lore
+  - Top skill levels shown as named items (e.g., "⚔ Combat Lv.12", "⛏ Mining Lv.8")
+  - Most valuable equipped gear slot items (display only)
+  - Balance shown on a gold coin item
+  - Recent achievements (last 3 unlocked) shown as named items
+  - "Send Trade Request" button if viewing another player
+- Target player must be online to view their profile (or show a last-known snapshot if offline data is cached)
+- Players can opt out of public profiles via `rpg.profile.private` permission — their profile shows "This player's profile is private."
+- Tab-complete for the player argument lists online player names
 
 ---
 
@@ -388,12 +460,28 @@ Almost no automated tests exist — only `QuestObjectiveTest.java`. For a codeba
 ---
 
 ### Vanilla Suppression Remaining Flags (`rpg-core`)
-Audit `VanillaSuppression.java` for any flags that are accepted in config but have no event handler yet and add the missing handlers.
+Audit `VanillaSuppression.java` — these flags are accepted in `config.yml` but likely have no event handler wired yet:
+
+| Flag | Config key | Likely missing handler |
+|---|---|---|
+| Villager trading | `villager-trading` | `VillagerAcquireTradeEvent` + `VillagerReplenishTradeEvent` + `InventoryOpenEvent` for villager GUIs |
+| Beacons | `beacons` | `BeaconEffectEvent` |
+| Pillager patrols | `pillager-patrols` | `EntitySpawnEvent` filtering `PILLAGER` patrol spawns |
+| Block explosion damage | `block-explosion-damage` | `EntityDamageByBlockEvent` for explosion sources |
+| Durability | `durability` | `PlayerItemDamageEvent` |
+| Death drops | `death-drops` | `PlayerDeathEvent` item drop handling (separate from the custom death-rules system — this is the vanilla drop specifically) |
+
+Verify each against the actual `VanillaSuppression.java` event listener list and add any confirmed-missing handlers.
 
 ---
 
 ### Economy: Vault Provider Bridge (`rpg-economy`)
-External non-suite plugins that expect a Vault `Economy` service can't use `rpg-economy`. Missing:
-- Register `rpg-economy` as a Vault `Economy` provider on enable
+External non-suite plugins (third-party shops, job plugins, etc.) that expect a Vault `Economy` service can't interact with `rpg-economy`. Missing:
+
+- Add Vault as a `softDepend` in `rpg-economy/plugin.yml`
+- On enable, if Vault is present, register a `net.milkbowl.vault.economy.Economy` provider via `getServer().getServicesManager().register(Economy.class, new VaultEconomyAdapter(coreEconomy), this, ServicePriority.Normal)`
+- `VaultEconomyAdapter` wraps `CoreEconomy` — implement `has()`, `getBalance()`, `withdrawPlayer()`, `depositPlayer()`, `format()` using `RpgServices.economy()`
+- Methods Vault doesn't support (multi-world, banks) can return `false` / throw `UnsupportedOperationException`
+- This is one-way compatibility: Vault plugins can read/write rpg-economy balances; rpg-economy doesn't need to depend on Vault at compile time beyond the soft-dep
 
 ---

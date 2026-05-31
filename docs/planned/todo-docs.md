@@ -45,6 +45,8 @@ These pages have a `Status:` header that no longer matches the actual code, or d
 
 - Every plugin doc page should have a **Commands** table and a **Permissions** table that matches `plugin.yml` exactly. Several pages (guilds, parties, quests) have incomplete or slightly mismatched permission nodes.
 - The **Changelog** (`docs/changelog.md`) is behind — suites 17–19 are listed in sub-files but not all changes are reflected in the main summary.
-- `docs/planned/backlog.md` is now superseded by this todo system. Either delete it or add a redirect note at the top pointing to `todo.md`.
+- **`docs/planned/backlog.md` is superseded** — delete it and add a redirect at the top: `_This file has been replaced by [todo.md](todo.md)._` to avoid confusing anyone who has a direct link to it.
+- The `docs/stats.md` stub should note which stats are currently **unimplemented** (speed, ferocity, swing_range, pristine — see [Bugs](todo-bugs.md)) so admins know not to put them on items yet.
+- Add a `docs/planned/README.md` (or index comment at the top of `todo.md`) explaining the planned/ folder is a living working document, not shipped design specs — it changes as work is done.
 
 ---
