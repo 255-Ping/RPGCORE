@@ -165,39 +165,72 @@ Starts a cooldown keyed to the ability ID. **Soft** — reducible by `COOLDOWN_R
 
 More effects added by skill addons (e.g., `fishing_lure`, `mining_charge`).
 
-## Pipeline & context
+## AbilityContext
 
-An `AbilityContext` carries:
+Every ability invocation creates one `AbilityContext` instance that flows through the entire effect chain. Effects read from it and mutate it; later effects see every change made by earlier ones. Context is never reset between effects — including across `delay` waits.
 
-- `caster` — the entity casting (player or mob)
-- `target` — current entity target (may be set/changed by effects)
-- `point` — current location (may be set/changed by effects)
-- `carriedDamage` — current damage value being computed
-- `pierceRemaining` — for projectile chains
-- `bag` — open `Map<String,Object>` for cross-effect state
+### Fields
 
-Effects return `CompletableFuture<AbilityContext>`. The pipeline chains effects with `thenCompose`, so an effect can defer (e.g., `delay`, `projectile` waiting for impact).
+| Field | Type | Mutable | Description |
+|---|---|---|---|
+| `caster` | `LivingEntity` | **No** | The casting entity (player or mob). Never null. Set at invocation; no effect can change it. |
+| `target` | `LivingEntity` | Yes | Current entity target. **Starts null.** Set by `beam` or `projectile` on hit. `damage` silently no-ops if null; `apply_status` falls back to `caster` if null. |
+| `point` | `Location` | Yes | Current world position. **Starts null.** Set by `beam` (endpoint), `projectile` (impact), and `teleport` (new caster position). `explode` and `particles` fall back to caster location if null. |
+| `carriedDamage` | `double` | Yes | Running damage value. Initialized from the item's base `damage` stat. Scaled by `damage_multiplier` params on `beam`/`projectile`/`explode`. Consumed by `damage{}` when no explicit `amount` is given. |
+| `pierceRemaining` | `int` | Yes | How many more entities the projectile/beam can pass through. Starts at 1; decremented on each hit. Increased by `pierce=` params. |
+| `bag` | `Map<String,Object>` | Yes | Open key-value store for cross-effect state. No built-in effects use this — it is for addon-defined effects to share data. |
 
-### What each effect reads and writes
+### How context flows
 
-| Effect | Reads from context | Writes to context |
+```
+Sequence: projectile{} → damage{} → apply_status{id=poison}
+
+ Before cast:
+   caster        = <player>
+   target        = null
+   point         = null
+   carriedDamage = 55.0   ← from item base damage
+
+ After projectile hits <zombie>:
+   target        = <zombie>       ← set by projectile
+   point         = <impact loc>   ← set by projectile
+   carriedDamage = 55.0           ← unchanged (no damage_multiplier)
+
+ After damage{}:
+   reads target=<zombie>, carriedDamage=55.0
+   → 55 damage dealt to <zombie>
+
+ After apply_status{id=poison}:
+   reads target=<zombie>
+   → poison applied to <zombie>
+```
+
+If the projectile expires without hitting anything, `target` stays null. `damage{}` silently no-ops and `apply_status{}` falls back to applying poison to the `caster` instead.
+
+### Pipeline mechanics
+
+Effects return `CompletableFuture<AbilityContext>`. The pipeline chains them with `thenCompose`, so deferred effects like `delay` and `projectile` suspend the chain without blocking the server thread. The same context instance is passed forward through any wait — `target`, `point`, and `carriedDamage` are all still there when the chain resumes.
+
+### Quick reads/writes summary
+
+| Effect | Reads | Writes |
 |---|---|---|
-| `beam` | `caster` location + look direction | `target` (first hit entity), `point` (beam endpoint) |
-| `projectile` | `caster` location + look direction | `target`, `point` (on impact — chain resumes there) |
-| `explode` | `point` (fallback: caster location if point not set) | — |
+| `beam` | `caster` location + look direction | `target` (first hit entity), `point` (endpoint) |
+| `projectile` | `caster` location + look direction | `target`, `point` (on impact) |
+| `explode` | `point` (fallback: caster location) | — |
 | `aoe` | `caster` location | — |
-| `damage` | `target`, `carriedDamage` (used if `amount` param omitted) | — |
-| `heal` | `target` (default: caster if not set) | — |
+| `damage` | `target`, `carriedDamage` (if no `amount` param) | — |
+| `heal` | `caster` or `target` (see `target=` param) | — |
 | `particles` | `point` (fallback: caster location) | — |
 | `sound` | `caster` location | — |
-| `apply_status` | `target` (default: caster) | — |
-| `teleport` | `caster` | caster's location changes |
+| `apply_status` | `target` (fallback: `caster`) | — |
+| `teleport` | `caster` | caster's world position |
 | `summon` | `caster` location | — |
-| `delay` | — | — (just pauses the chain) |
-| `mana_cost` | `caster` mana | Aborts chain if insufficient |
-| `cooldown` | ability ID | Starts cooldown keyed to ability ID |
+| `delay` | — | — (pauses chain; context unchanged) |
+| `mana_cost` | `caster` mana | Deducts mana; aborts chain if insufficient |
+| `cooldown` | ability ID | Starts cooldown in `CooldownService` |
 
-**Example reading the table:** `beam → explode` fires the beam, sets `point` to the endpoint, then `explode` reads that `point` and detonates there. `beam → particles` would spawn particles at the same endpoint. `beam → damage` would deal damage to whatever `beam` set as `target`.
+For full parameter tables, null-handling details, and examples per effect see the **[Effects Reference](ability-effects.md)**.
 
 ## Cooldowns
 

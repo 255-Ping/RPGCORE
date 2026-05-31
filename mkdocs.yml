@@ -52,6 +52,7 @@ nav:
     - Vanilla Suppression: core/vanilla-suppression.md
   - Content Creation:
     - Overview: content/README.md
+    - Learning Path: content/learning-path.md
     - Quick-Start Guide: content/quickstart.md
     - First Mob Walkthrough: content/first-mob.md
     - Cookbook: content/cookbook.md
@@ -60,6 +61,7 @@ nav:
     - Items: content/items.md
     - Mobs: content/mobs.md
     - Abilities: content/abilities.md
+    - Effects Reference: content/ability-effects.md
     - Blocks: content/blocks.md
     - Loot Tables: content/loot-tables.md
     - Recipes: content/recipes.md

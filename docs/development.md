@@ -123,6 +123,172 @@ Implemented since initial design:
 
 - `RpgServices.stations()` — `StationService` (rpg-core) — central right-click dispatch for interactable blocks; addons call `RpgServices.stations().register("type", handler)` in `onEnable`.
 
+## Events
+
+All RPGCORE events are in `rpg-api` and fired by `rpg-core` (or the relevant addon). Listen to them with standard Bukkit `@EventHandler` in any plugin that has `rpg-core` as a dependency.
+
+### Damage events
+
+**`PreDamageEvent`** (`com.github._255_ping.rpg.api.damage`) — fired before damage is applied; cancellable.
+
+```java
+@EventHandler
+public void onPreDamage(PreDamageEvent event) {
+    DamageContext ctx = event.context();
+    // ctx.attacker(), ctx.victim(), ctx.baseDamage(), ctx.critMultiplier(), ctx.trueDamage(), ctx.source()
+    // Mutate: ctx.setBaseDamage(x), ctx.setCritMultiplier(x), ctx.setTrueDamage(true)
+    event.setCancelled(true);  // abort damage entirely
+}
+```
+
+**`PostDamageEvent`** (`com.github._255_ping.rpg.api.damage`) — fired after damage is resolved; not cancellable. `dealtDamage()` is the final value after all pipeline steps.
+
+```java
+@EventHandler
+public void onPostDamage(PostDamageEvent event) {
+    double dealt = event.dealtDamage();
+    LivingEntity victim = event.context().victim();
+}
+```
+
+### Stat events
+
+**`StatRecalcEvent`** (`com.github._255_ping.rpg.api.stats`) — fired after a player's stats are fully recalculated (on equip/unequip). The `holder` snapshot reflects the new final stat values.
+
+```java
+@EventHandler
+public void onStatRecalc(StatRecalcEvent event) {
+    StatHolder stats = event.holder();
+    double totalDamage = stats.get(BuiltinStat.DAMAGE);
+}
+```
+
+### Skill events
+
+**`SkillXpAwardEvent`** (`com.github._255_ping.rpg.api.skills`) — fired before XP is added to a skill; cancellable. The `amount` is mutable — set it to change how much XP is actually awarded.
+
+```java
+@EventHandler
+public void onSkillXp(SkillXpAwardEvent event) {
+    if (event.skillId().equals("mining")) {
+        event.setAmount(event.amount() * 2);  // double XP from mining
+    }
+}
+```
+
+**`SkillLevelUpEvent`** (`com.github._255_ping.rpg.api.skills`) — fired after a skill levels up. Spans multiple levels in one event if a single XP award caused more than one level gain.
+
+```java
+@EventHandler
+public void onLevelUp(SkillLevelUpEvent event) {
+    int gained = event.newLevel() - event.previousLevel();
+    event.getPlayer().sendMessage("Gained " + gained + " levels in " + event.skillId() + "!");
+}
+```
+
+### Block events
+
+**`RpgBlockBreakEvent`** (`com.github._255_ping.rpg.api.blocks`) — fired when a player breaks an RPG-tagged custom block, just before the location is untagged and drops are rolled. Cancellable (cancelling aborts the break entirely — no drops, no respawn).
+
+```java
+@EventHandler
+public void onRpgBlockBreak(RpgBlockBreakEvent event) {
+    Block block = event.block();      // the rpg-api Block definition
+    Location loc = event.location();
+    Player player = event.player();
+}
+```
+
+### Combat events
+
+**`CombatTagEvent`** (`com.github._255_ping.rpg.api.combat`) — fired once when a player transitions from out-of-combat to in-combat. Not re-fired while the tag is refreshed by continued fighting. `durationSeconds()` is how long the combat tag lasts.
+
+```java
+@EventHandler
+public void onCombatTag(CombatTagEvent event) {
+    event.getPlayer().sendMessage("You entered combat!");
+}
+```
+
+### Region events
+
+**`RegionEnterEvent`** / **`RegionLeaveEvent`** (`com.github._255_ping.rpg.api.regions`) — fired when a player moves into or out of a named region.
+
+---
+
+## Extension points
+
+### Custom `AbilityEffect`
+
+Register new DSL primitives that content authors can use in item and mob ability sequences.
+
+```java
+public class MyEffect implements AbilityEffect {
+
+    @Override
+    public String name() { return "my_effect"; }
+
+    @Override
+    public CompletableFuture<AbilityContext> apply(AbilityContext ctx) {
+        // Read from context
+        LivingEntity caster = ctx.caster();
+        LivingEntity target = ctx.target();   // may be null — check!
+        Location point = ctx.point();         // may be null — check!
+        double damage = ctx.carriedDamage();
+
+        // Write back to context if you're setting target/point for later effects
+        ctx.setTarget(someEntity);
+        ctx.setPoint(someLocation);
+
+        // Return immediately or use thenApply / CompletableFuture.completedFuture
+        return CompletableFuture.completedFuture(ctx);
+    }
+
+    // Optional: show parameter descriptions in item lore
+    @Override
+    public List<String> description() {
+        return List.of("&7Does something custom");
+    }
+}
+```
+
+Register in your addon's `onEnable`:
+
+```java
+RpgServices.abilityRegistry().register(new MyEffect());
+```
+
+Content authors can then use `my_effect{k=v}` in any ability sequence. Parse your DSL params from `AbilityDsl.parse(rawString)` which returns a `Map<String, String>` for the current effect's `{...}` block.
+
+### Custom `StatusEffect`
+
+Define new named status effects. The effect type controls how the status is listed in `/effects` and whether it stacks.
+
+```java
+public class BurningEffect implements StatusEffect {
+    @Override public String id() { return "burn"; }
+    @Override public String displayName() { return "Burning"; }
+    @Override public Category category() { return Category.DEBUFF; }
+    @Override public StackingStrategy stacking() { return StackingStrategy.REPLACE; }
+    @Override public boolean hidden() { return false; }
+}
+```
+
+Register and handle tick behavior (damage per tick, expiry cleanup, etc.) by listening to the scheduler and querying `RpgServices.statusEffects().active(entity)`.
+
+Register the definition in `onEnable`:
+
+```java
+RpgServices.statusEffectRegistry().register(new BurningEffect());
+```
+
+### Planned extension points
+
+These interfaces exist in `rpg-api` but are not yet hookable from addons:
+
+- `QuestObjective` — custom objective types (e.g. `craft_item`, `explore_region`)
+- `StatProvider` — inject stats onto players from external sources (e.g. rpg-pets contributing pet bonuses)
+
 ## Versioning
 
 Each plugin module has its own version in `gradle.properties` (`coreVersion`, `combatVersion`, `foragingVersion`, etc.). Full jar version = `<pluginVersion>-<suiteVersion>` (e.g., `rpg-core-0.2.0-18.jar`).

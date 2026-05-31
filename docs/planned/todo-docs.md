@@ -23,7 +23,7 @@ _Missing pages, stale content, and inconsistencies. No code required — just wr
 
 | File | What to write | Difficulty |
 |---|---|---|
-| `docs/core/abilities.md` | All built-in effect types: parameters table, examples. Updated as new effects are added. Different from `content/abilities.md` (which is the authoring guide) — this is the canonical effect reference. | 🟡 Medium |
+| ~~`docs/core/abilities.md`~~ → created as `docs/content/ability-effects.md` | ✅ Done — full per-effect reference with parameters + context reads/writes + examples | |
 | `docs/core/loot-pools.md` | Loot pool YAML reference, attribution modes, `MagicFindAffected` flag. Write alongside the Loot Pool System feature. | 🟢 Easy |
 
 Everything else in the original stub list now has content. Status headers on `installation.md`, `configuration.md`, `resource-pack.md`, and `core/selection-wand.md` updated to Working. ✅
@@ -58,6 +58,12 @@ Added to `enchanting.md`, `status-effects.md`, `content/abilities.md`.
 
 ## ✅ Completed This Session
 
+- Created `docs/content/ability-effects.md` — dedicated built-in effects reference: per-effect parameter tables, context reads/writes, examples
+- Expanded `AbilityContext` section in `docs/content/abilities.md` — full field table with types/mutability/nullability, flow diagram, and null-handling summary
+- Created `docs/content/learning-path.md` — ordered content creator reading path (Quick Start → Items → Abilities → Status Effects → Mobs → Loot Tables → Spawning → Quests → Patterns → Cookbook)
+- Added Events section to `docs/development.md` — all 9 API events with code examples (`PreDamageEvent`, `PostDamageEvent`, `StatRecalcEvent`, `SkillXpAwardEvent`, `SkillLevelUpEvent`, `RpgBlockBreakEvent`, `CombatTagEvent`, `RegionEnterEvent`, `RegionLeaveEvent`)
+- Added Extension Points section to `docs/development.md` — how to implement `AbilityEffect` and `StatusEffect` with registration examples
+- Updated `mkdocs.yml` nav — added Learning Path and Effects Reference to Content Creation
 - Created `docs/content/quickstart.md` — beginner content creator guide (item + mob + quest in 30 min)
 - Created `docs/content/patterns.md` — named ability patterns (fireball, poison-on-hit, life steal, AoE slam, blink, beam, summon, delayed combo)
 - Created `docs/content/progression-guide.md` — stat budget guidelines per tier, defense/strength tables, mob design guidelines
