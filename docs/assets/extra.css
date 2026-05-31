@@ -59,9 +59,9 @@
   letter-spacing: 0.03em;
 }
 
-.md-typeset h1 { font-size: 2rem;   font-weight: 700; }
-.md-typeset h2 { font-size: 1.5rem; font-weight: 600; }
-.md-typeset h3 { font-size: 1.2rem; font-weight: 600; }
+.md-typeset h1 { font-size: 1.7rem;  font-weight: 700; }
+.md-typeset h2 { font-size: 1.3rem;  font-weight: 600; }
+.md-typeset h3 { font-size: 1.05rem; font-weight: 600; }
 
 /* Site title + nav titles in Cinzel */
 .md-header__title,
@@ -70,9 +70,9 @@
   letter-spacing: 0.04em;
 }
 
-/* ── Body text size bump — EB Garamond reads better slightly larger ───── */
+/* ── Body text ─────────────────────────────────────────────────────────── */
 .md-typeset {
-  font-size: 1.05rem;
+  font-size: 0.9rem;
   line-height: 1.7;
 }
 
