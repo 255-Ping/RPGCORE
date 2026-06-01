@@ -27,7 +27,7 @@
 #       duration: 200                # ticks (200 = 10 s)
 #
 # ── Stat IDs (grouped) ──────────────────────────────────────────────────────
-#   Combat:    damage  strength  crit_chance  crit_damage  ability_damage
+#   Combat:    damage  strength  crit_chance  crit_damage
 #              attack_speed  ferocity  lifesteal  knockback
 #              ammo_usage_reduction  projectile_speed  auto_loot
 #   Survival:  max_health  health_regen  vitality  defense  true_defense
@@ -85,7 +85,6 @@ beam_wand:
   Stats:
     damage: 30               # spell power — multiplied by ability damage_multiplier params
     intelligence: 50
-    ability_damage: 20
     knockback: 5
   Abilities:
   - testability
@@ -148,7 +147,6 @@ voidblade:
     crit_damage: 180
     ferocity: 60         # % extra swings
     lifesteal: 20
-    ability_damage: 80
     swing_range: 2       # extra reach in blocks
     knockback: 25
   # Multiple ability IDs — each fires in sequence on right-click
@@ -224,7 +222,6 @@ glacial_staff:
     intelligence: 120        # flat mana pool + ability scaling
     max_mana: 80
     mana_regen: 5
-    ability_damage: 60
     cooldown_reduction: 15   # % shorter cooldowns on all abilities
     knockback: 8
   Abilities:
