@@ -195,6 +195,13 @@ level-scaling:
 attack-cooldown:
   scale-damage: true    # true = penalise spam-clicking; false = always full damage regardless of charge
 
+# Bow / projectile settings.
+bow:
+  # projectile_speed stat divisor. The stat value is divided by this to produce a % multiplier.
+  # Default 100: projectile_speed: 25 → 25% faster than vanilla (1.25× speed).
+  # Lower this to make each stat point matter more; raise it to make the stat softer.
+  projectile-speed-divisor: 100.0
+
 # Per-player item drops — tags each dropped item with the player who earned it.
 # Only the assigned player can pick it up until release-seconds elapses (then public).
 # Holograms appear above drops showing item name and owner. Requires rpg-holograms or

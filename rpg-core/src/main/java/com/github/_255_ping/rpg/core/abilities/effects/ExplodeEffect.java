@@ -26,6 +26,9 @@ import java.util.concurrent.CompletableFuture;
  */
 public final class ExplodeEffect implements AbilityEffect {
 
+    /** Re-entrancy guard — same purpose as DamageEffect.FIRING_POST. */
+    private static final ThreadLocal<Boolean> FIRING_POST = ThreadLocal.withInitial(() -> false);
+
     private final double radius;
     private final double damageMultiplier;
     private final double flatDamage;
@@ -63,8 +66,15 @@ public final class ExplodeEffect implements AbilityEffect {
             if (!(e instanceof LivingEntity le)) continue;
             if (le.equals(ctx.caster())) continue;
             RpgServices.health().damage(le, finalDamage, "ability_aoe");
-            DamageContext dCtx = new DamageContext(ctx.caster(), le, finalDamage, "ability_aoe");
-            Bukkit.getPluginManager().callEvent(new PostDamageEvent(dCtx, finalDamage));
+            if (!FIRING_POST.get()) {
+                FIRING_POST.set(true);
+                try {
+                    DamageContext dCtx = new DamageContext(ctx.caster(), le, finalDamage, "ability_aoe");
+                    Bukkit.getPluginManager().callEvent(new PostDamageEvent(dCtx, finalDamage));
+                } finally {
+                    FIRING_POST.set(false);
+                }
+            }
         }
         return CompletableFuture.completedFuture(ctx);
     }

@@ -56,7 +56,7 @@ public final class MobAbilityRuntime {
         pipeline.cast(ctx, RpgServices.abilities()).exceptionally(err -> {
             java.util.logging.Logger.getLogger("rpg-core").warning(
                     "[MobAbility] cast failed for mob " + mob.getType().name()
-                            + ": " + err.getMessage());
+                            + ": " + err);
             return ctx;
         });
     }

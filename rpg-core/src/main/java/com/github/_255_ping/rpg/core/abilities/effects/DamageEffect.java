@@ -13,6 +13,13 @@ import java.util.concurrent.CompletableFuture;
 
 public final class DamageEffect implements AbilityEffect {
 
+    /**
+     * Re-entrancy guard: prevents PostDamageEvent fired by an ability from triggering
+     * OnHurt/OnHit mob bindings that contain DamageEffect and would cause a stack overflow.
+     * The indicator fires on the first level; nested ability-triggered hits do not re-fire it.
+     */
+    private static final ThreadLocal<Boolean> FIRING_POST = ThreadLocal.withInitial(() -> false);
+
     private final double amount;
     private final double damageMultiplier;
     private final String type;
@@ -32,9 +39,18 @@ public final class DamageEffect implements AbilityEffect {
         if (base <= 0) return CompletableFuture.completedFuture(ctx);
         String source = "true".equals(type) ? "ability_true" : "ability";
         RpgServices.health().damage(ctx.target(), base, source);
-        // Fire PostDamageEvent so damage-indicator listeners and OnHit/OnHurt triggers fire.
-        DamageContext dCtx = new DamageContext(ctx.caster(), ctx.target(), base, source);
-        Bukkit.getPluginManager().callEvent(new PostDamageEvent(dCtx, base));
+        // Fire PostDamageEvent for damage indicators. Guard against re-entrancy: if an OnHurt
+        // ability also contains DamageEffect, suppressing the nested PostDamageEvent breaks
+        // the recursion — the secondary hit still lands, but doesn't fire further triggers.
+        if (!FIRING_POST.get()) {
+            FIRING_POST.set(true);
+            try {
+                DamageContext dCtx = new DamageContext(ctx.caster(), ctx.target(), base, source);
+                Bukkit.getPluginManager().callEvent(new PostDamageEvent(dCtx, base));
+            } finally {
+                FIRING_POST.set(false);
+            }
+        }
         return CompletableFuture.completedFuture(ctx);
     }
 }

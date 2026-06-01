@@ -98,10 +98,11 @@ public final class BowListener implements Listener {
         // Scale by force (full-draw = 1.0, half-draw = 0.5^2 = 0.25).
         double arrowDamage = bowDamage * force * force;
 
-        // Projectile speed: stat is a % bonus (25 = 25% faster). Consistent with all other stats.
-        // Default 0 = vanilla speed (1.0× multiplier). Negative values are clamped to 0.
+        // Projectile speed: stat is a % bonus divided by config divisor (default 100).
+        // projectile_speed: 25 with divisor 100 → 25% faster (1.25× vanilla speed).
         double speedStat = Math.max(0, RpgServices.player(player).get(BuiltinStat.PROJECTILE_SPEED));
-        double speedMult = 1.0 + speedStat / 100.0;
+        double divisor = Math.max(1.0, plugin.getConfig().getDouble("bow.projectile-speed-divisor", 100.0));
+        double speedMult = 1.0 + speedStat / divisor;
         double speed = force * speedMult * 3.0; // 3.0 ≈ vanilla full-draw arrow speed
 
         spawnProjectile(player, item.projectileType(), speed, arrowDamage);
