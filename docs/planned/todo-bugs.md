@@ -15,12 +15,11 @@ _These are broken in live testing. Fix these before working on new features._
 
 ---
 
-### Potions Disappear + Drink Has No Effect (`rpg-core` / `rpg-alchemy`) — 🟡 Medium
-Two related issues:
-1. **Right-clicking the ground with a potion** — the potion item disappears from the player's inventory with no effect applied.
-2. **Right-clicking the air to drink a potion** — the animation plays and the item is consumed, but `/effects` shows no new entry; the status effect is never applied.
+### ~~Potions Disappear + Drink Has No Effect (`rpg-core` / `rpg-alchemy`)~~ ✅ Fixed in `rpg-alchemy 0.3.1`
 
-Both paths should apply the potion's configured effects and show them in `/effects`.
+Two root causes:
+1. **Wrong interception point** — `PotionDrinkListener` was handling `PlayerInteractEvent`. In Paper 1.21.4, the `ServerboundUseItemPacket` is already processed server-side before that event fires, so cancelling there did not reliably suppress vanilla. Handler moved to `PlayerItemConsumeEvent`: vanilla drives the animation, we intercept at consumption time.
+2. **Effect ID mismatch** — `potions/example.yml` referenced `strength_buff` and `heal_over_time`, neither of which existed in the status-effects registry. `CoreStatusEffectService.apply()` silently no-ops on unknown IDs. Updated to `strength_boost` and `regen`.
 
 ---
 
@@ -64,9 +63,9 @@ Several `BuiltinStat` entries appear on example items and show up in lore, but a
 
 | Stat | Defined | Implemented | Notes |
 |---|---|---|---|
-| `speed` | ✅ | ✅ `rpg-core 1.0.8` | Sets `generic.movement_speed` in `EquipmentListener`. Formula: `0.1 × (1 + speed × speedPerPoint / 100)`. |
-| `ferocity` | ✅ | ✅ `rpg-core 1.0.8` | Extra melee swings in `DamagePipelineListener`. Each 100 ferocity = 1 guaranteed extra hit; remainder = % chance. |
-| `swing_range` | ✅ | ✅ `rpg-core 1.0.8` | Sets `entity_interaction_range` in `EquipmentListener`. Formula: `3.0 + swingRange × blocksPerPoint`. |
+| `speed` | ✅ | ✅ `rpg-core 1.1.0` | Sets `generic.movement_speed` in `EquipmentListener`. Formula: `0.1 × (1 + speed × speedPerPoint / 100)`. |
+| `ferocity` | ✅ | ✅ `rpg-core 1.1.0` | Extra melee swings in `DamagePipelineListener`. Each 100 ferocity = 1 guaranteed extra hit; remainder = % chance. |
+| `swing_range` | ✅ | ✅ `rpg-core 1.1.0` | Sets `entity_interaction_range` in `EquipmentListener`. Formula: `3.0 + swingRange × blocksPerPoint`. |
 | `pristine` | ✅ | ❌ | Intended to improve item quality rolls. No quality roll system exists. |
 | `enchanting_luck` | ✅ | ❓ | Verify whether `StationGui` actually reads it during enchant application. |
 | `pet_luck` | ✅ | ❌ | Irrelevant until `rpg-pets` exists. |

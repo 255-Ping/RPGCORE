@@ -4,6 +4,10 @@
 
 ---
 
+### rpg-alchemy `0.3.1`
+- **Potions fixed — effects now apply on drink**: `PotionDrinkListener` was incorrectly intercepting `PlayerInteractEvent`. In Paper 1.21.4 the `ServerboundUseItemPacket` is processed before that event fires, so cancelling there did not reliably suppress the vanilla drink path — the animation played, the item was consumed, and no RPG effects fired. Handler rewritten to intercept `PlayerItemConsumeEvent` instead: vanilla drives the 1.6-second animation; on completion we cancel the event (suppresses item removal + glass-bottle replacement + vanilla effects) and apply RPG status effects + manually reduce item count.
+- **Example potion IDs corrected**: `strength_buff` → `strength_boost`, `heal_over_time` → `regen`, matching the status effect IDs actually defined in `rpg-core`'s `status-effects/example.yml`. Previously `CoreStatusEffectService.apply()` silently no-oped because the IDs were not in the registry.
+
 ### rpg-core `1.1.0`
 - **`speed` stat wired**: `EquipmentListener` now sets `generic.movement_speed` on every equipment recalc. Formula: `0.1 × (1 + speed × speedPerPoint / 100)`, where `speedPerPoint` comes from `stats.speed-per-point` in `config.yml` (default 1.0). Applied on join and all gear changes.
 - **`swing_range` stat wired**: `EquipmentListener` sets `entity_interaction_range` (melee reach) on every recalc. Formula: `3.0 + swingRange × blocksPerPoint` (config: `stats.swing-range-per-point`, default 1.0). `swing_range: 2` = 5.0-block reach.
