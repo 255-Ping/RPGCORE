@@ -195,6 +195,23 @@ level-scaling:
 attack-cooldown:
   scale-damage: true    # true = penalise spam-clicking; false = always full damage regardless of charge
 
+# Stats formula tuning — controls how each raw stat point translates into a gameplay value.
+# See docs/core/stats.md for the full formula reference.
+stats:
+  # Movement speed: each speed stat point adds this % to the vanilla base walk speed (0.1 b/tick).
+  # speed: 12 with per-point 1.0 → 12% faster → 0.112 b/tick.
+  speed-per-point: 1.0
+
+  # Swing range: each swing_range stat point adds this many blocks to vanilla melee reach (3.0 b).
+  # swing_range: 2 with per-point 1.0 → 5.0 block reach.
+  swing-range-per-point: 1.0
+
+# Ferocity extra swings.
+ferocity:
+  # Maximum extra melee hits that can be triggered by a single attack.
+  # Prevents extreme ferocity values from dealing tens of hits in one tick.
+  max-extra-hits: 10
+
 # Bow / projectile settings.
 bow:
   # projectile_speed stat divisor. The stat value is divided by this to produce a % multiplier.

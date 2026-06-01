@@ -31,6 +31,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class DamagePipelineListener implements Listener {
 
@@ -155,6 +156,28 @@ public final class DamagePipelineListener implements Listener {
 
         PostDamageEvent post = new PostDamageEvent(ctx, finalDamage);
         Bukkit.getPluginManager().callEvent(post);
+
+        // Ferocity: extra melee swings. Each 100 ferocity = 1 guaranteed extra hit; the
+        // remainder is a % chance for one more. Extra hits replicate finalDamage (crit already
+        // factored in) and fire PostDamageEvent for damage indicators. Knockback and lifesteal
+        // are NOT repeated — only the damage and indicator.
+        if ("melee".equals(source) && attacker instanceof Player ap) {
+            double ferocity = RpgServices.player(ap).get(BuiltinStat.FEROCITY);
+            if (ferocity > 0) {
+                int guaranteed = (int) (ferocity / 100.0);
+                double fraction = ferocity % 100.0;
+                int extraHits = guaranteed
+                        + (fraction > 0 && ThreadLocalRandom.current().nextDouble(100.0) < fraction ? 1 : 0);
+                int cap = plugin.getConfig().getInt("ferocity.max-extra-hits", 10);
+                extraHits = Math.min(extraHits, cap);
+                for (int i = 0; i < extraHits; i++) {
+                    if (!victim.isValid() || victim.isDead()) break;
+                    health.damage(victim, finalDamage, "ferocity");
+                    DamageContext fCtx = new DamageContext(attacker, victim, finalDamage, "ferocity");
+                    Bukkit.getPluginManager().callEvent(new PostDamageEvent(fCtx, finalDamage));
+                }
+            }
+        }
     }
 
     /**

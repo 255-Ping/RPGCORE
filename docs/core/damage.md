@@ -1,6 +1,6 @@
 # Damage pipeline
 
-> **Status:** In Progress — pipeline working; stat aggregation from equipment/accessories/effects/milestones/guild perks is wired for players. Mob attackers/victims return 0 for all stats until mob stat-holder lands. Combat XP awards and damage indicators are live. Per-source damage tuning and ferocity are planned.
+> **Status:** In Progress — pipeline working; stat aggregation from equipment/accessories/effects/milestones/guild perks is wired for players. Mob attackers/victims return 0 for all stats until mob stat-holder lands. Combat XP awards, damage indicators, knockback, lifesteal, and ferocity are live. Per-source damage tuning and configurable formula strings are planned.
 
 All damage flows through `rpg-core`. Vanilla `EntityDamageEvent` is cancelled at `LOWEST` priority and replaced with our pipeline.
 
@@ -63,7 +63,13 @@ On each hit, roll `crit_chance` (clamped to `chance-cap`). If success, multiply 
 
 ## Ferocity
 
-After a successful hit, if `ferocity > 0`, roll for extra hits (`ferocity / 100` chance, repeatable for ferocity > 100 — first 100% guarantees one, remaining rolls for second, etc.). Each extra hit fires the full pipeline (including its own crit roll) after a configurable delay.
+After a successful melee hit, if the attacker's `ferocity > 0`, extra hits are applied immediately:
+
+- `floor(ferocity / 100)` hits are guaranteed.
+- The fractional remainder (`ferocity % 100`) is a % chance for one more hit.
+- Example: `ferocity: 160` → 1 guaranteed + 60% chance for a second.
+
+Extra hits replicate the already-computed `finalDamage` (crit already factored in) and fire `PostDamageEvent` for damage indicators. Knockback and lifesteal are **not** repeated on extra hits — only the damage. Cap configurable via `ferocity.max-extra-hits` in `config.yml` (default 10).
 
 ## Death rules
 

@@ -1,6 +1,6 @@
 # Master stat reference
 
-> **Status:** Working — stat registry, lore rendering, and aggregation from gear/accessories/status effects all active. **Four stats are defined but not yet wired to gameplay logic:** `speed`, `ferocity`, `swing_range`, and `pristine` show on item lore but currently have no effect — avoid putting them on items until the wire-up is done (tracked in [Bugs](planned/todo-bugs.md)).
+> **Status:** Working — stat registry, lore rendering, and aggregation from gear/accessories/status effects all active. `speed`, `ferocity`, and `swing_range` are now wired (rpg-core 1.1.0). **`pristine`** is still defined but not yet wired to gameplay — tracked in [Bugs](planned/todo-bugs.md).
 
 Every stat in the framework. Built-in stats are part of `rpg-api`'s `BuiltinStat` enum so any addon can reference them. Custom stats can be registered at runtime via `StatRegistry.register(new CustomStat(...))`.
 
@@ -37,7 +37,7 @@ The two most common mistakes:
 | `crit_damage` | Crit Damage | yes | Crit multiplier |
 | `ability_damage` | Ability Damage | no | % bonus to ability damage (separate channel from strength) |
 | `attack_speed` | Attack Speed | yes | Reduces melee swing cooldown |
-| `ferocity` | Ferocity | yes | % chance per hit for an extra strike (can roll multiple) — **⚠ not yet wired** |
+| `ferocity` | Ferocity | yes | % chance per hit for an extra strike (can roll multiple). Each 100 ferocity = 1 guaranteed extra hit; remainder = fractional chance. Extra hits deal the same final damage. Melee only. |
 | `lifesteal` | Lifesteal | yes | % of dealt damage healed |
 
 ## Survival
@@ -63,8 +63,8 @@ The two most common mistakes:
 
 | ID | Display | Percent | Description |
 |---|---|---|---|
-| `speed` | Speed | no | Walk speed — **⚠ not yet wired** |
-| `swing_range` | Swing Range | no | Melee reach in blocks — **⚠ not yet wired** |
+| `speed` | Speed | no | Walk speed. Formula: `0.1 × (1 + speed × speedPerPoint / 100)` where `speedPerPoint` defaults to `1.0` (config: `stats.speed-per-point`). `speed: 12` → 12% faster. |
+| `swing_range` | Swing Range | no | Melee reach in blocks added to the vanilla 3.0 default. Formula: `3.0 + swingRange × blocksPerPoint` (config: `stats.swing-range-per-point`, default `1.0`). `swing_range: 2` → 5.0 block reach. |
 
 ## Loot
 

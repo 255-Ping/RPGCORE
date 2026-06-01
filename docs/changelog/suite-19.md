@@ -4,6 +4,12 @@
 
 ---
 
+### rpg-core `1.1.0`
+- **`speed` stat wired**: `EquipmentListener` now sets `generic.movement_speed` on every equipment recalc. Formula: `0.1 × (1 + speed × speedPerPoint / 100)`, where `speedPerPoint` comes from `stats.speed-per-point` in `config.yml` (default 1.0). Applied on join and all gear changes.
+- **`swing_range` stat wired**: `EquipmentListener` sets `entity_interaction_range` (melee reach) on every recalc. Formula: `3.0 + swingRange × blocksPerPoint` (config: `stats.swing-range-per-point`, default 1.0). `swing_range: 2` = 5.0-block reach.
+- **`ferocity` stat wired**: `DamagePipelineListener` now fires extra melee swings after each hit. Each 100 ferocity = 1 guaranteed extra hit; the remainder is a fractional % chance. Extra hits deal the same `finalDamage` (crit already factored), fire `PostDamageEvent` for indicators, but skip knockback and lifesteal. Cap: `ferocity.max-extra-hits` (default 10).
+- **Three new config sections**: `stats.speed-per-point`, `stats.swing-range-per-point`, and `ferocity.max-extra-hits` added to `config.yml`.
+
 ### rpg-core `1.0.7`
 - **`projectile_speed` stat is now a % bonus** (was a direct multiplier). `projectile_speed: 25` now means 25% faster than vanilla, not 25×. Formula: `speedMult = 1.0 + stat / 100.0`. Zero/absent stat = vanilla arrow speed unchanged.
 

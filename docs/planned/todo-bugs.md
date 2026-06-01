@@ -31,12 +31,8 @@ Mining fatigue amplifier bumped from `1` (Fatigue II) to `255` — vanilla block
 
 ---
 
-### Beam Wand: No Damage on Hit or Explosion (`rpg-core` / `rpg-combat`) — 🟡 Medium
-The beam ability visually stops and "explodes" when it contacts a mob, but:
-- The beam itself deals no damage while travelling through the mob
-- The explosion on impact deals no damage either
-
-The collision detection is working (it stops correctly), so the issue is in the damage application step — either the `DamageEffect` inside the beam's hit/explode pipeline is not firing, or it's firing against the wrong target entity.
+### ~~Beam Wand: No Damage on Hit or Explosion (`rpg-core` / `rpg-combat`)~~ ✅ Fixed in `rpg-core 1.0.7`
+Adding `damage: 30` to `beam_wand` (so `carriedDamage` is non-zero) combined with the `ExplodeEffect` + `DamageEffect` `PostDamageEvent` wiring fixed both the direct hit and AoE explosion paths.
 
 ---
 
@@ -66,17 +62,17 @@ Three causes fixed:
 ### Stats Shown in Lore That Do Nothing (`rpg-core` / `rpg-combat`) — 🔴 Hard
 Several `BuiltinStat` entries appear on example items and show up in lore, but are never read by any system. Players see the stat and get nothing from it:
 
-| Stat | Defined | Used | Notes |
+| Stat | Defined | Implemented | Notes |
 |---|---|---|---|
-| `speed` | ✅ | ❌ | `EquipmentListener` only sets `generic.attack_speed`, never touches `generic.movement_speed`. Windwalker Boots shows `+12 Speed` — does nothing. |
-| `ferocity` | ✅ | ❌ | Intended as "% chance for an extra swing." Voidblade shows `+60 Ferocity` — does nothing. No extra-swing logic exists in the damage pipeline. |
-| `swing_range` | ✅ | ❌ | Intended to expand melee reach. Voidblade shows `+2 Swing Range` — the player's hit box is never modified. |
-| `pristine` | ✅ | ❌ | Intended to improve item quality rolls. Pristine Talisman shows `+25 Pristine` — no quality roll system exists. |
-| `enchanting_luck` | ✅ | ❓ | Shown on several items. Verify whether `StationGui` actually reads it during enchant application or just ignores it. |
-| `pet_luck` | ✅ | ❌ | Irrelevant until `rpg-pets` exists, but shows on lore. Consider hiding it until the system is built. |
-| `magic_find` | ✅ | ❓ | Referenced in loot pool spec as `MagicFindAffected: true` — verify whether any loot roll actually reads this stat from the player. |
+| `speed` | ✅ | ✅ `rpg-core 1.0.8` | Sets `generic.movement_speed` in `EquipmentListener`. Formula: `0.1 × (1 + speed × speedPerPoint / 100)`. |
+| `ferocity` | ✅ | ✅ `rpg-core 1.0.8` | Extra melee swings in `DamagePipelineListener`. Each 100 ferocity = 1 guaranteed extra hit; remainder = % chance. |
+| `swing_range` | ✅ | ✅ `rpg-core 1.0.8` | Sets `entity_interaction_range` in `EquipmentListener`. Formula: `3.0 + swingRange × blocksPerPoint`. |
+| `pristine` | ✅ | ❌ | Intended to improve item quality rolls. No quality roll system exists. |
+| `enchanting_luck` | ✅ | ❓ | Verify whether `StationGui` actually reads it during enchant application. |
+| `pet_luck` | ✅ | ❌ | Irrelevant until `rpg-pets` exists. |
+| `magic_find` | ✅ | ❓ | Referenced in loot pool spec as `MagicFindAffected: true` — verify whether any loot roll reads it. |
 
-Fix approach: either implement the missing behaviour for each stat, or suppress it from lore display until the system is ready (add a `hidden: true` flag or a dedicated "not yet active" lore note).
+Remaining: `pristine`, `pet_luck` (pending system), `enchanting_luck`, `magic_find` (needs audit).
 
 ---
 

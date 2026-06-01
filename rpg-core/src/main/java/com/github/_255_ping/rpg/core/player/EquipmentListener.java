@@ -15,6 +15,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -29,7 +30,9 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public final class EquipmentListener implements Listener {
 
-    private static final double DEFAULT_ATTACK_SPEED = 4.0; // Minecraft player default
+    private static final double DEFAULT_ATTACK_SPEED = 4.0;           // Minecraft player default
+    private static final double DEFAULT_MOVEMENT_SPEED = 0.1;         // Minecraft player default (blocks/tick)
+    private static final double DEFAULT_ENTITY_INTERACTION_RANGE = 3.0; // Minecraft player default (blocks)
 
     private final JavaPlugin plugin;
     private final CoreHealthService health;
@@ -37,6 +40,12 @@ public final class EquipmentListener implements Listener {
     public EquipmentListener(JavaPlugin plugin, CoreHealthService health) {
         this.plugin = plugin;
         this.health = health;
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onJoin(PlayerJoinEvent e) {
+        // Defer one tick so inventory is fully loaded before applying attributes.
+        plugin.getServer().getScheduler().runTask(plugin, () -> recalc(e.getPlayer()));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -78,6 +87,8 @@ public final class EquipmentListener implements Listener {
             health.setMaxHp(player, newMax);
         }
         applyAttackSpeed(player);
+        applyMovementSpeed(player);
+        applySwingRange(player);
     }
 
     /**
@@ -97,5 +108,32 @@ public final class EquipmentListener implements Listener {
 
         double speed = cooldownTicks > 0 ? (20.0 / cooldownTicks) : DEFAULT_ATTACK_SPEED;
         attr.setBaseValue(speed);
+    }
+
+    /**
+     * Apply the {@code speed} stat to {@code generic.movement_speed}.
+     * Each speed point adds {@code stats.speed-per-point} percent over the vanilla base (0.1 b/tick).
+     * Formula: {@code 0.1 * (1 + speed * pctPerPoint / 100)}.
+     */
+    private void applyMovementSpeed(Player player) {
+        AttributeInstance attr = player.getAttribute(Attribute.MOVEMENT_SPEED);
+        if (attr == null) return;
+        double speed = RpgServices.player(player).get(BuiltinStat.SPEED);
+        double pctPerPoint = plugin.getConfig().getDouble("stats.speed-per-point", 1.0);
+        attr.setBaseValue(DEFAULT_MOVEMENT_SPEED * (1.0 + speed * pctPerPoint / 100.0));
+    }
+
+    /**
+     * Apply the {@code swing_range} stat to {@code entity_interaction_range} (melee reach).
+     * Each swing_range point adds {@code stats.swing-range-per-point} blocks to the vanilla
+     * default of 3.0 blocks.
+     * Formula: {@code 3.0 + swingRange * blocksPerPoint}.
+     */
+    private void applySwingRange(Player player) {
+        AttributeInstance attr = player.getAttribute(Attribute.ENTITY_INTERACTION_RANGE);
+        if (attr == null) return;
+        double swingRange = RpgServices.player(player).get(BuiltinStat.SWING_RANGE);
+        double blocksPerPoint = plugin.getConfig().getDouble("stats.swing-range-per-point", 1.0);
+        attr.setBaseValue(DEFAULT_ENTITY_INTERACTION_RANGE + swingRange * blocksPerPoint);
     }
 }
