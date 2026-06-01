@@ -4,6 +4,9 @@
 
 ---
 
+### rpg-core `1.0.7`
+- **`projectile_speed` stat is now a % bonus** (was a direct multiplier). `projectile_speed: 25` now means 25% faster than vanilla, not 25×. Formula: `speedMult = 1.0 + stat / 100.0`. Zero/absent stat = vanilla arrow speed unchanged.
+
 ### rpg-core `1.0.6`
 - **Player melee damage fix**: `DamagePipelineListener` now reads the player's RPG `DAMAGE` stat as the melee base, the same way mob attackers already did. Previously, `event.getFinalDamage()` was used — but since all vanilla attack-damage attributes are removed from custom items, that returned `1.0`, causing swords to deal ~1 damage regardless of stats.
 - **Wand ability damage fix**: `beam_wand` and `glacial_staff` now have a `damage` stat (`30` and `50` respectively). Without it, `carriedDamage = 0` while holding the wand, making all `damage_multiplier`-based ability effects deal zero.

@@ -175,7 +175,7 @@ hunters_bow:
     damage: 35
     crit_chance: 18
     crit_damage: 90
-    projectile_speed: 25     # flat bonus to launch speed
+    projectile_speed: 25     # % bonus to launch speed (25 = 25% faster than vanilla)
     ammo_usage_reduction: 20 # % chance to not consume an arrow
     knockback: 12            # applied to mobs on arrow hit
   Lore:
