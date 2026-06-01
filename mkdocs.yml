@@ -4,6 +4,8 @@ docs_dir: docs
 
 theme:
   name: material
+  logo: assets/logo.png
+  favicon: assets/logo.png
   palette:
     scheme: slate
     primary: custom

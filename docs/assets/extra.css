@@ -177,3 +177,11 @@
 .md-content {
   max-width: none;
 }
+
+/* ── Pixel-art logo / icons — keep crisp at any size ─────────────────── */
+.md-header__button.md-logo img,
+.md-nav__icon img,
+img[src*="/icons/icon-"] {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
