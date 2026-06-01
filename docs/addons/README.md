@@ -1,3 +1,5 @@
+﻿![banner-addons](../assets/banners/banner-addons.png)
+
 # Addons
 
 > **Status:** In Progress — all addons below are shipped and functional. See individual pages for per-feature status.

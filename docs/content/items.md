@@ -1,3 +1,5 @@
+﻿![banner-items](../assets/banners/banner-items.png)
+
 # Items
 
 > **Status:** Working — YAML loader, registry, PDC tagging, lore rendering, and equipment stat aggregation all working. Stats on equipped items (armor slots + main hand) aggregate into the player's effective stat sheet on every gear change via `EquipmentListener`. `/rpg item give <id> [player] [amount]` lights up. Type-specific runtime behavior for `CONSUMABLE`, `UPGRADE`, and `ACCESSORY` items is handled by their respective addons.

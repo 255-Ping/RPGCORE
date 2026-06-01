@@ -1,3 +1,5 @@
+﻿![banner-formatting](assets/banners/banner-formatting.png)
+
 # Formatting guide
 
 Standards for every player-facing UI element in the suite. **All GUIs and messages must follow this guide.** When in doubt, look at Hypixel Skyblock for GUI inspiration — we follow the same visual language with the constraints listed below.

@@ -1,3 +1,5 @@
+﻿![banner-stats](assets/banners/banner-stats.png)
+
 # Master stat reference
 
 > **Status:** Working — stat registry, lore rendering, and aggregation from gear/accessories/status effects all active. `speed`, `ferocity`, and `swing_range` are now wired (rpg-core 1.1.0). **`pristine`** is still defined but not yet wired to gameplay — tracked in [Bugs](planned/todo-bugs.md).

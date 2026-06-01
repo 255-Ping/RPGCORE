@@ -1,3 +1,5 @@
+﻿![banner-core](../assets/banners/banner-core.png)
+
 # Core (`rpg-core`)
 
 > **Status:** In Progress — persistence (YAML + MySQL), damage pipeline, block break handler, skills framework, stat registry, health display, status-effect framework, loot tables, natural spawning, admin spawners, expression evaluator, and content loaders (items/mobs/abilities/blocks/recipes) all working.

@@ -1,3 +1,5 @@
+﻿![banner-mining](../assets/banners/banner-mining.png)
+
 # Mining (`rpg-mining`)
 
 > **Status:** In Progress — Mining XP from breaking custom RPG blocks fully working. `breaking_power` gating, `mining_fortune`, `mining_speed`, and `mining_wisdom` stats all wired. Custom block definitions live in `rpg-core`. Mining Fatigue is suppressed so the stat-gating system is the only barrier.

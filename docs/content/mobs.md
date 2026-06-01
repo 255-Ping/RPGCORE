@@ -1,3 +1,5 @@
+﻿![banner-mobs](../assets/banners/banner-mobs.png)
+
 # Mobs
 
 > **Status:** In Progress — Full YAML loader, registry, PDC tagging, equipment, AbilityRegistry-driven ability triggers (`~onTimer` / `~onHit` / `~onHurt` / `~onSpawn` / `~onDeath` all execute), loot tables on death (with damager attribution + magic-find scaling), **and AI profiles (`aggressive`, `passive`, `defensive`, `stationary`)** are all working. Other profile kinds (`ranged_kiter`, `boss`, `swarming`, `pack-hunter`, `flying`) fall back to aggressive for v1 — refined behaviors come in a polish slice. Knockback-immunity flag is enforced via attribute on spawn.

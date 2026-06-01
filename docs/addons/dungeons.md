@@ -1,3 +1,5 @@
+﻿![banner-dungeons](../assets/banners/banner-dungeons.png)
+
 # Dungeons (`rpg-dungeons`)
 
 > **Status:** In Progress — Template commands (create, setentrance, setexit, setspawn, list, reload) all working. `/dungeon enter` teleports the player into the instance world but gameplay systems (mob spawning, win conditions, completion rewards, death handling) are not yet wired — entering gives an empty void. Full dungeon gameplay is a major planned flesh-out. See [todo-improvements](../planned/todo-improvements.md).

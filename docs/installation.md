@@ -1,3 +1,5 @@
+﻿![banner-getting-started](assets/banners/banner-getting-started.png)
+
 # Installation
 
 > **Status:** Working

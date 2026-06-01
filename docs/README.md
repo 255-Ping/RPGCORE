@@ -1,3 +1,5 @@
+﻿![banner-home](assets/banners/banner-home.png)
+
 # RPGCORE — Admin & Developer Documentation
 
 A suite of Paper Minecraft plugins (Paper API `26.1.2`, Java 25) that together build an entirely custom RPG framework. The goal is **total vanilla replacement** — every gameplay mechanic (damage, mana, skills, mob spawning, crafting, enchanting, brewing, regen, abilities, etc.) is custom-coded and configurable via YAML. No Java required to author content.

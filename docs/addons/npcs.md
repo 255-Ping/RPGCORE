@@ -1,3 +1,5 @@
+﻿![banner-npcs](../assets/banners/banner-npcs.png)
+
 # NPCs (`rpg-npcs`)
 
 > **Status:** v0.2.0 — shipped. Entity-based clickable NPCs with four behaviors (dialogue / shop / quest / banker). Entity style is per-NPC: `ENTITY` (any vanilla mob type, default VILLAGER) or `PLAYER` (fake player with skin). Invulnerability enforced by `NpcProtectionListener` — damage and mob targeting are cancelled at `HIGHEST` priority; death respawns the NPC after one tick. Fake players are spawned via NMS and are NOT shown in the tab list.

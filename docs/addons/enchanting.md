@@ -1,3 +1,5 @@
+﻿![banner-enchanting](../assets/banners/banner-enchanting.png)
+
 # Enchanting (`rpg-enchanting`)
 
 > **Status:** Working (v0.4.0+) — Custom enchants, reforges, and item upgrades all functional. Reforge stones and upgrade books are physical items applied in the anvil GUI. Enchant descriptions render in item lore. GUIs open from custom enchanting/anvil blocks (admins must copy `blocks-example.yml` into `plugins/rpg-core/blocks/`). Vanilla enchanting-table + anvil + smithing-table outputs suppressed. Minecraft XP cost for enchanting is planned but not yet wired (see [todo-improvements](../planned/todo-improvements.md)).

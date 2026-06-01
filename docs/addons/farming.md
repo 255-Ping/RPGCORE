@@ -1,3 +1,5 @@
+﻿![banner-farming](../assets/banners/banner-farming.png)
+
 # Farming (`rpg-farming`)
 
 > **Status:** In Progress — Farming XP from harvesting fully grown crops is working. `farming_fortune` stat is wired. Full custom-crop redesign (custom growth stages, not-breakable-until-grown, configurable growth time) is planned — see [todo-improvements](../planned/todo-improvements.md).

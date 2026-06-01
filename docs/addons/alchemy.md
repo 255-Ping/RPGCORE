@@ -1,3 +1,5 @@
+﻿![banner-alchemy](../assets/banners/banner-alchemy.png)
+
 # Alchemy (`rpg-alchemy`)
 
 > **Status:** Working — Station right-click dispatch active via `StationType: brewing` on the block definition. Recipe matching (ingredient check + consume + output potion) fully implemented. XP on brewing-station recipe completion, scaled by `ALCHEMY_WISDOM`. All vanilla brewing-stand mechanics are cancelled.

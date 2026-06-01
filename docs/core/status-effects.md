@@ -1,3 +1,5 @@
+﻿![banner-status-effects](../assets/banners/banner-status-effects.png)
+
 # Status effects
 
 > **Status:** Working — YAML-loaded effect content, stacking strategies, stat modifiers (flat + percent), `damage`/`heal` tick primitives, and `on-apply`/`on-expire` sound + particle hooks all active. Full ability-sequence tick actions (running an arbitrary `AbilitySequence` on each tick) are not yet wired — currently only `damage` and `heal` primitives are supported in the `tick` block. Default sample effects (`poison`, `regen`, `strength_boost`, `slow`) ship in `plugins/rpg-core/status-effects/example.yml`.

@@ -1,3 +1,5 @@
+﻿![banner-quests](../assets/banners/banner-quests.png)
+
 # Quests (`rpg-quests`)
 
 > **Status:** In Progress — Four objective types live: `kill_mob`, `mine_block`, `collect_item`, `talk_npc`. Per-player state via core DataStore. Rewards: skill XP, currency, items. Auto-complete on objective finish (configurable). NPC turn-in via `rpg-npcs` bridge. `/quest` commands wired. Quest log GUI deferred.

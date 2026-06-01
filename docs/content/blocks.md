@@ -1,3 +1,5 @@
+﻿![banner-blocks](../assets/banners/banner-blocks.png)
+
 # Custom blocks
 
 > **Status:** Working — YAML loader, registry, `/rpg block convert`, BlockBreakHandler with **hold-to-break + vanilla 0-9 progress packet**, `DataStore`-backed persistence, and right-click station dispatch all working. `MINING_SPEED` drains `Toughness` at HP/sec; bare hands have a 1 HP/sec floor so any block can be broken given enough time. `BREAKING_POWER` and `RequiredToolType` gates are enforced upfront. Drops + respawn timer working. Creative mode bypasses break-time (instant). Right-clicking a block with `Interactable: true` and a non-empty `StationType` routes through `RpgServices.stations()` — addons register handlers in their `onEnable`.

@@ -1,3 +1,5 @@
+﻿![banner-changelog](assets/banners/banner-changelog.png)
+
 # Changelog
 
 Version format: `<plugin>-<pluginVersion>-<suiteVersion>`. Only notable changes listed; see git log for full diff.

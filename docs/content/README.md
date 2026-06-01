@@ -1,3 +1,5 @@
+﻿![banner-content](../assets/banners/banner-content.png)
+
 # Content authoring overview
 
 > **Status:** In Progress — items, mobs, abilities, blocks, loot tables, admin spawners, and natural spawning all working. Recipes (crafting/cooking/brewing) are planned — station blocks open GUIs but recipe matching is not yet wired.

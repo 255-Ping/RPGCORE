@@ -1,3 +1,5 @@
+﻿![banner-cooking](../assets/banners/banner-cooking.png)
+
 # Cooking (`rpg-cooking`)
 
 > **Status:** Working — Station right-click dispatch active via `StationType: cooking` on the block definition. Recipe matching (ingredient check + consume + output) fully implemented. XP on cooking-station recipe completion, scaled by `COOKING_WISDOM`.

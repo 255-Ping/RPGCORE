@@ -1,3 +1,5 @@
+﻿![banner-configuration](assets/banners/banner-configuration.png)
+
 # Configuration overview
 
 > **Status:** Working

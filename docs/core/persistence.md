@@ -1,3 +1,5 @@
+﻿![banner-persistence](../assets/banners/banner-persistence.png)
+
 # Persistence
 
 > **Status:** In Progress — YAML backend fully working. MySQL backend implemented (`MysqlDataStore`, HikariCP connection pool, schema-version migration runner). On-startup `BackendMigrator` detects a backend switch (YAML→MySQL or MySQL→YAML) and copies all data forward before the server goes live.

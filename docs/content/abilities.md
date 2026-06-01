@@ -1,3 +1,5 @@
+﻿![banner-abilities](../assets/banners/banner-abilities.png)
+
 # Abilities
 
 > **Status:** In Progress — Built-in effects library (damage, heal, beam, explode, particles, sound, delay, apply_status, mana_cost, cooldown), custom ability YAML loader, item right-click cast, **and full mob ability trigger system** (`~onTimer:N`, `~onHit`, `~onHurt`, `~onSpawn`, `~onDeath`) all working. Items and mobs share the same ability registry, so custom abilities defined in `abilities/*.yml` are usable from both.

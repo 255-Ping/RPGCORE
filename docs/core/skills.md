@@ -1,3 +1,5 @@
+﻿![banner-skills](../assets/banners/banner-skills.png)
+
 # Skills framework
 
 > **Status:** In Progress — `SkillsService` tracks per-player XP, computes level from configured curves via the expression evaluator, fires `SkillXpAwardEvent`, persists across sessions. Pinned skill tracking works. Milestones, per-level implicit rewards, and per-skill addon XP sources arrive with each skill addon.
