@@ -72,6 +72,9 @@ public final class CoreHealthService implements HealthService {
     @Override
     public void damage(LivingEntity entity, double amount, String source) {
         setCurrentHp(entity, currentHp(entity) - amount);
+        // Hurt animation — we bypass EntityDamageEvent so vanilla never sends the
+        // red-flash status packet. Play it explicitly so the hit is always visible.
+        entity.playHurtAnimation(0f);
     }
 
     @Override

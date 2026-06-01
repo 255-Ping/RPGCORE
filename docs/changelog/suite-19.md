@@ -4,6 +4,11 @@
 
 ---
 
+### rpg-core `1.0.5`
+- **Hurt animation fix**: `CoreHealthService.damage()` now calls `entity.playHurtAnimation(0f)` after reducing HP. Previously, bypassing `EntityDamageEvent` meant vanilla never sent the red-flash status packet — arrows and mob abilities dealt damage silently with no visual feedback.
+- **Mob ability exception logging**: `MobAbilityRuntime.cast()` now logs a warning when an ability chain throws instead of silently swallowing the error.
+- **Example items — knockback added**: `aspect_of_test`, `iron_shortsword`, `voidblade`, `hunters_bow`, `beam_wand`, and `glacial_staff` now include a `knockback` stat so the mechanic is demonstrated out of the box.
+
 ### rpg-core `1.0.4`
 - **AbilityLoader unknown-field warning**: loading an ability YAML that contains an unrecognized top-level field (e.g. `ManaCost: 50`, `CombatXpMultiplier: 1.0`) now logs a console warning naming the field and pointing to the correct pattern (`mana_cost{amount=N}` in `AbilitySequence`). Previously these fields were silently ignored — abilities appeared to have a mana cost in config but never deducted any mana at runtime.
 

@@ -54,7 +54,9 @@ public final class MobAbilityRuntime {
 
         AbilityPipeline pipeline = new AbilityPipeline(binding.invocations());
         pipeline.cast(ctx, RpgServices.abilities()).exceptionally(err -> {
-            // Mob ability chain failed — silently swallow; log if needed for debug.
+            java.util.logging.Logger.getLogger("rpg-core").warning(
+                    "[MobAbility] cast failed for mob " + mob.getType().name()
+                            + ": " + err.getMessage());
             return ctx;
         });
     }
