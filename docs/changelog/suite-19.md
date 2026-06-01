@@ -4,6 +4,11 @@
 
 ---
 
+### rpg-core `1.0.6`
+- **Player melee damage fix**: `DamagePipelineListener` now reads the player's RPG `DAMAGE` stat as the melee base, the same way mob attackers already did. Previously, `event.getFinalDamage()` was used — but since all vanilla attack-damage attributes are removed from custom items, that returned `1.0`, causing swords to deal ~1 damage regardless of stats.
+- **Wand ability damage fix**: `beam_wand` and `glacial_staff` now have a `damage` stat (`30` and `50` respectively). Without it, `carriedDamage = 0` while holding the wand, making all `damage_multiplier`-based ability effects deal zero.
+- **Damage indicators for ability hits**: `DamageEffect` and `ExplodeEffect` now fire `PostDamageEvent` after each damage application, so floating damage numbers appear for wand abilities and mob AoE explosions.
+
 ### rpg-core `1.0.5`
 - **Hurt animation fix**: `CoreHealthService.damage()` now calls `entity.playHurtAnimation(0f)` after reducing HP. Previously, bypassing `EntityDamageEvent` meant vanilla never sent the red-flash status packet — arrows and mob abilities dealt damage silently with no visual feedback.
 - **Mob ability exception logging**: `MobAbilityRuntime.cast()` now logs a warning when an ability chain throws instead of silently swallowing the error.

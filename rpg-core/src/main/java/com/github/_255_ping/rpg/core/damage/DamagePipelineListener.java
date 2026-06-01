@@ -82,11 +82,14 @@ public final class DamagePipelineListener implements Listener {
             }
         }
 
-        // For custom mob attackers, use their registered DAMAGE stat as the base.
-        // Fall back to event damage for vanilla mobs (no registered holder).
-        // PDC override from custom bow projectiles takes highest priority.
+        // Determine base damage. Priority: bow PDC override > RPG stat > vanilla event damage.
+        // For custom items, vanilla attack-damage attributes are removed so getFinalDamage() == 1.
+        // Both player and mob paths must use their RPG DAMAGE stat instead.
         double baseDamage = baseDamageOverride > 0 ? baseDamageOverride : event.getFinalDamage();
-        if (baseDamageOverride <= 0 && attacker != null && !(attacker instanceof Player)) {
+        if (baseDamageOverride <= 0 && attacker instanceof Player ap) {
+            double playerDmg = RpgServices.player(ap).get(BuiltinStat.DAMAGE);
+            if (playerDmg > 0) baseDamage = playerDmg;
+        } else if (baseDamageOverride <= 0 && attacker != null && !(attacker instanceof Player)) {
             StatHolder mobHolder = RpgServices.mobStats().forMob(attacker);
             double mobDmg = mobHolder.get(BuiltinStat.DAMAGE);
             if (mobDmg > 0) baseDamage = mobDmg;

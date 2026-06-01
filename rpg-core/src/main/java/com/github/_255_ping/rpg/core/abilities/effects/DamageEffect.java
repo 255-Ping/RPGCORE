@@ -4,6 +4,9 @@ import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.abilities.AbilityContext;
 import com.github._255_ping.rpg.api.abilities.AbilityDsl;
 import com.github._255_ping.rpg.api.abilities.AbilityEffect;
+import com.github._255_ping.rpg.api.damage.DamageContext;
+import com.github._255_ping.rpg.api.damage.PostDamageEvent;
+import org.bukkit.Bukkit;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -29,6 +32,9 @@ public final class DamageEffect implements AbilityEffect {
         if (base <= 0) return CompletableFuture.completedFuture(ctx);
         String source = "true".equals(type) ? "ability_true" : "ability";
         RpgServices.health().damage(ctx.target(), base, source);
+        // Fire PostDamageEvent so damage-indicator listeners and OnHit/OnHurt triggers fire.
+        DamageContext dCtx = new DamageContext(ctx.caster(), ctx.target(), base, source);
+        Bukkit.getPluginManager().callEvent(new PostDamageEvent(dCtx, base));
         return CompletableFuture.completedFuture(ctx);
     }
 }

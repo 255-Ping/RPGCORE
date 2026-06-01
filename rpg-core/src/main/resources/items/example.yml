@@ -83,6 +83,7 @@ beam_wand:
   Type: WAND
   DisplayName: '&dBeam Wand'
   Stats:
+    damage: 30               # spell power — multiplied by ability damage_multiplier params
     intelligence: 50
     ability_damage: 20
     knockback: 5
@@ -219,6 +220,7 @@ glacial_staff:
   DisplayName: '&b&lGlacial Staff'
   ItemCooldown: 8
   Stats:
+    damage: 50               # spell power — multiplied by ability damage_multiplier params
     intelligence: 120        # flat mana pool + ability scaling
     max_mana: 80
     mana_regen: 5

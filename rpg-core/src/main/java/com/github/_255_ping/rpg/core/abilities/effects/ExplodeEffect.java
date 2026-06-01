@@ -4,6 +4,9 @@ import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.abilities.AbilityContext;
 import com.github._255_ping.rpg.api.abilities.AbilityDsl;
 import com.github._255_ping.rpg.api.abilities.AbilityEffect;
+import com.github._255_ping.rpg.api.damage.DamageContext;
+import com.github._255_ping.rpg.api.damage.PostDamageEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Entity;
@@ -60,6 +63,8 @@ public final class ExplodeEffect implements AbilityEffect {
             if (!(e instanceof LivingEntity le)) continue;
             if (le.equals(ctx.caster())) continue;
             RpgServices.health().damage(le, finalDamage, "ability_aoe");
+            DamageContext dCtx = new DamageContext(ctx.caster(), le, finalDamage, "ability_aoe");
+            Bukkit.getPluginManager().callEvent(new PostDamageEvent(dCtx, finalDamage));
         }
         return CompletableFuture.completedFuture(ctx);
     }
