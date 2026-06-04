@@ -30,10 +30,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * GUI for the BANKER NPC behavior.
- * Layout (27 slots, 3 rows):
+ * Layout (54 slots, 6 rows):
  *   Row 0: balance info pane
  *   Row 1: deposit amounts  (100 | 1k | 10k | 100k | All)
  *   Row 2: withdraw amounts (100 | 1k | 10k | 100k | All)
+ *   Rows 3–4: background fill
+ *   Row 5: nav bar (❌ Close at slot 49)
  */
 public final class BankerGui implements Listener {
 
@@ -66,7 +68,7 @@ public final class BankerGui implements Listener {
             return;
         }
 
-        Inventory inv = Bukkit.createInventory(null, 27,
+        Inventory inv = Bukkit.createInventory(null, 54,
             Component.text("⚑ " + stripColor(bankName)).color(NamedTextColor.GOLD)
                 .decorate(TextDecoration.BOLD));
 
@@ -87,8 +89,9 @@ public final class BankerGui implements Listener {
         setAmount(inv, 21, Material.RED_STAINED_GLASS_PANE, "&cWithdraw &f" + fmt(BigDecimal.valueOf(100_000)), "withdraw", 100_000);
         setAction(inv, 22, Material.RED_DYE,                "&cWithdraw All",          "withdraw_all");
 
-        // Fill all remaining empty slots with the configured background pane
+        // Fill remaining empty slots, then add the nav bar.
         RpgServices.guiConfig().fillBackground(inv);
+        RpgServices.guiConfig().placeNavBar(inv);
 
         p.openInventory(inv);
         openBank.put(p.getUniqueId(), def.id());
@@ -101,6 +104,12 @@ public final class BankerGui implements Listener {
         if (npcId == null) return;
         e.setCancelled(true);
         if (e.getCurrentItem() == null) return;
+
+        // Nav bar: close button closes the inventory without performing a transaction.
+        if (RpgServices.guiConfig().isCloseButton(e.getCurrentItem())) {
+            p.closeInventory();
+            return;
+        }
 
         String action = getAction(e.getCurrentItem());
         if (action == null) return;

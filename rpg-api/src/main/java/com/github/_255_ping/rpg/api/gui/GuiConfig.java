@@ -1,7 +1,9 @@
 package com.github._255_ping.rpg.api.gui;
 
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 
 /**
  * Central GUI style configuration, loaded from rpg-core's config.yml {@code gui:} block.
@@ -18,6 +20,59 @@ import org.bukkit.inventory.ItemStack;
  * </ul>
  */
 public interface GuiConfig {
+
+    // ── Navigation bar constants ──────────────────────────────────────────────
+
+    /** Slot for the Close button in top-level (non-nested) 54-slot GUIs — centre of the bottom row. */
+    int CLOSE_SLOT        = 49;
+    /** Slot for the Back button in nested 54-slot GUIs — far-left of the bottom row. */
+    int BACK_SLOT         = 45;
+    /** Slot for the Close button in nested 54-slot GUIs — far-right of the bottom row. */
+    int NESTED_CLOSE_SLOT = 53;
+
+    /**
+     * PDC key used to identify nav-bar buttons.
+     * Value is {@code "close"} for Close buttons, {@code "back"} for Back buttons.
+     */
+    NamespacedKey NAV_ACTION_KEY = new NamespacedKey("rpg", "nav_action");
+
+    // ── Navigation bar population ─────────────────────────────────────────────
+
+    /**
+     * Fill the bottom row of a <b>top-level</b> 54-slot GUI with border panes and place a
+     * ❌ Close button at slot {@value #CLOSE_SLOT}. Call this after all other content is placed.
+     */
+    void placeNavBar(Inventory inv);
+
+    /**
+     * Fill the bottom row of a <b>nested</b> 54-slot GUI with border panes and place a
+     * ← Back button at slot {@value #BACK_SLOT} and a ❌ Close button at slot
+     * {@value #NESTED_CLOSE_SLOT}. The Back button should reopen the parent GUI.
+     */
+    void placeNavBarNested(Inventory inv);
+
+    // ── Navigation bar detection ──────────────────────────────────────────────
+
+    /**
+     * Returns {@code true} if {@code item} is a Close button placed by {@link #placeNavBar} or
+     * {@link #placeNavBarNested}. Use in onClick handlers: if this returns true, call
+     * {@code player.closeInventory()}.
+     */
+    default boolean isCloseButton(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        return "close".equals(item.getItemMeta().getPersistentDataContainer()
+                .get(NAV_ACTION_KEY, PersistentDataType.STRING));
+    }
+
+    /**
+     * Returns {@code true} if {@code item} is a Back button placed by {@link #placeNavBarNested}.
+     * Use in onClick handlers: if this returns true, reopen the parent GUI.
+     */
+    default boolean isBackButton(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        return "back".equals(item.getItemMeta().getPersistentDataContainer()
+                .get(NAV_ACTION_KEY, PersistentDataType.STRING));
+    }
 
     /** ItemStack to use for background slots (default: GRAY_STAINED_GLASS_PANE, name " "). */
     ItemStack backgroundItem();

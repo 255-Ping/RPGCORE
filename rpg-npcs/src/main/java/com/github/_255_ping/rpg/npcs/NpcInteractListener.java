@@ -76,10 +76,10 @@ public final class NpcInteractListener implements Listener {
     }
 
     private void openShop(Player p, NpcDef def) {
-        Inventory inv = Bukkit.createInventory(p, 27, Component.text(def.displayName()).color(NamedTextColor.GOLD));
+        Inventory inv = Bukkit.createInventory(p, 54, Component.text(def.displayName()).color(NamedTextColor.GOLD));
         int i = 0;
         for (NpcDef.ShopEntry entry : def.shopItems()) {
-            if (i >= 27) break;
+            if (i >= 45) break; // rows 0–4 available for items; row 5 reserved for nav bar
             Optional<RpgItem> item = RpgServices.items().get(entry.itemId());
             ItemStack stack = item.map(RpgItem::toItemStack).orElseGet(() -> {
                 Material mat = Material.matchMaterial(entry.itemId());
@@ -96,6 +96,8 @@ public final class NpcInteractListener implements Listener {
             }
             inv.setItem(i++, stack);
         }
+        RpgServices.guiConfig().fillBackground(inv);
+        RpgServices.guiConfig().placeNavBar(inv);
         p.openInventory(inv);
         openShop.put(p.getUniqueId(), def.id());
     }
@@ -107,6 +109,11 @@ public final class NpcInteractListener implements Listener {
         if (npcId == null) return;
         if (e.getRawSlot() >= e.getView().getTopInventory().getSize()) return;
         e.setCancelled(true);
+        // Nav bar: close button.
+        if (RpgServices.guiConfig().isCloseButton(e.getCurrentItem())) {
+            p.closeInventory();
+            return;
+        }
         Optional<NpcDef> opt = manager.get(npcId);
         if (opt.isEmpty()) return;
         NpcDef def = opt.get();

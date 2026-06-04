@@ -9,6 +9,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Locale;
 
@@ -23,6 +24,8 @@ public final class CoreGuiConfig implements GuiConfig {
 
     private final ItemStack backgroundItem;
     private final ItemStack borderItem;
+    private final ItemStack closeItem;
+    private final ItemStack backItem;
 
     public CoreGuiConfig(FileConfiguration config) {
         Material bgMat   = parseMat(config, "gui.background-material", Material.GRAY_STAINED_GLASS_PANE);
@@ -31,6 +34,8 @@ public final class CoreGuiConfig implements GuiConfig {
         String   brdName = config.getString("gui.border-name",     " ");
         this.backgroundItem = buildPane(bgMat,  bgName);
         this.borderItem     = buildPane(brdMat, brdName);
+        this.closeItem      = buildNavButton(Material.BARRIER, "&c❌ Close", "close");
+        this.backItem       = buildNavButton(Material.ARROW,   "&7← Back",  "back");
     }
 
     // ── Interface ──────────────────────────────────────────────────────────────
@@ -89,6 +94,22 @@ public final class CoreGuiConfig implements GuiConfig {
         }
     }
 
+    @Override
+    public void placeNavBar(Inventory inv) {
+        // Border panes across the whole bottom row, then close button in the centre.
+        int lastRow = inv.getSize() / 9 - 1;
+        fillRow(inv, lastRow);
+        inv.setItem(CLOSE_SLOT, closeItem.clone());
+    }
+
+    @Override
+    public void placeNavBarNested(Inventory inv) {
+        int lastRow = inv.getSize() / 9 - 1;
+        fillRow(inv, lastRow);
+        inv.setItem(BACK_SLOT,         backItem.clone());
+        inv.setItem(NESTED_CLOSE_SLOT, closeItem.clone());
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────────────
 
     private static Material parseMat(FileConfiguration config, String key, Material fallback) {
@@ -99,6 +120,15 @@ public final class CoreGuiConfig implements GuiConfig {
         } catch (IllegalArgumentException e) {
             return fallback;
         }
+    }
+
+    private static ItemStack buildNavButton(Material mat, String legacyName, String action) {
+        ItemStack item = new ItemStack(mat);
+        ItemMeta  meta = item.getItemMeta();
+        meta.displayName(LEGACY.deserialize(legacyName).decoration(TextDecoration.ITALIC, false));
+        meta.getPersistentDataContainer().set(NAV_ACTION_KEY, PersistentDataType.STRING, action);
+        item.setItemMeta(meta);
+        return item;
     }
 
     private static ItemStack buildPane(Material mat, String legacyName) {

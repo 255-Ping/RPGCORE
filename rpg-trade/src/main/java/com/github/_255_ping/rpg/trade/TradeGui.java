@@ -67,6 +67,7 @@ public final class TradeGui implements Listener {
     private static final int COIN_SLOT       = 37;
     private static final int CONFIRM_SLOT    = 40;
     private static final int THEIR_COIN_SLOT = 43;
+    private static final int CANCEL_SLOT     = GuiConfig.CLOSE_SLOT; // 49
 
     // ── Dependencies ─────────────────────────────────────────────────────────
 
@@ -188,6 +189,12 @@ public final class TradeGui implements Listener {
         }
 
         // ── Top inventory clicks ─────────────────────────────────────────────
+
+        // Cancel / close button — equivalent to closing the inventory (triggers cancelAndReturn via onClose).
+        if (raw == CANCEL_SLOT) {
+            p.closeInventory();
+            return;
+        }
 
         // Confirm button
         if (raw == CONFIRM_SLOT) {
@@ -476,7 +483,7 @@ public final class TradeGui implements Listener {
     private void populate(Inventory inv, TradeSession session, UUID viewer) {
         GuiConfig gui = RpgServices.guiConfig();
         gui.fillAll(inv);
-        gui.fillRow(inv, 5); // black border bottom row
+        gui.placeNavBar(inv); // border bottom row + ❌ Cancel at slot 49
 
         // Dividers (col 4)
         ItemStack div = divider();
