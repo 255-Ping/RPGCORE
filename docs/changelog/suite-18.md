@@ -1,6 +1,10 @@
-# Suite 18
+# Suite 18 — Dev Log (Archived)
 
 ← [Back to changelog index](../changelog.md)
+
+!!! note "Archived format"
+    This is the granular per-change development log from Suite 18.
+    The new changelog format is a concise summary written once at suite transition — see the [changelog index](../changelog.md).
 
 ---
 

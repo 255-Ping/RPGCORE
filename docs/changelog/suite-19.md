@@ -1,6 +1,12 @@
-# Suite 19 (current)
+# Suite 19 — Dev Log (Archived)
 
 ← [Back to changelog index](../changelog.md)
+
+!!! note "Archived format"
+    This was the granular per-change development log maintained during Suite 19.
+    **New entries are no longer added here.** When the suite version increments to 20, a
+    concise suite summary will be written at this path from `git log`. Until then this file
+    is read-only reference.
 
 ---
 

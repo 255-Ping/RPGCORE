@@ -45,7 +45,7 @@ Two things must stay accurate at all times:
 | New content type (item/mob/ability/block) | `docs/content/<type>.md` |
 | New command or permission | `docs/commands.md` + `docs/permissions.md` |
 | `gradle.properties` keys / build | `docs/configuration.md` |
-| Any version bump in `gradle.properties` | `docs/changelog/suite-<N>.md` (see Rule 6) |
+| `suiteVersion` increments in `gradle.properties` | `docs/changelog/suite-<N>.md` summary + `docs/changelog.md` index row (see Rule 6) |
 | Any new GUI or message format | `docs/formatting.md` (see Rule 7) |
 
 If you add a feature without updating the relevant doc page, it **does not count as done**.
@@ -110,32 +110,22 @@ Before declaring a feature done, scan every literal in the new Java for values t
 The only things that may be hardcoded are: Java enum names, plugin IDs, repository names, and
 structural constants that are not observable by players.
 
-### 6. One version bump per plugin per session — and always update the changelog
+### 6. One version bump per plugin per session
 
 Within a single conversation, bump each plugin's version **at most once** — at the very end after
 all changes are accumulated. Never bump the same plugin twice in one session.
 
-**Every version bump requires a matching entry in the current suite's changelog page.** No exceptions.
+**No per-session changelog updates.** The granular dev-log format is retired. Instead, the
+changelog is written **once per suite at transition time:**
 
-The changelog is split into per-suite pages. The index is `docs/changelog.md`; each suite lives at
-`docs/changelog/suite-<N>.md`. Always write new entries to the **current** suite page.
+When `suiteVersion` increments (e.g., 19 → 20):
+1. Run `git log --oneline` since the previous suite bump to gather what changed.
+2. Write a concise summary at `docs/changelog/suite-<old-N>.md` — 5–10 bullet highlights
+   (new systems, major bug fixes, new plugins). Skip patch tweaks and minor cleanup.
+3. Add a row to the `docs/changelog.md` index table with the highlights one-liner.
 
-Format: add a section under the current suite page, one bullet per notable change:
-
-```markdown
-### rpg-<name> `X.Y.Z`
-- Short description of what changed and why it matters.
-- Another change if there are multiple.
-```
-
-Changelog entry checklist:
-- One `### rpg-<name> X.Y.Z` block per plugin bumped
-- Each bullet is 1–2 sentences: what changed + brief context (not a git log line)
-- If `suiteVersion` bumped: create `docs/changelog/suite-<N>.md`, add a row to the `docs/changelog.md` index table
-- Update the changelog **in the same commit** as the version bump
-- **Page-size rule**: if a suite's changelog page grows beyond ~150 lines, split it (close the old one, open a new sub-page or a new suite) and update the index. This keeps pages scannable.
-
-If you finish a session and realise the changelog is missing an entry, add it before pushing.
+The archived per-session dev logs live at `docs/changelog/suite-N.md` with an "Archived" admonition.
+Do **not** add entries to them during normal development.
 
 ### 7. Frontend formatting — always follow `docs/formatting.md`
 
@@ -231,10 +221,10 @@ When `suiteVersion` bumps:
 | rpg-farming | `farmingVersion` | 0.1.0 |
 | rpg-guilds | `guildsVersion` | 0.1.0 |
 | rpg-enchanting | `enchantingVersion` | 0.4.0 |
-| rpg-alchemy | `alchemyVersion` | 0.3.0 |
+| rpg-alchemy | `alchemyVersion` | 0.3.1 |
 | rpg-npcs | `npcsVersion` | 0.5.1 |
 | rpg-quests | `questsVersion` | 0.0.3 |
-| rpg-dungeons | `dungeonsVersion` | 0.0.2 |
+| rpg-dungeons | `dungeonsVersion` | 0.0.3 |
 | rpg-cooking | `cookingVersion` | 0.3.0 |
 | rpg-admin | `adminVersion` | 0.1.0 |
 | rpg-trade | `tradeVersion` | 0.1.0 |

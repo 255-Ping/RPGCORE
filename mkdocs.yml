@@ -93,9 +93,10 @@ nav:
     - Trade: addons/trade.md
   - Changelog:
     - Overview: changelog.md
-    - Suite 19: changelog/suite-19.md
-    - Suite 18: changelog/suite-18.md
-    - Suite 16: changelog/suite-16.md
+    - Dev Logs (Archived):
+      - Suite 19: changelog/suite-19.md
+      - Suite 18: changelog/suite-18.md
+      - Suite 16: changelog/suite-16.md
   - Development:
     - Developer Guide: development.md
     - Roadmap:
