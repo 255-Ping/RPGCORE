@@ -18,7 +18,7 @@ mining-fatigue:
   # Amplifier 255 rounded to exactly 0.0f, suppressing the animation entirely.
   # Vanilla can never complete a break in practice at this speed (~5+ hours per block);
   # BlockBreakEvent cancellation in rpg-core is the hard stop if it somehow did.
-  amplifier: 8
+  amplifier: 4
 
 # Per-block-id XP overrides. Match the block id from plugins/rpg-core/blocks/*.yml.
 # Blocks not listed here fall back to default-xp.

@@ -222,13 +222,18 @@ public final class BlockBreakHandler implements Listener {
                 return true;
             }
 
-            // Update the 0-9 break stage packet.
+            // Send crack stage every tick without a stage-change guard.
+            //
+            // Paper fires BlockDamageEvent every tick from its server-side break-progress
+            // loop.  Because we no longer cancel the event (to preserve the arm animation),
+            // Paper queues its own stage-0 packet during the packet-handling phase of each
+            // tick.  Scheduled tasks (this timer) run *after* packet handling in the same
+            // tick, so our sendBlockDamage packet is queued last and arrives at the client
+            // after Paper's stage-0 packet — the client renders our stage.  If we only
+            // sent on stage change, ticks 2+ would skip sending and Paper's stage-0 would
+            // win unchallenged, causing the visible crack-flash the player sees.
             double pct = 1.0 - (progress.remainingHp / progress.definition.toughness());
-            int stage = Math.max(0, Math.min(9, (int) Math.floor(pct * 10)));
-            if (stage != progress.lastStage) {
-                progress.lastStage = stage;
-                player.sendBlockDamage(progress.location, (float) Math.min(0.99, pct));
-            }
+            player.sendBlockDamage(progress.location, (float) Math.min(0.99, pct));
             return false;
         });
     }
