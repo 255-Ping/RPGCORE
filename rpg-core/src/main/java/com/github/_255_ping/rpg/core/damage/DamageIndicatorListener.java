@@ -13,16 +13,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.Transformation;
-import org.joml.AxisAngle4f;
-import org.joml.Vector3f;
 
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Spawns a short-lived TextDisplay at the victim showing the damage number.
- * Visible to all nearby players. Uses client-side TextDisplay interpolation
- * for a smooth rise + shrink with no per-tick task.
+ * Visible to all nearby players. Animates upward via server-side teleport each tick
+ * (avoids TextDisplay client interpolation packet-timing issues entirely).
  */
 public final class DamageIndicatorListener implements Listener {
 
@@ -40,7 +37,7 @@ public final class DamageIndicatorListener implements Listener {
         if (damage <= 0) return;
 
         LivingEntity victim = event.context().victim();
-        if (victim == null || !victim.isValid()) return;
+        if (victim == null || victim.getWorld() == null) return;
 
         boolean isCrit = event.context().critMultiplier() > 1.0;
         String text = damage == Math.floor(damage)
@@ -57,29 +54,28 @@ public final class DamageIndicatorListener implements Listener {
 
         int durationTicks = plugin.getConfig().getInt("damage-indicators.duration-ticks", 25);
         float riseBlocks = (float) plugin.getConfig().getDouble("damage-indicators.rise-blocks", 1.2);
+        double risePerTick = riseBlocks / (double) durationTicks;
 
         TextDisplay td = (TextDisplay) victim.getWorld().spawnEntity(loc, EntityType.TEXT_DISPLAY);
         td.text(label);
         td.setBillboard(Display.Billboard.CENTER);
         td.setDefaultBackground(false);
         td.setShadowed(true);
-        // NOTE: do NOT call setTransformation here — Paper bundles entity metadata into
-        // the spawn packet, so setting scale=0.01 immediately would make the entity
-        // invisible on arrival (client has no "previous" state to interpolate from).
-        // Defer one tick so the spawn packet goes out with default state (scale=1),
-        // then the transformation packet arrives separately and the client animates.
-        plugin.getServer().getScheduler().runTask(plugin, () -> {
-            if (!td.isValid()) return;
-            AxisAngle4f noRot = new AxisAngle4f(0f, 0f, 1f, 0f);
-            td.setInterpolationDelay(0);
-            td.setInterpolationDuration(durationTicks);
-            td.setTransformation(new Transformation(
-                    new Vector3f(0f, riseBlocks, 0f),
-                    noRot,
-                    new Vector3f(0.01f, 0.01f, 0.01f),
-                    noRot));
-        });
 
-        plugin.getServer().getScheduler().runTaskLater(plugin, td::remove, (long) durationTicks + 10L);
+        // Animate by teleporting upward each tick. We deliberately avoid setTransformation /
+        // client-side interpolation because Paper bundles entity metadata into the spawn packet,
+        // causing the entity to arrive at its end-state scale before any animation can start.
+        plugin.getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
+            int ticks = 0;
+
+            @Override
+            public void run() {
+                if (!td.isValid() || ticks++ >= durationTicks) {
+                    if (td.isValid()) td.remove();
+                    return;
+                }
+                td.teleport(td.getLocation().add(0, risePerTick, 0));
+            }
+        }, 1L, 1L);
     }
 }
