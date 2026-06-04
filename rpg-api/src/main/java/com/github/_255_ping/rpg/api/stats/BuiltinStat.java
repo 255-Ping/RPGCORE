@@ -29,7 +29,6 @@ public enum BuiltinStat implements Stat {
     SWING_RANGE("swing_range", "Swing Range", "&f", false, "mobility"),
 
     MAGIC_FIND("magic_find", "Magic Find", "&b", true, "loot"),
-    PRISTINE("pristine", "Pristine", "&5", true, "loot"),
 
     BREAKING_POWER("breaking_power", "Breaking Power", "&8", false, "gathering"),
 
@@ -52,11 +51,7 @@ public enum BuiltinStat implements Stat {
     FISHING_WISDOM("fishing_wisdom", "Fishing Wisdom", "&3", true, "wisdom"),
     COOKING_WISDOM("cooking_wisdom", "Cooking Wisdom", "&3", true, "wisdom"),
     ALCHEMY_WISDOM("alchemy_wisdom", "Alchemy Wisdom", "&3", true, "wisdom"),
-    ENCHANTING_WISDOM("enchanting_wisdom", "Enchanting Wisdom", "&3", true, "wisdom"),
-
-    ENCHANTING_LUCK("enchanting_luck", "Enchanting Luck", "&d", true, "enchanting"),
-
-    PET_LUCK("pet_luck", "Pet Luck", "&d", true, "pets");
+    ENCHANTING_WISDOM("enchanting_wisdom", "Enchanting Wisdom", "&3", true, "wisdom");
 
     private final String id;
     private final String displayName;

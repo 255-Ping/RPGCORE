@@ -2,7 +2,7 @@
 
 # Master stat reference
 
-> **Status:** Working — stat registry, lore rendering, and aggregation from gear/accessories/status effects all active. `speed`, `ferocity`, and `swing_range` are now wired (rpg-core 1.1.0). **`pristine`** is still defined but not yet wired to gameplay — tracked in [Bugs](planned/todo-bugs.md).
+> **Status:** Working — stat registry, lore rendering, and aggregation from gear/accessories/status effects all active. `speed`, `ferocity`, and `swing_range` are now wired (rpg-core 1.1.0). `magic_find` is defined but loot-roll integration is pending audit.
 
 Every stat in the framework. Built-in stats are part of `rpg-api`'s `BuiltinStat` enum so any addon can reference them. Custom stats can be registered at runtime via `StatRegistry.register(new CustomStat(...))`.
 
@@ -73,7 +73,6 @@ The two most common mistakes:
 | ID | Display | Percent | Description |
 |---|---|---|---|
 | `magic_find` | Magic Find | yes | Multiplies rare-loot chance on flagged drops |
-| `pristine` | Pristine | yes | Gemstone / rare drop quality (reserved for future) — **⚠ not yet wired** |
 
 ## Breaking & gathering — universal
 
@@ -121,18 +120,6 @@ The two most common mistakes:
 | `cooking_wisdom` | Cooking Wisdom | yes | % bonus cooking XP |
 | `alchemy_wisdom` | Alchemy Wisdom | yes | % bonus alchemy XP |
 | `enchanting_wisdom` | Enchanting Wisdom | yes | % bonus enchanting XP |
-
-## Enchanting
-
-| ID | Display | Percent | Description |
-|---|---|---|---|
-| `enchanting_luck` | Enchanting Luck | yes | Improves quality of random reforge / upgrade outcomes |
-
-## Reserved (future)
-
-| ID | Display | Percent | Description |
-|---|---|---|---|
-| `pet_luck` | Pet Luck | yes | Reserved for the future `rpg-pets` addon |
 
 ---
 

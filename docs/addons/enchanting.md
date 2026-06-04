@@ -257,7 +257,6 @@ Station blocks open the enchanting/anvil GUIs on right-click. The commands are a
 ## Stats
 
 - `enchanting_wisdom` — XP bonus
-- `enchanting_luck` — quality of random reforge / upgrade outcomes
 
 ## Related
 

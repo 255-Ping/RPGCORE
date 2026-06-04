@@ -33,7 +33,7 @@
 #   Survival:  max_health  health_regen  vitality  defense  true_defense
 #   Caster:    max_mana  mana_regen  intelligence  cooldown_reduction
 #   Mobility:  speed  swing_range
-#   Loot:      magic_find  pristine  auto_loot  enchanting_luck  pet_luck
+#   Loot:      magic_find  auto_loot
 #   Gathering: breaking_power
 #   Skills:    mining_speed  mining_fortune  foraging_speed  foraging_fortune
 #              farming_fortune  fishing_speed  fishing_fortune  sea_creature_chance
@@ -398,8 +398,6 @@ enchanted_upgrade_crystal:
   DisplayName: '&5Enchanted Upgrade Crystal'
   # Tradeable: false — cannot be traded to other players or listed on Bazaar / AH
   Tradeable: false
-  Stats:
-    enchanting_luck: 15    # % bonus to enchanting success (when used on anvil station)
   Lore:
   - '&7Apply at the &5Enchanting Anvil &7to attempt an upgrade.'
   - '&7This crystal is &cbound &7and cannot be traded.'
@@ -449,16 +447,13 @@ scholars_pendant:
   - '&7Increases all skill XP gains by &b+5% &7each.'
   Rarity: '&6&lLEGENDARY'
 
-pristine_talisman:
+fortune_talisman:
   MinecraftItem: nether_star
   Type: ACCESSORY
-  DisplayName: '&d&lPristine Talisman'
+  DisplayName: '&d&lFortune Talisman'
   Stats:
     magic_find: 40         # % bonus rare-drop chance
-    pristine: 25           # % bonus to item quality rolls
-    pet_luck: 20           # % bonus pet drop chance
     auto_loot: 1           # automatically picks up nearby drops (flat radius bonus)
-    enchanting_luck: 10    # % enchanting success bonus
   Lore:
   - '&7A talisman of extraordinary fortune.'
   - '&7All the luck of the cosmos, bound into one gem.'

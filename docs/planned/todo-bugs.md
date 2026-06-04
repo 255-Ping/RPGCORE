@@ -68,12 +68,9 @@ Several `BuiltinStat` entries appear on example items and show up in lore, but a
 | `speed` | ✅ | ✅ `rpg-core 1.1.0` | Sets `generic.movement_speed` in `EquipmentListener`. Formula: `0.1 × (1 + speed × speedPerPoint / 100)`. |
 | `ferocity` | ✅ | ✅ `rpg-core 1.1.0` | Extra melee swings in `DamagePipelineListener`. Each 100 ferocity = 1 guaranteed extra hit; remainder = % chance. |
 | `swing_range` | ✅ | ✅ `rpg-core 1.1.0` | Sets `entity_interaction_range` in `EquipmentListener`. Formula: `3.0 + swingRange × blocksPerPoint`. |
-| `pristine` | ✅ | ❌ | Intended to improve item quality rolls. No quality roll system exists. |
-| `enchanting_luck` | ✅ | ❓ | Verify whether `StationGui` actually reads it during enchant application. |
-| `pet_luck` | ✅ | ❌ | Irrelevant until `rpg-pets` exists. |
 | `magic_find` | ✅ | ❓ | Referenced in loot pool spec as `MagicFindAffected: true` — verify whether any loot roll reads it. |
 
-Remaining: `pristine`, `pet_luck` (pending system), `enchanting_luck`, `magic_find` (needs audit).
+Remaining: `magic_find` (needs audit). `pristine`, `pet_luck`, `enchanting_luck` removed from `BuiltinStat` — will be re-added when the systems that use them are built.
 
 ---
 
