@@ -28,25 +28,36 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Brewing GUI: player drops ingredients into the 3 input slots (10,11,12) and clicks a recipe
- * tile to brew. We resolve the first recipe whose inputs match the contents (matters: id +
- * minimum amount). On confirm, inputs are consumed and the output potion is given to the player.
+ * Brewing GUI — 54-slot layout (6 rows):
+ * <pre>
+ *   Row 0 (0–8):   background
+ *   Row 1 (9–17):  ingredient slots centred at 12, 13, 14; rest background
+ *   Rows 2–4 (18–44): recipe tiles (27 per page)
+ *   Row 5 (45–53): nav bar  ← PREV (45) | bg | bg | bg | ❌ Close (49) | bg | bg | bg | NEXT → (53)
+ * </pre>
  *
  * <p><b>Per-player isolation</b>: every call to {@link #open} creates a brand-new
- * {@link Inventory} object for that specific player. Two players clicking the same station
- * block simultaneously each get their own independent inventory — they cannot see or interfere
- * with each other's ingredients.
+ * {@link Inventory} object for that specific player.
  */
 public final class BrewingGui implements Listener {
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
-    private static final int[] INPUT_SLOTS = {10, 11, 12};
+    // Ingredient slots: row 1, centred (matches cooking station layout)
+    private static final int[] INPUT_SLOTS    = {12, 13, 14};
+    // Recipe tiles fill rows 2–4
+    private static final int RECIPE_START     = 18;
+    private static final int RECIPES_PER_PAGE = 27; // rows 2–4
+    // Nav bar
+    private static final int NAV_PREV  = 45;
+    private static final int NAV_CLOSE = GuiConfig.CLOSE_SLOT; // 49
+    private static final int NAV_NEXT  = 53;
 
     private final RpgAlchemyPlugin plugin;
     private final AlchemyRegistry registry;
     private final PotionItemFactory potionItems;
     private final Map<UUID, Boolean> open = new HashMap<>();
+    private final Map<UUID, Integer> page  = new HashMap<>();
 
     public BrewingGui(RpgAlchemyPlugin plugin, AlchemyRegistry registry, PotionItemFactory potionItems) {
         this.plugin = plugin;
@@ -55,14 +66,15 @@ public final class BrewingGui implements Listener {
     }
 
     public void open(Player player) {
-        Inventory inv = Bukkit.createInventory(player, 36,
+        Inventory inv = Bukkit.createInventory(player, 54,
                 Component.text("Brewing Station").color(NamedTextColor.LIGHT_PURPLE).decorate(TextDecoration.BOLD));
         GuiConfig gui = RpgServices.guiConfig();
         gui.fillAll(inv);
         for (int slot : INPUT_SLOTS) inv.setItem(slot, null);
-        refreshRecipes(inv);
-        player.openInventory(inv);
         open.put(player.getUniqueId(), true);
+        page.put(player.getUniqueId(), 0);
+        refreshRecipes(inv, player);
+        player.openInventory(inv);
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -71,36 +83,58 @@ public final class BrewingGui implements Listener {
         if (open.get(p.getUniqueId()) == null) return;
         int raw = e.getRawSlot();
         int topSize = e.getView().getTopInventory().getSize();
+        Inventory top = e.getView().getTopInventory();
 
-        // Shift-click from bottom inventory → route to first free input slot.
+        // Bottom inventory: shift-click routes to first free input slot
         if (raw >= topSize) {
             if (!e.isShiftClick()) return;
             ItemStack clicked = e.getCurrentItem();
             if (clicked == null || clicked.getType().isAir()) return;
             e.setCancelled(true);
-            Inventory top = e.getView().getTopInventory();
             for (int slot : INPUT_SLOTS) {
-                ItemStack existing = top.getItem(slot);
-                if (existing == null || existing.getType().isAir()) {
+                ItemStack ex = top.getItem(slot);
+                if (ex == null || ex.getType().isAir()) {
                     top.setItem(slot, clicked.clone());
                     clicked.setAmount(0);
-                    plugin.getServer().getScheduler().runTask(plugin, () -> refreshRecipes(top));
+                    plugin.getServer().getScheduler().runTask(plugin, () -> refreshRecipes(top, p));
                     return;
                 }
             }
             return;
         }
 
-        // Inputs: 10..12 — allow drop. Recipes: 19..25.
-        if (isInputSlot(raw)) {
-            plugin.getServer().getScheduler().runTask(plugin, () -> refreshRecipes(e.getView().getTopInventory()));
-            return;
-        }
-        if (raw >= 19 && raw <= 25) {
+        // Nav bar (row 5): close, prev, next — block all other nav-bar slots
+        if (raw >= 45) {
             e.setCancelled(true);
-            tryBrew(p, e.getView().getTopInventory(), raw - 19);
+            if (RpgServices.guiConfig().isCloseButton(top.getItem(raw))) {
+                p.closeInventory();
+            } else if (raw == NAV_PREV) {
+                int pg = page.getOrDefault(p.getUniqueId(), 0);
+                if (pg > 0) { page.put(p.getUniqueId(), pg - 1); refreshRecipes(top, p); }
+            } else if (raw == NAV_NEXT) {
+                int pg = page.getOrDefault(p.getUniqueId(), 0);
+                page.put(p.getUniqueId(), pg + 1); // refresh clamps
+                refreshRecipes(top, p);
+            }
             return;
         }
+
+        // Input slots — allow interaction, defer refresh
+        if (isInputSlot(raw)) {
+            plugin.getServer().getScheduler().runTask(plugin, () -> refreshRecipes(top, p));
+            return;
+        }
+
+        // Recipe tile click
+        if (raw >= RECIPE_START && raw < RECIPE_START + RECIPES_PER_PAGE) {
+            e.setCancelled(true);
+            int pg = page.getOrDefault(p.getUniqueId(), 0);
+            int idx = pg * RECIPES_PER_PAGE + (raw - RECIPE_START);
+            tryBrew(p, top, idx);
+            return;
+        }
+
+        // Everything else in the top inventory is locked
         e.setCancelled(true);
     }
 
@@ -108,7 +142,7 @@ public final class BrewingGui implements Listener {
     public void onClose(InventoryCloseEvent e) {
         if (!(e.getPlayer() instanceof Player p)) return;
         if (open.remove(p.getUniqueId()) == null) return;
-        // Return any ingredients still in input slots.
+        page.remove(p.getUniqueId());
         for (int slot : INPUT_SLOTS) {
             ItemStack stack = e.getInventory().getItem(slot);
             if (stack != null && !stack.getType().isAir()) {
@@ -125,16 +159,46 @@ public final class BrewingGui implements Listener {
         return false;
     }
 
-    private void refreshRecipes(Inventory inv) {
-        // Show all recipes; only highlight ones whose inputs the player satisfies right now.
-        java.util.List<BrewRecipeDef> recipes = new java.util.ArrayList<>(registry.allRecipes());
-        for (int i = 0; i < 7; i++) {
-            int slot = 19 + i;
-            if (i >= recipes.size()) { inv.setItem(slot, paneItem()); continue; }
-            BrewRecipeDef r = recipes.get(i);
-            ItemStack tile = recipeTile(r, slotsSatisfy(inv, r.inputs()));
-            inv.setItem(slot, tile);
+    private void refreshRecipes(Inventory inv, Player p) {
+        List<BrewRecipeDef> recipes = new java.util.ArrayList<>(registry.allRecipes());
+        int totalPages = Math.max(1, (recipes.size() + RECIPES_PER_PAGE - 1) / RECIPES_PER_PAGE);
+        int pg = Math.min(page.getOrDefault(p.getUniqueId(), 0), totalPages - 1);
+        page.put(p.getUniqueId(), pg);
+
+        int start = pg * RECIPES_PER_PAGE;
+        for (int i = 0; i < RECIPES_PER_PAGE; i++) {
+            int slot = RECIPE_START + i;
+            int recipeIdx = start + i;
+            if (recipeIdx >= recipes.size()) { inv.setItem(slot, paneItem()); continue; }
+            BrewRecipeDef r = recipes.get(recipeIdx);
+            inv.setItem(slot, recipeTile(r, slotsSatisfy(inv, r.inputs())));
         }
+
+        placeNavBar(inv, pg, totalPages);
+    }
+
+    private void placeNavBar(Inventory inv, int pg, int totalPages) {
+        RpgServices.guiConfig().placeNavBar(inv); // border row + close at 49
+        if (totalPages > 1) {
+            inv.setItem(NAV_PREV, pg > 0
+                    ? pageArrow("&7← Previous Page", pg, totalPages)
+                    : RpgServices.guiConfig().borderItem());
+            inv.setItem(NAV_NEXT, pg < totalPages - 1
+                    ? pageArrow("&7Next Page →", pg, totalPages)
+                    : RpgServices.guiConfig().borderItem());
+        }
+    }
+
+    private static ItemStack pageArrow(String label, int pg, int total) {
+        ItemStack item = new ItemStack(Material.ARROW);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.displayName(LEGACY.deserialize(label).decoration(TextDecoration.ITALIC, false));
+            meta.lore(List.of(LEGACY.deserialize("&8Page &7" + (pg + 1) + " &8/ &7" + total)
+                    .decoration(TextDecoration.ITALIC, false)));
+            item.setItemMeta(meta);
+        }
+        return item;
     }
 
     private ItemStack recipeTile(BrewRecipeDef r, boolean satisfied) {
@@ -145,7 +209,7 @@ public final class BrewingGui implements Listener {
             meta.displayName(Component.text(satisfied ? "Brew: " : "Recipe: ")
                     .append(Component.text(r.id())).color(NamedTextColor.WHITE)
                     .decoration(TextDecoration.ITALIC, false));
-            java.util.List<Component> lore = new java.util.ArrayList<>();
+            List<Component> lore = new java.util.ArrayList<>();
             lore.add(Component.text("Inputs:").color(NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
             for (BrewRecipeDef.Ingredient in : r.inputs()) {
                 lore.add(Component.text("  " + in.amount() + "x " + in.itemId())
@@ -165,15 +229,14 @@ public final class BrewingGui implements Listener {
         return stack;
     }
 
-    private void tryBrew(Player p, Inventory inv, int recipeIdx) {
+    private void tryBrew(Player p, Inventory inv, int idx) {
         if (!p.hasPermission("rpg.alchemy.use.brew")) return;
         List<BrewRecipeDef> recipes = new java.util.ArrayList<>(registry.allRecipes());
-        if (recipeIdx >= recipes.size()) return;
-        BrewRecipeDef r = recipes.get(recipeIdx);
+        if (idx >= recipes.size()) return;
+        BrewRecipeDef r = recipes.get(idx);
         int level = RpgServices.skills().level(p, BuiltinSkill.ALCHEMY.id());
         if (level < r.requiredLevel()) {
-            p.sendMessage(plugin.messages().get("brew.requires-level",
-                    java.util.Map.of("level", r.requiredLevel())));
+            p.sendMessage(plugin.messages().get("brew.requires-level", Map.of("level", r.requiredLevel())));
             return;
         }
         if (!slotsSatisfy(inv, r.inputs())) {
@@ -187,29 +250,22 @@ public final class BrewingGui implements Listener {
             return;
         }
         HashMap<Integer, ItemStack> overflow = p.getInventory().addItem(output);
-        for (ItemStack drop : overflow.values()) {
-            p.getWorld().dropItemNaturally(p.getLocation(), drop);
-        }
+        for (ItemStack drop : overflow.values()) p.getWorld().dropItemNaturally(p.getLocation(), drop);
         long xp = plugin.getConfig().getLong("xp.per-brew", 30);
         if (xp > 0) RpgServices.skills().awardXp(p, BuiltinSkill.ALCHEMY.id(), xp);
-        p.sendMessage(plugin.messages().get("brew.success",
-                java.util.Map.of("item", r.output().itemId())));
-        refreshRecipes(inv);
+        p.sendMessage(plugin.messages().get("brew.success", Map.of("item", r.output().itemId())));
+        refreshRecipes(inv, p);
     }
 
     private boolean slotsSatisfy(Inventory inv, List<BrewRecipeDef.Ingredient> inputs) {
-        // Count by item id across input slots.
         Map<String, Integer> have = new HashMap<>();
         for (int slot : INPUT_SLOTS) {
             ItemStack stack = inv.getItem(slot);
             if (stack == null || stack.getType().isAir()) continue;
-            String key = identifierOf(stack);
-            have.merge(key.toLowerCase(Locale.ROOT), stack.getAmount(), Integer::sum);
+            have.merge(identifierOf(stack).toLowerCase(Locale.ROOT), stack.getAmount(), Integer::sum);
         }
         for (BrewRecipeDef.Ingredient in : inputs) {
-            int needed = in.amount();
-            int got = have.getOrDefault(in.itemId().toLowerCase(Locale.ROOT), 0);
-            if (got < needed) return false;
+            if (have.getOrDefault(in.itemId().toLowerCase(Locale.ROOT), 0) < in.amount()) return false;
         }
         return true;
     }

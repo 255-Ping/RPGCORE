@@ -17,9 +17,9 @@ class EnchantDefTest {
     private static final double EPS = 1e-9;
 
     private EnchantDef sharpness(double scale) {
-        return new EnchantDef("sharpness", "Sharpness", 5,
+        return new EnchantDef("sharpness", "Sharpness", List.of(), 5,
                 List.of("sword"), Map.of("strength", 5.0), scale,
-                0, 0, 1);
+                0L, 0.0, 1);
     }
 
     @Test void level0_returnsEmpty() {

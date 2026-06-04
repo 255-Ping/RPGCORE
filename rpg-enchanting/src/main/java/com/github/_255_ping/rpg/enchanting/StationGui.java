@@ -64,16 +64,25 @@ public final class StationGui implements Listener {
     // Enchanting mode — enchant option slots (rows 2 and 3, excluding border cols)
     private static final int[] ENCHANT_SLOTS = {19, 20, 21, 22, 23, 24, 25,
                                                  28, 29, 30, 31, 32, 33, 34};
+    private static final int ENCHANTS_PER_PAGE = ENCHANT_SLOTS.length; // 14
 
     // Anvil mode
     private static final int ANVIL_STONE_SLOT   = 13;   // reforge stone or upgrade book
     private static final int ANVIL_APPLY_SLOT   = 15;   // apply button
     private static final int ANVIL_HINT_SLOT    = 22;   // contextual hint label
 
+    // Nav bar slots (row 5 of the 54-slot GUI)
+    private static final int NAV_PREV_SLOT  = 45;
+    private static final int NAV_PAGE_SLOT  = 47;
+    private static final int NAV_CLOSE_SLOT = com.github._255_ping.rpg.api.gui.GuiConfig.CLOSE_SLOT; // 49
+    private static final int NAV_NEXT_SLOT  = 53;
+
     private final RpgEnchantingPlugin plugin;
     private final EnchantRegistry registry;
     private final ItemModifier modifier;
     private final Map<UUID, Mode> open = new HashMap<>();
+    /** Current enchant page per player (only relevant in ENCHANTING mode). */
+    private final Map<UUID, Integer> enchantPage = new HashMap<>();
 
     public StationGui(RpgEnchantingPlugin plugin, EnchantRegistry registry, ItemModifier modifier) {
         this.plugin = plugin;
@@ -85,7 +94,7 @@ public final class StationGui implements Listener {
 
     public void open(Player player, Mode mode) {
         String title = mode == Mode.ENCHANTING ? "✦ Enchanting Table" : "⚒ Custom Anvil";
-        Inventory inv = player.getServer().createInventory(player, 45,
+        Inventory inv = player.getServer().createInventory(player, 54,
                 Component.text(title).color(NamedTextColor.DARK_PURPLE).decorate(TextDecoration.BOLD));
         GuiConfig gui = RpgServices.guiConfig();
         gui.fillAll(inv);
@@ -94,9 +103,14 @@ public final class StationGui implements Listener {
             inv.setItem(ANVIL_STONE_SLOT, null);  // leave open for stone/book
             inv.setItem(ANVIL_APPLY_SLOT, buildApplyButton(null, null));
             inv.setItem(ANVIL_HINT_SLOT, hintItem("&7Place your item in the &dleft slot&7,\nthen a reforge stone or upgrade book in the &dcenter slot&7."));
+            gui.placeNavBar(inv);
         }
         player.openInventory(inv);
         open.put(player.getUniqueId(), mode);
+        if (mode == Mode.ENCHANTING) {
+            enchantPage.put(player.getUniqueId(), 0);
+            refreshEnchanting(player, inv);
+        }
     }
 
     // ── Events ───────────────────────────────────────────────────────────────
@@ -153,6 +167,22 @@ public final class StationGui implements Listener {
             return;
         }
 
+        // Nav bar (row 5) — handle close and pagination, block everything else
+        if (raw >= 45) {
+            e.setCancelled(true);
+            if (RpgServices.guiConfig().isCloseButton(top.getItem(raw))) {
+                p.closeInventory();
+            } else if (mode == Mode.ENCHANTING && raw == NAV_PREV_SLOT) {
+                int pg = enchantPage.getOrDefault(p.getUniqueId(), 0);
+                if (pg > 0) { enchantPage.put(p.getUniqueId(), pg - 1); refresh(p, mode); }
+            } else if (mode == Mode.ENCHANTING && raw == NAV_NEXT_SLOT) {
+                int pg = enchantPage.getOrDefault(p.getUniqueId(), 0);
+                enchantPage.put(p.getUniqueId(), pg + 1); // refreshEnchanting clamps
+                refresh(p, mode);
+            }
+            return;
+        }
+
         // Enchanting mode — enchant slots
         if (mode == Mode.ENCHANTING) {
             for (int i = 0; i < ENCHANT_SLOTS.length; i++) {
@@ -174,6 +204,7 @@ public final class StationGui implements Listener {
         if (!(e.getPlayer() instanceof Player p)) return;
         Mode mode = open.remove(p.getUniqueId());
         if (mode == null) return;
+        enchantPage.remove(p.getUniqueId());
         // Return any items left in the input slots
         returnSlot(p, e.getInventory(), TARGET_SLOT);
         if (mode == Mode.ANVIL) returnSlot(p, e.getInventory(), ANVIL_STONE_SLOT);
@@ -191,23 +222,76 @@ public final class StationGui implements Listener {
     }
 
     private void refreshEnchanting(Player p, Inventory inv) {
-        // Clear all enchant slots first
+        int page = enchantPage.getOrDefault(p.getUniqueId(), 0);
+
+        // Clear all enchant slots
         for (int slot : ENCHANT_SLOTS) inv.setItem(slot, paneItem());
 
         ItemStack target = inv.getItem(TARGET_SLOT);
-        if (target == null || target.getType().isAir()) return;
+        if (target == null || target.getType().isAir()) {
+            placeEnchantNavBar(inv, 0, 1);
+            return;
+        }
 
         Optional<RpgItem> base = RpgServices.items().from(target);
         String itemType = base.map(b -> b.type().id()).orElse("");
 
-        int slotIdx = 0;
+        // Count total applicable enchants to compute page count
+        int applicable = 0;
         for (EnchantDef def : registry.allEnchants()) {
-            if (slotIdx >= ENCHANT_SLOTS.length) break;
-            if (!appliesTo(def.appliesTo(), itemType)) continue;
-            int cur = modifier.enchants(target).getOrDefault(def.id(), 0);
-            inv.setItem(ENCHANT_SLOTS[slotIdx], buildEnchantSlot(def, cur));
-            slotIdx++;
+            if (appliesTo(def.appliesTo(), itemType)) applicable++;
         }
+        int totalPages = Math.max(1, (applicable + ENCHANTS_PER_PAGE - 1) / ENCHANTS_PER_PAGE);
+        page = Math.min(page, totalPages - 1); // clamp if page was beyond last
+        enchantPage.put(p.getUniqueId(), page);
+
+        // Fill visible enchant slots for this page
+        int skip = page * ENCHANTS_PER_PAGE;
+        int seen = 0, slotIdx = 0;
+        for (EnchantDef def : registry.allEnchants()) {
+            if (!appliesTo(def.appliesTo(), itemType)) continue;
+            if (seen++ < skip) continue;
+            if (slotIdx >= ENCHANTS_PER_PAGE) break;
+            int cur = modifier.enchants(target).getOrDefault(def.id(), 0);
+            inv.setItem(ENCHANT_SLOTS[slotIdx++], buildEnchantSlot(def, cur));
+        }
+
+        placeEnchantNavBar(inv, page, totalPages);
+    }
+
+    private void placeEnchantNavBar(Inventory inv, int page, int totalPages) {
+        RpgServices.guiConfig().placeNavBar(inv); // border row + close at 49
+        if (totalPages > 1) {
+            inv.setItem(NAV_PREV_SLOT, page > 0
+                    ? navPageArrow("&7← Previous Page", page, totalPages)
+                    : RpgServices.guiConfig().borderItem());
+            inv.setItem(NAV_PAGE_SLOT, navPageIndicator(page, totalPages));
+            inv.setItem(NAV_NEXT_SLOT, page < totalPages - 1
+                    ? navPageArrow("&7Next Page →", page, totalPages)
+                    : RpgServices.guiConfig().borderItem());
+        }
+    }
+
+    private static ItemStack navPageArrow(String label, int page, int totalPages) {
+        ItemStack item = new ItemStack(Material.ARROW);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.displayName(ni(LEGACY.deserialize(label)));
+            meta.lore(List.of(ni(LEGACY.deserialize("&8Page &7" + (page + 1) + " &8/ &7" + totalPages))));
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+
+    private static ItemStack navPageIndicator(int page, int totalPages) {
+        ItemStack item = new ItemStack(Material.BOOK);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.displayName(ni(LEGACY.deserialize("&7Page &f" + (page + 1) + " &7/ &f" + totalPages)));
+            meta.lore(List.of());
+            item.setItemMeta(meta);
+        }
+        return item;
     }
 
     private void refreshAnvil(Player p, Inventory inv) {
@@ -237,10 +321,12 @@ public final class StationGui implements Listener {
         Optional<RpgItem> base = RpgServices.items().from(target);
         String itemType = base.map(b -> b.type().id()).orElse("");
 
+        int page = enchantPage.getOrDefault(p.getUniqueId(), 0);
+        int targetIdx = page * ENCHANTS_PER_PAGE + slotIdx;
         int j = 0;
         for (EnchantDef def : registry.allEnchants()) {
             if (!appliesTo(def.appliesTo(), itemType)) continue;
-            if (j == slotIdx) {
+            if (j == targetIdx) {
                 int cur = modifier.enchants(target).getOrDefault(def.id(), 0);
                 if (cur >= def.maxLevel()) {
                     p.sendMessage(plugin.messages().get("enchant.at-max")); return;
