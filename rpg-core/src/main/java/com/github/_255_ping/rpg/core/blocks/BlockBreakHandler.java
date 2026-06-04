@@ -8,9 +8,16 @@ import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import com.github._255_ping.rpg.core.RpgCorePlugin;
 import com.github._255_ping.rpg.core.drops.DropManager;
 import com.destroystokyo.paper.event.block.BlockDestroyEvent;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelPromise;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -24,10 +31,10 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -38,17 +45,35 @@ import java.util.concurrent.ThreadLocalRandom;
  * counter initialized to {@code Toughness}. We push the {@link Player#sendBlockDamage}
  * packet each tick to draw the 0-9 break stage. On 0, the break flow runs (drops + respawn).
  *
- * <p>BlockBreakEvent on a tagged block always cancels — only this handler can complete
- * the break. PlayerInteractEvent left-click on air clears progress, as does
+ * <h3>Arm animation + crack-stage flash fix (NMS)</h3>
+ * <p>Paper fires {@code BlockDamageEvent} every tick from its server-side break-progress loop.
+ * Cancelling the event suppresses the crack flash but sends a FAILED ack to the client, which
+ * resets its "is destroying" state — the arm animation never sustains. Not cancelling keeps the
+ * arm animated but Paper queues its own stage-0 crack packet that flashes against our stages.
+ *
+ * <p>We solve both at once via a Netty outbound interceptor injected into each player's pipeline.
+ * The interceptor sits between {@code packet_handler} and {@code encoder}. Any
+ * {@link ClientboundBlockDestructionPacket} for the active RPG block has its {@code progress}
+ * field replaced with our RPG-computed stage before it reaches the encoder — whether that packet
+ * originated from Paper's vanilla processing or from our own {@code sendBlockDamage} calls.
+ * Paper's stage-0 packets are transparently rewritten; the SUCCESS ack still reaches the client
+ * so the arm animation runs uninterrupted.
+ *
+ * <p>{@code BlockBreakEvent} on a tagged block always cancels — only this handler can complete
+ * the break. {@code PlayerInteractEvent} left-click on air clears progress, as does
  * {@code BlockDamageAbortEvent} and quitting / swapping items.
  */
 public final class BlockBreakHandler implements Listener {
+
+    /** Netty pipeline handler name for the per-player crack interceptor. */
+    private static final String CRACK_HANDLER = "rpg_crack_intercept";
 
     private final RpgCorePlugin plugin;
     private final CoreBlockRegistry registry;
     private final DropManager dropManager;
     private final BlockHologramService hologramService;
-    private final Map<UUID, BlockBreakProgress> active = new HashMap<>();
+    // ConcurrentHashMap: main thread writes, Netty IO thread reads via crack interceptor.
+    private final Map<UUID, BlockBreakProgress> active = new ConcurrentHashMap<>();
     private BukkitTask tickTask;
 
     public BlockBreakHandler(RpgCorePlugin plugin, CoreBlockRegistry registry,
@@ -86,33 +111,25 @@ public final class BlockBreakHandler implements Listener {
             return;
         }
 
-        // Wrong tool / insufficient power: cancel so vanilla doesn't advance break progress,
-        // and give the player the "wrong tool" action-bar message.
+        // Wrong tool / insufficient power: cancel so vanilla doesn't advance break progress
+        // and show an error.  The failed ack resets the client mining state — correct here
+        // because the player genuinely can't mine this block.
         if (!gatesPass(player, block)) {
             event.setCancelled(true);
             return;
         }
 
-        // Requirements met: do NOT cancel the event.
-        //
-        // Cancelling sends a ClientboundBlockChangedAck(FAILED) to the client, which resets
-        // the client's "is destroying" state.  The client immediately retries on the next tick,
-        // creating an infinite cancel→failed-ack→resend cycle.  Each cycle causes a one-tick
-        // flash between our sendBlockDamage stage and the client's reset state — that's the
-        // crack-stage flicker the player sees.  It also suppresses the arm-raise animation,
-        // because the client never stays in "destroying" state long enough to render it.
-        //
-        // Not cancelling lets Paper send a SUCCESS ack.  The client enters and STAYS in the
-        // "destroying" animation state (arm raises and mines).  Vanilla break progress does
-        // advance, but only at ~0.0002× normal speed (Mining Fatigue amplifier 8), so it
-        // will never reach 100% in any realistic session.  onBreak() is the hard stop if it
-        // somehow did.  Our tick loop owns the crack-stage packets via sendBlockDamage.
+        // Requirements met: do NOT cancel the event.  Cancelling would send FAILED ack →
+        // client resets "is destroying" state → arm animation dies.  Instead we leave the
+        // event alone so the client receives SUCCESS ack and keeps the arm animated.
+        // Paper's vanilla crack-stage packet (always stage 0) is intercepted and replaced
+        // with our RPG stage by the Netty handler injected below.
         BlockBreakProgress existing = active.get(player.getUniqueId());
         if (existing == null || !existing.location.equals(loc)) {
-            // New block (or switching target) — start fresh progress.
             active.put(player.getUniqueId(), new BlockBreakProgress(loc, block));
+            injectCrackInterceptor(player);
         }
-        // If continuing on the same block, the tick task is already running — nothing to do here.
+        // Continuing on the same block — tick task already running, nothing to do.
     }
 
     @EventHandler
@@ -126,7 +143,6 @@ public final class BlockBreakHandler implements Listener {
         if (!registry.hasTag(loc)) return;
 
         // Creative bypass — let the break go through, but un-tag.
-        // Only admins (rpg.admin) in creative mode can break custom blocks.
         if (event.getPlayer().getGameMode() == GameMode.CREATIVE
                 && event.getPlayer().hasPermission("rpg.admin")
                 && plugin.getConfig().getBoolean("creative-mode-bypass.break-time", true)) {
@@ -143,6 +159,7 @@ public final class BlockBreakHandler implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         clearProgress(event.getPlayer());
+        removeCrackInterceptor(event.getPlayer());
     }
 
     @EventHandler
@@ -156,24 +173,21 @@ public final class BlockBreakHandler implements Listener {
             clearProgress(event.getPlayer());
             return;
         }
-        // Fallback trigger for LEFT_CLICK_BLOCK: Mining Fatigue 255 (applied by rpg-mining to
-        // gathering tools) causes Paper to suppress per-tick BlockDamageEvent because the
-        // calculated break-progress-per-tick is effectively 0. BlockDamageEvent still fires once
-        // on the initial START_DESTROY_BLOCK client packet, but PlayerInteractEvent fires from
-        // the same packet and is a safe secondary path to start progress if needed.
+        // Fallback trigger: same packet as BlockDamageEvent (START_DESTROY_BLOCK); guards against
+        // any edge case where BlockDamageEvent was suppressed but PlayerInteractEvent still fired.
         if (event.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_BLOCK
                 && event.getClickedBlock() != null) {
             Location loc = event.getClickedBlock().getLocation();
             if (!registry.hasTag(loc)) return;
             Player player = event.getPlayer();
-            if (player.getGameMode() == GameMode.CREATIVE) return; // handled by onDamage/onBreak
-            // Only start if not already tracking this exact block.
+            if (player.getGameMode() == GameMode.CREATIVE) return;
             BlockBreakProgress existing = active.get(player.getUniqueId());
             if (existing != null && existing.location.equals(loc)) return;
             Optional<Block> opt = registry.at(loc);
             if (opt.isEmpty()) return;
             if (!gatesPass(player, opt.get())) return;
             active.put(player.getUniqueId(), new BlockBreakProgress(loc, opt.get()));
+            injectCrackInterceptor(player);
         }
     }
 
@@ -201,6 +215,10 @@ public final class BlockBreakHandler implements Listener {
             Location blockCenter = progress.location.clone().add(0.5, 0.5, 0.5);
             if (player.getWorld() != progress.location.getWorld() ||
                     player.getLocation().distanceSquared(blockCenter) > 36) {
+                // Set clearing flag before sending: the entry is still in active at this
+                // point (removeIf removes it after the lambda returns), so the interceptor
+                // would otherwise replace our 0f clear with the RPG stage.
+                progress.clearing = true;
                 player.sendBlockDamage(progress.location, 0f);
                 return true;
             }
@@ -208,12 +226,13 @@ public final class BlockBreakHandler implements Listener {
             // Still aiming at the same block?
             org.bukkit.block.Block targeted = player.getTargetBlockExact(8);
             if (targeted == null || !targeted.getLocation().equals(progress.location)) {
+                progress.clearing = true;
                 player.sendBlockDamage(progress.location, 0f);
                 return true;
             }
 
             double miningSpeed = RpgServices.player(player).get(BuiltinStat.MINING_SPEED);
-            if (miningSpeed <= 0) miningSpeed = 1.0;     // 1 HP/sec floor so plain hands still progress
+            if (miningSpeed <= 0) miningSpeed = 1.0;
             double perTick = miningSpeed / 20.0;
             progress.remainingHp -= perTick;
 
@@ -222,16 +241,9 @@ public final class BlockBreakHandler implements Listener {
                 return true;
             }
 
-            // Send crack stage every tick without a stage-change guard.
-            //
-            // Paper fires BlockDamageEvent every tick from its server-side break-progress
-            // loop.  Because we no longer cancel the event (to preserve the arm animation),
-            // Paper queues its own stage-0 packet during the packet-handling phase of each
-            // tick.  Scheduled tasks (this timer) run *after* packet handling in the same
-            // tick, so our sendBlockDamage packet is queued last and arrives at the client
-            // after Paper's stage-0 packet — the client renders our stage.  If we only
-            // sent on stage change, ticks 2+ would skip sending and Paper's stage-0 would
-            // win unchallenged, causing the visible crack-flash the player sees.
+            // Send our RPG crack stage every tick.  The interceptor rewrites ALL
+            // ClientboundBlockDestructionPacket for this block (including this one and Paper's
+            // vanilla stage-0) to the computed RPG stage, so both paths converge correctly.
             double pct = 1.0 - (progress.remainingHp / progress.definition.toughness());
             player.sendBlockDamage(progress.location, (float) Math.min(0.99, pct));
             return false;
@@ -241,6 +253,9 @@ public final class BlockBreakHandler implements Listener {
     private void completeBreak(Player player, BlockBreakProgress progress) {
         Block block = progress.definition;
         Location loc = progress.location;
+        // Set clearing flag so the interceptor passes our 0f packet through as-is
+        // (entry is still in active map when completeBreak is called from tickAll).
+        progress.clearing = true;
         player.sendBlockDamage(loc, 0f);    // clear the break-stage overlay
 
         com.github._255_ping.rpg.api.blocks.RpgBlockBreakEvent rpgEvent =
@@ -251,7 +266,6 @@ public final class BlockBreakHandler implements Listener {
         hologramService.despawnAt(loc);
         registry.untagLocation(loc);
 
-        // Break the world block — set to air, then roll our drops.
         if (loc.getWorld() != null) {
             loc.getBlock().setType(Material.AIR);
         }
@@ -264,12 +278,98 @@ public final class BlockBreakHandler implements Listener {
                 if (loc.getWorld() == null) return;
                 loc.getBlock().setType(block.material());
                 registry.tagLocation(loc, block.id());
-                hologramService.spawnAt(loc, block);   // re-spawn hologram after block respawns
+                hologramService.spawnAt(loc, block);
             }, block.respawnTicks());
         }
     }
 
+    // ----- NMS crack-stage interceptor -----
+
+    /**
+     * Inject a Netty outbound handler between {@code packet_handler} and the encoder.
+     * Any {@link ClientboundBlockDestructionPacket} for the currently-active RPG block
+     * has its {@code progress} field replaced with the RPG-computed stage before reaching
+     * the encoder, transparently overriding Paper's vanilla stage-0 packets.
+     *
+     * <p>The handler references {@link #active} dynamically, so it automatically tracks
+     * block switches without re-injection. Only one handler per player is maintained;
+     * subsequent calls are no-ops if the handler is already present.
+     */
+    private void injectCrackInterceptor(Player player) {
+        try {
+            Channel channel = getChannel(player);
+            if (channel == null) return;
+            channel.eventLoop().submit(() -> {
+                try {
+                    if (channel.pipeline().get(CRACK_HANDLER) != null) return;
+                    channel.pipeline().addBefore("packet_handler", CRACK_HANDLER,
+                        new ChannelOutboundHandlerAdapter() {
+                            @Override
+                            public void write(ChannelHandlerContext ctx, Object msg,
+                                              ChannelPromise promise) throws Exception {
+                                if (msg instanceof ClientboundBlockDestructionPacket pkt) {
+                                    BlockBreakProgress p = active.get(player.getUniqueId());
+                                    if (p != null && !p.clearing) {
+                                        BlockPos activePos = new BlockPos(
+                                            p.location.getBlockX(),
+                                            p.location.getBlockY(),
+                                            p.location.getBlockZ());
+                                        if (pkt.getPos().equals(activePos)) {
+                                            double pct = Math.min(0.99,
+                                                1.0 - (p.remainingHp / p.definition.toughness()));
+                                            int stage = (int) (pct * 10.0) - 1;
+                                            stage = Math.max(-1, Math.min(9, stage));
+                                            ctx.write(new ClientboundBlockDestructionPacket(
+                                                pkt.getId(), pkt.getPos(), stage), promise);
+                                            return;
+                                        }
+                                    }
+                                }
+                                ctx.write(msg, promise);
+                            }
+                        });
+                } catch (Exception e) {
+                    plugin.getLogger().warning("rpg-core: failed to inject crack interceptor for "
+                        + player.getName() + ": " + e.getMessage());
+                }
+            });
+        } catch (Exception ignored) {}
+    }
+
+    /**
+     * Remove the crack interceptor from the player's pipeline.
+     * Called on player quit; the interceptor is retained across block switches otherwise.
+     */
+    private void removeCrackInterceptor(Player player) {
+        try {
+            Channel channel = getChannel(player);
+            if (channel == null) return;
+            channel.eventLoop().submit(() -> {
+                try {
+                    if (channel.pipeline().get(CRACK_HANDLER) != null) {
+                        channel.pipeline().remove(CRACK_HANDLER);
+                    }
+                } catch (Exception ignored) {}
+            });
+        } catch (Exception ignored) {}
+    }
+
+    private static Channel getChannel(Player player) {
+        try {
+            return ((CraftPlayer) player).getHandle().connection.connection.channel;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     // ----- Helpers -----
+
+    private void clearProgress(Player player) {
+        BlockBreakProgress progress = active.remove(player.getUniqueId());
+        // Entry removed from active BEFORE sendBlockDamage — interceptor sees p=null and
+        // passes the 0f clear packet through unchanged.  No clearing flag needed here.
+        if (progress != null) player.sendBlockDamage(progress.location, 0f);
+    }
 
     private boolean gatesPass(Player player, Block block) {
         double breakingPower = RpgServices.player(player).get(BuiltinStat.BREAKING_POWER);
@@ -286,18 +386,12 @@ public final class BlockBreakHandler implements Listener {
         return true;
     }
 
-    /** Sends an action bar message via the priority service (1 second) so it isn't instantly overridden by the idle HUD. */
     private static void sendPriorityActionBar(Player player, net.kyori.adventure.text.Component msg) {
         try {
             RpgServices.actionBar().send(player, msg, 20);
         } catch (IllegalStateException ignored) {
             player.sendActionBar(msg);
         }
-    }
-
-    private void clearProgress(Player player) {
-        BlockBreakProgress progress = active.remove(player.getUniqueId());
-        if (progress != null) player.sendBlockDamage(progress.location, 0f);
     }
 
     private static boolean toolMatches(RequiredToolType required, ItemStack hand) {
@@ -347,7 +441,6 @@ public final class BlockBreakHandler implements Listener {
         }
     }
 
-    /** Parses {@code "[file] <itemId> <min>[-<max>]"}. The file token is optional. */
     private static ItemStack parseDrop(String spec) {
         String[] parts = spec.trim().split("\\s+");
         if (parts.length < 2) throw new IllegalArgumentException("expected at least 2 tokens, got: " + spec);
