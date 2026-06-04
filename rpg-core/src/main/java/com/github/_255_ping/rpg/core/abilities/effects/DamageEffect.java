@@ -37,6 +37,11 @@ public final class DamageEffect implements AbilityEffect {
         if (ctx.target() == null) return CompletableFuture.completedFuture(ctx);
         double base = amount + ctx.carriedDamage() * damageMultiplier;
         if (base <= 0) return CompletableFuture.completedFuture(ctx);
+        // Respect creative mode — abilities (including mob abilities) must not damage creative players.
+        if (ctx.target() instanceof org.bukkit.entity.Player p
+                && p.getGameMode() == org.bukkit.GameMode.CREATIVE) {
+            return CompletableFuture.completedFuture(ctx);
+        }
         String source = "true".equals(type) ? "ability_true" : "ability";
         RpgServices.health().damage(ctx.target(), base, source);
         // Fire PostDamageEvent for damage indicators. Guard against re-entrancy: if an OnHurt

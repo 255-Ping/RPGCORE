@@ -23,7 +23,12 @@ Two root causes:
 ### ~~Mining: Vanilla Break Still Visuals (`rpg-mining`)~~ ✅ Fixed in `rpg-mining 0.2.1`
 Mining fatigue amplifier bumped from `1` (Fatigue II) to `255` — vanilla block breaking fully suppressed while holding an RPG gathering tool. Configurable via `mining-fatigue.amplifier` in `plugins/rpg-mining/config.yml`.
 
-> **Still open:** Miners Pickaxe cannot mine a Red Gem Block — `BREAKING_POWER` gate check or tool-type check mismatch in `BlockBreakHandler`. Needs separate investigation.
+### ~~Miner's Pickaxe Can't Mine Red Gem Block (`rpg-core`)~~ ✅ Fixed in `rpg-core 1.1.1`
+Root cause: Mining Fatigue amplifier 255 (applied by rpg-mining to all gathering tools) causes Paper to suppress per-tick `BlockDamageEvent` because the server-side break-progress-per-tick rounds to 0. `BlockBreakHandler` used a 400 ms `lastClickMs` heartbeat fed by `BlockDamageEvent` to detect "still mining" — with no per-tick events arriving, the timeout expired and cleared progress after the initial click. The BREAKING_POWER gate and tool-type check were both correct all along.
+
+Fixed by:
+1. Removing the `lastClickMs` field and 400 ms timeout entirely from `BlockBreakProgress` / `tickAll()`. Release detection now relies on `BlockDamageAbortEvent` (fired by the client's `ABORT_DESTROY_BLOCK` packet regardless of Mining Fatigue), `getTargetBlockExact()` look-away check, and existing `PlayerItemHeldEvent` / `PlayerQuitEvent` guards.
+2. Adding a `PlayerInteractEvent` LEFT_CLICK_BLOCK handler as a secondary trigger so progress starts even if the initial `BlockDamageEvent` is also suppressed in edge cases.
 
 ---
 
@@ -77,8 +82,8 @@ The ability configured on `testmob` (and likely other mobs) fires and runs its a
 
 ---
 
-### Mob Abilities Damage Players in Creative Mode (`rpg-core`) — 🟢 Easy
-Mob abilities (via the `DamageEffect` path in the ability pipeline) damage players who are in creative mode. Vanilla combat skips creative players entirely — the RPG pipeline needs to mirror that. Check `DamageEffect` (and anywhere else `AbilityContext` resolves a damage application) for a `player.getGameMode() == GameMode.CREATIVE` guard before applying damage.
+### ~~Mob Abilities Damage Players in Creative Mode (`rpg-core`)~~ ✅ Fixed in `rpg-core 1.1.1`
+Added a `GameMode.CREATIVE` guard in `DamageEffect.apply()` before the `RpgServices.health().damage()` call. Mob abilities (and player abilities) no longer damage creative-mode players.
 
 ---
 

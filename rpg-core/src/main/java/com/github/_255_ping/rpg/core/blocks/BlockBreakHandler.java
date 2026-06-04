@@ -91,15 +91,11 @@ public final class BlockBreakHandler implements Listener {
         if (!gatesPass(player, block)) return;
 
         BlockBreakProgress existing = active.get(player.getUniqueId());
-        if (existing != null && existing.location.equals(loc)) {
-            // Continuing on the same block — refresh the click timestamp only.
-            existing.lastClickMs = System.currentTimeMillis();
-        } else {
-            // New block — start fresh progress.
-            BlockBreakProgress progress = new BlockBreakProgress(loc, block);
-            progress.lastClickMs = System.currentTimeMillis();
-            active.put(player.getUniqueId(), progress);
+        if (existing == null || !existing.location.equals(loc)) {
+            // New block (or switching target) — start fresh progress.
+            active.put(player.getUniqueId(), new BlockBreakProgress(loc, block));
         }
+        // If continuing on the same block, the tick task is already running — nothing to do here.
     }
 
     @EventHandler
@@ -141,6 +137,26 @@ public final class BlockBreakHandler implements Listener {
     public void onInteract(PlayerInteractEvent event) {
         if (event.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_AIR) {
             clearProgress(event.getPlayer());
+            return;
+        }
+        // Fallback trigger for LEFT_CLICK_BLOCK: Mining Fatigue 255 (applied by rpg-mining to
+        // gathering tools) causes Paper to suppress per-tick BlockDamageEvent because the
+        // calculated break-progress-per-tick is effectively 0. BlockDamageEvent still fires once
+        // on the initial START_DESTROY_BLOCK client packet, but PlayerInteractEvent fires from
+        // the same packet and is a safe secondary path to start progress if needed.
+        if (event.getAction() == org.bukkit.event.block.Action.LEFT_CLICK_BLOCK
+                && event.getClickedBlock() != null) {
+            Location loc = event.getClickedBlock().getLocation();
+            if (!registry.hasTag(loc)) return;
+            Player player = event.getPlayer();
+            if (player.getGameMode() == GameMode.CREATIVE) return; // handled by onDamage/onBreak
+            // Only start if not already tracking this exact block.
+            BlockBreakProgress existing = active.get(player.getUniqueId());
+            if (existing != null && existing.location.equals(loc)) return;
+            Optional<Block> opt = registry.at(loc);
+            if (opt.isEmpty()) return;
+            if (!gatesPass(player, opt.get())) return;
+            active.put(player.getUniqueId(), new BlockBreakProgress(loc, opt.get()));
         }
     }
 
@@ -163,13 +179,6 @@ public final class BlockBreakHandler implements Listener {
             BlockBreakProgress progress = entry.getValue();
             if (player == null || !player.isOnline()) return true;
             if (!registry.hasTag(progress.location)) return true;
-
-            // Require the player to be holding left-click: if no BlockDamageEvent arrived in
-            // the last 400 ms, the player released the mouse button — cancel progress.
-            if (System.currentTimeMillis() - progress.lastClickMs > 400) {
-                player.sendBlockDamage(progress.location, 0f);
-                return true;
-            }
 
             // Distance check: player must be within 6 blocks of the target.
             Location blockCenter = progress.location.clone().add(0.5, 0.5, 0.5);
