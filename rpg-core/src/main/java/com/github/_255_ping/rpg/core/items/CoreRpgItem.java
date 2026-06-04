@@ -5,6 +5,7 @@ import com.github._255_ping.rpg.api.abilities.AbilityInvocation;
 import com.github._255_ping.rpg.api.abilities.ItemAbilityBinding;
 import com.github._255_ping.rpg.api.abilities.PlayerAbilityTrigger;
 import com.github._255_ping.rpg.api.items.ItemType;
+import com.github._255_ping.rpg.api.sets.SetBonus;
 import com.github._255_ping.rpg.api.items.Rarity;
 import com.github._255_ping.rpg.api.items.RpgItem;
 import com.github._255_ping.rpg.api.stats.BuiltinStat;
@@ -147,6 +148,48 @@ public final class CoreRpgItem implements RpgItem {
             if (!lore.isEmpty()) lore.add(Component.empty());
             for (ItemAbilityBinding binding : triggeredAbilities) {
                 renderAbilityBinding(binding, lore);
+            }
+        }
+
+        // Set membership lore — shows set name and each tier's bonuses.
+        // Rendered before rarity so the set block sits just above the rarity line.
+        if (setId != null && !setId.isBlank()) {
+            try {
+                RpgServices.armorSets().get(setId).ifPresent(def -> {
+                    if (!lore.isEmpty()) lore.add(Component.empty());
+                    lore.add(noItalic(LEGACY.deserialize("&6" + def.name())));
+                    def.bonuses().entrySet().stream()
+                            .sorted(Map.Entry.comparingByKey())
+                            .forEach(entry -> {
+                                int threshold = entry.getKey();
+                                SetBonus bonus = entry.getValue();
+                                StringBuilder sb = new StringBuilder("  &8(");
+                                sb.append(threshold).append('/').append(def.totalPieces()).append(") ");
+                                // Stats
+                                boolean first = true;
+                                for (Map.Entry<Stat, Double> se : bonus.stats().entrySet()) {
+                                    if (!first) sb.append("&8, ");
+                                    sb.append("&f").append(formatValue(se.getValue(), se.getKey().percent()))
+                                            .append(" &7").append(se.getKey().displayName());
+                                    first = false;
+                                }
+                                // Ability trigger hints
+                                if (!bonus.abilities().isEmpty()) {
+                                    if (!first) sb.append(" ");
+                                    Map<PlayerAbilityTrigger, Long> counts = bonus.abilities().stream()
+                                            .collect(java.util.stream.Collectors.groupingBy(
+                                                    ItemAbilityBinding::trigger,
+                                                    java.util.stream.Collectors.counting()));
+                                    sb.append("&8| ");
+                                    sb.append(counts.keySet().stream()
+                                            .map(t -> "&7" + t.loreHint())
+                                            .collect(java.util.stream.Collectors.joining("&8, ")));
+                                }
+                                lore.add(noItalic(LEGACY.deserialize(sb.toString())));
+                            });
+                });
+            } catch (IllegalStateException ignored) {
+                // ArmorSetRegistry not yet bootstrapped — skip set lore on this render
             }
         }
 

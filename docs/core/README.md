@@ -26,6 +26,7 @@
 | Expression evaluator (formula parser) | [skills](skills.md#level-curves) |
 | Content loaders (items, mobs, abilities, blocks, recipes) | [content/](../content/README.md) |
 | Spawner runtime + natural spawning | [spawning](../content/spawning.md) |
+| Armor set bonuses + passive abilities | [armor-sets](armor-sets.md) |
 
 ## Service locator
 

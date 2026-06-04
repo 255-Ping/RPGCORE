@@ -205,29 +205,29 @@ When `suiteVersion` bumps:
 
 | Module | Property | Current |
 |---|---|---|
-| rpg-api | `apiVersion` | 0.3.0 |
-| rpg-core | `coreVersion` | 1.1.0 |
-| rpg-mining | `miningVersion` | 0.2.1 |
+| rpg-api | `apiVersion` | 0.4.2 |
+| rpg-core | `coreVersion` | 1.2.0 |
+| rpg-mining | `miningVersion` | 0.2.3 |
 | rpg-combat | `combatVersion` | 0.2.0 |
 | rpg-economy | `economyVersion` | 0.1.0 |
 | rpg-hud | `hudVersion` | 0.4.0 |
 | rpg-chat | `chatVersion` | 0.1.0 |
 | rpg-accessories | `accessoriesVersion` | 0.1.0 |
-| rpg-holograms | `hologramsVersion` | 0.0.2 |
+| rpg-holograms | `hologramsVersion` | 0.0.3 |
 | rpg-parties | `partiesVersion` | 0.2.0 |
 | rpg-foraging | `foragingVersion` | 0.1.0 |
 | rpg-fishing | `fishingVersion` | 0.0.1 |
 | rpg-regions | `regionsVersion` | 0.5.0 |
 | rpg-farming | `farmingVersion` | 0.1.0 |
 | rpg-guilds | `guildsVersion` | 0.1.0 |
-| rpg-enchanting | `enchantingVersion` | 0.4.0 |
-| rpg-alchemy | `alchemyVersion` | 0.3.1 |
-| rpg-npcs | `npcsVersion` | 0.5.1 |
+| rpg-enchanting | `enchantingVersion` | 0.4.1 |
+| rpg-alchemy | `alchemyVersion` | 0.3.2 |
+| rpg-npcs | `npcsVersion` | 0.6.1 |
 | rpg-quests | `questsVersion` | 0.0.3 |
 | rpg-dungeons | `dungeonsVersion` | 0.0.3 |
-| rpg-cooking | `cookingVersion` | 0.3.0 |
+| rpg-cooking | `cookingVersion` | 0.3.1 |
 | rpg-admin | `adminVersion` | 0.1.0 |
-| rpg-trade | `tradeVersion` | 0.1.0 |
+| rpg-trade | `tradeVersion` | 0.1.1 |
 | suite-wide suffix | `suiteVersion` | 19 |
 
 **Keep this table in sync** — update it in the same commit as any version bump.
@@ -406,7 +406,13 @@ stored per player. When adding new persistent player fields, update both the sav
 | `YamlDataStore` / `YamlRepository` | YAML backend (default) |
 | `MysqlDataStore` / `MysqlRepository` | MySQL backend (falls back to YAML on connect failure) |
 | `CoreExpressionEvaluator` | Formula parser used by damage formulas and skill curves |
-| `MobLoader` / `ItemLoader` / `AbilityLoader` | YAML content loaders; errors skip the bad file, not crash |
+| `MobLoader` / `ItemLoader` / `AbilityLoader` / `ArmorSetLoader` | YAML content loaders; errors skip the bad file, not crash |
+| `ItemAbilityListener` | Fires active click bindings (`right_click`, `left_click`, `shift_*`) from held item |
+| `PassiveAbilityFirer` | Shared helper — collects + fires passive/proc bindings from equipped items + active set bonuses |
+| `PlayerHitAbilityListener` / `PlayerHurtAbilityListener` / `PlayerJumpAbilityListener` | Event listeners for `on_hit`, `on_hurt`, `on_jump` triggers |
+| `PlayerPassiveAbilityTask` | Repeating task that fires `passive` trigger bindings; interval: `abilities.passive-interval-ticks` |
+| `ArmorSetListener` | Counts set pieces on armor change; updates `CoreRpgPlayer.setSetBonusStats()` (Layer 2.5) + caches active passive bindings |
+| `CoreArmorSetRegistry` | In-memory store of all `ArmorSetDef`s loaded from `sets/*.yml` |
 
 ### Content authoring
 

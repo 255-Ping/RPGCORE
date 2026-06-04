@@ -10,6 +10,36 @@
 
 ---
 
+### rpg-core `1.2.0` + rpg-api `0.4.2`
+- **Ability trigger system**: item `Abilities:` entries now support a `~trigger ` prefix. Supported player triggers: `right_click` (default, backwards-compatible), `left_click`, `shift_right_click`, `shift_left_click`, `on_hit`, `on_hurt`, `on_jump`, `passive`. Active triggers (`right_click` etc.) gate on mana cost if the sequence includes `mana_cost{}`. Passive/proc triggers (`on_hit`, `on_hurt`, `on_jump`, `passive`) fire freely with no mana gate unless explicitly added.
+- **Passive ability infrastructure**: `PassiveAbilityFirer` collects trigger-matched bindings from all equipped items + active set bonuses and fires them. New event listeners: `PlayerHitAbilityListener` (`on_hit`), `PlayerHurtAbilityListener` (`on_hurt`), `PlayerJumpAbilityListener` (`on_jump`). New task: `PlayerPassiveAbilityTask` fires `passive` bindings on a configurable interval (`abilities.passive-interval-ticks` in `config.yml`, default 20).
+- **Left-click + shift variants**: `ItemAbilityListener` extended to handle `LEFT_CLICK_AIR`, `LEFT_CLICK_BLOCK`, and sneaking variants of both click types.
+- **Armor set system**: sets defined in `plugins/rpg-core/sets/*.yml`. Each set names piece IDs and threshold tiers. `ArmorSetListener` detects piece count changes on armor events and writes to `CoreRpgPlayer.setSetBonusStats()` — a new Layer 2.5 in the stat pipeline (after equipment, before accessories). Set passive ability bindings are tracked per-player and queried by proc listeners.
+- **Scale: support on set bonuses**: `Scale: 0.5` on a `SetBonus` multiplies all numeric ability params at load time, deriving weaker tiers automatically without duplicating effect strings.
+- **Set lore on items**: `CoreRpgItem.toItemStack()` renders a set membership block showing set name + each tier's stat bonuses and trigger hints, above the rarity line.
+- **New `RpgServices` entry**: `armorSets()` / `setArmorSets(ArmorSetRegistry)`.
+- **New API types**: `PlayerAbilityTrigger`, `ItemAbilityBinding`, `ArmorSetDef`, `ArmorSetRegistry`, `SetBonus`.
+- **`RpgItem` additions**: `triggeredAbilities()` (new canonical method), `setId()`. `abilities()` kept as backwards-compat alias returning right-click invocations.
+
+### rpg-core `1.1.6`
+- **GUI nav bar standard** on all GUIs: BankerGui, NPC shop expanded to 54 slots with a close button at slot 49.
+
+### rpg-npcs `0.6.1`
+- **GUI nav bar** added to BankerGui and NPC shop GUIs.
+
+### rpg-enchanting `0.4.1`, rpg-cooking `0.3.1`, rpg-alchemy `0.3.2`
+- **GUI pagination + redesign**: enchanting station paginated (14 enchants/page, prev/close/next nav bar). Cooking and brewing stations redesigned to 54-slot layout — ingredient slots at row 1 center (12, 13, 14), recipe tiles in rows 2–4, paginated nav bar in row 5.
+
+### rpg-api `0.4.1`, rpg-core `1.1.5`, rpg-npcs `0.6.0`, rpg-trade `0.1.1`
+- **GUI nav bar standard**: `GuiConfig.placeNavBar(inv)` / `placeNavBarNested(inv)` API. Close button (BARRIER, slot 49) on all top-level GUIs; back button (ARROW, slot 45) + close button (slot 53) on nested GUIs. PDC-tagged via `rpg:nav_action` key. `TradeGui` cancel button moved to slot 49.
+
+### rpg-npcs `0.6.0`
+- **NPC command overhaul**: new subcommands `/npc setentitytype`, `/npc setstyle`, `/npc setskin`, `/npc dialogue`, `/npc shop`, `/npc setlook`, `/npc info`. Full tab-complete including quest IDs (soft-dep reflection). `saveOnly()` for dialogue/shop edits avoids entity respawn flicker.
+- **Per-NPC entity type**: `EntityType:` field in npc.yml. `setentitytype` validates against `LivingEntity` subtypes (excludes PLAYER).
+- **Look-at-player task**: NPCs with `LookAtPlayers: true` (default via config) tick every `look-at-players.interval-ticks` ticks and rotate toward the nearest player within `LookRadius` blocks. Entity-style NPCs use Paper's `setRotation(yaw, pitch)`. Fake-player NPCs send `ClientboundMoveEntityPacket.Rot` + `ClientboundRotateHeadPacket` via reflection.
+
+---
+
 ### rpg-dungeons `0.0.3`
 - **Dungeon enter now teleports the player**: `TemplatePaster.run()` was missing exception handling around `dst.setBlockData()`. In Paper 1.21.4, block writes to freshly-generated void-world chunks can throw; the exception escaped the `while` loop, got swallowed by Bukkit's repeating-task runner, and the task retried the same coordinate forever — `onDone` was never called and the player was stuck at "Preparing dungeon...". Fix: wrapped per-block operations in `try/finally { advance(); }` so a failed block is always skipped and the paste completes. Also wrapped `onDone.accept()` in a try-catch so callback exceptions are logged at SEVERE rather than silently dropped.
 

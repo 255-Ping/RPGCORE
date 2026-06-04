@@ -2,7 +2,7 @@
 
 # Items
 
-> **Status:** Working — YAML loader, registry, PDC tagging, lore rendering, and equipment stat aggregation all working. Stats on equipped items (armor slots + main hand) aggregate into the player's effective stat sheet on every gear change via `EquipmentListener`. `/rpg item give <id> [player] [amount]` lights up. Type-specific runtime behavior for `CONSUMABLE`, `UPGRADE`, and `ACCESSORY` items is handled by their respective addons.
+> **Status:** Working — YAML loader, registry, PDC tagging, lore rendering, equipment stat aggregation, triggered abilities (active + passive + proc), and armor set membership all working. `/rpg item give <id> [player] [amount]` lights up.
 
 Custom items are defined in YAML under `plugins/rpg-core/items/`. Any number of files, any number of items per file.
 
@@ -22,10 +22,34 @@ testitem: #itemid
     damage: 5
     strength: 2
     crit_chance: 5
-  Abilities:                     # optional; ability invocations using the ability DSL
-  - explode{radius=3,damage_multiplier=1.5}
-  CombatXpMultiplier: 1.0        # optional; per-ability override for combat XP from this item
+  Abilities:                     # optional; ability bindings — see trigger syntax below
+  - "explode{radius=3,damage_multiplier=1.5}"     # implicit right_click
+  - "~on_hit particles{type=HEART,count=3}"       # passive proc — no mana cost by default
+  - "~shift_right_click mana_cost{amount=50} aoe{radius=5.0}"
+  - "~passive heal{amount=1}"                     # ticking passive
+  SetId: my_armor_set            # optional; which set/*.yml this item counts toward
 ```
+
+### Ability trigger syntax
+
+Every `Abilities:` entry is a **binding**. A binding has a trigger (when it fires) and an effect sequence (what runs). Lines without a `~trigger` prefix default to `right_click` — existing item YAML works unchanged.
+
+| Format | Trigger |
+|---|---|
+| `"ability_id"` or `"effect{}"` | `right_click` (default) |
+| `"~right_click ..."` | Right-click (explicit) |
+| `"~left_click ..."` | Left-click |
+| `"~shift_right_click ..."` | Sneak + right-click |
+| `"~shift_left_click ..."` | Sneak + left-click |
+| `"~on_hit ..."` | Player deals damage (melee or projectile) |
+| `"~on_hurt ..."` | Player receives damage |
+| `"~on_jump ..."` | Player jumps |
+| `"~passive ..."` | Ticking — every `abilities.passive-interval-ticks` while held/worn |
+
+Passive and proc triggers do not auto-apply mana cost. Add `mana_cost{amount=N}` at the start of the sequence if you want passive procs to cost mana.
+
+See **[Abilities](abilities.md)** for the full trigger system and effect DSL reference.
+
 
 ## Type-specific blocks
 
@@ -81,17 +105,48 @@ zombie_talisman:
 
 ### `ARMOR`
 
-Standard item with optional armor-slot binding. Stats apply while equipped.
+Standard item with optional armor-slot binding. Stats apply while equipped. Passive ability bindings (`~on_hit`, `~on_hurt`, `~on_jump`, `~passive`) fire whenever the item is in an armor slot, not just when held.
 
 ```yaml
 flame_helmet:
   MinecraftItem: golden_helmet
   Type: ARMOR
-  ArmorSlot: HELMET              # HELMET | CHEST | LEGS | BOOTS
+  ArmorSlot: HELMET              # HELMET | CHESTPLATE | LEGGINGS | BOOTS
   Stats:
     defense: 25
     max_health: 30
+  Abilities:
+  - "~on_hurt particles{type=FLAME,count=8}"   # proc when player is hit
+  - "~passive heal{amount=1}"                  # 1 HP/sec while wearing
+  SetId: flame_set               # optional — links this piece to a set
 ```
+
+### Armor set pieces
+
+Items with a `SetId:` field count toward an armor set defined in `plugins/rpg-core/sets/`. When enough pieces are worn simultaneously, the set's stat bonuses and passive ability bindings activate. The item lore automatically shows the set name and each tier's bonuses.
+
+```yaml
+berserker_helmet:
+  MinecraftItem: iron_helmet
+  Type: ARMOR
+  ArmorSlot: HELMET
+  DisplayName: "&cBerserker's Helmet"
+  SetId: berserker_set           # references sets/example.yml → berserker_set
+  Stats:
+    defense: 25
+    ferocity: 10
+  Rarity: '&5&lEPIC'
+```
+
+Lore renders automatically:
+
+```
+§6Berserker's Set
+  §8(2/4) §f+25 Ferocity §8| §7On Hit
+  §8(4/4) §f+75 Ferocity, +50 Damage §8| §7On Hit
+```
+
+See **[Armor Sets](../core/armor-sets.md)** for the full set definition schema.
 
 ### `SWORD`
 
@@ -172,7 +227,8 @@ When `RpgItem.toItemStack()` produces an `ItemStack`, it embeds the item ID in t
 
 ## Related
 
+- [Abilities](abilities.md) — trigger system, effect DSL, passive/proc reference
+- [Armor Sets](../core/armor-sets.md) — set bonus YAML schema
 - [Stats reference](../stats.md)
-- [Abilities](abilities.md)
 - [Accessories addon](../addons/accessories.md)
 - [Resource pack ranges](../resource-pack.md)

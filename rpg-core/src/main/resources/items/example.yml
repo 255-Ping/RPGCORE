@@ -523,3 +523,187 @@ soulbound_fragment:
   - '&7It resonates only with the one who found it.'
   - '&c✘ &7Soulbound — cannot be traded or auctioned.'
   Rarity: '&9&lRARE'
+
+# ════════════════════════════════════════════════════════════════════════════
+#  ABILITY TRIGGER SHOWCASE
+#  Demonstrates every PlayerAbilityTrigger type.
+#  Obtain with: /rpg item give <id>
+# ════════════════════════════════════════════════════════════════════════════
+
+# ── ACTIVE: Multiple click bindings on one item ──────────────────────────────
+# Right-click casts a mana-gated beam burst.
+# Shift + right-click casts a wider, more expensive AoE.
+phantom_blade:
+  MinecraftItem: iron_sword
+  Type: SWORD
+  DisplayName: '&5Phantom Blade'
+  AttackCooldown: 14
+  Stats:
+    damage: 45
+    strength: 20
+    intelligence: 40
+    max_mana: 60
+    crit_chance: 10
+    crit_damage: 50
+  Abilities:
+  - "mana_cost{amount=25} cooldown{ticks=40} beam{range=12.0,damage_multiplier=1.5,particle=CRIT}"
+  - "~shift_right_click mana_cost{amount=60} cooldown{ticks=80} explode{radius=5.0,damage_multiplier=1.2,falloff=linear}"
+  Lore:
+  - '&7Right-click: &dPhantom Beam &8(25 mana)'
+  - '&7Shift + Right-click: &5Phase Burst &8(60 mana)'
+  Rarity: '&5&lEPIC'
+
+# ── PASSIVE: ON_HIT — procs when player deals damage ─────────────────────────
+# Each melee hit has a chance to fire a lifesteal heal + heart particles.
+# No mana cost — passive procs fire freely unless you add mana_cost{} explicitly.
+vampiric_dagger:
+  MinecraftItem: stone_sword
+  Type: SWORD
+  DisplayName: '&4Vampiric Dagger'
+  AttackCooldown: 8
+  Stats:
+    damage: 22
+    strength: 12
+    lifesteal: 8
+    crit_chance: 15
+    crit_damage: 60
+  Abilities:
+  - "~on_hit heal{amount=5,target=caster} particles{type=HEART,count=4,spread=0.4}"
+  Lore:
+  - '&7Each hit drains life from the target.'
+  Rarity: '&a&lUNCOMMON'
+
+# ── PASSIVE: ON_HURT — procs when player receives damage ─────────────────────
+# A chestplate that retaliates with particles and a sound effect when hit.
+# Extend with apply_status{id=…} once you have a thorn/reflect status effect.
+thorns_chestplate:
+  MinecraftItem: iron_chestplate
+  Type: ARMOR
+  ArmorSlot: CHESTPLATE
+  DisplayName: '&2Thorns Chestplate'
+  Stats:
+    defense: 40
+    max_health: 30
+    true_defense: 5
+  Abilities:
+  - "~on_hurt particles{type=CRIT,count=12,spread=0.6} sound{key=entity.blaze.hurt,volume=0.6,pitch=1.2}"
+  Lore:
+  - '&7Retaliates with thorny energy when struck.'
+  Rarity: '&9&lRARE'
+
+# ── PASSIVE: ON_JUMP — procs each time the player jumps ──────────────────────
+springheel_boots:
+  MinecraftItem: leather_boots
+  Type: ARMOR
+  ArmorSlot: BOOTS
+  DisplayName: '&eSpringheel Boots'
+  Stats:
+    defense: 12
+    speed: 10
+    crit_chance: 5
+  Abilities:
+  - "~on_jump particles{type=CLOUD,count=8,spread=0.5} sound{key=entity.firework_rocket.launch,volume=0.4,pitch=1.6}"
+  Lore:
+  - '&7Leaves a cloud of energy with every leap.'
+  Rarity: '&a&lUNCOMMON'
+
+# ── PASSIVE: PASSIVE — ticks every abilities.passive-interval-ticks (default 20) ──
+# Robes that slowly regenerate 1 HP per second while worn.
+# Stack with health_regen stat for continuous recovery builds.
+sorcerers_robes:
+  MinecraftItem: leather_chestplate
+  Type: ARMOR
+  ArmorSlot: CHESTPLATE
+  DisplayName: '&bSorcerer''s Robes'
+  Stats:
+    defense: 15
+    intelligence: 70
+    max_mana: 100
+    mana_regen: 10
+    max_health: 20
+  Abilities:
+  - "~passive heal{amount=1,target=caster}"
+  Lore:
+  - '&7Woven from condensed mana thread.'
+  - '&7Quietly restores the wearer''s health over time.'
+  Rarity: '&9&lRARE'
+
+# ── ACTIVE: LEFT_CLICK binding ────────────────────────────────────────────────
+# A wand with separate left-click and right-click casts.
+dual_cast_wand:
+  MinecraftItem: blaze_rod
+  Type: WAND
+  DisplayName: '&6Dual-Cast Wand'
+  ItemCooldown: 4
+  Stats:
+    damage: 40
+    intelligence: 80
+    max_mana: 120
+    mana_regen: 8
+    cooldown_reduction: 10
+  Abilities:
+  - "mana_cost{amount=30} cooldown{ticks=20} beam{range=15.0,damage_multiplier=1.8}"
+  - "~left_click mana_cost{amount=15} cooldown{ticks=10} heal{amount=20,target=caster}"
+  Lore:
+  - '&7Right-click: &6Solar Beam &8(30 mana)'
+  - '&7Left-click: &aSelf-Heal &8(15 mana)'
+  Rarity: '&6&lLEGENDARY'
+
+# ════════════════════════════════════════════════════════════════════════════
+#  ARMOR SET SHOWCASE — Berserker's Set (defined in sets/example.yml)
+#  Collect all 4 pieces for full set bonuses.
+#  2/4: +25 Ferocity | On-Hit Proc
+#  4/4: +75 Ferocity, +50 Damage | On-Hit Proc
+# ════════════════════════════════════════════════════════════════════════════
+
+berserker_helmet:
+  MinecraftItem: iron_helmet
+  Type: ARMOR
+  ArmorSlot: HELMET
+  DisplayName: '&cBerserker''s Helmet'
+  SetId: berserker_set
+  Stats:
+    defense: 25
+    max_health: 20
+    ferocity: 10
+    strength: 10
+  Rarity: '&5&lEPIC'
+
+berserker_chestplate:
+  MinecraftItem: iron_chestplate
+  Type: ARMOR
+  ArmorSlot: CHESTPLATE
+  DisplayName: '&cBerserker''s Chestplate'
+  SetId: berserker_set
+  Stats:
+    defense: 45
+    max_health: 40
+    strength: 20
+    ferocity: 15
+  Rarity: '&5&lEPIC'
+
+berserker_leggings:
+  MinecraftItem: iron_leggings
+  Type: ARMOR
+  ArmorSlot: LEGGINGS
+  DisplayName: '&cBerserker''s Leggings'
+  SetId: berserker_set
+  Stats:
+    defense: 35
+    ferocity: 15
+    crit_chance: 5
+    crit_damage: 20
+  Rarity: '&5&lEPIC'
+
+berserker_boots:
+  MinecraftItem: iron_boots
+  Type: ARMOR
+  ArmorSlot: BOOTS
+  DisplayName: '&cBerserker''s Boots'
+  SetId: berserker_set
+  Stats:
+    defense: 20
+    speed: 5
+    ferocity: 10
+    knockback: 10
+  Rarity: '&5&lEPIC'
