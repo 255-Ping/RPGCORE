@@ -78,6 +78,37 @@ Currently supported triggers: `~onTimer`, `~onHurt`, `~onDeath`. Several common 
 
 ---
 
+### Ability Pierce Cap (`rpg-core`) — 🟢 Easy
+
+Abilities that travel (beam, projectile) currently have no limit on how many entities they hit. A `PierceCap` field on any traveling effect controls how many distinct entities the effect can hit before it stops.
+
+**YAML — per-effect field:**
+```yaml
+my_beam:
+  Effects:
+    - Type: beam
+      Damage: 25
+      PierceCap: 1    # hits 1 entity then stops; 0 or absent = unlimited
+```
+
+**Behaviour:**
+- `PierceCap: 1` — single-target: beam stops on first hit (most common default for wand builds)
+- `PierceCap: 3` — pierces through up to 3 entities before dissipating
+- `PierceCap: 0` / field absent — no cap, hits everything along the path (current behaviour)
+- The cap counts **distinct entities hit this tick**, not total invocations across ticks — a lingering beam legitimately re-hitting the same target on a later tick is fine and doesn't count against the cap
+
+**Per-tick per-ability dedup (separate from pierce cap):**
+Every ability invocation tracks a `Set<UUID>` of entities already hit **this tick**. Any entity in that set is skipped for the remainder of that tick's processing, regardless of pierce cap. The set is cleared at the start of the next tick. This is what prevents the beam from hitting the same enemy 3× in one tick (the current bug). The two guards work together:
+
+1. **Dedup set** — same entity, same tick → skip (always enforced, not configurable)
+2. **Pierce cap** — total distinct entities this tick → stop the beam once the cap is reached (configurable)
+
+**Also applies to:** any future `projectile` effect type. AoE/explode effects already scope by radius so pierce doesn't apply there; `chain` has its own `targets=` param.
+
+**Implementation note:** `BeamEffect` already iterates over entities in the beam path. Add a `Set<UUID> hitThisTick` that resets each tick and a `int hitCount` counter for the pierce cap check. Skip any entity whose UUID is already in `hitThisTick`; after a successful hit add to the set, increment the counter, and break if `pierceCap > 0 && hitCount >= pierceCap`.
+
+---
+
 ### MagicFind Stat: Implement or Suppress (`rpg-core`) — 🟡 Medium
 `magic_find` is referenced in the loot pool spec as `MagicFindAffected: true` on individual loot entries, but there's no evidence the stat is actually read when rolling those entries. Confirm and implement:
 
@@ -249,7 +280,7 @@ When a dungeon instance is created via schematic paste, the paste only copies **
 
 **Admin workflow:**
 1. Admin builds the dungeon template with display entities placed using `/de create*` / `/de edit` as normal
-2. Admin runs **`/dungeon capturedisplays <id>`** — scans the template region (the same bounding box used for the schematic paste), finds all entities tagged with the `rpg_display_id` PDC key, records each one's **position relative to the template origin** and its full display entity definition (same YAML fields as `plugins/rpg-holograms/displays/`), and writes them into the dungeon YAML under a `DisplayEntities:` block
+2. Admin runs **`/dungeon capturedisplays <id>`** — scans the template region (the same bounding box used for the schematic paste), finds all entities tagged with the `rpg_display_id` PDC key (this key is defined when the display entity suite in `rpg-holograms` is built — it does not exist yet), records each one's **position relative to the template origin** and its full display entity definition (same YAML fields as `plugins/rpg-holograms/displays/`), and writes them into the dungeon YAML under a `DisplayEntities:` block
 3. From this point, the template-world entities are only needed for re-capture — the dungeon YAML is the authoritative source, so the template world can be unloaded or the entities deleted without affecting instance spawning
 
 **Instance spawn/despawn lifecycle:**
@@ -333,9 +364,16 @@ Several improvements needed:
 ---
 
 ### Knockback on All Weapons + Wands (`rpg-core` / `rpg-combat`) — 🟢 Easy
-Currently arrows do no knockback, and most example items have no `knockback` stat defined. Fix:
-- Ensure melee attacks (swords), ranged attacks (bows/arrows), and wand impacts all apply knockback proportional to the item's `knockback` stat
-- Add a `knockback` stat entry to every example sword, bow, and wand in the default item YAML files so the behaviour is demonstrated out of the box
+Knockback is missing or broken across multiple item types. Confirmed issues:
+
+- **Beam wand** — `BeamEffect` deals damage but applies no knockback to the hit entity. The `KNOCKBACK` stat on the held item is never read in the beam path. Needs an explicit knockback velocity application after the damage call in `BeamEffect`, scaled the same way melee does it (stat value / 100 = strength).
+- **Arrows** — arrow hits deal damage but no knockback is applied through the RPG pipeline.
+- **Example items** — all example swords, bows, and wands in the default YAML files are missing a `Knockback:` stat entry entirely, so there's nothing to apply even where the code path exists.
+
+**Fix checklist:**
+1. Wire `KNOCKBACK` stat application into `BeamEffect` (after damage, repel target away from caster)
+2. Wire `KNOCKBACK` into the arrow/bow hit path
+3. Add `Knockback: 50` (or appropriate value) to every example sword, bow, crossbow, and wand in `items/example.yml` so knockback is demonstrated out of the box
 
 ---
 
@@ -859,18 +897,18 @@ Qualifiers: `.others` (viewing/editing another player's data), `.admin` (elevate
 ---
 
 ### Unit Test Coverage (all plugins) — 🟡 Medium (ongoing)
-Almost no automated tests exist — only `QuestObjectiveTest.java`. For a codebase this size, untested code means regressions are invisible until they hit the live server. Priority areas:
+Currently only two test files exist: `QuestObjectiveTest.java` and `DamageMathTest.java`. For a codebase this size, untested code means regressions are invisible until they hit the live server. Priority areas:
 
-- `DamageMath` — formula correctness (crit, defense reduction, level scaling)
-- `SlotResolver` / `StationGui` — recipe matching logic
-- `ExpressionEvaluator` — skill curve calculations
+- `DamageMath` — expand existing tests: crit, defense reduction, level scaling edge cases
+- `StationGui` — recipe matching logic (no separate `SlotResolver` class; matching lives inside `StationGui` directly)
+- `ExpressionEvaluator` — skill curve calculations (accessible via `RpgServices.expressions()`)
 - `QuestManager` — objective progression and completion
 - `BossBarService` / `SignEntryService` once built
 
 ---
 
 ### Vanilla Suppression Remaining Flags (`rpg-core`) — 🟢 Easy
-Audit `VanillaSuppression.java` — these flags are accepted in `config.yml` but likely have no event handler wired yet:
+Audit `VanillaSuppressionListener.java` — these flags are accepted in `config.yml` but likely have no event handler wired yet:
 
 | Flag | Config key | Likely missing handler |
 |---|---|---|
@@ -881,7 +919,7 @@ Audit `VanillaSuppression.java` — these flags are accepted in `config.yml` but
 | Durability | `durability` | `PlayerItemDamageEvent` |
 | Death drops | `death-drops` | `PlayerDeathEvent` item drop handling (separate from the custom death-rules system — this is the vanilla drop specifically) |
 
-Verify each against the actual `VanillaSuppression.java` event listener list and add any confirmed-missing handlers.
+Verify each against the actual `VanillaSuppressionListener.java` event listener list and add any confirmed-missing handlers.
 
 ---
 
@@ -905,7 +943,7 @@ The `apply_status` effect is used in several example abilities, but there's no d
   - `burning` — sets entity on fire for duration ticks (maps to Bukkit `setFireTicks`)
   - `frozen` — applies high-amplifier Slowness + Mining Fatigue; blue particle burst on apply
   - `marked` — damage amplification debuff (used by `mark` ability effect above); ring particles on target
-  - `silenced` — prevents ability use for duration (check in `AbilityService.invoke`)
+  - `silenced` — prevents ability use for duration (add a silenced-status check at the top of `ItemAbilityListener` before the ability fires; no `AbilityService` class exists — the right-click dispatch lives in `ItemAbilityListener`)
   - `haste` — positive buff: increased mining speed (Haste potion effect)
   - `shield_buff` — absorbed damage indicator (visual only — used internally by `shield` effect)
 

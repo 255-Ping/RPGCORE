@@ -28,6 +28,77 @@ Implementation: `PlayerInteractEvent` for right-click, `InventoryClickEvent` + `
 
 ---
 
+### Item Browser GUI (`rpg-core`) — 🟡 Medium
+
+A `/rpg items` command (alias `/items`) that opens a paginated GUI showing every item registered across all loaded RPG plugins. Primarily an admin-facing tool, but can be made player-visible via permission.
+
+**Command:**
+- `/rpg items` — opens the browser
+- `/rpg items <search>` — opens with the search term pre-applied
+- Permission: `rpg.items.browse` (default: op) to open; `rpg.items.give` (default: op) to click-give items
+
+**GUI layout (54 slots):**
+- Row 1: filter toggle buttons (one slot per configured filter; active filter highlighted with enchant glint). Last slot = clear-all-filters button.
+- Row 2: search button (opens sign-entry prompt; current search shown in button lore), result count, prev/next page arrows
+- Rows 3–6 (36 slots): item display grid — actual `ItemStack` of each matching RPG item, built via `ItemRegistry`
+- Clicking an item with `rpg.items.give`: gives one copy to the clicker's inventory (or opens a quantity prompt if shift-clicked)
+
+**Search:** case-insensitive substring match against the item's display name and its YAML id. Combine-able with active filters.
+
+**Configurable filters** — defined in `plugins/rpg-core/item-browser.yml`. Each filter entry specifies a display name, GUI icon, and one or more match criteria. Admins create, remove, or rename filters in this file; `/rpg reload` picks up changes without a restart.
+
+```yaml
+filters:
+  weapons:
+    DisplayName: "&cWeapons"
+    Icon: IRON_SWORD
+    Match:
+      Type: [SWORD, BOW, CROSSBOW, WAND]
+
+  armor:
+    DisplayName: "&9Armor"
+    Icon: IRON_CHESTPLATE
+    Match:
+      Type: [HELMET, CHESTPLATE, LEGGINGS, BOOTS, ACCESSORY]
+
+  potions:
+    DisplayName: "&dPotions"
+    Icon: POTION
+    Match:
+      Type: [POTION, FOOD]
+
+  tools:
+    DisplayName: "&eMining Tools"
+    Icon: IRON_PICKAXE
+    Match:
+      Type: [PICKAXE, AXE, SHOVEL]
+
+  # Tag-based filter — matches items with `Tag: rare` in their YAML
+  rare:
+    DisplayName: "&6Rare+"
+    Icon: NETHER_STAR
+    Match:
+      Tag: rare
+```
+
+**Match criteria (all optional, ANDed together within one filter):**
+- `Type: [...]` — matches items whose `Type:` field is in the list
+- `Tag: <value>` — matches items with a `Tag:` field equal to this value (or one of a list)
+- `Stat: { id: DAMAGE, min: 50 }` — matches items with at least N of a given stat (useful for "high damage" filter)
+- `Plugin: <plugin-name>` — matches items registered by a specific addon (e.g., `rpg-alchemy` only)
+
+Multiple filters can be active simultaneously — results must satisfy **all** active filters (AND logic). Search is applied on top of whatever filters are active.
+
+**Pagination:** 36 items per page; prev/next arrows hidden when not applicable. Page resets to 1 on any filter or search change.
+
+**Implementation notes:**
+- Source of truth is `RpgServices.items()` (`ItemRegistry` API, backed by `CoreItemRegistry`). All plugins register their items on enable. No file-scanning at GUI open time — just iterate the already-loaded registry.
+- Filter config loaded by a new `ItemBrowserConfig` class; reloaded on `/rpg reload`.
+- Sign-entry for search requires the `SignEntryService` (see above — build that first if it doesn't exist, or use a book-and-quill fallback in the interim).
+- Filter slots in row 1 are built dynamically from the YAML; if more than 8 filters are defined, overflow filters are hidden (log a warning on load).
+
+---
+
 ### Player Homes + Server Warps (`rpg-admin`) — 🟢 Easy
 Conspicuously absent from the suite. Every RPG server needs these.
 

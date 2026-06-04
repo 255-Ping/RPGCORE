@@ -72,8 +72,27 @@ Remaining: `pristine`, `pet_luck` (pending system), `enchanting_luck`, `magic_fi
 
 ---
 
-### Mob Ability Deals No Damage (`rpg-core`) — 🟡 Medium
+### ~~Mob Ability Deals No Damage (`rpg-core`)~~ ✅ Fixed as a side effect of earlier core work
 The ability configured on `testmob` (and likely other mobs) fires and runs its animation/effects, but no damage is applied to the target player. The `DamageEffect` inside the ability pipeline is either not executing or resolving to 0. Check whether `AbilityContext` is correctly carrying the caster entity and whether `DamageEffect` falls back to a null or zero stat value when cast from a mob rather than a player.
+
+---
+
+### Mob Abilities Damage Players in Creative Mode (`rpg-core`) — 🟢 Easy
+Mob abilities (via the `DamageEffect` path in the ability pipeline) damage players who are in creative mode. Vanilla combat skips creative players entirely — the RPG pipeline needs to mirror that. Check `DamageEffect` (and anywhere else `AbilityContext` resolves a damage application) for a `player.getGameMode() == GameMode.CREATIVE` guard before applying damage.
+
+---
+
+### Beam Wand: Damage Applied 3× + Health Display Doesn't Refresh (`rpg-core`) — 🟡 Medium
+
+Three distinct issues confirmed in testing (zombie set to 100 HP):
+
+1. **Damage applied ~3× per cast** — beam wand shows `23.3` on the indicator but the zombie drops from 100 HP to ~30 (≈70 actual damage). `23.3 × 3 ≈ 69.9` — the damage is being applied exactly three times per trigger. Most likely cause: `BeamEffect` fires `entity.damage()` or calls `DamageEffect` once per tick while the beam is active and the beam lingers for 3 ticks, or `DamageEffect` itself is being invoked three times through the ability pipeline. Needs logging around every damage call in the beam path to confirm hit count.
+
+2. **Damage indicator sourcing wrong value** — the `23.3` shown is the RPG-pipeline damage (probably post-mitigation), but the actual HP removed is `~70`. The indicator is not wrong per se — it's showing one application correctly — but it's showing it once while the entity is hit three times. So the indicator fires on the first hit and the remaining two hits land silently.
+
+3. **Health display hologram doesn't update on beam damage** (`rpg-holograms`) — the TextDisplay nameplate showing mob HP doesn't refresh after the beam wand hits. A fist hit immediately after does update it. The relevant listener is in `rpg-holograms` (a `DamageIndicatorListener` or equivalent), not `rpg-core`. It likely watches `EntityDamageEvent` or `PostDamageEvent` to schedule a nameplate refresh; the beam's damage path may be bypassing whichever event it hooks into, or the update fires before the HP value is actually written.
+
+Fix approach: (a) cap beam damage to one application per cast via the per-tick dedup set in `BeamEffect` (see pierce-cap improvement entry); (b) ensure `rpg-holograms`' health display refresh is triggered after `entity.damage()` regardless of the damage source path — may need to fire a custom event or ensure `PostDamageEvent` is always published by the beam path.
 
 ---
 
