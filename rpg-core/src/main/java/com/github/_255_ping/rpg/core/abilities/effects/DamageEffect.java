@@ -6,7 +6,10 @@ import com.github._255_ping.rpg.api.abilities.AbilityDsl;
 import com.github._255_ping.rpg.api.abilities.AbilityEffect;
 import com.github._255_ping.rpg.api.damage.DamageContext;
 import com.github._255_ping.rpg.api.damage.PostDamageEvent;
+import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -44,6 +47,23 @@ public final class DamageEffect implements AbilityEffect {
         }
         String source = "true".equals(type) ? "ability_true" : "ability";
         RpgServices.health().damage(ctx.target(), base, source);
+
+        // Knockback: push the target away from the caster using the caster's KNOCKBACK stat.
+        // Same formula as melee knockback in DamagePipelineListener; only applies when the
+        // caster is a player and the target is a non-player LivingEntity.
+        if (ctx.caster() instanceof Player casterPlayer
+                && ctx.target() instanceof LivingEntity le
+                && !(le instanceof Player)) {
+            double knockback = RpgServices.player(casterPlayer).get(BuiltinStat.KNOCKBACK);
+            if (knockback > 0) {
+                org.bukkit.util.Vector dir = le.getLocation().toVector()
+                        .subtract(ctx.caster().getLocation().toVector());
+                if (dir.lengthSquared() > 0) dir.normalize();
+                double strength = knockback / 100.0;
+                le.setVelocity(dir.multiply(strength).setY(Math.min(0.3 + strength * 0.1, 0.5)));
+            }
+        }
+
         // Fire PostDamageEvent for damage indicators. Guard against re-entrancy: if an OnHurt
         // ability also contains DamageEffect, suppressing the nested PostDamageEvent breaks
         // the recursion — the secondary hit still lands, but doesn't fire further triggers.

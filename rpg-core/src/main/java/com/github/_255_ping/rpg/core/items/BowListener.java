@@ -22,6 +22,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityShootBowEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -106,6 +107,30 @@ public final class BowListener implements Listener {
         double speed = force * speedMult * 3.0; // 3.0 ≈ vanilla full-draw arrow speed
 
         spawnProjectile(player, item.projectileType(), speed, arrowDamage);
+    }
+
+    /**
+     * Removes RPG-tagged arrows after they hit something.
+     *
+     * <p>When {@link DamagePipelineListener} cancels {@code EntityDamageByEntityEvent}, Paper
+     * suppresses the vanilla arrow-hit cleanup, leaving the arrow flying through its target.
+     * Handling {@code ProjectileHitEvent} at MONITOR (after all damage is processed) ensures
+     * the arrow entity is always removed on contact.
+     *
+     * <p>Entity hit: remove immediately (arrow consumed by impact).
+     * Block hit: remove after 2 seconds so the arrow briefly sticks, then disappears.
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onArrowHit(ProjectileHitEvent event) {
+        if (!(event.getEntity() instanceof AbstractArrow arrow)) return;
+        if (!arrow.getPersistentDataContainer().has(ARROW_DAMAGE_KEY, PersistentDataType.DOUBLE)) return;
+
+        if (event.getHitEntity() != null) {
+            arrow.remove();
+        } else {
+            // Block hit — brief stick-in-block effect, then clean up.
+            plugin.getServer().getScheduler().runTaskLater(plugin, arrow::remove, 40L);
+        }
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
