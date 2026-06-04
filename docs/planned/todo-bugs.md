@@ -6,12 +6,9 @@ _These are broken in live testing. Fix these before working on new features._
 
 ---
 
-### Dungeon Enter Does Nothing (`rpg-dungeons`) — 🟡 Medium
-`/dungeon enter <id>` sends "Preparing dungeon..." in chat but the player is never teleported and nothing else happens. Tested on a freshly created dungeon with `setentrance / setexit / setspawn` all set correctly — same result.
+### ~~Dungeon Enter Does Nothing (`rpg-dungeons`)~~ ✅ Fixed in `rpg-dungeons 0.0.3`
 
-**Likely cause:** The async paste callback in `DungeonManager.enter()` is silently dropped. Possible reasons: the template world lookup (`Bukkit.getWorld(def.templateWorld())`) returns null, or `TemplatePaster.pasteAsync` never calls its callback due to an unhandled exception.
-
-**Fix approach:** Add null/error logging around the template world lookup and inside the paste callback. Confirm the instance world (`rpg_dungeon_instances`) is being created. Check `TemplatePaster` for swallowed exceptions.
+`TemplatePaster.run()` lacked exception handling around `dst.setBlockData()`. In Paper 1.21.4, block writes to freshly-generated void-world chunks can throw (unloaded-chunk state). The exception escaped the `while` loop, was swallowed by Bukkit's repeating-task runner, and the task retried the same `(x, y, z)` coordinate on every tick forever — `onDone` was never called, player stuck at "Preparing dungeon...". Fixed by wrapping per-block ops in `try/finally { advance(); }` (failed blocks are skipped) and `onDone.accept()` in a try-catch (callback failures now log at SEVERE).
 
 ---
 

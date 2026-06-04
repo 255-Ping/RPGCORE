@@ -62,29 +62,46 @@ public final class TemplatePaster {
             public void run() {
                 int budget = blocksPerTick;
                 while (budget-- > 0 && y <= yMax) {
-                    Block src = templateWorld.getBlockAt(x, y, z);
-                    Block dst = destWorld.getBlockAt(oX + (x - xMin), oY + (y - minY), oZ + (z - zMin));
-                    BlockData data = src.getBlockData();
-                    dst.setBlockData(data, false);
+                    // always advance in finally so an exception on one block doesn't
+                    // stall the paster on that coordinate forever
+                    try {
+                        Block src = templateWorld.getBlockAt(x, y, z);
+                        Block dst = destWorld.getBlockAt(oX + (x - xMin), oY + (y - minY), oZ + (z - zMin));
+                        BlockData data = src.getBlockData();
+                        dst.setBlockData(data, false);
 
-                    if (hasTileEntity(src.getType())) {
-                        try {
-                            BlockState srcState = src.getState(false);
-                            // copy() lets us retarget the snapshot to the new location, then
-                            // update() writes the NBT (inventory, sign lines, etc.) into the dest.
-                            BlockState dstSnapshot = srcState.copy(dst.getLocation());
-                            dstSnapshot.update(true, false);
-                        } catch (Exception ex) {
-                            plugin.getLogger().fine("Block-state copy failed at "
-                                    + x + "," + y + "," + z + ": " + ex.getMessage());
+                        if (hasTileEntity(src.getType())) {
+                            try {
+                                BlockState srcState = src.getState(false);
+                                // copy() lets us retarget the snapshot to the new location, then
+                                // update() writes the NBT (inventory, sign lines, etc.) into the dest.
+                                BlockState dstSnapshot = srcState.copy(dst.getLocation());
+                                dstSnapshot.update(true, false);
+                            } catch (Exception ex) {
+                                plugin.getLogger().fine("Block-state copy failed at "
+                                        + x + "," + y + "," + z + ": " + ex.getMessage());
+                            }
                         }
+                        copied++;
+                    } catch (Exception ex) {
+                        plugin.getLogger().warning("Paste skipped block at "
+                                + x + "," + y + "," + z + ": " + ex.getMessage());
+                    } finally {
+                        advance();
                     }
-                    copied++;
-                    advance();
                 }
                 if (y > yMax) {
                     cancel();
-                    onDone.accept(copied);
+                    try {
+                        onDone.accept(copied);
+                    } catch (Exception ex) {
+                        // Make callback failures visible rather than letting them be swallowed
+                        // by Bukkit's task runner silently.
+                        plugin.getLogger().severe("Dungeon paste callback failed: " + ex.getMessage());
+                        if (ex.getCause() != null) {
+                            plugin.getLogger().severe("  Caused by: " + ex.getCause().getMessage());
+                        }
+                    }
                 }
             }
 

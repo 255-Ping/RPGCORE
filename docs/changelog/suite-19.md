@@ -4,6 +4,9 @@
 
 ---
 
+### rpg-dungeons `0.0.3`
+- **Dungeon enter now teleports the player**: `TemplatePaster.run()` was missing exception handling around `dst.setBlockData()`. In Paper 1.21.4, block writes to freshly-generated void-world chunks can throw; the exception escaped the `while` loop, got swallowed by Bukkit's repeating-task runner, and the task retried the same coordinate forever — `onDone` was never called and the player was stuck at "Preparing dungeon...". Fix: wrapped per-block operations in `try/finally { advance(); }` so a failed block is always skipped and the paste completes. Also wrapped `onDone.accept()` in a try-catch so callback exceptions are logged at SEVERE rather than silently dropped.
+
 ### rpg-alchemy `0.3.1`
 - **Potions fixed — effects now apply on drink**: `PotionDrinkListener` was incorrectly intercepting `PlayerInteractEvent`. In Paper 1.21.4 the `ServerboundUseItemPacket` is processed before that event fires, so cancelling there did not reliably suppress the vanilla drink path — the animation played, the item was consumed, and no RPG effects fired. Handler rewritten to intercept `PlayerItemConsumeEvent` instead: vanilla drives the 1.6-second animation; on completion we cancel the event (suppresses item removal + glass-bottle replacement + vanilla effects) and apply RPG status effects + manually reduce item count.
 - **Example potion IDs corrected**: `strength_buff` → `strength_boost`, `heal_over_time` → `regen`, matching the status effect IDs actually defined in `rpg-core`'s `status-effects/example.yml`. Previously `CoreStatusEffectService.apply()` silently no-oped because the IDs were not in the registry.
