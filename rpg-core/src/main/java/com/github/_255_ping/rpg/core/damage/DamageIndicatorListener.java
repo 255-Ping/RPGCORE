@@ -55,24 +55,31 @@ public final class DamageIndicatorListener implements Listener {
         Component label = Component.text(text, isCrit ? NamedTextColor.GOLD : NamedTextColor.RED)
                 .decoration(TextDecoration.BOLD, isCrit);
 
+        int durationTicks = plugin.getConfig().getInt("damage-indicators.duration-ticks", 25);
+        float riseBlocks = (float) plugin.getConfig().getDouble("damage-indicators.rise-blocks", 1.2);
+
         TextDisplay td = (TextDisplay) victim.getWorld().spawnEntity(loc, EntityType.TEXT_DISPLAY);
         td.text(label);
         td.setBillboard(Display.Billboard.CENTER);
         td.setDefaultBackground(false);
         td.setShadowed(true);
+        // NOTE: do NOT call setTransformation here — Paper bundles entity metadata into
+        // the spawn packet, so setting scale=0.01 immediately would make the entity
+        // invisible on arrival (client has no "previous" state to interpolate from).
+        // Defer one tick so the spawn packet goes out with default state (scale=1),
+        // then the transformation packet arrives separately and the client animates.
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            if (!td.isValid()) return;
+            AxisAngle4f noRot = new AxisAngle4f(0f, 0f, 1f, 0f);
+            td.setInterpolationDelay(0);
+            td.setInterpolationDuration(durationTicks);
+            td.setTransformation(new Transformation(
+                    new Vector3f(0f, riseBlocks, 0f),
+                    noRot,
+                    new Vector3f(0.01f, 0.01f, 0.01f),
+                    noRot));
+        });
 
-        int durationTicks = plugin.getConfig().getInt("damage-indicators.duration-ticks", 25);
-        float riseBlocks = (float) plugin.getConfig().getDouble("damage-indicators.rise-blocks", 1.2);
-
-        td.setInterpolationDelay(0);
-        td.setInterpolationDuration(durationTicks);
-        AxisAngle4f noRot = new AxisAngle4f(0f, 0f, 1f, 0f);
-        td.setTransformation(new Transformation(
-                new Vector3f(0f, riseBlocks, 0f),
-                noRot,
-                new Vector3f(0.01f, 0.01f, 0.01f),
-                noRot));
-
-        plugin.getServer().getScheduler().runTaskLater(plugin, td::remove, durationTicks + 5L);
+        plugin.getServer().getScheduler().runTaskLater(plugin, td::remove, (long) durationTicks + 10L);
     }
 }
