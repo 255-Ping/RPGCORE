@@ -149,11 +149,6 @@ public final class DamagePipelineListener implements Listener {
             }
         }
 
-        // Update mob health bar in display name.
-        if (!(victim instanceof Player) && mobIdKey != null) {
-            updateMobHealthBar(victim);
-        }
-
         PostDamageEvent post = new PostDamageEvent(ctx, finalDamage);
         Bukkit.getPluginManager().callEvent(post);
 
@@ -177,6 +172,19 @@ public final class DamagePipelineListener implements Listener {
                     Bukkit.getPluginManager().callEvent(new PostDamageEvent(fCtx, finalDamage));
                 }
             }
+        }
+    }
+
+    /**
+     * Refreshes the mob health bar on every damage event, including ability damage that bypasses
+     * {@link EntityDamageEvent}. DamageEffect, ExplodeEffect, and the melee/projectile path all
+     * fire PostDamageEvent so this single listener handles all cases.
+     */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPostDamageUpdateHealthBar(PostDamageEvent event) {
+        LivingEntity victim = event.context().victim();
+        if (victim != null && !(victim instanceof Player) && mobIdKey != null) {
+            updateMobHealthBar(victim);
         }
     }
 

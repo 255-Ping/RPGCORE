@@ -1,6 +1,5 @@
 package com.github._255_ping.rpg.core.abilities.effects;
 
-import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.abilities.AbilityContext;
 import com.github._255_ping.rpg.api.abilities.AbilityDsl;
 import com.github._255_ping.rpg.api.abilities.AbilityEffect;
@@ -19,8 +18,11 @@ import java.util.concurrent.CompletableFuture;
  * blocks. The first living entity hit (excluding caster) becomes the new {@code ctx.target};
  * {@code ctx.point} is set to the endpoint (hit point or max range).
  *
- * <p>If the beam hits an entity and {@code damage_multiplier > 0}, damage is applied
- * immediately. Carried damage is also scaled by {@code damage_multiplier} for chained effects.
+ * <p>Beam does NOT apply damage directly — it only sets the target and scales
+ * {@code ctx.carriedDamage} by {@code damage_multiplier}. Follow with an explicit
+ * {@code damage} step for a direct hit, or {@code explode} for AoE. This keeps
+ * each effect's responsibility distinct and prevents double-dipping when beam and
+ * explode are chained together.
  */
 public final class BeamEffect implements AbilityEffect {
 
@@ -53,11 +55,7 @@ public final class BeamEffect implements AbilityEffect {
         if (result != null && result.getHitEntity() instanceof LivingEntity hit) {
             ctx.setTarget(hit);
             end = result.getHitPosition().toLocation(caster.getWorld());
-            double dealDamage = ctx.carriedDamage() * damageMultiplier;
-            ctx.setCarriedDamage(dealDamage);
-            if (dealDamage > 0) {
-                RpgServices.health().damage(hit, dealDamage, "ability_beam");
-            }
+            ctx.setCarriedDamage(ctx.carriedDamage() * damageMultiplier);
         } else if (result != null) {
             end = result.getHitPosition().toLocation(caster.getWorld());
         } else {

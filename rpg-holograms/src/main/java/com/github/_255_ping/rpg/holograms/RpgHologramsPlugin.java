@@ -18,7 +18,6 @@ public final class RpgHologramsPlugin extends JavaPlugin implements CommandExecu
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        getServer().getPluginManager().registerEvents(new DamageIndicatorListener(this), this);
         manager = new HologramManager(this);
         manager.loadAll();
         Objects.requireNonNull(getCommand("holograms"), "command 'holograms' missing").setExecutor(this);

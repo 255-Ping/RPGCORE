@@ -4,7 +4,8 @@
 # Built-in effects:
 #   damage{amount=, damage_multiplier=, type=physical/true}
 #   heal{amount=, target=caster/target}
-#   beam{range=, damage_multiplier=, particle=}        sets target + point
+#   beam{range=, damage_multiplier=, particle=}        sets target + point; scales carried damage; NO direct hit
+#                                                       follow with damage{} for a direct hit, explode{} for AoE
 #   explode{radius=, damage=, damage_multiplier=, particle=}
 #   particles{type=, count=, offset=}
 #   sound{key=, volume=, pitch=}
@@ -17,6 +18,7 @@ testability:
   AbilitySequence:
   - mana_cost{amount=20}
   - beam{range=8, damage_multiplier=1.5, particle=crit}
+  - damage{damage_multiplier=1.0}
   - explode{radius=3, damage_multiplier=0.5, particle=explosion}
   - sound{key=entity.generic.explode, volume=1.0, pitch=1.2}
   Cooldown: 40
