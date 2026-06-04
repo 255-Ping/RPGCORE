@@ -65,6 +65,8 @@ public final class ExplodeEffect implements AbilityEffect {
         for (Entity e : center.getWorld().getNearbyEntities(center, radius, radius, radius)) {
             if (!(e instanceof LivingEntity le)) continue;
             if (le.equals(ctx.caster())) continue;
+            // Skip the primary beam target — it was already hit by an explicit damage{} step.
+            if (ctx.target() != null && le.equals(ctx.target())) continue;
             RpgServices.health().damage(le, finalDamage, "ability_aoe");
             if (!FIRING_POST.get()) {
                 FIRING_POST.set(true);

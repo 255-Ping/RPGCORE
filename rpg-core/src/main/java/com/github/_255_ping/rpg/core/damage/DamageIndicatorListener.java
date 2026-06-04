@@ -67,12 +67,14 @@ public final class DamageIndicatorListener implements Listener {
         td.setBillboard(Display.Billboard.CENTER);
         td.setDefaultBackground(false);
         td.setShadowed(true);
-        td.setVisibleByDefault(false); // hidden by default; revealed per-audience below
 
-        // Reveal to the configured audience.
+        // Determine who should see this indicator, then hide it from everyone else.
+        // We use hideEntity (not setVisibleByDefault=false + showEntity) because
+        // showEntity on a freshly-spawned entity is unreliable — the tracker hasn't
+        // sent the spawn packet to clients yet, so the show call may be a no-op.
         Set<Player> audience = buildAudience(event);
-        for (Player p : audience) {
-            p.showEntity(plugin, td);
+        for (Player p : plugin.getServer().getOnlinePlayers()) {
+            if (!audience.contains(p)) p.hideEntity(plugin, td);
         }
 
         int durationTicks = plugin.getConfig().getInt("damage-indicators.duration-ticks", 25);
