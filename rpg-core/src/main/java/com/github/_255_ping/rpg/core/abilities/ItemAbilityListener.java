@@ -3,6 +3,8 @@ package com.github._255_ping.rpg.core.abilities;
 import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.abilities.AbilityContext;
 import com.github._255_ping.rpg.api.abilities.AbilityPipeline;
+import com.github._255_ping.rpg.api.abilities.ItemAbilityBinding;
+import com.github._255_ping.rpg.api.abilities.PlayerAbilityTrigger;
 import com.github._255_ping.rpg.api.items.BuiltinItemType;
 import com.github._255_ping.rpg.api.items.RpgItem;
 import com.github._255_ping.rpg.api.stats.BuiltinStat;
@@ -17,13 +19,16 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
 
 /**
- * Right-click with a held RPG item that declares Abilities -> cast them.
+ * Fires active-click ability bindings ({@link PlayerAbilityTrigger#RIGHT_CLICK},
+ * {@link PlayerAbilityTrigger#LEFT_CLICK}, {@link PlayerAbilityTrigger#SHIFT_RIGHT_CLICK},
+ * {@link PlayerAbilityTrigger#SHIFT_LEFT_CLICK}) from the held item on interact events.
  *
- * <p>Both air-rightclick and block-rightclick are handled. Block-rightclick cancels the
+ * <p>Both air-click and block-click variants are handled.  Block-rightclick cancels the
  * placement for weapon-type items so the cast doesn't also place a block.
  * Only MAIN_HAND interactions are processed to prevent double-firing.
  */
@@ -39,14 +44,23 @@ public final class ItemAbilityListener implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onInteract(PlayerInteractEvent event) {
-        // Only fire once per click — ignore off-hand duplicate event.
         if (event.getHand() != EquipmentSlot.HAND) return;
 
         Action action = event.getAction();
-        if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) return;
+        boolean rightClick = action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK;
+        boolean leftClick  = action == Action.LEFT_CLICK_AIR  || action == Action.LEFT_CLICK_BLOCK;
+        if (!rightClick && !leftClick) return;
 
         Player player = event.getPlayer();
-        // event.getItem() can be null on air-clicks in some Paper versions; fall back to main hand.
+        boolean sneaking = player.isSneaking();
+
+        PlayerAbilityTrigger trigger;
+        if (rightClick) {
+            trigger = sneaking ? PlayerAbilityTrigger.SHIFT_RIGHT_CLICK : PlayerAbilityTrigger.RIGHT_CLICK;
+        } else {
+            trigger = sneaking ? PlayerAbilityTrigger.SHIFT_LEFT_CLICK : PlayerAbilityTrigger.LEFT_CLICK;
+        }
+
         ItemStack stack = event.getItem();
         if (stack == null || stack.getType().isAir()) {
             stack = player.getInventory().getItemInMainHand();
@@ -56,7 +70,11 @@ public final class ItemAbilityListener implements Listener {
         Optional<RpgItem> opt = RpgServices.items().from(stack);
         if (opt.isEmpty()) return;
         RpgItem item = opt.get();
-        if (item.abilities().isEmpty()) return;
+
+        List<ItemAbilityBinding> bindings = item.triggeredAbilities().stream()
+                .filter(b -> b.trigger() == trigger)
+                .toList();
+        if (bindings.isEmpty()) return;
 
         // Cancel block-place for weapon-type items so the right-click cast doesn't also place a block.
         if (action == Action.RIGHT_CLICK_BLOCK && isWeaponType(item)) {
@@ -78,19 +96,21 @@ public final class ItemAbilityListener implements Listener {
         }
 
         double baseDamage = RpgServices.player(player).get(BuiltinStat.DAMAGE);
-        AbilityContext ctx = new AbilityContext(player, baseDamage);
-        ctx.setPoint(player.getEyeLocation());
-
-        AbilityPipeline pipeline = new AbilityPipeline(item.abilities());
-        pipeline.cast(ctx, registry).exceptionally(err -> {
-            Throwable root = err instanceof CompletionException ce && ce.getCause() != null ? ce.getCause() : err;
-            if (root instanceof ManaCostEffect.InsufficientMana) {
-                player.sendActionBar(plugin.messages().component("ability.no-mana"));
-            } else {
-                plugin.getLogger().warning("Ability chain failed: " + root.getMessage());
-            }
-            return ctx;
-        });
+        for (ItemAbilityBinding binding : bindings) {
+            AbilityContext ctx = new AbilityContext(player, baseDamage);
+            ctx.setPoint(player.getEyeLocation());
+            AbilityPipeline pipeline = new AbilityPipeline(binding.invocations());
+            pipeline.cast(ctx, registry).exceptionally(err -> {
+                Throwable root = err instanceof CompletionException ce && ce.getCause() != null
+                        ? ce.getCause() : err;
+                if (root instanceof ManaCostEffect.InsufficientMana) {
+                    player.sendActionBar(plugin.messages().component("ability.no-mana"));
+                } else {
+                    plugin.getLogger().warning("Ability chain failed: " + root.getMessage());
+                }
+                return ctx;
+            });
+        }
     }
 
     private static boolean isWeaponType(RpgItem item) {
@@ -107,7 +127,7 @@ public final class ItemAbilityListener implements Listener {
         registry.register("heal",         com.github._255_ping.rpg.core.abilities.effects.HealEffect::new);
         registry.register("beam",         com.github._255_ping.rpg.core.abilities.effects.BeamEffect::new);
         registry.register("explode",      com.github._255_ping.rpg.core.abilities.effects.ExplodeEffect::new);
-        registry.register("aoe",          com.github._255_ping.rpg.core.abilities.effects.ExplodeEffect::new); // alias
+        registry.register("aoe",          com.github._255_ping.rpg.core.abilities.effects.ExplodeEffect::new);
         registry.register("particles",    com.github._255_ping.rpg.core.abilities.effects.ParticlesEffect::new);
         registry.register("sound",        com.github._255_ping.rpg.core.abilities.effects.SoundEffect::new);
         registry.register("delay",        com.github._255_ping.rpg.core.abilities.effects.DelayEffect::new);

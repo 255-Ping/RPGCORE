@@ -3,6 +3,8 @@ package com.github._255_ping.rpg.core.items;
 import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.abilities.AbilityDsl;
 import com.github._255_ping.rpg.api.abilities.AbilityInvocation;
+import com.github._255_ping.rpg.api.abilities.ItemAbilityBinding;
+import com.github._255_ping.rpg.api.abilities.PlayerAbilityTrigger;
 import com.github._255_ping.rpg.api.items.BuiltinItemType;
 import com.github._255_ping.rpg.api.items.CustomItemType;
 import com.github._255_ping.rpg.api.items.ItemType;
@@ -101,12 +103,12 @@ public final class ItemLoader {
             }
         }
 
-        List<AbilityInvocation> abilities = new ArrayList<>();
-        for (String inv : s.getStringList("Abilities")) {
+        List<ItemAbilityBinding> triggeredAbilities = new ArrayList<>();
+        for (String line : s.getStringList("Abilities")) {
             try {
-                abilities.addAll(AbilityDsl.parse(inv));
+                triggeredAbilities.add(parseAbilityLine(id, line));
             } catch (Exception ex) {
-                logger.warning("item '" + id + "' has bad ability invocation '" + inv + "': " + ex.getMessage());
+                logger.warning("item '" + id + "' has bad ability line '" + line + "': " + ex.getMessage());
             }
         }
 
@@ -129,11 +131,40 @@ public final class ItemLoader {
         boolean infiniteAmmo = s.getBoolean("InfiniteAmmo", false);
         String projectileType = s.getString("ProjectileType", "ARROW");
         boolean tradeable   = s.getBoolean("Tradeable", true);
+        String setId        = s.getString("SetId");
 
         return new CoreRpgItem(id, displayName, type, rarity, material, customModelData,
-                stats, abilities, lore, consumeEffects,
+                stats, triggeredAbilities, lore, consumeEffects,
                 attackCooldown, itemCooldown, ammoType, infiniteAmmo, projectileType,
-                tradeable, itemIdKey);
+                tradeable, setId, itemIdKey);
+    }
+
+    /**
+     * Parses a single line from an item's {@code Abilities:} list into an {@link ItemAbilityBinding}.
+     *
+     * <ul>
+     *   <li>Lines starting with {@code ~trigger } bind to that trigger, e.g.
+     *       {@code "~on_hit drain{amount=5}"}.</li>
+     *   <li>Lines without a {@code ~} prefix default to {@link PlayerAbilityTrigger#RIGHT_CLICK}
+     *       (backwards compatible with pre-trigger YAML).</li>
+     * </ul>
+     */
+    private static ItemAbilityBinding parseAbilityLine(String itemId, String line) {
+        if (line.startsWith("~")) {
+            int space = line.indexOf(' ');
+            if (space < 0) {
+                throw new IllegalArgumentException(
+                        "trigger line must be '~<trigger> <effects...>', got: '" + line + "'");
+            }
+            String triggerStr = line.substring(1, space);
+            String effectStr  = line.substring(space + 1).trim();
+            PlayerAbilityTrigger trigger = PlayerAbilityTrigger.parse(triggerStr);
+            List<AbilityInvocation> invocations = AbilityDsl.parse(effectStr);
+            return new ItemAbilityBinding(trigger, invocations);
+        }
+        // No prefix — legacy right_click binding.
+        List<AbilityInvocation> invocations = AbilityDsl.parse(line);
+        return new ItemAbilityBinding(PlayerAbilityTrigger.RIGHT_CLICK, invocations);
     }
 
     private static ItemType parseType(String s) {

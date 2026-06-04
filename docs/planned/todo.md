@@ -49,7 +49,7 @@
 1. 🐛 🟡 **Fix all confirmed bugs first** — see [Bugs](todo-bugs.md)
 2. ✅ **Wire up silent stats** (speed, ferocity, swing_range) — already implemented
 3. ✅ **NPC command overhaul + in-game editing** — per-NPC entity type (`/npc setentitytype`), style/skin commands, dialogue/shop in-game editing, look-at-player task, `/npc info` (`rpg-npcs 0.6.0`)
-4. 🔵 🟡 **GUI redesigns** (brewing/cooking/enchanting pagination + layouts) — high visibility
+4. ✅ **GUI redesigns** (brewing/cooking/enchanting pagination + layouts, nav bar standard on all GUIs)
 5. 🟠 🔴 **New built-in ability effects** — unlocks all the interesting new ability content
 6. 🟠 🟡 **Expand example mobs, abilities, items** — depends on new effects
 7. 🟠 🔴 **Loot pool system** — needed by mobs, dungeons, and enchanting XP all at once

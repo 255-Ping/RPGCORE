@@ -25,6 +25,8 @@ public final class CoreRpgPlayer implements RpgPlayer {
     private final MutableStatHolder base = new MutableStatHolder();
     /** Permanent bonus stats accumulated from milestone rewards. Applied in recalculation after base. */
     private final MutableStatHolder bonusStats = new MutableStatHolder();
+    /** Temporary flat bonuses from active armor-set tiers. Updated by ArmorSetListener before recalc. */
+    private final MutableStatHolder setBonusStats = new MutableStatHolder();
     private final MutableStatHolder effective = new MutableStatHolder();
     private double currentMana;
 
@@ -80,6 +82,12 @@ public final class CoreRpgPlayer implements RpgPlayer {
 
         // Layer 2: equipment (armor slots + main hand)
         for (Map.Entry<Stat, Double> e : collectEquipmentStats().entrySet()) {
+            double cur = effective.get(e.getKey());
+            effective.set(e.getKey(), cur + e.getValue());
+        }
+
+        // Layer 2.5: armor-set bonus stats (flat, set by ArmorSetListener before recalc)
+        for (Map.Entry<Stat, Double> e : setBonusStats.snapshot().entrySet()) {
             double cur = effective.get(e.getKey());
             effective.set(e.getKey(), cur + e.getValue());
         }
@@ -156,5 +164,14 @@ public final class CoreRpgPlayer implements RpgPlayer {
 
     public void clearBaseStats() {
         base.clear();
+    }
+
+    /**
+     * Replaces the entire set-bonus stat layer.  Called by {@code ArmorSetListener} whenever
+     * the player's active set tiers change, before {@code EquipmentListener} triggers recalc.
+     */
+    public void setSetBonusStats(Map<Stat, Double> stats) {
+        setBonusStats.clear();
+        stats.forEach(setBonusStats::set);
     }
 }

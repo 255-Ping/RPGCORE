@@ -4,6 +4,14 @@ import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.core.abilities.AbilityLoader;
 import com.github._255_ping.rpg.core.abilities.CoreAbilityRegistry;
 import com.github._255_ping.rpg.core.abilities.ItemAbilityListener;
+import com.github._255_ping.rpg.core.abilities.PassiveAbilityFirer;
+import com.github._255_ping.rpg.core.abilities.PlayerHitAbilityListener;
+import com.github._255_ping.rpg.core.abilities.PlayerHurtAbilityListener;
+import com.github._255_ping.rpg.core.abilities.PlayerJumpAbilityListener;
+import com.github._255_ping.rpg.core.abilities.PlayerPassiveAbilityTask;
+import com.github._255_ping.rpg.core.sets.ArmorSetListener;
+import com.github._255_ping.rpg.core.sets.ArmorSetLoader;
+import com.github._255_ping.rpg.core.sets.CoreArmorSetRegistry;
 import com.github._255_ping.rpg.core.blocks.BlockBreakHandler;
 import com.github._255_ping.rpg.core.blocks.BlockHologramService;
 import com.github._255_ping.rpg.core.blocks.BlockInteractListener;
@@ -119,6 +127,10 @@ public final class RpgCorePlugin extends JavaPlugin {
     private WandListener wandListener;
     private LootChestRegistry lootChestRegistry;
     private ParticleManager particleManager;
+    private CoreArmorSetRegistry armorSetRegistry;
+    private ArmorSetLoader armorSetLoader;
+    private PassiveAbilityFirer passiveAbilityFirer;
+    private ArmorSetListener armorSetListener;
 
     public static RpgCorePlugin get() {
         return instance;
@@ -188,6 +200,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         itemRegistry = new CoreItemRegistry(itemIdKey);
         mobRegistry = new CoreMobRegistry(mobIdKey);
         abilityRegistry = new CoreAbilityRegistry();
+        armorSetRegistry = new CoreArmorSetRegistry();
         blockRegistry = new CoreBlockRegistry();
         damagerTracker = new DamagerTracker();
         currencyRegistry = new CoreCurrencyRegistry();
@@ -210,11 +223,26 @@ public final class RpgCorePlugin extends JavaPlugin {
         RpgServices.setItems(itemRegistry);
         RpgServices.setMobs(mobRegistry);
         RpgServices.setAbilities(abilityRegistry);
+        RpgServices.setArmorSets(armorSetRegistry);
         RpgServices.setBlocks(blockRegistry);
         RpgServices.setCurrencies(currencyRegistry);
         RpgServices.setLootTables(lootTableRegistry);
 
         ItemAbilityListener.registerBuiltins(abilityRegistry);
+
+        // Armor set loader
+        File setsDir = new File(getDataFolder(), "sets");
+        if (!setsDir.isDirectory()) setsDir.mkdirs();
+        if (!new File(setsDir, "example.yml").exists()) {
+            saveResource("sets/example.yml", false);
+        }
+        armorSetLoader = new ArmorSetLoader(setsDir, armorSetRegistry, getLogger());
+        armorSetLoader.loadAll();
+
+        // Passive/proc ability infrastructure
+        passiveAbilityFirer = new PassiveAbilityFirer(abilityRegistry, getLogger());
+        armorSetListener = new ArmorSetListener(this, armorSetRegistry, playerLookup);
+        passiveAbilityFirer.setArmorSetListener(armorSetListener);
 
         statusEffectLoader = new StatusEffectLoader(statusEffectsDir, statusEffectRegistry, getLogger());
         statusEffectLoader.loadAll();
@@ -250,6 +278,19 @@ public final class RpgCorePlugin extends JavaPlugin {
                 new EquipmentListener(this, healthService), this);
         getServer().getPluginManager().registerEvents(
                 new ItemAbilityListener(this, abilityRegistry), this);
+        getServer().getPluginManager().registerEvents(armorSetListener, this);
+        getServer().getPluginManager().registerEvents(
+                new PlayerHitAbilityListener(passiveAbilityFirer), this);
+        getServer().getPluginManager().registerEvents(
+                new PlayerHurtAbilityListener(passiveAbilityFirer), this);
+        getServer().getPluginManager().registerEvents(
+                new PlayerJumpAbilityListener(passiveAbilityFirer), this);
+
+        long passiveInterval = getConfig().getLong("abilities.passive-interval-ticks", 20L);
+        getServer().getScheduler().runTaskTimer(
+                this, new PlayerPassiveAbilityTask(getServer(), passiveAbilityFirer),
+                passiveInterval, passiveInterval);
+
         DropManager dropManager = new DropManager(this);
         getServer().getPluginManager().registerEvents(dropManager, this);
 
@@ -378,6 +419,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         itemLoader.loadAll();
         mobLoader.loadAll();
         abilityLoader.loadAll();
+        if (armorSetLoader != null) armorSetLoader.loadAll();
         blockLoader.loadAll();
         blockHologramService.initAll(blockRegistry);   // re-spawn with updated definitions
         skillsService.onReload();

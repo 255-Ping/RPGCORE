@@ -1,0 +1,70 @@
+# ============================================================
+# Example Armor Set — Berserker's Set
+# ============================================================
+#
+# Wearing 2+ pieces: +25 ferocity, on-hit particles
+# Wearing 4 pieces (full set): +75 ferocity +50 damage, on-hit drain
+#
+# This file is auto-generated on first startup. Remove or replace it with your own sets.
+# Full docs: docs/core/armor-sets.md
+# ============================================================
+
+berserker_set:
+  Name: "&c&lBerserker's Set"
+  Pieces:
+    - berserker_helmet
+    - berserker_chestplate
+    - berserker_leggings
+    - berserker_boots
+
+  Bonuses:
+
+    # 2/4 pieces: partial set — half the stats, a visual proc to hint at the full set
+    2:
+      Stats:
+        ferocity: 25
+      Abilities:
+        - "~on_hit particles{type=crit}"
+
+    # 4/4 pieces: full set — defined explicitly rather than using Scale
+    4:
+      Stats:
+        ferocity: 75
+        damage: 50
+      Abilities:
+        - "~on_hit particles{type=heart}"
+        # drain is not yet a built-in effect — add it once new effects are wired up:
+        # - "~on_hit drain{amount=10}"
+
+
+# ============================================================
+# Scale-based example — use Scale to auto-derive weaker tiers
+# instead of writing effects twice.
+# ============================================================
+
+flame_set:
+  Name: "&6&lFlame Walker's Set"
+  Pieces:
+    - flame_helmet
+    - flame_chestplate
+    - flame_leggings
+    - flame_boots
+
+  Bonuses:
+
+    # 2/4 — Scale: 0.5 halves all numeric params in Abilities at load time.
+    # "~on_hurt heal{amount=10}" becomes "~on_hurt heal{amount=5}" automatically.
+    2:
+      Stats:
+        health_regen: 5
+      Scale: 0.5
+      Abilities:
+        - "~on_hurt heal{amount=10}"
+
+    # 4/4 — full values as written.
+    4:
+      Stats:
+        health_regen: 15
+      Abilities:
+        - "~on_hurt heal{amount=10}"
+        - "~passive heal{amount=2}"

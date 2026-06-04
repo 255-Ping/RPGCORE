@@ -19,7 +19,18 @@
 #   ProjectileType   — entity type the bow/crossbow launches; default ARROW
 #                      Valid: ARROW | SPECTRAL_ARROW | SNOWBALL | EGG | SMALL_FIREBALL | TRIDENT
 #   Stats            — map of stat-id: value (see all stat IDs below)
-#   Abilities        — list of ability IDs defined in abilities/*.yml
+#   Abilities        — list of ability bindings. Prefix a line with ~trigger to set its trigger:
+#                        "ability_id"                   → right_click (default, backwards compat)
+#                        "~right_click ability_id"      → right_click (explicit)
+#                        "~left_click ability_id"       → left_click
+#                        "~shift_right_click ability_id"
+#                        "~shift_left_click ability_id"
+#                        "~on_hit drain{amount=5}"      → proc on dealing damage (passive, no mana cost by default)
+#                        "~on_hurt particles{type=crit}"→ proc on receiving damage
+#                        "~on_jump particles{type=cloud}"
+#                        "~passive heal{amount=2}"      → ticking (every abilities.passive-interval-ticks)
+#                      Multiple ~triggers on the same item are allowed.
+#   SetId            — id of an armor set in sets/*.yml that this item counts toward
 #   OnConsume        — right-click consumable effects:
 #     Effects:
 #     - effect: <status-effect-id>   # defined in status-effects/*.yml

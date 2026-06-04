@@ -1,6 +1,7 @@
 package com.github._255_ping.rpg.api.items;
 
 import com.github._255_ping.rpg.api.abilities.AbilityInvocation;
+import com.github._255_ping.rpg.api.abilities.ItemAbilityBinding;
 import com.github._255_ping.rpg.api.stats.Stat;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -16,8 +17,28 @@ public interface RpgItem {
     Material material();
     int customModelData();
     Map<Stat, Double> stats();
+
+    /**
+     * All ability bindings on this item, each paired with the {@link
+     * com.github._255_ping.rpg.api.abilities.PlayerAbilityTrigger} that fires it.
+     * This supersedes {@link #abilities()} for all new code.
+     */
+    default List<ItemAbilityBinding> triggeredAbilities() { return List.of(); }
+
+    /**
+     * Backwards-compat: returns invocations from {@link
+     * com.github._255_ping.rpg.api.abilities.PlayerAbilityTrigger#RIGHT_CLICK} bindings only.
+     * Prefer {@link #triggeredAbilities()} for new code.
+     */
     List<AbilityInvocation> abilities();
+
     List<String> extraLore();
+
+    /**
+     * The armor-set this item belongs to, or {@code null} / empty if it is not part of a set.
+     * Set via {@code SetId: set_name} in the item YAML.
+     */
+    default String setId() { return null; }
 
     ItemStack toItemStack();
 

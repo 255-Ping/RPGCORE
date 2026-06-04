@@ -2,6 +2,8 @@ package com.github._255_ping.rpg.core.items;
 
 import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.abilities.AbilityInvocation;
+import com.github._255_ping.rpg.api.abilities.ItemAbilityBinding;
+import com.github._255_ping.rpg.api.abilities.PlayerAbilityTrigger;
 import com.github._255_ping.rpg.api.items.ItemType;
 import com.github._255_ping.rpg.api.items.Rarity;
 import com.github._255_ping.rpg.api.items.RpgItem;
@@ -36,7 +38,7 @@ public final class CoreRpgItem implements RpgItem {
     private final Material material;
     private final int customModelData;
     private final Map<Stat, Double> stats;
-    private final List<AbilityInvocation> abilities;
+    private final List<ItemAbilityBinding> triggeredAbilities;
     private final List<String> extraLore;
     private final List<ConsumeEffect> consumeEffects;
     private final int attackCooldownTicks;
@@ -45,40 +47,16 @@ public final class CoreRpgItem implements RpgItem {
     private final boolean infiniteAmmo;
     private final String projectileType;
     private final boolean tradeable;
+    private final String setId;
     private final NamespacedKey itemIdKey;
 
     public CoreRpgItem(String id, String displayName, ItemType type, Rarity rarity,
                        Material material, int customModelData,
-                       Map<Stat, Double> stats, List<AbilityInvocation> abilities,
-                       List<String> extraLore, NamespacedKey itemIdKey) {
-        this(id, displayName, type, rarity, material, customModelData, stats, abilities, extraLore, List.of(), 0, 0, null, false, "ARROW", true, itemIdKey);
-    }
-
-    public CoreRpgItem(String id, String displayName, ItemType type, Rarity rarity,
-                       Material material, int customModelData,
-                       Map<Stat, Double> stats, List<AbilityInvocation> abilities,
-                       List<String> extraLore, List<ConsumeEffect> consumeEffects, NamespacedKey itemIdKey) {
-        this(id, displayName, type, rarity, material, customModelData, stats, abilities, extraLore, consumeEffects, 0, 0, null, false, "ARROW", true, itemIdKey);
-    }
-
-    public CoreRpgItem(String id, String displayName, ItemType type, Rarity rarity,
-                       Material material, int customModelData,
-                       Map<Stat, Double> stats, List<AbilityInvocation> abilities,
+                       Map<Stat, Double> stats, List<ItemAbilityBinding> triggeredAbilities,
                        List<String> extraLore, List<ConsumeEffect> consumeEffects,
                        int attackCooldownTicks, int itemCooldownTicks,
                        String ammoType, boolean infiniteAmmo, String projectileType,
-                       NamespacedKey itemIdKey) {
-        this(id, displayName, type, rarity, material, customModelData, stats, abilities, extraLore, consumeEffects,
-                attackCooldownTicks, itemCooldownTicks, ammoType, infiniteAmmo, projectileType, true, itemIdKey);
-    }
-
-    public CoreRpgItem(String id, String displayName, ItemType type, Rarity rarity,
-                       Material material, int customModelData,
-                       Map<Stat, Double> stats, List<AbilityInvocation> abilities,
-                       List<String> extraLore, List<ConsumeEffect> consumeEffects,
-                       int attackCooldownTicks, int itemCooldownTicks,
-                       String ammoType, boolean infiniteAmmo, String projectileType,
-                       boolean tradeable, NamespacedKey itemIdKey) {
+                       boolean tradeable, String setId, NamespacedKey itemIdKey) {
         this.id = id;
         this.displayName = displayName;
         this.type = type;
@@ -86,7 +64,7 @@ public final class CoreRpgItem implements RpgItem {
         this.material = material;
         this.customModelData = customModelData;
         this.stats = Map.copyOf(stats);
-        this.abilities = List.copyOf(abilities);
+        this.triggeredAbilities = List.copyOf(triggeredAbilities);
         this.extraLore = List.copyOf(extraLore);
         this.consumeEffects = List.copyOf(consumeEffects);
         this.attackCooldownTicks = attackCooldownTicks;
@@ -95,6 +73,7 @@ public final class CoreRpgItem implements RpgItem {
         this.infiniteAmmo = infiniteAmmo;
         this.projectileType = projectileType != null ? projectileType : "ARROW";
         this.tradeable = tradeable;
+        this.setId = setId;
         this.itemIdKey = itemIdKey;
     }
 
@@ -105,7 +84,19 @@ public final class CoreRpgItem implements RpgItem {
     @Override public Material material() { return material; }
     @Override public int customModelData() { return customModelData; }
     @Override public Map<Stat, Double> stats() { return stats; }
-    @Override public List<AbilityInvocation> abilities() { return abilities; }
+
+    @Override
+    public List<ItemAbilityBinding> triggeredAbilities() { return triggeredAbilities; }
+
+    /** Backwards compat — returns invocations from RIGHT_CLICK bindings only. */
+    @Override
+    public List<AbilityInvocation> abilities() {
+        return triggeredAbilities.stream()
+                .filter(b -> b.trigger() == PlayerAbilityTrigger.RIGHT_CLICK)
+                .flatMap(b -> b.invocations().stream())
+                .toList();
+    }
+
     @Override public List<String> extraLore() { return extraLore; }
     public List<ConsumeEffect> consumeEffects() { return consumeEffects; }
     @Override public int attackCooldownTicks() { return attackCooldownTicks; }
@@ -114,6 +105,7 @@ public final class CoreRpgItem implements RpgItem {
     @Override public boolean infiniteAmmo() { return infiniteAmmo; }
     @Override public String projectileType() { return projectileType; }
     @Override public boolean tradeable() { return tradeable; }
+    @Override public String setId() { return setId; }
 
     @Override
     public ItemStack toItemStack() {
@@ -150,24 +142,11 @@ public final class CoreRpgItem implements RpgItem {
             lore.add(noItalic(LEGACY.deserialize(l)));
         }
 
-        // Abilities: show display name + description lines from the ability registry.
-        if (!abilities.isEmpty()) {
+        // Abilities — grouped by trigger for clean lore presentation.
+        if (!triggeredAbilities.isEmpty()) {
             if (!lore.isEmpty()) lore.add(Component.empty());
-            for (AbilityInvocation inv : abilities) {
-                String abilityId = inv.effectName();
-                String displayName;
-                List<String> description;
-                try {
-                    displayName = RpgServices.abilities().abilityDisplayName(abilityId);
-                    description = RpgServices.abilities().abilityDescription(abilityId);
-                } catch (IllegalStateException ex) {
-                    displayName = abilityId;
-                    description = List.of();
-                }
-                lore.add(noItalic(LEGACY.deserialize("&5Ability: &d" + displayName)));
-                for (String line : description) {
-                    lore.add(noItalic(LEGACY.deserialize("  &7" + line)));
-                }
+            for (ItemAbilityBinding binding : triggeredAbilities) {
+                renderAbilityBinding(binding, lore);
             }
         }
 
@@ -184,21 +163,58 @@ public final class CoreRpgItem implements RpgItem {
         meta.getPersistentDataContainer().set(itemIdKey, PersistentDataType.STRING, id);
 
         // Remove vanilla attribute modifiers so they don't interfere with our own stat system.
-        // HIDE_ATTRIBUTES only hides them from the tooltip — Minecraft still applies them to the
-        // player when the item is held/worn unless we explicitly remove them here.
-        // Without this, e.g. holding an iron_sword applies a -2.4 ADDITION to generic.attack_speed,
-        // which offsets our setBaseValue() and causes the attack bar to never fill.
         meta.removeAttributeModifier(Attribute.ATTACK_DAMAGE);
         meta.removeAttributeModifier(Attribute.ATTACK_SPEED);
         meta.removeAttributeModifier(Attribute.ARMOR);
         meta.removeAttributeModifier(Attribute.ARMOR_TOUGHNESS);
         meta.removeAttributeModifier(Attribute.KNOCKBACK_RESISTANCE);
 
-        // Suppress vanilla tooltip lines (attack damage, potion effects, "No Effects", etc.)
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
 
         stack.setItemMeta(meta);
         return stack;
+    }
+
+    /**
+     * Renders a single ability binding into lore lines.
+     * Active triggers (click-based) show as "&5Ability: &d[name] &8([trigger hint])".
+     * Passive/proc triggers show as "&2Passive: &a[name] &8([trigger hint])".
+     */
+    private void renderAbilityBinding(ItemAbilityBinding binding, List<Component> lore) {
+        // Each binding may contain multiple invocations (one line in AbilitySequence per invocation).
+        // We show one lore entry per invocation that has a known display name.
+        for (AbilityInvocation inv : binding.invocations()) {
+            String abilityId = inv.effectName();
+            String abilityDisplayName;
+            List<String> description;
+            try {
+                abilityDisplayName = RpgServices.abilities().abilityDisplayName(abilityId);
+                description = RpgServices.abilities().abilityDescription(abilityId);
+            } catch (IllegalStateException ex) {
+                abilityDisplayName = abilityId;
+                description = List.of();
+            }
+
+            // Skip built-in effect primitives (mana_cost, cooldown, particles, sound, delay) —
+            // they're pipeline plumbing, not standalone abilities worth showing in lore.
+            if (isPlumbingEffect(abilityId) && description.isEmpty()) continue;
+
+            boolean isActive = binding.trigger().isActive();
+            String prefix = isActive ? "&5Ability: &d" : "&2Passive: &a";
+            String hint = " &8(" + binding.trigger().loreHint() + ")";
+            lore.add(noItalic(LEGACY.deserialize(prefix + abilityDisplayName + hint)));
+            for (String line : description) {
+                lore.add(noItalic(LEGACY.deserialize("  &7" + line)));
+            }
+        }
+    }
+
+    /** Returns true for low-level pipeline effects that shouldn't appear as standalone lore entries. */
+    private static boolean isPlumbingEffect(String id) {
+        return switch (id) {
+            case "mana_cost", "cooldown", "delay", "particles", "sound" -> true;
+            default -> false;
+        };
     }
 
     private static Component noItalic(Component c) {
