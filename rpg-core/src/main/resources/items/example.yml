@@ -235,6 +235,19 @@ glacial_staff:
 #  ARMOR — ArmorSlot, survival + caster stats, all four pieces
 # ════════════════════════════════════════════════════════════════════════════
 
+magic_find_crown:
+  MinecraftItem: golden_helmet
+  Type: ARMOR
+  ArmorSlot: HELMET
+  DisplayName: '&b&lMagic Find Crown'
+  Stats:
+    magic_find: 100          # doubles all magic-find-affected drop chances
+  Lore:
+  - '&7A test piece for verifying magic find.'
+  - '&7Equip it and compare drop rates on the testmob.'
+  - '&bMagic Find: +100%'
+  Rarity: '&e&lSPECIAL'
+
 reinforced_helmet:
   MinecraftItem: iron_helmet
   Type: ARMOR
