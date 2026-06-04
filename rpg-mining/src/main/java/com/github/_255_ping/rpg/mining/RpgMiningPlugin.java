@@ -91,8 +91,11 @@ public final class RpgMiningPlugin extends JavaPlugin implements Listener, org.b
             return;
         }
         if (isGatheringTool(held)) {
-            if (!fatigueApplied.contains(player.getUniqueId())) {
-                int amplifier = getConfig().getInt("mining-fatigue.amplifier", 255);
+            int amplifier = getConfig().getInt("mining-fatigue.amplifier", 8);
+            // Re-apply whenever the amplifier doesn't match — supports /mining reload.
+            PotionEffect current = player.getPotionEffect(PotionEffectType.MINING_FATIGUE);
+            if (current == null || current.getAmplifier() != amplifier) {
+                player.removePotionEffect(PotionEffectType.MINING_FATIGUE);
                 player.addPotionEffect(new PotionEffect(
                         PotionEffectType.MINING_FATIGUE,
                         Integer.MAX_VALUE, amplifier,
@@ -100,8 +103,8 @@ public final class RpgMiningPlugin extends JavaPlugin implements Listener, org.b
                         false,  // no particles
                         false   // no icon
                 ));
-                fatigueApplied.add(player.getUniqueId());
             }
+            fatigueApplied.add(player.getUniqueId());
         } else {
             removeFatigue(player);
         }

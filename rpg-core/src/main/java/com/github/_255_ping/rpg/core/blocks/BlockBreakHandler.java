@@ -86,10 +86,27 @@ public final class BlockBreakHandler implements Listener {
             return;
         }
 
-        event.setCancelled(true);
+        // Wrong tool / insufficient power: cancel so vanilla doesn't advance break progress,
+        // and give the player the "wrong tool" action-bar message.
+        if (!gatesPass(player, block)) {
+            event.setCancelled(true);
+            return;
+        }
 
-        if (!gatesPass(player, block)) return;
-
+        // Requirements met: do NOT cancel the event.
+        //
+        // Cancelling sends a ClientboundBlockChangedAck(FAILED) to the client, which resets
+        // the client's "is destroying" state.  The client immediately retries on the next tick,
+        // creating an infinite cancel→failed-ack→resend cycle.  Each cycle causes a one-tick
+        // flash between our sendBlockDamage stage and the client's reset state — that's the
+        // crack-stage flicker the player sees.  It also suppresses the arm-raise animation,
+        // because the client never stays in "destroying" state long enough to render it.
+        //
+        // Not cancelling lets Paper send a SUCCESS ack.  The client enters and STAYS in the
+        // "destroying" animation state (arm raises and mines).  Vanilla break progress does
+        // advance, but only at ~0.0002× normal speed (Mining Fatigue amplifier 8), so it
+        // will never reach 100% in any realistic session.  onBreak() is the hard stop if it
+        // somehow did.  Our tick loop owns the crack-stage packets via sendBlockDamage.
         BlockBreakProgress existing = active.get(player.getUniqueId());
         if (existing == null || !existing.location.equals(loc)) {
             // New block (or switching target) — start fresh progress.

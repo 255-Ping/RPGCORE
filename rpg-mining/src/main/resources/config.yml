@@ -13,7 +13,12 @@ default-xp: 5   # XP for any custom block not explicitly listed in xp-per-block
 # Lower values (e.g. 2) only slow mining rather than prevent it.
 mining-fatigue:
   enabled: true
-  amplifier: 255   # Max fatigue — fully suppresses vanilla block breaking while holding RPG tools
+  # Amplifier 8 → break speed ≈ 0.02% of normal. This value is tiny but nonzero in
+  # float32, so the client enters its "active mining" visual state (arm raises, swings).
+  # Amplifier 255 rounded to exactly 0.0f, suppressing the animation entirely.
+  # Vanilla can never complete a break in practice at this speed (~5+ hours per block);
+  # BlockBreakEvent cancellation in rpg-core is the hard stop if it somehow did.
+  amplifier: 8
 
 # Per-block-id XP overrides. Match the block id from plugins/rpg-core/blocks/*.yml.
 # Blocks not listed here fall back to default-xp.
