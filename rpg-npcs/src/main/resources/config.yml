@@ -15,6 +15,14 @@ display:
 # true = safe; false = only saves on server shutdown or /npc save.
 autosave: true
 
+# Look-at-player behaviour. NPCs with LookAtPlayers: true in their YAML will rotate
+# to face the nearest player within their configured radius.
+npc:
+  look-at-players:
+    enabled: true            # set to false to disable globally (overrides per-NPC setting)
+    interval-ticks: 2        # how often the rotation task runs; lower = smoother, higher = cheaper
+    default-radius: 8.0      # default LookRadius for NPCs that don't specify it explicitly
+
 # Banker NPC settings. Applies to any NPC with Behavior.Type: banker.
 banker:
   default-daily-interest-percent: 0.5   # % interest accrued on savings per interval (0.5 = 0.5%/day)

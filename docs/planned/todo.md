@@ -40,14 +40,15 @@
 - Mining fatigue amplifier fix — bumped to 255 to fully suppress vanilla breaking (`rpg-mining 0.2.1`)
 - Coin drops deposit fix — added `currency-rolls:` loot table section that deposits via economy (`rpg-core 1.0.3`)
 - NPC click fix — orphan sweep on reload + ZOMBIE default + NORMAL/ignoreCancelled=false handler (`rpg-npcs 0.5.1`)
+- Silent stats wired up — `ferocity` (extra melee swings), `speed` (movement speed), `swing_range` (melee reach) all implemented in `DamagePipelineListener` / `EquipmentListener`
 
 ---
 
 ## Suggested Priority Order
 
 1. 🐛 🟡 **Fix all confirmed bugs first** — see [Bugs](todo-bugs.md)
-2. 🐛 🔴 **Wire up silent stats** (speed, ferocity, swing_range) — showing stats that do nothing is misleading
-3. 🟠 🔴 **NPC command overhaul + in-game editing** — per-NPC entity type, style/skin commands, dialogue/shop editing, look-at-player
+2. ✅ **Wire up silent stats** (speed, ferocity, swing_range) — already implemented
+3. ✅ **NPC command overhaul + in-game editing** — per-NPC entity type (`/npc setentitytype`), style/skin commands, dialogue/shop in-game editing, look-at-player task, `/npc info` (`rpg-npcs 0.6.0`)
 4. 🔵 🟡 **GUI redesigns** (brewing/cooking/enchanting pagination + layouts) — high visibility
 5. 🟠 🔴 **New built-in ability effects** — unlocks all the interesting new ability content
 6. 🟠 🟡 **Expand example mobs, abilities, items** — depends on new effects

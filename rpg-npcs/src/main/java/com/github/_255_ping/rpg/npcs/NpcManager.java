@@ -7,10 +7,13 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Interaction;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
@@ -32,6 +35,7 @@ public final class NpcManager {
     private final Map<UUID, String> entityToId = new ConcurrentHashMap<>();
     /** Tracks live State for PLAYER-style NPCs (npcId → State). */
     private final Map<String, FakePlayerNpc.State> fakePlayerStates = new ConcurrentHashMap<>();
+    private BukkitTask lookAtTask;
 
     public NpcManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -84,6 +88,7 @@ public final class NpcManager {
             }
         }
         spawnAll();
+        startLookAtTask();
     }
 
     public void saveAll() {
@@ -137,7 +142,90 @@ public final class NpcManager {
         if (plugin.getConfig().getBoolean("autosave", true)) saveAll();
     }
 
+    /** Save without despawning/respawning entities (for data-only changes like dialogue/shop edits). */
+    public void saveOnly() { autosave(); }
+
+    // ---- look-at-player task ----
+
+    private void startLookAtTask() {
+        if (lookAtTask != null) { lookAtTask.cancel(); lookAtTask = null; }
+        if (!plugin.getConfig().getBoolean("npc.look-at-players.enabled", true)) return;
+        long interval = plugin.getConfig().getLong("npc.look-at-players.interval-ticks", 2L);
+        lookAtTask = plugin.getServer().getScheduler().runTaskTimer(plugin, this::tickLookAt, interval, interval);
+    }
+
+    private void tickLookAt() {
+        for (NpcDef def : byId.values()) {
+            if (!def.lookAtPlayers()) continue;
+            Location loc = def.location();
+            if (loc == null || loc.getWorld() == null) continue;
+
+            // Find nearest player within radius.
+            Player nearest = null;
+            double nearestDist2 = def.lookRadius() * def.lookRadius();
+            for (Player p : loc.getWorld().getPlayers()) {
+                double d2 = p.getLocation().distanceSquared(loc);
+                if (d2 < nearestDist2) { nearestDist2 = d2; nearest = p; }
+            }
+
+            if (def.entityStyle() == NpcDef.EntityStyle.ENTITY) {
+                tickLookAtEntity(def, nearest);
+            } else {
+                tickLookAtFakePlayer(def, loc, nearest);
+            }
+        }
+    }
+
+    private void tickLookAtEntity(NpcDef def, Player target) {
+        for (Map.Entry<UUID, String> entry : entityToId.entrySet()) {
+            if (!def.id().equals(entry.getValue())) continue;
+            Entity ent = Bukkit.getEntity(entry.getKey());
+            if (ent == null || ent instanceof TextDisplay || ent instanceof Interaction) continue;
+
+            float yaw, pitch;
+            if (target != null) {
+                var dir = target.getEyeLocation().toVector()
+                        .subtract(ent.getLocation().add(0, ent.getHeight() / 2.0, 0).toVector());
+                if (dir.lengthSquared() < 1e-6) continue;
+                var look = ent.getLocation().clone().setDirection(dir);
+                yaw = look.getYaw();
+                pitch = look.getPitch();
+            } else {
+                yaw = def.yaw();
+                pitch = def.pitch();
+            }
+            ent.setRotation(yaw, pitch);
+            break; // one body entity per NPC
+        }
+    }
+
+    private void tickLookAtFakePlayer(NpcDef def, Location loc, Player target) {
+        FakePlayerNpc.State state = fakePlayerStates.get(def.id());
+        if (state == null) return;
+
+        float yaw, pitch;
+        if (target != null) {
+            var dir = target.getEyeLocation().toVector()
+                    .subtract(loc.clone().add(0, 1.0, 0).toVector());
+            if (dir.lengthSquared() < 1e-6) return;
+            var look = loc.clone().setDirection(dir);
+            yaw = look.getYaw();
+            pitch = look.getPitch();
+        } else {
+            yaw = def.yaw();
+            pitch = def.pitch();
+        }
+
+        // Only broadcast to players within a reasonable render distance.
+        var nearby = loc.getWorld().getPlayers().stream()
+                .filter(p -> p.getLocation().distanceSquared(loc) <= 64.0 * 64.0)
+                .toList();
+        if (nearby.isEmpty()) return;
+        FakePlayerNpc.rotateHead(state, yaw, pitch, nearby);
+    }
+
     public void despawnAll() {
+        if (lookAtTask != null) { lookAtTask.cancel(); lookAtTask = null; }
         for (UUID uuid : new ArrayList<>(entityToId.keySet())) {
             Entity ent = Bukkit.getEntity(uuid);
             if (ent != null) ent.remove();
@@ -186,12 +274,15 @@ public final class NpcManager {
     }
 
     private void spawnEntityNpc(NpcDef def, Location loc) {
-        String entType = plugin.getConfig().getString("display.body-entity", "ZOMBIE");
+        // Per-NPC entity type takes priority over the global config default.
+        String entTypeStr = def.entityType() != null
+                ? def.entityType()
+                : plugin.getConfig().getString("display.body-entity", "ZOMBIE");
         EntityType type;
         try {
-            type = EntityType.valueOf(entType.toUpperCase(Locale.ROOT));
+            type = EntityType.valueOf(entTypeStr.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
-            type = EntityType.VILLAGER;
+            type = EntityType.ZOMBIE;
         }
         Entity ent = loc.getWorld().spawnEntity(loc, type);
         ent.setPersistent(true);
@@ -308,7 +399,12 @@ public final class NpcManager {
                 bankerData = new NpcDef.BankerData(bankName, interest);
             }
         }
-        return new NpcDef(id, name, world, x, y, z, yaw, pitch, style, skin, type, shop, lines, quest, bankerData);
+        NpcDef def = new NpcDef(id, name, world, x, y, z, yaw, pitch, style, skin, type, shop, lines, quest, bankerData);
+        def.setEntityType(s.getString("EntityType", null));
+        def.setLookAtPlayers(s.getBoolean("LookAtPlayers", false));
+        def.setLookRadius(s.getDouble("LookRadius",
+                plugin.getConfig().getDouble("npc.look-at-players.default-radius", 8.0)));
+        return def;
     }
 
     private static NpcDef.BehaviorType parseBehavior(String s) {

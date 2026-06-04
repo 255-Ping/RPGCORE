@@ -35,6 +35,12 @@ public final class NpcDef {
     private List<String> dialogueLines;
     private String questId;
     private BankerData bankerData;
+    /** Overrides the global config entity type for this NPC (ENTITY style only). null = use global default. */
+    private String entityType;
+    /** Whether this NPC rotates to face the nearest player within lookRadius. */
+    private boolean lookAtPlayers;
+    /** Radius in blocks for the look-at behaviour. */
+    private double lookRadius = 8.0;
 
     public NpcDef(String id, String displayName, String worldName,
                   double x, double y, double z, float yaw, float pitch,
@@ -71,6 +77,9 @@ public final class NpcDef {
     public List<String> dialogueLines() { return dialogueLines; }
     public String questId() { return questId; }
     public BankerData bankerData() { return bankerData; }
+    public String entityType() { return entityType; }
+    public boolean lookAtPlayers() { return lookAtPlayers; }
+    public double lookRadius() { return lookRadius; }
 
     public Location location() {
         World w = Bukkit.getWorld(worldName);
@@ -94,8 +103,11 @@ public final class NpcDef {
     }
 
     public void setDisplayName(String name) { this.displayName = name; }
-
     public void setSkin(SkinDef skin) { this.skin = skin; }
+    public void setEntityStyle(EntityStyle style) { this.entityStyle = style; }
+    public void setEntityType(String type) { this.entityType = type; }
+    public void setLookAtPlayers(boolean v) { this.lookAtPlayers = v; }
+    public void setLookRadius(double r) { this.lookRadius = r; }
 
     public Map<String, Object> toMap() {
         Map<String, Object> out = new java.util.LinkedHashMap<>();
@@ -104,6 +116,9 @@ public final class NpcDef {
         out.put("X", x); out.put("Y", y); out.put("Z", z);
         out.put("Yaw", yaw); out.put("Pitch", pitch);
         out.put("EntityStyle", entityStyle.name().toLowerCase(Locale.ROOT));
+        if (entityType != null && !entityType.isEmpty()) out.put("EntityType", entityType);
+        if (lookAtPlayers) out.put("LookAtPlayers", true);
+        if (lookRadius != 8.0) out.put("LookRadius", lookRadius);
         if (skin != null) {
             Map<String, Object> skinMap = new java.util.LinkedHashMap<>();
             if (skin.playerName() != null) skinMap.put("Name", skin.playerName());

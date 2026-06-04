@@ -26,8 +26,10 @@ public final class RpgNpcsPlugin extends JavaPlugin {
         pm.registerEvents(new NpcProtectionListener(manager, this), this);
         pm.registerEvents(bankerGui, this);
 
-        Objects.requireNonNull(getCommand("npc"), "command 'npc' missing")
-               .setExecutor(new NpcCommand(this));
+        NpcCommand npcCommand = new NpcCommand(this);
+        var npcCmd = Objects.requireNonNull(getCommand("npc"), "command 'npc' missing");
+        npcCmd.setExecutor(npcCommand);
+        npcCmd.setTabCompleter(npcCommand);
 
         scheduleBankerInterest();
 

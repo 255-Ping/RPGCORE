@@ -5,9 +5,11 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
+import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
+import net.minecraft.network.protocol.game.ClientboundRotateHeadPacket;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.GameType;
@@ -90,6 +92,42 @@ public final class FakePlayerNpc {
         }
         if (state.interactionEntity() != null && state.interactionEntity().isValid()) {
             state.interactionEntity().remove();
+        }
+    }
+
+    // ---- look-at rotation ----
+
+    /**
+     * Send a body + head rotation update for the fake player to the given viewers.
+     * Called every 2 ticks by NpcManager's look-at task for PLAYER-style NPCs.
+     *
+     * ClientboundRotateHeadPacket only has a public constructor that takes a real Entity,
+     * so we access the private (int, byte) constructor via reflection — it is always present
+     * because the STREAM_CODEC references it with a method handle.
+     */
+    public static void rotateHead(State state, float yaw, float pitch, List<Player> viewers) {
+        if (viewers.isEmpty()) return;
+        byte yRot = encodeAngle(yaw);
+        byte xRot = encodeAngle(pitch);
+        var bodyPacket = new ClientboundMoveEntityPacket.Rot(state.entityId(), yRot, xRot, false);
+        ClientboundRotateHeadPacket headPacket = buildRotateHeadPacket(state.entityId(), yRot);
+        for (Player p : viewers) {
+            sendPacket(p, bodyPacket);
+            if (headPacket != null) sendPacket(p, headPacket);
+        }
+    }
+
+    private static byte encodeAngle(float angleDeg) {
+        return (byte) Math.floor(angleDeg * 256.0f / 360.0f);
+    }
+
+    private static ClientboundRotateHeadPacket buildRotateHeadPacket(int entityId, byte yHeadRot) {
+        try {
+            var ctor = ClientboundRotateHeadPacket.class.getDeclaredConstructor(int.class, byte.class);
+            ctor.setAccessible(true);
+            return (ClientboundRotateHeadPacket) ctor.newInstance(entityId, yHeadRot);
+        } catch (Exception ex) {
+            return null;
         }
     }
 

@@ -10,7 +10,7 @@ softdepend: [rpg-economy, rpg-quests]
 commands:
   npc:
     description: NPC admin commands
-    usage: /npc <create|delete|move|list|reload|setbehavior>
+    usage: /npc — type /npc for full help
 permissions:
   rpg.npcs.admin.create:
     description: Create an NPC
@@ -22,13 +22,31 @@ permissions:
     description: Move an NPC
     default: op
   rpg.npcs.admin.list:
-    description: List NPCs
+    description: List / info NPCs
     default: op
   rpg.npcs.admin.reload:
     description: Reload NPC YAMLs
     default: op
   rpg.npcs.admin.setbehavior:
     description: Set an NPC's behavior
+    default: op
+  rpg.npcs.admin.setentitytype:
+    description: Set an NPC's entity type
+    default: op
+  rpg.npcs.admin.setstyle:
+    description: Switch an NPC's body style (entity/player)
+    default: op
+  rpg.npcs.admin.setskin:
+    description: Apply a player skin to an NPC
+    default: op
+  rpg.npcs.admin.dialogue:
+    description: Edit an NPC's dialogue in-game
+    default: op
+  rpg.npcs.admin.shop:
+    description: Edit an NPC's shop items in-game
+    default: op
+  rpg.npcs.admin.setlook:
+    description: Toggle look-at-player on an NPC
     default: op
   rpg.npcs.use:
     description: Click NPCs to interact
