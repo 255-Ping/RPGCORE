@@ -68,27 +68,36 @@ public final class DamageIndicatorListener implements Listener {
         td.setDefaultBackground(false);
         td.setShadowed(true);
 
-        // Determine who should see this indicator, then hide it from everyone else.
-        // We use hideEntity (not setVisibleByDefault=false + showEntity) because
-        // showEntity on a freshly-spawned entity is unreliable — the tracker hasn't
-        // sent the spawn packet to clients yet, so the show call may be a no-op.
+        // Hide from players outside the configured audience. Fall back to showing everyone
+        // if the audience set is empty (e.g. mob-vs-mob context with no players involved).
         Set<Player> audience = buildAudience(event);
-        for (Player p : plugin.getServer().getOnlinePlayers()) {
-            if (!audience.contains(p)) p.hideEntity(plugin, td);
+        if (!audience.isEmpty()) {
+            for (Player p : plugin.getServer().getOnlinePlayers()) {
+                if (!audience.contains(p)) p.hideEntity(plugin, td);
+            }
         }
 
         int durationTicks = plugin.getConfig().getInt("damage-indicators.duration-ticks", 25);
         float riseBlocks = (float) plugin.getConfig().getDouble("damage-indicators.rise-blocks", 1.2);
 
-        // Client-side interpolation: the TextDisplay rises and shrinks without any per-tick task.
-        td.setInterpolationDelay(0);
-        td.setInterpolationDuration(durationTicks);
-        AxisAngle4f noRot = new AxisAngle4f(0f, 0f, 1f, 0f);
-        td.setTransformation(new Transformation(
-                new Vector3f(0f, riseBlocks, 0f),
-                noRot,
-                new Vector3f(0.01f, 0.01f, 0.01f),
-                noRot));
+        // Defer setTransformation by one tick. If called in the same tick as spawnEntity,
+        // Paper bundles the transformation update into the spawn packet and the client
+        // receives the entity already at scale 0.01 (invisible) with no visible initial frame.
+        // Deferring ensures the client first sees the entity at default scale (1,1,1),
+        // then begins interpolating on the next tick.
+        final int finalDuration = durationTicks;
+        final float finalRise = riseBlocks;
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            if (!td.isValid()) return;
+            AxisAngle4f noRot = new AxisAngle4f(0f, 0f, 1f, 0f);
+            td.setInterpolationDelay(0);
+            td.setInterpolationDuration(finalDuration);
+            td.setTransformation(new Transformation(
+                    new Vector3f(0f, finalRise, 0f),
+                    noRot,
+                    new Vector3f(0.01f, 0.01f, 0.01f),
+                    noRot));
+        });
 
         plugin.getServer().getScheduler().runTaskLater(plugin, td::remove, durationTicks + 5L);
     }
