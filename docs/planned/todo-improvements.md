@@ -6,59 +6,15 @@ _These systems exist and partially work, but have significant gaps._
 
 ---
 
-### Expand Example Content — Mobs, Abilities, and Items (`rpg-core`) — 🟡 Medium
-The current example files are thin: 3 abilities, 2 mobs, and items that don't cover many interaction patterns. Need a richer out-of-the-box set so new server owners can see the full range of the system.
+### ✅ Expand Example Content — Mobs, Abilities, and Items (`rpg-core`) — shipped in 1.3.0
 
-**New abilities to add (`abilities/example.yml`):**
-- `fireball_barrage` — fire 3 delayed fireballs in a spread (beam × 3 with short delays between)
-- `death_nova` — on-death explosion that damages all nearby players (uses `~onDeath` trigger)
-- `enrage` — applies a self-buff status effect on hurt, making the mob hit harder when low HP (`~onHurt`)
-- `ground_slam` — melee AoE: particles + explode in radius around caster, knocking targets back
-- `soul_drain` — beam that deals damage and heals the caster for a % of damage dealt (beam + heal chained)
-- `warp_strike` — teleports caster to target then immediately damages (needs `teleport` effect — see new effects below)
-- `chain_lightning` — chains damage to multiple nearby targets (needs `chain` effect — see below)
-- `zone_of_pain` — creates a lingering zone that pulses a status effect on everything inside (needs `zone` effect)
-- `player_shield` — absorbs incoming damage for a short window (needs `shield` effect)
-- `blink_forward` — short-range dash in look direction (needs `blink` effect)
-
-**New mobs to add (`mobs/example.yml`):**
-- `forest_sprite` — passive mob, flees combat, drops rare herbs; demonstrates `passive` AI + `~onHurt` flee ability
-- `goblin` — fast, low-HP melee mob; uses `aggressive` AI, enrage ability `~onHurt`, small loot table
-- `skeleton_archer` — ranged mob (skeleton base); uses `~onTimer` ranged ability, moderate HP
-- `cave_troll` — tank mob (iron_golem base); high HP/armor, `ground_slam ~onTimer:60`, slow movement, rich loot
-- `corrupted_mage` — caster mob (witch base); uses `soul_drain ~onTimer:40`, `chain_lightning ~onTimer:80`, mana-themed
-- `dungeon_boss` — showcase boss: multiple abilities on different timers, `death_nova ~onDeath`, large loot pool, named with health bar
-
-**New items to add (`items/example.yml`):**
-- `goblin_fang` — material drop from goblin, used in recipes
-- `troll_hide` — material drop from cave_troll
-- `void_crystal` — epic material, rare drop, used in high-tier crafting
-- `mages_robes` (4-piece set) — caster armor set demonstrating full intelligence/mana stats
-- `shadow_dagger` — fast sword (low AttackCooldown), high crit stats, demonstrates ferocity
-- `berserker_axe` — AXE type weapon, demonstrates strength + ferocity, uses `ground_slam` ability
-- `soul_staff` — WAND using `soul_drain` ability, lifesteal stats
-- `rangers_shortbow` — lighter bow, faster fire rate, `ammo_usage_reduction`, demonstrates BOW type fully
-- `mana_potion` — CONSUMABLE that restores mana (new `restore_mana` OnConsume effect)
-- `stamina_crystal` — ACCESSORY with `health_regen` + `mana_regen` + `vitality`
+5 showcase mobs added to `mobs/example.yml` — `frost_golem` (zone denial + freeze on hit), `chain_wraith` (beam+chain+death nova), `blood_shade` (mark+detonate), `shield_golem` (boss: shield+slam+launch), `void_phantom` (blink+drain+death zone). Berserker set cleaned up to pure passive stats (no `~on_hit` procs on stat tiers). Items updated with DualCast Wand demonstrating `beam{}+damage{}` chain. Docs page `mobs.md` updated with ability pattern examples. Armor sets docs updated with passive-stats callout.
 
 ---
 
-### New Built-in Ability Effects (`rpg-core`) — 🔴 Hard
-The current effect set (`damage`, `heal`, `beam`, `explode`, `particles`, `sound`, `delay`, `apply_status`, `mana_cost`, `cooldown`) covers the basics but needs more building blocks for interesting abilities. Proposed additions:
+### ✅ New Built-in Ability Effects (`rpg-core`) — shipped in 1.3.0
 
-| Effect | Parameters | Description | Est. |
-|---|---|---|---|
-| `knockback` | `force=`, `direction=away/toward/up` | Push or pull the target. `away` = repel from caster, `toward` = pull in, `up` = launch upward. Works on both player→mob and mob→player. | 🟢 Easy |
-| `teleport` | `mode=to_target/behind_target/random_near`, `distance=` | Teleport the caster. `to_target` = land on top of target, `behind_target` = appear behind, `random_near` = random point within `distance`. | 🟢 Easy |
-| `blink` | `distance=` | Teleport the caster forward in their look direction by up to `distance` blocks, stopping at the first solid block. | 🟢 Easy |
-| `chain` | `targets=`, `range=`, `damage_multiplier=`, `particle=` | Bounce a damage hit to up to `targets` additional entities within `range` of each successive target. Damage decays per bounce. | 🟡 Medium |
-| `zone` | `radius=`, `duration_ticks=`, `interval_ticks=`, `effect_id=`, `effect_level=` | Spawn a persistent zone at the cast location. Every `interval_ticks`, applies `effect_id` at `effect_level` to all entities inside the radius. Despawns after `duration_ticks`. | 🟡 Medium |
-| `shield` | `amount=`, `duration_ticks=`, `target=caster/target` | Apply a damage-absorb shield that blocks up to `amount` HP of incoming damage, expiring after `duration_ticks`. | 🟡 Medium |
-| `drain` | `amount=`, `steal_percent=`, `target=caster/target` | Deal `amount` damage to the target and heal the caster for `steal_percent`% of the damage dealt. Stacks with `lifesteal` stat. | 🟢 Easy |
-| `mark` | `duration_ticks=`, `damage_amplify=` | Mark the target; all damage they receive is multiplied by `damage_amplify` while the mark is active. Visual: a particle ring around the target. | 🟡 Medium |
-| `restore_mana` | `amount=`, `target=caster/target` | Restore `amount` mana to caster or target. Counterpart to `mana_cost`. | 🟢 Easy |
-| `launch` | `force=`, `direction=up/away/toward`, `target=caster/target` | Apply velocity to caster or target. Softer than `knockback` — suitable for mobility abilities rather than combat disruption. | 🟢 Easy |
-| `freeze` | `duration_ticks=`, `target=caster/target` | Severely slow the target (apply a high-amplifier slowness + mining fatigue equivalent). Not the same as `apply_status slow` — `freeze` is much stronger and visually distinct (ice particle burst). | 🟢 Easy |
+10 new effects implemented: `knockback` (push/pull/launch), `blink` (forward dash to first solid), `chain` (bounce damage to N targets), `zone` (persistent AoE ground zone with interval pulses), `shield` (damage-absorb HP buffer), `drain` (damage + lifesteal), `mark` (damage-amplify debuff, consumed by `damage{}`), `launch` (velocity burst), `freeze` (Slowness V + Mining Fatigue), `restore_mana`. All available in mob and item ability chains. Zone pulse null-attacker fix shipped in 1.3.1 (prevented mob `~onHit` cascade). `teleport` deferred to a later slice.
 
 ---
 
@@ -163,44 +119,9 @@ Same timed-crafting treatment as cooking and brewing — apply when building `rp
 
 ---
 
-### Loot Pool System (`rpg-core`) — 🔴 Hard
-Admins need a way to define reusable named loot pools and assign them to mobs (and dungeons, chests, etc.) rather than embedding loot inline everywhere. This also fixes the broken external `LootTable: <id>` reference system (see Loot Tables entry below — both should be consolidated into this).
+### ✅ Loot Pool System (`rpg-core`) — shipped in 1.4.0 / rpg-api 0.4.3
 
-**Pool definition** — new content folder: `plugins/rpg-core/loot-pools/<file>.yml`
-
-```yaml
-goblin_drops:
-  Attribution: last-hit           # last-hit | top-damager | split-equal | weighted-by-damage
-  RollMode: per-player            # per-player | shared
-  Rolls:
-    - { Item: goblin_fang,    Chance: 60.0, Min: 1, Max: 2 }
-    - { Item: gold_nugget,    Chance: 40.0, Min: 1, Max: 5, MagicFindAffected: true }
-    - { Item: rare_goblin_hat, Chance: 1.0, Min: 1, Max: 1, MagicFindAffected: true }
-  Guaranteed:
-    - { Item: coin_pouch, Min: 1, Max: 1 }
-  Exp: 15              # vanilla XP orbs dropped on kill (separate from any entry-level Exp)
-  CombatExp: 50        # skill XP awarded to killer's combat skill
-```
-
-Each entry can also carry its own `Exp` field (vanilla XP orbs if *that specific entry* rolls).
-
-**Usage in mob YAML:**
-```yaml
-goblin:
-  LootPool: goblin_drops          # single pool by id
-  # or
-  LootPools:                      # multiple pools, all roll independently
-    - goblin_drops
-    - rare_event_pool
-```
-
-**Attribution modes** (same as inline — important to document clearly):
-- `last-hit` — loot goes to whoever landed the killing blow
-- `top-damager` — loot goes to whoever dealt the most damage
-- `split-equal` — every damager gets the same loot roll
-- `weighted-by-damage` — each damager's chance is proportional to % of damage dealt
-
-**Also applies to:** dungeon loot chests, loot chest blocks, future fishing loot, future farming loot drops.
+Named reusable loot pools in `plugins/rpg-core/loot-pools/*.yml`. Mobs reference pools via `LootPool: <id>` (single) or `LootPools: [id, ...]` (multiple, all roll independently on kill). Pools carry `exp:` (vanilla XP orbs), `combat-exp:` (skill XP to all damagers), `attribution`, `roll-mode`, `rolls`, `guaranteed`, `currency-rolls`. Inline `LootTable:` still works alongside pool references. `LootPoolRegistry` in `rpg-api`; `LootPoolLoader` in `rpg-core` loads before mobs. Full docs at `docs/content/loot-pools.md`.
 
 ---
 
@@ -579,54 +500,9 @@ Current: inline loot tables on mob YAML work. External `LootTable: <id>` referen
 
 ---
 
-### NPC Command Overhaul + In-Game Editing (`rpg-npcs`) — 🔴 Hard
-The `/npc` command is bare-bones and requires YAML editing for almost everything. Multiple gaps:
+### ✅ NPC Command Overhaul + In-Game Editing (`rpg-npcs`) — shipped in 0.6.0
 
-**Per-NPC entity type (currently missing entirely):**
-- `NpcDef` has no per-NPC entity type field — all entity-style NPCs share a single global `display.body-entity` setting in `config.yml`. If you have a blacksmith NPC and a quest giver, they're both the same entity type.
-- Add an `EntityType` field to `NpcDef` YAML and the parser
-- Add `/npc setentitytype <id> <VILLAGER|ZOMBIE|IRON_GOLEM|...>` command with tab-complete for entity type names
-- Default to the global config value if not specified per-NPC
-
-**Style + skin commands (data model exists, no commands):**
-- `EntityStyle` (ENTITY vs PLAYER) and `SkinDef` are in `NpcDef` but can only be set by editing YAML directly
-- Add `/npc setstyle <id> entity|player` — switches between a vanilla entity body and a fake-player skin
-- Add `/npc setskin <id> <playerName>` — fetches the Mojang skin for `<playerName>` and applies it (calls `SkinFetcher` which already exists)
-- Add `/npc setskin <id> raw <value> <signature>` — for custom skins via raw texture data
-
-**In-game dialogue editing (currently: YAML only):**
-- `/npc setbehavior dialogue <id> <line>` overwrites all dialogue with one line — no way to add/remove individual lines
-- Add `/npc dialogue add <id> <line...>` — appends a line
-- Add `/npc dialogue set <id> <index> <line...>` — replaces line at index
-- Add `/npc dialogue remove <id> <index>` — removes line at index
-- Add `/npc dialogue clear <id>` — removes all lines
-- Add `/npc dialogue list <id>` — shows all current lines with indices
-
-**In-game shop editing (currently: YAML only + "edit npcs/all.yml" message):**
-- When `setbehavior shop` is set, the only instruction is "Edit npcs/all.yml to add items." — completely unusable for non-technical admins
-- Add `/npc shop add <id> <itemId> <buyPrice> <sellPrice>` — adds an item to the shop
-- Add `/npc shop remove <id> <index>` — removes item at index
-- Add `/npc shop list <id>` — shows current shop items with indices, prices, and whether the item exists in the registry
-- Add `/npc shop clear <id>` — removes all shop items
-
-**In-game quest assignment (partial — no tab-complete):**
-- `/npc setbehavior quest <id> <questId>` works but offers no tab-complete for quest IDs
-- Add tab-complete for the fourth argument pulling from the quest registry (soft-dep lookup)
-
-**NPC look-at-player (new):**
-- NPCs should smoothly rotate to face the nearest player within a configurable radius, making them feel alive
-- Add a `LookAtPlayers: true` boolean field per NPC YAML (default from `config.yml → npc.look-at-players.enabled`)
-- Add `LookRadius: 8` (blocks) per NPC, also with a global default in `config.yml`
-- A repeating Bukkit task (interval configurable, e.g., every 2 ticks) scans all loaded NPC entities that have `LookAtPlayers: true`, finds the nearest online player within `LookRadius`, and rotates the entity to face them
-- For **entity-style NPCs**: update `yaw` via `entity.teleport(entity.getLocation().setDirection(dir))` — this is the cleanest way to rotate an entity without moving it
-- For **PLAYER-style NPCs**: requires sending a head-rotation packet (`ClientboundRotateHeadPacket` / `ClientboundMoveEntityPacket`) to all nearby players each tick — NMS, same pattern as `FakePlayerNpc`
-- If no player is within `LookRadius`, the NPC returns to its default facing direction (stored `yaw`/`pitch` from YAML)
-- Add `/npc setlook <id> true|false` command and include it in tab-complete
-- Add it to `/npc info <id>` output
-
-**General help + info:**
-- `/npc` with no args shows a one-liner — should show a formatted list of all subcommands with brief descriptions
-- Add `/npc info <id>` — shows all current settings: location, world, entity style, entity type, skin name, behavior type, look-at-players enabled, dialogue line count, shop item count, quest ID
+Per-NPC `EntityType` field + `/npc setentitytype` with tab-complete. `/npc setstyle` + `/npc setskin` for style/skin. Full in-game dialogue editing (`/npc dialogue add|set|remove|clear|list`). Full in-game shop editing (`/npc shop add|remove|list|clear`). Quest assignment tab-complete wired. Look-at-player task with `LookAtPlayers: true` + `LookRadius:` per NPC. `/npc info <id>` shows all settings. General `/npc` help listing. Patched to 0.6.1 for orphan sweep + ZOMBIE default + handler priority fix.
 
 ---
 

@@ -41,6 +41,12 @@
 - Coin drops deposit fix — added `currency-rolls:` loot table section that deposits via economy (`rpg-core 1.0.3`)
 - NPC click fix — orphan sweep on reload + ZOMBIE default + NORMAL/ignoreCancelled=false handler (`rpg-npcs 0.5.1`)
 - Silent stats wired up — `ferocity` (extra melee swings), `speed` (movement speed), `swing_range` (melee reach) all implemented in `DamagePipelineListener` / `EquipmentListener`
+- NPC command overhaul — per-NPC entity type, style/skin commands, dialogue/shop in-game editing, look-at-player, `/npc info` (`rpg-npcs 0.6.0`)
+- 10 new built-in ability effects — `knockback`, `blink`, `chain`, `zone`, `shield`, `drain`, `mark`, `launch`, `freeze`, `restore_mana` (`rpg-core 1.3.0`)
+- Expanded example mobs — 5 showcase mobs using the new effects; berserker set passives clarified; items updated (`rpg-core 1.3.0`)
+- Frost Golem permanent Slowness fix — zone pulse now uses null attacker to prevent `~onHit` cascade (`rpg-core 1.3.1`)
+- Loot pool system — named reusable `LootPool:`/`LootPools:`, vanilla XP + combat XP per pool (`rpg-core 1.4.0` / `rpg-api 0.4.3`)
+- Enchanting vanilla XP cost — `XpCost:` wired; levels shown in GUI and deducted on apply (`rpg-enchanting 0.5.0`)
 
 ---
 
@@ -50,9 +56,9 @@
 2. ✅ **Wire up silent stats** (speed, ferocity, swing_range) — already implemented
 3. ✅ **NPC command overhaul + in-game editing** — per-NPC entity type (`/npc setentitytype`), style/skin commands, dialogue/shop in-game editing, look-at-player task, `/npc info` (`rpg-npcs 0.6.0`)
 4. ✅ **GUI redesigns** (brewing/cooking/enchanting pagination + layouts, nav bar standard on all GUIs)
-5. 🟠 🔴 **New built-in ability effects** — unlocks all the interesting new ability content
-6. 🟠 🟡 **Expand example mobs, abilities, items** — depends on new effects
-7. 🟠 🔴 **Loot pool system** — needed by mobs, dungeons, and enchanting XP all at once
+5. ✅ **New built-in ability effects** — 10 effects shipped: `knockback`, `blink`, `chain`, `zone`, `shield`, `drain`, `mark`, `launch`, `freeze`, `restore_mana` (rpg-core 1.3.0)
+6. ✅ **Expand example mobs, abilities, items** — 5 showcase mobs added (`frost_golem`, `chain_wraith`, `blood_shade`, `shield_golem`, `void_phantom`); items updated with berserker set passives + DualCast wand
+7. ✅ **Loot pool system** — named reusable pools, `LootPool:`/`LootPools:` on mobs, vanilla XP + combat XP per pool (rpg-core 1.4.0 / rpg-api 0.4.3)
 8. ✅ **Enchanting: Minecraft XP cost** — `XpCost:` field wired; levels deducted + shown in GUI (rpg-enchanting 0.5.0)
 9. 🟠 🟡 **Ability trigger types expansion** (`~onAttack`, `~onKill`, `~onBlock`, `~onJump`) — small but unlocks good mob/item designs
 10. 🟠 🟡 **Timed cooking + brewing** — QoL, self-contained
