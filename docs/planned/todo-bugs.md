@@ -81,6 +81,19 @@ Triple-damage and hologram refresh issues both resolved.
 
 ---
 
+### Dual-Cast Wand: Solar Beam Deals No Damage (`rpg-core`) 🟢
+
+Right-click "Solar Beam" fires `beam{range=15.0,damage_multiplier=1.8}` with no effect after it. `beam{}` sets `ctx.target` and scales `carriedDamage` but never delivers damage on its own — a `damage{}` call at the end of the chain is what actually hits the target. The ability spends mana and consumes the cooldown but does nothing.
+
+**Fix:** append `damage{}` to the right-click sequence in `items/example.yml`:
+```yaml
+- "mana_cost{amount=30} cooldown{ticks=20} beam{range=15.0,damage_multiplier=1.8} damage{}"
+```
+
+Left-click self-heal is unaffected.
+
+---
+
 ### ~~Coin Drops Not Depositing to Player Economy (`rpg-core`)~~ ✅ Fixed in `rpg-core 1.0.3`
 Added `currency-rolls:` section to the mob loot table schema. `CoreLootTable.rollCurrency()` returns per-player coin amounts; `MobLootListener` deposits them via `RpgServices.economy()` immediately on mob death instead of spawning item entities. Requires `rpg-economy`; silently no-ops if not loaded. Schema: `currency-rolls: [{ chance: 80.0, min: 50, max: 150 }]`.
 
