@@ -11,6 +11,10 @@ import java.util.Map;
  * <em>thresholds</em>: wearing {@code k} or more matching pieces activates that tier's bonus.
  * Only the highest satisfied threshold is active at a time.
  *
+ * <p>Stats in a bonus are always passive — they activate the moment the tier is met and
+ * deactivate on unequip. No trigger or proc is needed for stat bonuses. The {@code Abilities:}
+ * block is optional and only needed for event-driven effects (on_hit, on_hurt, etc.).
+ *
  * <pre>
  * berserker_set:
  *   Name: "Berserker's Set"
@@ -21,17 +25,14 @@ import java.util.Map;
  *     - berserker_boots
  *   Bonuses:
  *     2:
- *       Stats:
+ *       Stats:                      # purely passive — just wear the armor
  *         ferocity: 25
- *       Abilities:
- *         - "~on_hit particles{type=crit}"
  *     4:
  *       Stats:
  *         ferocity: 75
  *         damage: 50
- *       Abilities:
- *         - "~on_hit drain{amount=10}"
- *       Scale: 1.0   # optional — multiplies all numeric params in Abilities (default 1.0)
+ *       Abilities:                  # optional event-driven bonus
+ *         - "~on_hit drain{amount=10, leech=1.0}"
  * </pre>
  *
  * <p>Alternatively, use {@code Scale} to derive a weaker tier automatically.  With

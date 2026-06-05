@@ -75,3 +75,130 @@ mini_boss:
     - { item: gold_ingot, chance: 60.0, min: 2, max: 5 }
     guaranteed:
     - { item: emerald, min: 1, max: 2 }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ABILITY PATTERN SHOWCASE
+# Each mob below demonstrates a specific ability composition using the full
+# built-in effect library. Spawn with: /rpg mob spawn <id>
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Pattern: zone on spawn + freeze on hit + knockback retaliation
+# The frost golem immediately creates a cold denial zone and freezes anything
+# it touches. Getting hit pushes attackers away, making it hard to melee safely.
+frost_golem:
+  MinecraftMob: iron_golem
+  DisplayName: '&bFrost Golem'
+  Health: 400
+  Damage: 18
+  Armor: 25
+  Abilities:
+  - "zone{radius=5.0,duration=600,interval=20,damage=6.0,particle=SNOWFLAKE} sound{key=entity.player.hurt_freeze,volume=1.0,pitch=0.8} ~onSpawn"
+  - "freeze{duration=80,amplifier=4} ~onHit"
+  - "knockback{force=1.4,up=0.3,direction=away} ~onHurt"
+  LootTable:
+    attribution: last-hit
+    roll-mode: per-player
+    rolls:
+    - { item: crude_iron_ingot, chance: 75.0, min: 1, max: 2 }
+    - { item: red_gem, chance: 20.0, min: 1, max: 1, magic-find-affected: true }
+    currency-rolls:
+    - { chance: 100.0, min: 30, max: 60 }
+
+# Pattern: beam + chain bounce on timer + death explosion
+# The chain wraith is a fragile ranged mob. Every 3 seconds it fires a beam
+# that bounces chain-lightning to nearby players. Dying triggers an AoE burst.
+chain_wraith:
+  MinecraftMob: phantom
+  DisplayName: '&5Chain Wraith'
+  Health: 120
+  Damage: 10
+  Armor: 5
+  Abilities:
+  - "particles{type=ENCHANT,count=20,spread=0.8} ~onSpawn"
+  - "beam{range=14.0,damage_multiplier=1.0} damage{} chain{count=3,range=8.0,damage_multiplier=0.55} ~onTimer:60"
+  - "explode{radius=4.0,damage=18.0,particle=ENCHANT} ~onDeath"
+  LootTable:
+    attribution: last-hit
+    roll-mode: per-player
+    rolls:
+    - { item: soulbound_fragment, chance: 30.0, min: 1, max: 1, magic-find-affected: true }
+    currency-rolls:
+    - { chance: 100.0, min: 15, max: 40 }
+
+# Pattern: mark on hit + beam-detonate on timer (combo sequence)
+# The blood shade marks the player on each melee hit. Every 4 seconds it fires
+# a beam — the damage{} in that sequence detonates any pending mark for 2× bonus.
+# Fighting it safely requires bursting it down before the timer fires.
+blood_shade:
+  MinecraftMob: zombie
+  DisplayName: '&4Blood Shade'
+  Health: 220
+  Damage: 16
+  Armor: 8
+  Abilities:
+  - "particles{type=CRIT,count=24,spread=0.5} ~onSpawn"
+  - "mark{bonus=2.0,duration=200,consume=true} ~onHit"
+  - "beam{range=10.0,damage_multiplier=1.3} damage{} ~onTimer:80"
+  LootTable:
+    attribution: last-hit
+    roll-mode: per-player
+    rolls:
+    - { item: rotten_flesh, chance: 80.0, min: 1, max: 2 }
+    - { item: soulbound_fragment, chance: 15.0, min: 1, max: 1, magic-find-affected: true }
+    currency-rolls:
+    - { chance: 100.0, min: 20, max: 50 }
+
+# Pattern: shield on hurt + ground slam on timer + launch on hit (boss design)
+# The shield golem is a mini-boss that shields itself each time it takes damage,
+# making burst windows crucial. Its ground slam hits nearby players every 6 seconds.
+# Melee hits launch players into the air.
+shield_golem:
+  MinecraftMob: iron_golem
+  DisplayName: '&f&lShield Golem'
+  Health: 1200
+  Damage: 28
+  Armor: 45
+  Stats:
+    crit_chance: 10
+    crit_damage: 50
+  Abilities:
+  - "sound{key=entity.iron_golem.attack,volume=1.2,pitch=0.6} particles{type=ENCHANT,count=40,spread=1.0} ~onSpawn"
+  - "shield{amount=150,duration=120,target=caster} particles{type=ENCHANT,count=12} ~onHurt"
+  - "aoe{radius=5.0,damage_multiplier=0.7,damage=10.0,particle=CLOUD} sound{key=entity.generic.explode,volume=0.8,pitch=1.4} ~onTimer:120"
+  - "launch{force=1.2,horizontal=0.4,target=target} ~onHit"
+  LootTable:
+    attribution: top-damager
+    roll-mode: per-player
+    rolls:
+    - { item: aspect_of_test, chance: 40.0, min: 1, max: 1, magic-find-affected: true }
+    - { item: crude_iron_ingot, chance: 80.0, min: 3, max: 6 }
+    guaranteed:
+    - { item: emerald, min: 2, max: 3 }
+    currency-rolls:
+    - { chance: 100.0, min: 80, max: 200 }
+
+# Pattern: blink on timer + drain on hit + void zone on death
+# The void phantom repositions every 4 seconds with a blink, drains life on hit,
+# and leaves a lingering damage zone where it dies. Chasing it is risky.
+void_phantom:
+  MinecraftMob: phantom
+  DisplayName: '&8Void Phantom'
+  Health: 160
+  Damage: 14
+  Armor: 3
+  Stats:
+    speed: 20
+    crit_chance: 12
+    crit_damage: 50
+  Abilities:
+  - "particles{type=PORTAL,count=20,spread=0.6} ~onSpawn"
+  - "blink{range=10.0,particles=true} ~onTimer:80"
+  - "drain{amount=12.0,leech=0.8} ~onHit"
+  - "zone{radius=5.0,duration=180,interval=20,damage=10.0,particle=PORTAL} ~onDeath"
+  LootTable:
+    attribution: last-hit
+    roll-mode: per-player
+    rolls:
+    - { item: soulbound_fragment, chance: 35.0, min: 1, max: 1, magic-find-affected: true }
+    currency-rolls:
+    - { chance: 100.0, min: 25, max: 55 }

@@ -2,8 +2,12 @@
 # Example Armor Set — Berserker's Set
 # ============================================================
 #
-# Wearing 2+ pieces: +25 ferocity, on-hit particles
-# Wearing 4 pieces (full set): +75 ferocity +50 damage, on-hit drain
+# Wearing 2+ pieces: +25 ferocity  (purely passive — no trigger needed)
+# Wearing 4 pieces (full set): +75 ferocity +50 damage, vampiric on-hit drain
+#
+# Stats in a set bonus are ALWAYS passive. You get them just by wearing the armor;
+# no proc or trigger is required. Abilities are optional and only needed when you
+# want an effect that fires on an event (on_hit, on_hurt, passive, etc.).
 #
 # This file is auto-generated on first startup. Remove or replace it with your own sets.
 # Full docs: docs/core/armor-sets.md
@@ -19,22 +23,18 @@ berserker_set:
 
   Bonuses:
 
-    # 2/4 pieces: partial set — half the stats, a visual proc to hint at the full set
+    # 2/4 pieces: partial set — pure stat bonus, nothing to trigger
     2:
       Stats:
         ferocity: 25
-      Abilities:
-        - "~on_hit particles{type=crit}"
 
-    # 4/4 pieces: full set — defined explicitly rather than using Scale
+    # 4/4 pieces: full set — stats plus vampiric on-hit drain
     4:
       Stats:
         ferocity: 75
         damage: 50
       Abilities:
-        - "~on_hit particles{type=heart}"
-        # drain is not yet a built-in effect — add it once new effects are wired up:
-        # - "~on_hit drain{amount=10}"
+        - "~on_hit drain{amount=10, leech=1.0}"
 
 
 # ============================================================

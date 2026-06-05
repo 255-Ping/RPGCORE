@@ -20,16 +20,14 @@ berserker_set:
     - berserker_boots
   Bonuses:
     2:                             # threshold: ≥2 pieces → this bonus activates
-      Stats:
+      Stats:                       # purely passive — granted the moment the tier activates
         ferocity: 25
-      Abilities:
-      - "~on_hit particles{type=crit}"
     4:                             # full set
       Stats:
         ferocity: 75
         damage: 50
-      Abilities:
-      - "~on_hit particles{type=heart}"
+      Abilities:                   # optional — only add if you want an event-driven effect
+      - "~on_hit drain{amount=10, leech=1.0}"
 ```
 
 ### Fields
@@ -66,6 +64,8 @@ Only one tier can be active per set per player at a time. Swapping a single piec
 ---
 
 ## Stat bonuses
+
+> **Stats are always passive.** A tier's `Stats:` bonuses take effect the moment the player equips enough pieces and deactivate immediately on unequip. No trigger, no proc, no ability — just wearing the armor is enough. You only need an `Abilities:` block if you want an event-driven effect on top of the stats.
 
 Set stat bonuses are applied as **Layer 2.5** in the stat pipeline — after equipment stats, before accessory stats and status-effect modifiers:
 
@@ -146,9 +146,11 @@ Any item with a `SetId:` field automatically renders a set info block in its lor
 
 ```
 §6Berserker's Set
-  §8(2/4) §f+25 Ferocity §8| §7On Hit
+  §8(2/4) §f+25 Ferocity
   §8(4/4) §f+75 Ferocity, +50 Damage §8| §7On Hit
 ```
+
+Tiers with no `Abilities:` show only their stats — no trigger hint is appended. Tiers that do have abilities show `§8| §7<trigger>` to signal the proc.
 
 The `(N/4)` shows the threshold and total piece count. Stat values use the same sign/format as item stats. Ability bindings are summarized as their trigger hint (`On Hit`, `Passive`, `On Hurt`, etc.). Dynamic piece count (how many the player is currently wearing) is not shown in static item lore — this can be added to a HUD plugin.
 

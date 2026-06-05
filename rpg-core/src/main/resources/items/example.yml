@@ -651,9 +651,10 @@ dual_cast_wand:
 
 # ════════════════════════════════════════════════════════════════════════════
 #  ARMOR SET SHOWCASE — Berserker's Set (defined in sets/example.yml)
-#  Collect all 4 pieces for full set bonuses.
-#  2/4: +25 Ferocity | On-Hit Proc
-#  4/4: +75 Ferocity, +50 Damage | On-Hit Proc
+#  Collect all 4 pieces for full set bonuses. Stats are always passive —
+#  no trigger needed, just wear the armor.
+#  2/4: +25 Ferocity (passive)
+#  4/4: +75 Ferocity, +50 Damage (passive) + on-hit drain (vampiric)
 # ════════════════════════════════════════════════════════════════════════════
 
 berserker_helmet:
