@@ -34,6 +34,8 @@ public final class CoreRpgMob implements RpgMob {
     private final String customHeadTexture;
     private final List<MobAbilityBinding> bindings;
     private final CoreLootTable lootTable;
+    /** Named loot pool IDs referenced via {@code LootPool:} / {@code LootPools:} in mob YAML. */
+    private final List<String> lootPoolIds;
     private final MobAiProfile aiProfile;
 
     private final long xp;
@@ -48,6 +50,7 @@ public final class CoreRpgMob implements RpgMob {
                       String customHeadTexture,
                       List<MobAbilityBinding> bindings,
                       CoreLootTable lootTable,
+                      List<String> lootPoolIds,
                       MobAiProfile aiProfile,
                       long xp,
                       NamespacedKey mobIdKey, CoreHealthService healthService) {
@@ -67,6 +70,7 @@ public final class CoreRpgMob implements RpgMob {
         this.customHeadTexture = customHeadTexture;
         this.bindings = List.copyOf(bindings);
         this.lootTable = lootTable;
+        this.lootPoolIds = lootPoolIds == null ? List.of() : List.copyOf(lootPoolIds);
         this.aiProfile = aiProfile == null ? MobAiProfile.DEFAULT : aiProfile;
         this.xp = xp;
         this.mobIdKey = mobIdKey;
@@ -93,6 +97,7 @@ public final class CoreRpgMob implements RpgMob {
 
     public List<MobAbilityBinding> abilityBindings() { return bindings; }
     public CoreLootTable lootTable() { return lootTable; }
+    public List<String> lootPoolIds() { return lootPoolIds; }
 
     @Override
     public LivingEntity spawn(Location loc) {

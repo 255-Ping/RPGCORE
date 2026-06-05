@@ -3,7 +3,9 @@ package com.github._255_ping.rpg.core.mobs;
 import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.economy.Economy;
 import com.github._255_ping.rpg.api.loot.LootContext;
+import com.github._255_ping.rpg.api.loot.LootPool;
 import com.github._255_ping.rpg.api.mobs.RpgMob;
+import com.github._255_ping.rpg.core.loot.CoreLootPool;
 import com.github._255_ping.rpg.core.drops.DropManager;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
@@ -15,16 +17,25 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 /**
- * On RPG mob death: cancel vanilla drops, look up our loot table, attribute via the
- * damager tracker, and drop the rolled items at the corpse.
- *
- * <p>If {@link DropManager} is set, each dropped item is tagged with its assigned player
- * so only they can pick it up (until the release window expires).
+ * On RPG mob death:
+ * <ol>
+ *   <li>Cancels vanilla drops.</li>
+ *   <li>Sets vanilla XP (sum of mob's {@code XP:}, inline table {@code exp:}, and all
+ *       referenced pool {@code exp:} values).</li>
+ *   <li>Rolls the inline {@code LootTable:} if present.</li>
+ *   <li>Resolves each named {@code LootPool:} / {@code LootPools:} reference and rolls them
+ *       independently.</li>
+ *   <li>Drops all rolled items at the corpse, optionally tagged for the assigned player via
+ *       {@link DropManager}.</li>
+ *   <li>Deposits currency rolls directly to player balances.</li>
+ *   <li>Awards combat-skill XP from inline table and pools to all eligible damagers.</li>
+ * </ol>
  */
 public final class MobLootListener implements Listener {
 
@@ -43,49 +54,110 @@ public final class MobLootListener implements Listener {
         if (opt.isEmpty()) return;
         if (!(opt.get() instanceof CoreRpgMob def)) return;
 
-        // Cancel vanilla drops + XP — our loot table is the source of truth.
+        // Cancel vanilla drops — RPG loot is the source of truth.
         event.getDrops().clear();
-        event.setDroppedExp(0);
 
-        CoreLootTable table = def.lootTable();
-        if (table == null) {
-            tracker.takeFor(victim.getUniqueId()); // still clear the tracker entry
-            return;
-        }
-
-        Player killer = tracker.lastHitter(victim.getUniqueId());
+        Player killer         = tracker.lastHitter(victim.getUniqueId());
         Map<Player, Double> damagers = tracker.takeFor(victim.getUniqueId());
-        LootContext ctx = new LootContext(victim, damagers, killer);
+        LootContext ctx       = new LootContext(victim, damagers, killer);
 
-        Map<Player, List<ItemStack>> rolled = table.roll(ctx);
+        // ── Vanilla XP ────────────────────────────────────────────────────────
+        // Sum: mob's XP field + inline table exp + all referenced pool exp.
+        int totalVanillaXp = (int) def.xp();
+        CoreLootTable inlineTable = def.lootTable();
+        if (inlineTable != null) totalVanillaXp += inlineTable.vanillaExp();
+        List<LootPool> resolvedPools = resolvePools(def);
+        for (LootPool pool : resolvedPools) totalVanillaXp += pool.vanillaExp();
+        event.setDroppedExp(totalVanillaXp);
+
         if (victim.getWorld() == null) return;
 
-        for (Map.Entry<Player, List<ItemStack>> assignment : rolled.entrySet()) {
-            Player owner = assignment.getKey();
-            for (ItemStack s : assignment.getValue()) {
-                if (s == null) continue;
-                Item dropped = victim.getWorld().dropItemNaturally(victim.getLocation(), s);
-                if (owner != null) {
-                    dropManager.register(dropped, owner);
-                }
-            }
+        // ── Roll inline LootTable ──────────────────────────────────────────────
+        if (inlineTable != null) {
+            dropItems(victim, inlineTable.roll(ctx));
+            depositCurrency(inlineTable.rollCurrency(ctx));
         }
 
-        // Currency rolls — deposit directly to player balance instead of dropping items.
-        Map<Player, BigDecimal> currency = table.rollCurrency(ctx);
-        if (!currency.isEmpty()) {
+        // ── Roll each named LootPool ───────────────────────────────────────────
+        for (LootPool pool : resolvedPools) {
+            dropItems(victim, pool.roll(ctx));
+            if (pool instanceof CoreLootPool cp) depositCurrency(cp.rollCurrency(ctx));
+        }
+
+        // ── Combat skill XP ───────────────────────────────────────────────────
+        // Award to every player who dealt damage (skill XP is shared, not attributed).
+        if (!damagers.isEmpty()) {
+            long totalCombatExp = (inlineTable != null ? inlineTable.combatExp() : 0L);
+            String combatSkill  = (inlineTable != null && !inlineTable.combatSkillId().isBlank())
+                    ? inlineTable.combatSkillId() : "combat";
+            // If any pool overrides the skill, use the first non-empty one found.
+            for (LootPool pool : resolvedPools) {
+                totalCombatExp += pool.combatExp();
+                if (!pool.combatSkillId().isBlank()) combatSkill = pool.combatSkillId();
+            }
+            if (totalCombatExp > 0) {
+                awardCombatXp(damagers.keySet(), combatSkill, totalCombatExp);
+            }
+        }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /** Resolves the mob's loot-pool ID references from the registry. Warns on unknown IDs. */
+    private List<LootPool> resolvePools(CoreRpgMob def) {
+        if (def.lootPoolIds().isEmpty()) return List.of();
+        List<LootPool> pools = new ArrayList<>();
+        for (String poolId : def.lootPoolIds()) {
             try {
-                Economy economy = RpgServices.economy();
-                if (economy != null) {
-                    for (Map.Entry<Player, BigDecimal> entry : currency.entrySet()) {
-                        if (entry.getValue().compareTo(BigDecimal.ZERO) > 0) {
-                            economy.deposit(entry.getKey(), entry.getValue());
-                        }
-                    }
+                Optional<LootPool> poolOpt = RpgServices.lootPools().get(poolId);
+                if (poolOpt.isPresent()) {
+                    pools.add(poolOpt.get());
+                } else {
+                    RpgServices.mobs(); // ensure service is up before logging
+                    // Log once — warn in console that pool is missing.
+                    org.bukkit.Bukkit.getLogger().warning(
+                            "[rpg-core] Mob '" + def.id() + "' references unknown loot pool '" + poolId + "'");
                 }
             } catch (IllegalStateException ignored) {
-                // rpg-economy not loaded — currency drops silently skipped.
+                // LootPoolRegistry not yet set — skip silently during startup.
             }
+        }
+        return pools;
+    }
+
+    private void dropItems(LivingEntity victim, Map<Player, List<ItemStack>> rolled) {
+        for (Map.Entry<Player, List<ItemStack>> entry : rolled.entrySet()) {
+            Player owner = entry.getKey();
+            for (ItemStack s : entry.getValue()) {
+                if (s == null) continue;
+                Item dropped = victim.getWorld().dropItemNaturally(victim.getLocation(), s);
+                if (owner != null) dropManager.register(dropped, owner);
+            }
+        }
+    }
+
+    private void depositCurrency(Map<Player, BigDecimal> currency) {
+        if (currency.isEmpty()) return;
+        try {
+            Economy economy = RpgServices.economy();
+            for (Map.Entry<Player, BigDecimal> entry : currency.entrySet()) {
+                if (entry.getValue().compareTo(BigDecimal.ZERO) > 0) {
+                    economy.deposit(entry.getKey(), entry.getValue());
+                }
+            }
+        } catch (IllegalStateException ignored) {
+            // rpg-economy not loaded — silently skip.
+        }
+    }
+
+    private void awardCombatXp(Iterable<Player> players, String skillId, long amount) {
+        try {
+            var skills = RpgServices.skills();
+            for (Player p : players) {
+                if (p != null && p.isOnline()) skills.awardXp(p, skillId, amount);
+            }
+        } catch (IllegalStateException ignored) {
+            // rpg-combat (skills service) not loaded — silently skip.
         }
     }
 }

@@ -184,9 +184,32 @@ Vanilla mob spawning is cancelled when `vanilla-suppression.mob-spawning: true` 
 
 When a custom mob spawns, its ID is written to the entity's PDC. `MobRegistry.from(LivingEntity)` recovers the definition. Vanilla mobs return empty.
 
+## Loot pools
+
+Named, reusable drop tables defined in `loot-pools/*.yml` and referenced by ID. Any mob can share the same pool, and multiple pools stack.
+
+```yaml
+# Single pool
+testmob:
+  LootPool: basic_mob_drops
+
+# Multiple pools — all roll independently on kill
+mini_boss:
+  LootPools:
+    - boss_drops
+    - elite_bonus_drops
+```
+
+Pools carry `exp:` (vanilla XP orbs) and `combat-exp:` (skill XP) in addition to item and currency drops. Both still work alongside an inline `LootTable:` if present.
+
+**Full docs:** [Loot Pools →](loot-pools.md)
+
+---
+
 ## Related
 
 - [Spawning](spawning.md)
+- [Loot pools](loot-pools.md)
 - [Loot tables](loot-tables.md)
 - [Abilities](abilities.md)
 - [Vanilla suppression](../core/vanilla-suppression.md)

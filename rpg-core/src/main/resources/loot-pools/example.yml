@@ -1,0 +1,64 @@
+# ============================================================
+# Example Loot Pools
+# ============================================================
+#
+# Named, reusable loot pools referenced from mob YAML via:
+#   LootPool: <id>           (single pool)
+#   LootPools: [id1, id2]   (multiple pools; all roll independently)
+#
+# Pools roll independently of any inline LootTable: on the mob.
+# Use pools when the same drop table is shared across several mobs,
+# or to separate "always-on" drops from "bonus" drop tables.
+#
+# Reload live with /rpg reloadall.
+# Full docs: docs/content/loot-pools.md
+# ============================================================
+
+# ── basic_mob_drops ──────────────────────────────────────────
+# Reusable drop set for standard trash mobs. Referenced by testmob.
+basic_mob_drops:
+  attribution: last-hit
+  roll-mode: per-player
+  # vanilla XP orbs spawned at the corpse on kill
+  exp: 5
+  # skill XP awarded to every player who dealt damage
+  combat-exp: 10
+  combat-skill: combat
+  rolls:
+    - { item: rotten_flesh,     chance: 80.0, min: 1, max: 3 }
+    - { item: red_gem,          chance: 35.0, min: 1, max: 1, magic-find-affected: true }
+    - { item: crude_iron_ingot, chance: 15.0, min: 1, max: 2, magic-find-affected: true }
+  guaranteed:
+    - { item: bone, min: 1, max: 1 }
+  currency-rolls:
+    - { chance: 100.0, min: 10, max: 25 }
+
+# ── elite_bonus_drops ────────────────────────────────────────
+# Stacked on top of another pool for elite / rare encounters.
+# Demonstrates LootPools: [main_pool, elite_bonus_drops] usage.
+elite_bonus_drops:
+  attribution: top-damager
+  roll-mode: per-player
+  exp: 20
+  combat-exp: 50
+  rolls:
+    - { item: crude_iron_ingot, chance: 50.0, min: 2, max: 4 }
+    - { item: aspect_of_test,   chance: 5.0,  min: 1, max: 1, magic-find-affected: true }
+  currency-rolls:
+    - { chance: 100.0, min: 25, max: 75 }
+
+# ── boss_drops ───────────────────────────────────────────────
+# Rich drop table for boss-tier mobs. Referenced by mini_boss.
+boss_drops:
+  attribution: top-damager
+  roll-mode: per-player
+  exp: 50
+  combat-exp: 200
+  rolls:
+    - { item: aspect_of_test,   chance: 25.0, min: 1, max: 1, magic-find-affected: true }
+    - { item: gold_ingot,       chance: 60.0, min: 2, max: 5 }
+    - { item: crude_iron_ingot, chance: 70.0, min: 3, max: 6 }
+  guaranteed:
+    - { item: emerald,          min: 1, max: 2 }
+  currency-rolls:
+    - { chance: 100.0, min: 80, max: 200 }

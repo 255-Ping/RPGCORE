@@ -7,6 +7,7 @@
 #   Health       — max HP (also sets MAX_HEALTH attribute)
 #   Damage       — base melee damage
 #   Armor        — armor value; mapped to the DEFENSE stat for our pipeline
+#   XP           — vanilla XP orbs dropped on death (in addition to pool/table exp values)
 #   Stats        — bonus stat map (additive on top of damage/armor)
 #   Equipment    — list of "<SLOT> <itemId>" — HELMET / CHEST / LEGS /
 #                  BOOTS / HAND / OFFHAND. itemId resolves via item registry
@@ -14,9 +15,14 @@
 #   Abilities    — list of ability invocations + trigger suffix
 #                  (~onTimer:N | ~onHit | ~onHurt | ~onSpawn | ~onDeath).
 #                  No trigger = ~onSpawn.
-#   LootTable    — inline drop table (optional):
+#   LootPool     — single named pool ID (defined in loot-pools/*.yml).
+#   LootPools    — list of pool IDs; each rolls independently on death.
+#   LootTable    — inline drop table (optional; rolls alongside any LootPool references):
 #                    attribution: last-hit | top-damager | split-equal | weighted-by-damage
 #                    roll-mode:   per-player | shared
+#                    exp:         vanilla XP orbs from this table (default 0)
+#                    combat-exp:  skill XP awarded to all damagers (default 0)
+#                    combat-skill: skill id for combat-exp (default "combat")
 #                    rolls:       list of { item, chance (%), min, max, magic-find-affected }
 #                    guaranteed:  list of { item, min, max }
 #                    currency-rolls: list of { chance (%), min, max } — deposited directly to
@@ -37,21 +43,9 @@ testmob:
   Abilities:
   - particles{type=flame,count=8} ~onSpawn
   - explode{radius=5,damage_multiplier=0.5,particle=flame} ~onTimer:100
-  LootTable:
-    attribution: last-hit
-    roll-mode: per-player
-    rolls:
-    - { item: rotten_flesh, chance: 80.0, min: 1, max: 3 }
-    # magic-find-affected drops — base rates chosen so the magic_find_crown (+100 MF) is obvious:
-    #   red_gem:          35% base → 70% with crown
-    #   crude_iron_ingot: 15% base → 30% with crown
-    - { item: red_gem, chance: 35.0, min: 1, max: 1, magic-find-affected: true }
-    - { item: crude_iron_ingot, chance: 15.0, min: 1, max: 2, magic-find-affected: true }
-    guaranteed:
-    - { item: bone, min: 1, max: 1 }
-    # currency-rolls: deposited directly to the killer's balance — no item dropped.
-    currency-rolls:
-    - { chance: 100.0, min: 10, max: 25 }   # always drops 10–25 coins
+  # Named pool — defined in loot-pools/example.yml.
+  # Drop contents live in one place; any mob can reference the same pool.
+  LootPool: basic_mob_drops
 
 mini_boss:
   MinecraftMob: zombified_piglin
@@ -67,14 +61,11 @@ mini_boss:
   Abilities:
   - sound{key=entity.wither.spawn,volume=1.0,pitch=0.5} ~onSpawn
   - particles{type=large_smoke,count=15} ~onHurt
-  LootTable:
-    attribution: top-damager
-    roll-mode: per-player
-    rolls:
-    - { item: aspect_of_test, chance: 25.0, min: 1, max: 1, magic-find-affected: true }
-    - { item: gold_ingot, chance: 60.0, min: 2, max: 5 }
-    guaranteed:
-    - { item: emerald, min: 1, max: 2 }
+  # Two pools: boss_drops is the main table, elite_bonus_drops adds extra rare rolls.
+  # Both roll independently — the boss can drop from both on the same kill.
+  LootPools:
+  - boss_drops
+  - elite_bonus_drops
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ABILITY PATTERN SHOWCASE
@@ -95,14 +86,7 @@ frost_golem:
   - "zone{radius=5.0,duration=600,interval=20,damage=6.0,particle=SNOWFLAKE} sound{key=entity.player.hurt_freeze,volume=1.0,pitch=0.8} ~onSpawn"
   - "freeze{duration=80,amplifier=4} ~onHit"
   - "knockback{force=1.4,up=0.3,direction=away} ~onHurt"
-  LootTable:
-    attribution: last-hit
-    roll-mode: per-player
-    rolls:
-    - { item: crude_iron_ingot, chance: 75.0, min: 1, max: 2 }
-    - { item: red_gem, chance: 20.0, min: 1, max: 1, magic-find-affected: true }
-    currency-rolls:
-    - { chance: 100.0, min: 30, max: 60 }
+  LootPool: basic_mob_drops
 
 # Pattern: beam + chain bounce on timer + death explosion
 # The chain wraith is a fragile ranged mob. Every 3 seconds it fires a beam
@@ -117,13 +101,7 @@ chain_wraith:
   - "particles{type=ENCHANT,count=20,spread=0.8} ~onSpawn"
   - "beam{range=14.0,damage_multiplier=1.0} damage{} chain{count=3,range=8.0,damage_multiplier=0.55} ~onTimer:60"
   - "explode{radius=4.0,damage=18.0,particle=ENCHANT} ~onDeath"
-  LootTable:
-    attribution: last-hit
-    roll-mode: per-player
-    rolls:
-    - { item: soulbound_fragment, chance: 30.0, min: 1, max: 1, magic-find-affected: true }
-    currency-rolls:
-    - { chance: 100.0, min: 15, max: 40 }
+  LootPool: basic_mob_drops
 
 # Pattern: mark on hit + beam-detonate on timer (combo sequence)
 # The blood shade marks the player on each melee hit. Every 4 seconds it fires
@@ -139,14 +117,7 @@ blood_shade:
   - "particles{type=CRIT,count=24,spread=0.5} ~onSpawn"
   - "mark{bonus=2.0,duration=200,consume=true} ~onHit"
   - "beam{range=10.0,damage_multiplier=1.3} damage{} ~onTimer:80"
-  LootTable:
-    attribution: last-hit
-    roll-mode: per-player
-    rolls:
-    - { item: rotten_flesh, chance: 80.0, min: 1, max: 2 }
-    - { item: soulbound_fragment, chance: 15.0, min: 1, max: 1, magic-find-affected: true }
-    currency-rolls:
-    - { chance: 100.0, min: 20, max: 50 }
+  LootPool: basic_mob_drops
 
 # Pattern: shield on hurt + ground slam on timer + launch on hit (boss design)
 # The shield golem is a mini-boss that shields itself each time it takes damage,
@@ -166,16 +137,9 @@ shield_golem:
   - "shield{amount=150,duration=120,target=caster} particles{type=ENCHANT,count=12} ~onHurt"
   - "aoe{radius=5.0,damage_multiplier=0.7,damage=10.0,particle=CLOUD} sound{key=entity.generic.explode,volume=0.8,pitch=1.4} ~onTimer:120"
   - "launch{force=1.2,horizontal=0.4,target=target} ~onHit"
-  LootTable:
-    attribution: top-damager
-    roll-mode: per-player
-    rolls:
-    - { item: aspect_of_test, chance: 40.0, min: 1, max: 1, magic-find-affected: true }
-    - { item: crude_iron_ingot, chance: 80.0, min: 3, max: 6 }
-    guaranteed:
-    - { item: emerald, min: 2, max: 3 }
-    currency-rolls:
-    - { chance: 100.0, min: 80, max: 200 }
+  LootPools:
+  - boss_drops
+  - elite_bonus_drops
 
 # Pattern: blink on timer + drain on hit + void zone on death
 # The void phantom repositions every 4 seconds with a blink, drains life on hit,
@@ -195,10 +159,4 @@ void_phantom:
   - "blink{range=10.0,particles=true} ~onTimer:80"
   - "drain{amount=12.0,leech=0.8} ~onHit"
   - "zone{radius=5.0,duration=180,interval=20,damage=10.0,particle=PORTAL} ~onDeath"
-  LootTable:
-    attribution: last-hit
-    roll-mode: per-player
-    rolls:
-    - { item: soulbound_fragment, chance: 35.0, min: 1, max: 1, magic-find-affected: true }
-    currency-rolls:
-    - { chance: 100.0, min: 25, max: 55 }
+  LootPool: basic_mob_drops

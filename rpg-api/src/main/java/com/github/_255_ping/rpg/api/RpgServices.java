@@ -17,6 +17,7 @@ import com.github._255_ping.rpg.api.formatting.NameFormatter;
 import com.github._255_ping.rpg.api.formula.ExpressionEvaluator;
 import com.github._255_ping.rpg.api.health.HealthService;
 import com.github._255_ping.rpg.api.items.ItemRegistry;
+import com.github._255_ping.rpg.api.loot.LootPoolRegistry;
 import com.github._255_ping.rpg.api.loot.LootTableRegistry;
 import com.github._255_ping.rpg.api.mobs.MobRegistry;
 import com.github._255_ping.rpg.api.parties.PartyService;
@@ -63,6 +64,7 @@ public final class RpgServices {
     private static ExpressionEvaluator expressions;
     private static CurrencyRegistry currencies;
     private static LootTableRegistry lootTables;
+    private static LootPoolRegistry lootPools;
     private static BlockRegistry blocks;
     private static Economy economy;
     private static AccessoryService accessories;
@@ -100,6 +102,7 @@ public final class RpgServices {
     public static ExpressionEvaluator expressions() { return require(expressions, "ExpressionEvaluator"); }
     public static CurrencyRegistry currencies() { return require(currencies, "CurrencyRegistry"); }
     public static LootTableRegistry lootTables() { return require(lootTables, "LootTableRegistry"); }
+    public static LootPoolRegistry lootPools() { return require(lootPools, "LootPoolRegistry"); }
     public static BlockRegistry blocks() { return require(blocks, "BlockRegistry"); }
     public static Economy economy() { return require(economy, "Economy"); }
     public static AccessoryService accessories() { return require(accessories, "AccessoryService"); }
@@ -134,6 +137,7 @@ public final class RpgServices {
     public static void setExpressions(ExpressionEvaluator svc) { expressions = svc; }
     public static void setCurrencies(CurrencyRegistry svc) { currencies = svc; }
     public static void setLootTables(LootTableRegistry svc) { lootTables = svc; }
+    public static void setLootPools(LootPoolRegistry svc) { lootPools = svc; }
     public static void setBlocks(BlockRegistry svc) { blocks = svc; }
     public static void setEconomy(Economy svc) { economy = svc; }
     public static void setAccessories(AccessoryService svc) { accessories = svc; }

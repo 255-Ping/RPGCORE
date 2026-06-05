@@ -149,9 +149,21 @@ public final class MobLoader {
         MobAiProfile aiProfile = parseAiProfile(s.getConfigurationSection("AI"));
         long xp = s.getLong("XP", 0);
 
+        // LootPool: "id"  or  LootPools: [id1, id2]
+        List<String> lootPoolIds = new ArrayList<>();
+        String singlePool = s.getString("LootPool");
+        if (singlePool != null && !singlePool.isBlank()) {
+            lootPoolIds.add(singlePool.trim());
+        }
+        List<String> multiPools = s.getStringList("LootPools");
+        for (String pid : multiPools) {
+            String trimmed = pid.trim();
+            if (!trimmed.isBlank() && !lootPoolIds.contains(trimmed)) lootPoolIds.add(trimmed);
+        }
+
         return new CoreRpgMob(id, displayName, type, health, damage, defense,
                 stats, helmet, chest, legs, boots, hand, off, null, bindings, lootTable,
-                aiProfile, xp, mobIdKey, healthService);
+                lootPoolIds, aiProfile, xp, mobIdKey, healthService);
     }
 
     private MobAiProfile parseAiProfile(ConfigurationSection s) {
@@ -181,6 +193,9 @@ public final class MobLoader {
         if (s == null) return null;
         Attribution attribution = parseAttribution(s.getString("attribution", "weighted-by-damage"));
         RollMode rollMode = parseRollMode(s.getString("roll-mode", "per-player"));
+        int vanillaExp  = s.getInt("exp", 0);
+        long combatExp  = s.getLong("combat-exp", 0L);
+        String combatSkill = s.getString("combat-skill", "combat");
 
         List<CoreLootTable.Roll> rolls = new ArrayList<>();
         for (Map<?, ?> raw : s.getMapList("rolls")) {
@@ -219,7 +234,8 @@ public final class MobLoader {
             }
         }
 
-        return new CoreLootTable(mobId, attribution, rollMode, rolls, guaranteed, currencyRolls);
+        return new CoreLootTable(mobId, attribution, rollMode, rolls, guaranteed, currencyRolls,
+                vanillaExp, combatExp, combatSkill);
     }
 
     private static Attribution parseAttribution(String s) {

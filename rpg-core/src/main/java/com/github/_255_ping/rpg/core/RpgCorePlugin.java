@@ -46,8 +46,10 @@ import com.github._255_ping.rpg.core.formula.CoreExpressionEvaluator;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
 import com.github._255_ping.rpg.core.health.RegenTask;
 import com.github._255_ping.rpg.core.items.CoreItemRegistry;
+import com.github._255_ping.rpg.core.loot.CoreLootPoolRegistry;
 import com.github._255_ping.rpg.core.loot.CoreLootTableRegistry;
 import com.github._255_ping.rpg.core.loot.LootChestRegistry;
+import com.github._255_ping.rpg.core.loot.LootPoolLoader;
 import com.github._255_ping.rpg.core.items.ItemLoader;
 import com.github._255_ping.rpg.core.mobs.CoreMobRegistry;
 import com.github._255_ping.rpg.core.mobs.MobAiTask;
@@ -119,6 +121,8 @@ public final class RpgCorePlugin extends JavaPlugin {
     private DamagerTracker damagerTracker;
     private CoreCurrencyRegistry currencyRegistry;
     private CoreLootTableRegistry lootTableRegistry;
+    private CoreLootPoolRegistry lootPoolRegistry;
+    private LootPoolLoader lootPoolLoader;
     private SpawnerManager spawnerManager;
     private DamagePipelineListener damagePipeline;
     private RecipeLoader recipeLoader;
@@ -205,6 +209,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         damagerTracker = new DamagerTracker();
         currencyRegistry = new CoreCurrencyRegistry();
         lootTableRegistry = new CoreLootTableRegistry();
+        lootPoolRegistry = new CoreLootPoolRegistry();
 
         RpgServices.setDataStore(dataStore);
         RpgServices.setMessageFormatter(messageFormatter);
@@ -227,6 +232,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         RpgServices.setBlocks(blockRegistry);
         RpgServices.setCurrencies(currencyRegistry);
         RpgServices.setLootTables(lootTableRegistry);
+        RpgServices.setLootPools(lootPoolRegistry);
 
         ItemAbilityListener.registerBuiltins(abilityRegistry, this);
 
@@ -249,6 +255,14 @@ public final class RpgCorePlugin extends JavaPlugin {
 
         itemLoader = new ItemLoader(itemsDir, itemRegistry, itemIdKey, getLogger());
         itemLoader.loadAll();
+
+        File lootPoolsDir = new File(getDataFolder(), "loot-pools");
+        if (!lootPoolsDir.isDirectory()) lootPoolsDir.mkdirs();
+        if (!new File(lootPoolsDir, "example.yml").exists()) {
+            saveResource("loot-pools/example.yml", false);
+        }
+        lootPoolLoader = new LootPoolLoader(lootPoolsDir, lootPoolRegistry, getLogger());
+        lootPoolLoader.loadAll();
 
         mobLoader = new MobLoader(mobsDir, mobRegistry, mobIdKey, healthService, getLogger());
         mobLoader.loadAll();
@@ -417,6 +431,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         messageFormatter.reload();
         statusEffectLoader.loadAll();
         itemLoader.loadAll();
+        if (lootPoolLoader != null) lootPoolLoader.loadAll();
         mobLoader.loadAll();
         abilityLoader.loadAll();
         if (armorSetLoader != null) armorSetLoader.loadAll();
