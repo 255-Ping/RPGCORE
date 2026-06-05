@@ -124,8 +124,8 @@
 49. 🔴 🔴 **Ability DSL: Context variables + flags** — Tier 1 (boolean flags: `set_flag{}`, `clear_flag{}`, `if_flag{}`; ship first), Tier 2 (numeric: `increment{}`, `decrement{}`, `if_var_gte{}`); ship Tier 1 first. Full spec in [Improvements](todo-improvements.md)
 50. 🔴 ⚫ **World events + world boss**
 51. 🔴 🟡 **Salvaging system**
-52. 🔴 ⚫ **Auction House** (needs sign-entry + mail first)
-53. 🔴 🔴 **Bazaar**
+52. 🔴 ⚫ **Auction House** (needs sign-entry ✅ + mail first) — reference SurvivalCore `auction/` + `gui/AuctionGui.java`; swap `CoinProvider` → `RpgServices.economy()`
+53. 🔴 🔴 **Bazaar** — reference SurvivalCore `bazaar/` + `gui/BazaarGui.java`; swap `CoinProvider` → `RpgServices.economy()`
 54. 🟠 🔴 **Display entity suite** (`rpg-holograms`) — ItemDisplay, BlockDisplay, physical `/de` editor with inventory replacement, fine-detail GUI, YAML persistence for all types
 55. 🔵 🟡 **Party / Guild / Quest GUI conversions**
 56. 🔴 ⚫ **Pets system** (`rpg-pets`) — long-term, build in phases
