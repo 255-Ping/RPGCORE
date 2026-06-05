@@ -1,0 +1,18 @@
+# Example smelting recipes.
+# Each top-level key is the recipe ID (lowercase).
+#
+# Input:         single ingredient { Item: <id>, Amount: N }
+# Output:        result item       { Item: <id>, Amount: N }
+# SmeltTicks:    ticks to smelt (200 = 10 seconds).  0 = instant.
+# RequiredLevel: minimum Smelting skill level required.
+# VanillaXP:     XP orbs awarded by the vanilla furnace when this recipe completes
+#                (only relevant if features.vanilla-furnace-recipes is true).
+#
+# Items can be custom RPG item IDs or vanilla Material names (e.g. IRON_ORE).
+
+# iron_ingot_from_ore:
+#   Input:  { Item: iron_ore, Amount: 1 }
+#   Output: { Item: iron_ingot, Amount: 1 }
+#   SmeltTicks: 200
+#   RequiredLevel: 1
+#   VanillaXP: 0.7

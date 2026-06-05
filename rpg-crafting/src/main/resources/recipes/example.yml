@@ -1,0 +1,25 @@
+# Example custom crafting recipes.
+# Each top-level key is the recipe ID (lowercase).
+# Shape:       3-row grid using character keys; spaces = empty slot.
+# Ingredients: maps each character to { item: <id>, amount: N }
+# Output:      { item: <id>, amount: N }
+# Shapeless:   true → Ingredients is a list of { item: <id>, amount: N }
+#
+# Items can be custom RPG item IDs or vanilla Material names (e.g. DIAMOND_SWORD).
+
+# example_shaped:
+#   Shape:
+#   - "DDD"
+#   - " S "
+#   - " S "
+#   Ingredients:
+#     D: { item: diamond, amount: 1 }
+#     S: { item: stick, amount: 1 }
+#   Output: { item: diamond_sword, amount: 1 }
+
+# example_shapeless:
+#   Shapeless: true
+#   Ingredients:
+#   - { item: oak_planks, amount: 2 }
+#   - { item: stick, amount: 1 }
+#   Output: { item: crafting_table, amount: 1 }

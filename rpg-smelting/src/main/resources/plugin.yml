@@ -1,0 +1,22 @@
+name: rpg-smelting
+version: '${version}'
+main: com.github._255_ping.rpg.smelting.RpgSmeltingPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Timed smelting station with progress bar + DataStore persistence. Also registers vanilla furnace recipes.
+depend: [rpg-core]
+commands:
+  smelting:
+    description: Smelting admin commands
+    usage: /smelting <reload|list>
+permissions:
+  rpg.smelting.use:
+    description: Use the smelting station
+    default: true
+  rpg.smelting.admin.reload:
+    description: Reload rpg-smelting config and recipes
+    default: op
+  rpg.smelting.admin.list:
+    description: List loaded smelting recipes
+    default: op

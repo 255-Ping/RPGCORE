@@ -35,6 +35,7 @@ import com.github._255_ping.rpg.core.death.DeathRulesListener;
 import com.github._255_ping.rpg.core.damage.DamageIndicatorListener;
 import com.github._255_ping.rpg.core.damage.DamagePipelineListener;
 import com.github._255_ping.rpg.core.items.ConsumableItemListener;
+import com.github._255_ping.rpg.core.mobs.MobDeathAnimListener;
 import com.github._255_ping.rpg.core.mobs.MobAbilityRuntime;
 import com.github._255_ping.rpg.core.formatting.CoreMessageFormatter;
 import com.github._255_ping.rpg.core.formatting.CoreNameFormatter;
@@ -67,8 +68,6 @@ import com.github._255_ping.rpg.core.persistence.BackendMigrator;
 import com.github._255_ping.rpg.core.persistence.MysqlDataStore;
 import com.github._255_ping.rpg.core.persistence.YamlDataStore;
 import com.github._255_ping.rpg.api.persistence.DataStore;
-import com.github._255_ping.rpg.core.recipes.RecipeLoader;
-import com.github._255_ping.rpg.core.recipes.SmeltingLoader;
 import com.github._255_ping.rpg.core.wand.CoreWandService;
 import com.github._255_ping.rpg.core.wand.WandListener;
 import com.github._255_ping.rpg.core.player.CoreManaService;
@@ -129,8 +128,6 @@ public final class RpgCorePlugin extends JavaPlugin {
     private LootPoolLoader lootPoolLoader;
     private SpawnerManager spawnerManager;
     private DamagePipelineListener damagePipeline;
-    private RecipeLoader recipeLoader;
-    private SmeltingLoader smeltingLoader;
     private CoreWandService wandService;
     private WandListener wandListener;
     private LootChestRegistry lootChestRegistry;
@@ -334,6 +331,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         // Make particle manager accessible to RpgCommand.
         this.particleManager = particleManager;
         getServer().getPluginManager().registerEvents(new MobAbilityEventListener(), this);
+        getServer().getPluginManager().registerEvents(new MobDeathAnimListener(mobIdKey), this);
         getServer().getPluginManager().registerEvents(new DeathRulesListener(this), this);
 
         long regenInterval = getConfig().getLong("regen.interval-ticks", 20L);
@@ -380,16 +378,6 @@ public final class RpgCorePlugin extends JavaPlugin {
         spawnerCmd.setExecutor(spawnerCommand);
         spawnerCmd.setTabCompleter(spawnerCommand);
         getServer().getScheduler().runTaskTimer(this, spawnerManager::tick, 20L, 20L);
-
-        File craftingDir = new File(getDataFolder(), "recipes/crafting");
-        if (!craftingDir.isDirectory()) craftingDir.mkdirs();
-        recipeLoader = new RecipeLoader(this, craftingDir);
-        recipeLoader.reload();
-
-        File smeltingDir = new File(getDataFolder(), "recipes/smelting");
-        if (!smeltingDir.isDirectory()) smeltingDir.mkdirs();
-        smeltingLoader = new SmeltingLoader(this, smeltingDir);
-        smeltingLoader.reload();
 
         wandService = new CoreWandService();
         wandListener = new WandListener(this, wandService);
@@ -449,8 +437,6 @@ public final class RpgCorePlugin extends JavaPlugin {
         blockLoader.loadAll();
         blockHologramService.initAll(blockRegistry);   // re-spawn with updated definitions
         skillsService.onReload();
-        if (recipeLoader != null) recipeLoader.reload();
-        if (smeltingLoader != null) smeltingLoader.reload();
     }
 
     public CoreMessageFormatter messages() {

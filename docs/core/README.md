@@ -75,5 +75,6 @@ The main `config.yml` covers:
 - i18n locale
 - **Resource pack auto-delivery** — `resource-pack.enabled/url/sha1/prompt/required`; sends pack to players on join. Disabled by default.
 - **Damage indicators** — `damage-indicators.enabled/duration-ticks/rise-blocks`; TextDisplay entities animate via a sine arc (rise then fall) with linear scale shrink 1→0.
+- **Mob death animation** — per-mob YAML fields `DeathParticle`, `DeathParticleCount`, `DeathParticleSpread`, `DeathSound`; optional burst + sound at death location, velocity zeroed to suppress knockback flop.
 
 Each field has a comment block in the generated `config.yml` describing it.

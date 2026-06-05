@@ -27,6 +27,8 @@ Each addon is its own plugin jar. All addons hard-depend on `rpg-core`. To enabl
 | `rpg-quests` | Shipped | [quests](quests.md) | Quest system with objective DSL, NPC hand-off |
 | `rpg-homes` | Shipped | [homes](homes.md) | Player homes + server warps |
 | `rpg-kits` | Shipped | [kits](kits.md) | Starter and reward kits (one-time + cooldown) |
+| `rpg-crafting` | Shipped | [crafting](crafting.md) | Custom shaped + shapeless crafting-table recipes |
+| `rpg-smelting` | Shipped | [smelting](smelting.md) | Timed smelting station + vanilla furnace recipe registration |
 
 ## Skill addons
 

@@ -161,9 +161,31 @@ public final class MobLoader {
             if (!trimmed.isBlank() && !lootPoolIds.contains(trimmed)) lootPoolIds.add(trimmed);
         }
 
+        // Optional death animation
+        org.bukkit.Particle deathParticle = null;
+        String deathParticleStr = s.getString("DeathParticle");
+        if (deathParticleStr != null && !deathParticleStr.isBlank()) {
+            try { deathParticle = org.bukkit.Particle.valueOf(deathParticleStr.toUpperCase(Locale.ROOT)); }
+            catch (IllegalArgumentException ex) {
+                logger.warning("mob '" + id + "' has unknown DeathParticle: " + deathParticleStr);
+            }
+        }
+        int    deathParticleCount  = s.getInt("DeathParticleCount", 20);
+        double deathParticleSpread = s.getDouble("DeathParticleSpread", 0.3);
+        org.bukkit.Sound deathSound = null;
+        String deathSoundStr = s.getString("DeathSound");
+        if (deathSoundStr != null && !deathSoundStr.isBlank()) {
+            try { deathSound = org.bukkit.Sound.valueOf(deathSoundStr.toUpperCase(Locale.ROOT)); }
+            catch (IllegalArgumentException ex) {
+                logger.warning("mob '" + id + "' has unknown DeathSound: " + deathSoundStr);
+            }
+        }
+
         return new CoreRpgMob(id, displayName, type, health, damage, defense,
                 stats, helmet, chest, legs, boots, hand, off, null, bindings, lootTable,
-                lootPoolIds, aiProfile, xp, mobIdKey, healthService);
+                lootPoolIds, aiProfile, xp,
+                deathParticle, deathParticleCount, deathParticleSpread, deathSound,
+                mobIdKey, healthService);
     }
 
     private MobAiProfile parseAiProfile(ConfigurationSection s) {

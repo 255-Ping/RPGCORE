@@ -55,6 +55,9 @@
 - Resource pack auto-delivery — `resource-pack:` config block + `ResourcePackListener` on join (`rpg-core 1.5.2`)
 - Player homes + warps — `rpg-homes 0.1.0`; DataStore homes + warps.yml; max-homes config; `/home`, `/warp`, `/setwarp`, `/delwarp`, `/warps`
 - Starter kits — `rpg-kits 0.1.0`; one-time + cooldown modes; RPG/vanilla items; `/kit`, `/givenkit`, `/kitreset`; suiteVersion bumped to 20
+- Mob death animation — `DeathParticle`/`DeathParticleCount`/`DeathParticleSpread`/`DeathSound` YAML fields; `MobDeathAnimListener` plays particle burst + sound, zeroes knockback velocity at death (`rpg-core 1.6.0`)
+- Extract crafting — `rpg-crafting 0.1.0`; shaped + shapeless recipes from `plugins/rpg-crafting/recipes/`; `/crafting reload|list`; removed from rpg-core loader
+- Timed smelting — `rpg-smelting 0.1.0`; BLAST_FURNACE station block, orange progress-bar GUI, single input slot, DataStore persist/restore, optional vanilla FurnaceRecipe registration, XP → Mining skill; suiteVersion bumped to 21
 
 ---
 
@@ -71,13 +74,13 @@
 9. ✅ **Ability trigger types expansion** (`~onAttack`, `~onKill`, `~onBlock`, `~onJump`) — player items and mob triggers both expanded; 3 showcase items added (`rpg-core 1.5.0`)
 10. ✅ **Ability DSL: `chance{}` gate** — `chance{percent=N}` sets `ctx.blocked` on a failed roll; `AbilityPipeline` skips all downstream effects; stacking = AND logic; 2 showcase items added (`rpg-core 1.5.1`, `rpg-api 0.5.1`)
 11. ✅ **Timed cooking + brewing** — `CraftProgress` timer, progress bar in row 0, DataStore save/restore on close/reopen, ingredient locking, cook time shown in recipe lore (`rpg-cooking 0.4.0`, `rpg-alchemy 0.4.0`)
-12. 🟠 🟡 **Mob death animation** — polish, self-contained
+12. ✅ **Mob death animation** — `DeathParticle` / `DeathSound` YAML fields on mobs; `MobDeathAnimListener` zeroes velocity + spawns burst + plays sound (`rpg-core 1.6.0`)
 13. ✅ **Damage indicators: float down + shrink** — sin-arc position + linear scale shrink 1→0; `riseBlocks` config unchanged (`rpg-core 1.5.2`)
 14. ✅ **Player homes + warps** — `rpg-homes 0.1.0`; `/home [set|delete|list|<name>]`, `/warp`, `/setwarp`, `/delwarp`, `/warps`; DataStore-backed per-player homes + warps.yml for server warps; configurable max-homes
 15. ✅ **Starter kits** — `rpg-kits 0.1.0`; `/kit`, `/givenkit`, `/kitreset`; one-time + cooldown kits; YAML-driven items (RPG + vanilla); DataStore-backed claim state
 16. ✅ **Resource pack auto-delivery** — `resource-pack:` block in rpg-core config; `ResourcePackListener` fires on join if enabled (`rpg-core 1.5.2`)
-17. 🔴 🟢 **Extract smelting + crafting to own plugins** — cleanup, low risk; build timed crafting into `rpg-smelting` from day one
-18. 🟠 🟡 **Timed smelting** — same CraftTime + DataStore persistence model as cooking/brewing; goes in `rpg-smelting`
+17. ✅ **Extract smelting + crafting to own plugins** — `rpg-crafting 0.1.0` (shaped/shapeless recipes); `rpg-smelting 0.1.0` scaffolded; `VanillaSuppressionListener.onSmelt` updated to allow any non-minecraft namespace
+18. ✅ **Timed smelting** — `rpg-smelting 0.1.0`; single input slot GUI, orange progress bar, BLAST_FURNACE station block, DataStore save/restore, vanilla FurnaceRecipe registration toggle; XP → Mining skill
 19. 🟠 🟡 **Permission system consistency audit** — every command gets a permission, all nodes follow `rpg.<plugin>.<verb>[.<qualifier>]` convention, add `docs/permissions.md`
 20. 🟠 🟡 **Telekinesis effect** — drops → inventory enchant/reforge/upgrade; ships as enchant + reforge stone + upgrade scroll
 21. 🟠 🟢 **Document `backend.yml` vs `config.yml`** — quick doc note only

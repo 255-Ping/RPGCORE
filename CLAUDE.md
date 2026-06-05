@@ -206,7 +206,7 @@ When `suiteVersion` bumps:
 | Module | Property | Current |
 |---|---|---|
 | rpg-api | `apiVersion` | 0.5.1 |
-| rpg-core | `coreVersion` | 1.5.2 |
+| rpg-core | `coreVersion` | 1.6.0 |
 | rpg-mining | `miningVersion` | 0.2.3 |
 | rpg-combat | `combatVersion` | 0.2.0 |
 | rpg-economy | `economyVersion` | 0.1.0 |
@@ -230,7 +230,9 @@ When `suiteVersion` bumps:
 | rpg-trade | `tradeVersion` | 0.1.1 |
 | rpg-homes | `homesVersion` | 0.1.0 |
 | rpg-kits  | `kitsVersion`  | 0.1.0 |
-| suite-wide suffix | `suiteVersion` | 20 |
+| rpg-crafting | `craftingVersion` | 0.1.0 |
+| rpg-smelting | `smeltingVersion` | 0.1.0 |
+| suite-wide suffix | `suiteVersion` | 21 |
 
 **Keep this table in sync** — update it in the same commit as any version bump.
 

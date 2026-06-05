@@ -169,17 +169,18 @@ public final class VanillaSuppressionListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onSmelt(FurnaceSmeltEvent e) {
         if (!flag("smelting")) return;
-        // FurnaceSmeltEvent doesn't expose the recipe key directly; consult the iterator and
-        // match the source/result. If the running recipe is in our namespace, let it through.
+        // Allow any custom (non-vanilla) smelting recipe through.  Vanilla recipes have the
+        // "minecraft" namespace; RPG plugin recipes use their own plugin name as namespace
+        // (e.g. "rpg-smelting").  This mirrors how onCraft already works.
         java.util.Iterator<org.bukkit.inventory.Recipe> it = org.bukkit.Bukkit.recipeIterator();
         while (it.hasNext()) {
             org.bukkit.inventory.Recipe r = it.next();
             if (!(r instanceof org.bukkit.Keyed keyed)) continue;
-            if (!plugin.getName().toLowerCase().equals(keyed.getKey().getNamespace())) continue;
+            if ("minecraft".equals(keyed.getKey().getNamespace())) continue; // skip vanilla
             if (!(r instanceof org.bukkit.inventory.CookingRecipe<?> cr)) continue;
             if (cr.getResult().isSimilar(e.getResult())
                     && cr.getInputChoice().test(e.getSource())) {
-                return; // ours — allow
+                return; // custom recipe — allow
             }
         }
         e.setCancelled(true);

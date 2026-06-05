@@ -1,0 +1,6 @@
+smelt:
+  started: "&eSmelting {item}&e... ({time}s)"
+  success: "&aSmelted &f{item}&a successfully!"
+  missing-ingredients: "&cMissing ingredient!"
+  requires-level: "&cRequires Smelting level &e{level}&c."
+  unknown-output: "&cOutput item not found — contact an admin."

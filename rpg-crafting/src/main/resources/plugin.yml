@@ -1,0 +1,19 @@
+name: rpg-crafting
+version: '${version}'
+main: com.github._255_ping.rpg.crafting.RpgCraftingPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Custom crafting-table recipes (shaped and shapeless). Requires rpg-core.
+depend: [rpg-core]
+commands:
+  crafting:
+    description: Crafting admin commands
+    usage: /crafting <reload|list>
+permissions:
+  rpg.crafting.admin.reload:
+    description: Reload rpg-crafting config and recipes
+    default: op
+  rpg.crafting.admin.list:
+    description: List loaded crafting recipes
+    default: op

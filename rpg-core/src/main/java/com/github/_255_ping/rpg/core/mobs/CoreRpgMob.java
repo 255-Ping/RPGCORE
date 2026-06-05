@@ -41,6 +41,11 @@ public final class CoreRpgMob implements RpgMob {
     private final long xp;
     private final NamespacedKey mobIdKey;
     private final CoreHealthService healthService;
+    // Optional death animation — null means "no custom effect"
+    private final org.bukkit.Particle deathParticle;
+    private final int    deathParticleCount;
+    private final double deathParticleSpread;
+    private final org.bukkit.Sound deathSound;
 
     public CoreRpgMob(String id, String displayName, EntityType baseType,
                       double maxHealth, double damage, double defense,
@@ -53,6 +58,8 @@ public final class CoreRpgMob implements RpgMob {
                       List<String> lootPoolIds,
                       MobAiProfile aiProfile,
                       long xp,
+                      org.bukkit.Particle deathParticle, int deathParticleCount, double deathParticleSpread,
+                      org.bukkit.Sound deathSound,
                       NamespacedKey mobIdKey, CoreHealthService healthService) {
         this.id = id;
         this.displayName = displayName;
@@ -73,11 +80,21 @@ public final class CoreRpgMob implements RpgMob {
         this.lootPoolIds = lootPoolIds == null ? List.of() : List.copyOf(lootPoolIds);
         this.aiProfile = aiProfile == null ? MobAiProfile.DEFAULT : aiProfile;
         this.xp = xp;
+        this.deathParticle      = deathParticle;
+        this.deathParticleCount = deathParticleCount;
+        this.deathParticleSpread = deathParticleSpread;
+        this.deathSound         = deathSound;
         this.mobIdKey = mobIdKey;
         this.healthService = healthService;
     }
 
     public MobAiProfile aiProfile() { return aiProfile; }
+
+    // Death animation accessors — null means no custom effect for that field
+    public org.bukkit.Particle deathParticle()   { return deathParticle; }
+    public int                 deathParticleCount() { return deathParticleCount; }
+    public double              deathParticleSpread() { return deathParticleSpread; }
+    public org.bukkit.Sound    deathSound()       { return deathSound; }
 
     @Override public String id() { return id; }
     @Override public String displayName() { return displayName; }

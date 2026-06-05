@@ -1,0 +1,16 @@
+# rpg-smelting config.
+# Recipes are defined in plugins/rpg-smelting/recipes/*.yml.
+# The smelting station is any custom block with StationType: smelting in its block YAML.
+
+features:
+  smelting: true              # set false to disable the smelting station GUI
+  vanilla-furnace-recipes: true  # also register each recipe as a vanilla FurnaceRecipe
+
+# Default ticks-per-smelt if a recipe doesn't specify SmeltTicks.
+# 200 ticks = 10 seconds.  Set to 0 for instant-smelt default.
+default-smelt-ticks: 200
+
+# Skill XP awarded on each successful smelt.
+# XP is added to the Mining skill (no dedicated Smelting skill exists yet).
+xp:
+  per-smelt: 20
