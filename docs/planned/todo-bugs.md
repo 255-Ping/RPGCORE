@@ -81,6 +81,14 @@ Triple-damage and hologram refresh issues both resolved.
 
 ---
 
+### ~~Frost Golem: Permanent Slowness V (`rpg-core`)~~ ✅ Fixed in `rpg-core 1.3.1`
+
+`ZoneEffect.firePulse()` was firing `PostDamageEvent` with the zone's owner mob as `attacker`. `MobAbilityEventListener` sees a non-null attacker and fires the mob's `~onHit` abilities. The frost golem's `~onHit freeze{duration=80}` therefore triggered on every zone pulse (every 20 ticks = 1 s), refreshing Slowness V to 4 s repeatedly — it never expired. Displayed as "00:00" because Minecraft shows sub-second remaining time as `00:00`.
+
+**Fix:** `DamageContext` in zone pulses now uses `null` attacker. Zone damage is environmental AoE, not a direct mob hit — `~onHit` should not fire. The victim's `~on_hurt` procs still fire correctly (driven by the victim field, not attacker).
+
+---
+
 ### Dual-Cast Wand: Solar Beam Deals No Damage (`rpg-core`) 🟢
 
 Right-click "Solar Beam" fires `beam{range=15.0,damage_multiplier=1.8}` with no effect after it. `beam{}` sets `ctx.target` and scales `carriedDamage` but never delivers damage on its own — a `damage{}` call at the end of the chain is what actually hits the target. The ability spends mana and consumes the cooldown but does nothing.

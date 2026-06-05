@@ -211,7 +211,12 @@ public final class ZoneEffect implements AbilityEffect {
                     if (!FIRING_POST.get()) {
                         FIRING_POST.set(true);
                         try {
-                            DamageContext dCtx = new DamageContext(owner, le, damage, "ability_zone");
+                            // Attacker is null: zone pulses are environmental AoE, not a direct
+                            // hit from the owner mob/player. A null attacker prevents mob ~onHit
+                            // abilities from re-triggering on every zone pulse (e.g. freeze
+                            // refreshing every second from a frost golem's zone). The victim's
+                            // ~on_hurt item procs still fire correctly via the victim field.
+                            DamageContext dCtx = new DamageContext(null, le, damage, "ability_zone");
                             Bukkit.getPluginManager().callEvent(new PostDamageEvent(dCtx, damage));
                         } finally {
                             FIRING_POST.set(false);
