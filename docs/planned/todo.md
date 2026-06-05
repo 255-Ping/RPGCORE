@@ -61,6 +61,8 @@
 - Doc note: `backend.yml` vs `config.yml` — added callout to `docs/core/persistence.md` clarifying that `backend.yml` is internal `BackendMigrator` bookkeeping; admins only touch `config.yml`
 - Vault provider bridge — `VaultEconomyProvider` wraps `CoreEconomy`; registered at `ServicePriority.Normal` when Vault is present; no bank support; `rpg-economy 0.2.0`
 - Vanilla suppression remaining flags — `BeaconEffectEvent` handler added (was the only unwired flag); dead `onPortalCreate` removed; doc status updated; `rpg-core 1.6.1`
+- Permission system consistency audit — `rpg.core.particle` + `rpg.regions.admin.global` added to plugin.ymls; `docs/permissions.md` fully rewritten covering all 25 plugins; `rpg-regions 0.5.1`
+- Telekinesis effect — `telekinesis` enchant + `telekinetic` reforge + `telekinesis_scroll` upgrade all give `auto_loot: 1`; deployed via `ensureExample` on startup; `rpg-enchanting 0.6.0`
 
 ---
 
@@ -84,8 +86,8 @@
 16. ✅ **Resource pack auto-delivery** — `resource-pack:` block in rpg-core config; `ResourcePackListener` fires on join if enabled (`rpg-core 1.5.2`)
 17. ✅ **Extract smelting + crafting to own plugins** — `rpg-crafting 0.1.0` (shaped/shapeless recipes); `rpg-smelting 0.1.0` scaffolded; `VanillaSuppressionListener.onSmelt` updated to allow any non-minecraft namespace
 18. ✅ **Timed smelting** — `rpg-smelting 0.1.0`; single input slot GUI, orange progress bar, BLAST_FURNACE station block, DataStore save/restore, vanilla FurnaceRecipe registration toggle; XP → Mining skill
-19. 🟠 🟡 **Permission system consistency audit** — every command gets a permission, all nodes follow `rpg.<plugin>.<verb>[.<qualifier>]` convention, add `docs/permissions.md`
-20. 🟠 🟡 **Telekinesis effect** — drops → inventory enchant/reforge/upgrade; ships as enchant + reforge stone + upgrade scroll
+19. ✅ **Permission system consistency audit** — added `rpg.core.particle` + `rpg.regions.admin.global` to plugin.ymls; `docs/permissions.md` fully rewritten to match all 25 plugins (added Admin, Homes, Kits, Cooking, Alchemy, Crafting, Smelting, skill addons; fixed Dungeons/Regions mismatches; removed stale nodes); `rpg-regions 0.5.1`
+20. ✅ **Telekinesis effect** — ships as `telekinesis` enchant + `telekinetic` reforge + `telekinesis_scroll` upgrade; all give `auto_loot: 1` which `DropManager` already checks; deployed via `ensureExample`; applies to any item; `rpg-enchanting 0.6.0`
 21. ✅ **Document `backend.yml` vs `config.yml`** — callout added to `docs/core/persistence.md`; `backend.yml` is internal `BackendMigrator` state — do not edit manually
 22. ✅ **Vault provider bridge** — `VaultEconomyProvider` registered at `ServicePriority.Normal` when Vault is on the server; no banks; `rpg-economy 0.2.0`
 23. ✅ **Vanilla suppression remaining flags** — added `BeaconEffectEvent` handler (only truly missing flag); removed dead `onPortalCreate`; updated Javadoc + doc status; `rpg-core 1.6.1`

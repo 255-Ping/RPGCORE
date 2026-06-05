@@ -53,6 +53,9 @@ permissions:
   rpg.core.loot-chest:
     description: Manage loot chest bindings
     default: op
+  rpg.core.particle:
+    description: Spawn debug particle effects via /rpg particle
+    default: op
   rpg.core.stats:
     description: Show your effective stats
     default: true

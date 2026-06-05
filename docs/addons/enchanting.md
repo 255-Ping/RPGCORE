@@ -2,7 +2,7 @@
 
 # Enchanting (`rpg-enchanting`)
 
-> **Status:** Working (v0.5.0+) — Custom enchants, reforges, and item upgrades all functional. Reforge stones and upgrade books are physical items applied in the anvil GUI. Enchant descriptions render in item lore. GUIs open from custom enchanting/anvil blocks. Vanilla enchanting-table + anvil suppressed. **Minecraft XP level cost** is wired: each enchant YAML specifies `XpCost:` (integer levels); the cost is shown in the enchant slot lore and deducted on apply.
+> **Status:** Working (v0.6.0+) — Custom enchants, reforges, and item upgrades all functional. Reforge stones and upgrade books are physical items applied in the anvil GUI. Enchant descriptions render in item lore. GUIs open from custom enchanting/anvil blocks. Vanilla enchanting-table + anvil suppressed. **Minecraft XP level cost** is wired: each enchant YAML specifies `XpCost:` (integer levels); the cost is shown in the enchant slot lore and deducted on apply. **Telekinesis** ships as a built-in enchant, reforge, and upgrade — all three give `auto_loot: 1` so drops go straight to inventory.
 
 One addon bundling four related "improve your gear" features. Each sub-feature is individually toggleable.
 

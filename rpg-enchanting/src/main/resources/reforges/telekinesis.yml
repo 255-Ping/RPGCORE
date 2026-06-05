@@ -1,0 +1,14 @@
+# Telekinetic Edge reforge — same AUTO_LOOT effect as the enchant but applied
+# via a reforge stone.  Gives auto_loot: 1 at every rarity so the effect is
+# always present regardless of item tier.
+telekinetic:
+  DisplayName: "&bTelekinetic"
+  AppliesTo: [any]
+  CurrencyCost: 10000
+  RequiredLevel: 30
+  StatsByRarity:
+    common:    { auto_loot: 1 }
+    uncommon:  { auto_loot: 1 }
+    rare:      { auto_loot: 1 }
+    epic:      { auto_loot: 1 }
+    legendary: { auto_loot: 1 }

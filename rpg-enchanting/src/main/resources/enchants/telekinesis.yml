@@ -1,0 +1,19 @@
+# Telekinesis enchant — drops from kills and block-breaks go directly into the
+# player's inventory instead of spawning on the ground.  Powered by the AUTO_LOOT
+# stat that the DropManager already checks; no additional Java wiring needed.
+#
+# A single level is all that's needed (binary effect: you have it or you don't).
+# Apply via the enchanting station to any weapon, tool, bow, or wand.
+telekinesis:
+  DisplayName: "&bTelekinesis"
+  Description:
+    - "Drops teleport straight to your inventory."
+    - "Full inventory? Items land at your feet."
+  MaxLevel: 1
+  AppliesTo: [any]
+  Stats:
+    auto_loot: 1
+  ScalePerLevel: 1.0
+  XpCost: 20
+  CurrencyCost: 5000
+  RequiredLevel: 25

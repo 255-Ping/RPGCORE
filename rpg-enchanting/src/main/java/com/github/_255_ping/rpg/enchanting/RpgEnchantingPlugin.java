@@ -16,8 +16,11 @@ public final class RpgEnchantingPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         ensureExample("enchants/example.yml");
+        ensureExample("enchants/telekinesis.yml");
         ensureExample("reforges/example.yml");
+        ensureExample("reforges/telekinesis.yml");
         ensureExample("upgrades/example.yml");
+        ensureExample("upgrades/telekinesis.yml");
         messages = new Messages(this);
 
         File enchantsDir = new File(getDataFolder(), "enchants");

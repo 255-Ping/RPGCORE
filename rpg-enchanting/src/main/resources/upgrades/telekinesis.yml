@@ -1,0 +1,10 @@
+# Telekinesis Scroll upgrade — one-shot scroll that permanently adds AUTO_LOOT
+# to any weapon or tool.  MaxTier: 1 means it can only be applied once per item.
+telekinesis_scroll:
+  DisplayName: "&bTelekinesis Scroll"
+  AppliesTo: [any]
+  MaxTier: 1
+  CurrencyCost: 7500
+  RequiredLevel: 20
+  StatsPerTier:
+    auto_loot: 1
