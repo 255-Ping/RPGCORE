@@ -1,0 +1,8 @@
+name: rpg-bossbar
+version: '${version}'
+main: com.github._255_ping.rpg.bossbar.RpgBossBarPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Proximity-based boss health bars for RPG mobs with a BossBar YAML section.
+depend: [rpg-core]

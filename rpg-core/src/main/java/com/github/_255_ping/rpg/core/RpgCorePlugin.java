@@ -70,6 +70,7 @@ import com.github._255_ping.rpg.core.persistence.MysqlDataStore;
 import com.github._255_ping.rpg.core.persistence.YamlDataStore;
 import com.github._255_ping.rpg.api.persistence.DataStore;
 import com.github._255_ping.rpg.core.input.CoreSignInputService;
+import com.github._255_ping.rpg.core.mobs.OwnedMobTracker;
 import com.github._255_ping.rpg.core.wand.CoreWandService;
 import com.github._255_ping.rpg.core.wand.WandListener;
 import com.github._255_ping.rpg.core.player.CoreManaService;
@@ -241,6 +242,9 @@ public final class RpgCorePlugin extends JavaPlugin {
         signInputService = new CoreSignInputService(this);
         getServer().getPluginManager().registerEvents(signInputService, this);
         RpgServices.setSignInput(signInputService);
+
+        OwnedMobTracker ownedMobTracker = new OwnedMobTracker(this);
+        getServer().getPluginManager().registerEvents(ownedMobTracker, this);
 
         ItemAbilityListener.registerBuiltins(abilityRegistry, this);
 

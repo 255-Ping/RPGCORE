@@ -171,6 +171,9 @@ public final class ItemAbilityListener implements Listener {
         registry.register("set_flag",             p -> new com.github._255_ping.rpg.core.abilities.effects.FlagEffect(com.github._255_ping.rpg.core.abilities.effects.FlagEffect.Mode.SET_FLAG, p));
         registry.register("clear_flag",           p -> new com.github._255_ping.rpg.core.abilities.effects.FlagEffect(com.github._255_ping.rpg.core.abilities.effects.FlagEffect.Mode.CLEAR_FLAG, p));
 
+        // ── #42 Mob spawning ──────────────────────────────────────────────────
+        registry.register("spawn_mob", p -> new com.github._255_ping.rpg.core.abilities.effects.SpawnMobEffect(plugin, p));
+
         // ── Zone infrastructure ───────────────────────────────────────────────
         int zoneMax = plugin.getConfig().getInt("abilities.zone.max-active", 50);
         com.github._255_ping.rpg.core.abilities.effects.ZoneEffect.init(zoneMax);

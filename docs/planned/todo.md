@@ -68,6 +68,8 @@
 - Region enter/exit messages + more flags — `enter-message`/`leave-message` (title or `[actionbar]` prefix; `{player}`/`{region}` placeholders); `no-mob-spawn`, `no-damage`, `fly` (granted/revoked on enter/leave), `no-item-drop`, `keep-inventory`; flag table in docs rewritten; `rpg-regions 0.6.0`
 - Stats GUI redesign — `/stats [player]` now opens 54-slot inventory GUI; gear column shows equipped items; 7 stat-category items (Combat/Survival/Caster/Mobility/Loot/Wisdom/Skills) with full lore breakdowns; Trade button when viewing another player; nav bar with Close; `rpg-core 1.7.0`
 - Sign-entry utility — `SignInputService` in `rpg-api 0.5.2` + `CoreSignInputService` in `rpg-core 1.8.0`; virtual sign editor, 60s timeout, null on cancel/disconnect; `RpgServices.signInput().ask(player, label, callback)`
+- Ability DSL: `spawn_mob{}` — `id=,count=1,at=caster|target|point,radius=0,offset_y=0,owned=false`; `OwnedMobTracker` enforces per-caster cap + despawns on logout; `rpg-core 1.8.0`
+- Boss bar system — `rpg-bossbar 0.1.0`; `BossBar: {Color,Style,Range}` in mob YAML; proximity task shows/hides per player; `PostDamageEvent` updates HP fraction; `RpgServices.bossBar()`; `ancient_golem` boss example added
 
 ---
 
@@ -103,7 +105,7 @@
 28. ✅ **Stats GUI redesign** — 54-slot inventory GUI with gear column + 7 stat categories + Trade button. `rpg-core 1.7.0`
 29. 🔴 🔴 **Achievement system** — player retention + milestone tracking
 30. 🔴 🟡 **Leaderboards** — community engagement
-31. 🔴 🟡 **Boss bar system** — needed by dungeons + world events
+31. ✅ **Boss bar system** — `rpg-bossbar 0.1.0`; `BossBar:` YAML section on mobs; proximity task shows/hides bar; `PostDamageEvent` updates HP fraction; `RpgServices.bossBar()`
 32. ✅ **Sign-entry utility** — `SignInputService` interface in `rpg-api 0.5.2` + `CoreSignInputService` in `rpg-core 1.8.0`; virtual sign, 60s timeout, null callback on cancel/disconnect; `RpgServices.signInput().ask(player, label, callback)`
 33. 🔴 🔴 **Offline mail / inbox system** — needed before AH and offline achievement rewards
 34. 🟠 🟡 **HUD improvements** — scoreboard, tablist, PAPI support, ability cooldowns
@@ -114,7 +116,7 @@
 39. 🟠 🟡 **Fishing content slice**
 40. 🟠 🟡 **Quest log GUI + chains + repeatable quests**
 41. 🟠 🔴 **Guild bank + rank GUI**
-42. 🟠 🟡 **Ability DSL: `spawn_mob{}` effect** — `spawn_mob{id=,count=1,at=caster,radius=0,owned=false}`; `owned=true` tags mob with caster UUID for ally semantics + max-per-caster safety cap in config. Full spec in [Improvements](todo-improvements.md)
+42. ✅ **Ability DSL: `spawn_mob{}` effect** — `spawn_mob{id=,count=1,at=caster|target|point,radius=0,offset_y=0,owned=false}`; `owned=true` tags with caster UUID + `OwnedMobTracker` cap; despawns on caster logout; `rpg-core 1.8.0`
 43. 🔴 🔴 **Custom enchantment ability triggers** — ability-fire enchants (on_hit, on_kill, etc.)
 44. 🟠 🔴 **RPG-Farming redesign**
 45. 🔴 🟡 **Elite/champion mob variants**

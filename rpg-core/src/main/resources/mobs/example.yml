@@ -160,3 +160,41 @@ void_phantom:
   - "drain{amount=12.0,leech=0.8} ~onHit"
   - "zone{radius=5.0,duration=180,interval=20,damage=10.0,particle=PORTAL} ~onDeath"
   LootPool: basic_mob_drops
+
+# ── Boss mob example (rpg-bossbar + spawn_mob showcase) ──────────────────────
+# The Ancient Golem is a boss mob. When players come within 64 blocks they see
+# its red boss bar. At 25% HP it spawns two golem_shard adds and shields.
+
+ancient_golem:
+  MinecraftMob: IRON_GOLEM
+  DisplayName: '&4&lAncient Golem'
+  Health: 5000
+  Damage: 35
+  Armor: 60
+  Stats:
+    strength: 80
+    defense: 100
+    true_defense: 20
+  BossBar:
+    Color: RED
+    Style: SEGMENTED_20
+    Range: 64
+  Abilities:
+  - "aoe{radius=5.0,damage=30.0,particle=EXPLOSION_EMITTER} ~onTimer:100"
+  - "knockback{force=2.0,up=0.6,target=target} ~onHit"
+  - "if_health_below{percent=25} if_not_flag{name=phase2} set_flag{name=phase2} spawn_mob{id=golem_shard,count=2,radius=5.0} shield{amount=500,duration=200,target=caster} sound{key=entity.wither.spawn,volume=1.0,pitch=0.7} ~onTimer:20"
+  LootPool: boss_drops
+
+# Spawned as phase-2 adds by ancient_golem
+golem_shard:
+  MinecraftMob: IRON_GOLEM
+  DisplayName: '&8Golem Shard'
+  Health: 800
+  Damage: 18
+  Armor: 20
+  Stats:
+    strength: 30
+    defense: 30
+  Abilities:
+  - "knockback{force=1.2,up=0.3,target=target} ~onHit"
+  LootPool: basic_mob_drops

@@ -5,11 +5,14 @@ import com.github._255_ping.rpg.api.abilities.AbilityDsl;
 import com.github._255_ping.rpg.api.abilities.AbilityInvocation;
 import com.github._255_ping.rpg.api.loot.Attribution;
 import com.github._255_ping.rpg.api.loot.RollMode;
+import com.github._255_ping.rpg.api.mobs.BossBarDef;
 import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import com.github._255_ping.rpg.api.stats.Stat;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
@@ -181,11 +184,48 @@ public final class MobLoader {
             }
         }
 
+        BossBarDef bossBarDef = parseBossBar(id, displayName, s.getConfigurationSection("BossBar"));
+
         return new CoreRpgMob(id, displayName, type, health, damage, defense,
                 stats, helmet, chest, legs, boots, hand, off, null, bindings, lootTable,
                 lootPoolIds, aiProfile, xp,
+                bossBarDef,
                 deathParticle, deathParticleCount, deathParticleSpread, deathSound,
                 mobIdKey, healthService);
+    }
+
+    private BossBarDef parseBossBar(String mobId, String mobDisplayName, ConfigurationSection s) {
+        if (s == null) return null;
+
+        // Name defaults to the mob's DisplayName with legacy colour codes stripped
+        String name = s.getString("Name");
+        if (name == null || name.isBlank()) {
+            name = mobDisplayName != null
+                    ? net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+                            .legacyAmpersand().deserialize(mobDisplayName).toString()
+                    : mobId;
+        }
+
+        BarColor color = BarColor.RED;
+        String colorStr = s.getString("Color");
+        if (colorStr != null) {
+            try { color = BarColor.valueOf(colorStr.toUpperCase(Locale.ROOT)); }
+            catch (IllegalArgumentException ex) {
+                logger.warning("mob '" + mobId + "' BossBar.Color unknown: " + colorStr);
+            }
+        }
+
+        BarStyle style = BarStyle.SOLID;
+        String styleStr = s.getString("Style");
+        if (styleStr != null) {
+            try { style = BarStyle.valueOf(styleStr.toUpperCase(Locale.ROOT)); }
+            catch (IllegalArgumentException ex) {
+                logger.warning("mob '" + mobId + "' BossBar.Style unknown: " + styleStr);
+            }
+        }
+
+        double range = s.getDouble("Range", BossBarDef.USE_CONFIG_RANGE);
+        return new BossBarDef(name, color, style, range);
     }
 
     private MobAiProfile parseAiProfile(ConfigurationSection s) {

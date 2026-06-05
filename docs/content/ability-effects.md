@@ -319,6 +319,32 @@ Pauses the ability chain for N ticks without blocking the server thread. Context
 
 ---
 
+## spawn_mob
+
+_Added in rpg-core 1.8.0._ Spawns one or more registered custom mobs at or near the caster, target, or beam point. The anchor is evaluated at cast time; if the chosen anchor is null the caster location is used as a fallback.
+
+| Param | Default | Description |
+|---|---|---|
+| `id` | _(required)_ | Mob registry ID |
+| `count` | `1` | Number of mobs to spawn |
+| `at` | `caster` | Spawn anchor: `caster`, `target`, or `point` (ctx.point from a preceding `beam{}`) |
+| `radius` | `0.0` | Random XZ spread radius around the anchor (0 = exact location) |
+| `offset_y` | `0.0` | Y offset added to the anchor location |
+| `owned` | `false` | If `true`: tags the mob with the caster's UUID, counts toward the per-caster cap (`abilities.spawn-mob.max-per-caster` in config, default 10), and despawns all owned mobs when the caster logs out |
+
+```yaml
+# Phase-2 trigger: spawn adds once when below 25% HP
+- "if_health_below{percent=25} if_not_flag{name=phase2} set_flag{name=phase2} spawn_mob{id=golem_shard,count=2,radius=5.0} shield{amount=500} ~onTimer:20"
+
+# On-death split: mob spawns two weaker versions of itself
+- "spawn_mob{id=shadow_shard,count=2,at=caster,radius=2.0} ~onDeath"
+
+# Summoner item: player spawns a temporary ally
+- "mana_cost{amount=50} cooldown{ticks=400} spawn_mob{id=summoned_skeleton,count=1,at=caster,radius=2.0,owned=true} right_click"
+```
+
+---
+
 ## Target selection effects
 
 _Added in rpg-core 1.7.0._ These effects set `ctx.target` before the effects that follow them. Place them at the start of a sequence (or after a trigger gate) to pick who the next `damage{}`, `heal{}`, `mark{}`, etc. acts on.

@@ -116,10 +116,30 @@ mark_detonator:
 # set_flag{} prevents re-entry on subsequent timer ticks.
 # (Put this in a mob YAML as a ~onTimer ability line.)
 boss_phase2_trigger:
+  # Phase 2 enrage: at 25% HP, spawn two adds + shield.
+  # set_flag{} ensures this fires exactly once per life.
+  # (Attach to a mob under Abilities: as a ~onTimer:20 line.)
   AbilitySequence:
   - if_health_below{percent=25}
   - if_not_flag{name=enraged}
   - set_flag{name=enraged}
+  - spawn_mob{id=golem_shard, count=2, radius=5.0}
   - shield{amount=200, duration=100, target=caster}
-  - particles{type=soul_fire_flame, count=40, offset=1.0}
+  - particles{type=soul_fire_flame, count=40, spread=1.0}
   - sound{key=entity.wither.spawn, volume=1.0, pitch=0.8}
+
+# ── #42 spawn_mob{} showcase ────────────────────────────────────────────────
+
+on_death_spawn:
+  # On-death: the mob splits into two weaker shards.
+  # Uses at=caster so shards appear at the original mob's position.
+  AbilitySequence:
+  - spawn_mob{id=shadow_shard, count=2, at=caster, radius=2.0}
+
+summon_ally:
+  # Player item: right-click to summon a temporary skeleton ally.
+  # owned=true means it won't attack the caster and despawns on logout.
+  AbilitySequence:
+  - mana_cost{amount=50}
+  - cooldown{ticks=400}
+  - spawn_mob{id=summoned_skeleton, count=1, at=caster, radius=2.0, owned=true}

@@ -7,6 +7,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Map;
+import java.util.Optional;
 
 public interface RpgMob {
     String id();
@@ -31,4 +32,11 @@ public interface RpgMob {
     long xp();
 
     LivingEntity spawn(Location loc);
+
+    /**
+     * Returns the boss bar display config for this mob, if one is defined.
+     * Present when the mob YAML has a {@code BossBar:} section.
+     * {@code rpg-bossbar} reads this to decide which mobs get proximity bars.
+     */
+    default Optional<BossBarDef> bossBar() { return Optional.empty(); }
 }

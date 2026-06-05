@@ -1,5 +1,6 @@
 package com.github._255_ping.rpg.core.mobs;
 
+import com.github._255_ping.rpg.api.mobs.BossBarDef;
 import com.github._255_ping.rpg.api.mobs.RpgMob;
 import com.github._255_ping.rpg.api.stats.Stat;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
@@ -18,6 +19,7 @@ import org.bukkit.persistence.PersistentDataType;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public final class CoreRpgMob implements RpgMob {
 
@@ -41,6 +43,8 @@ public final class CoreRpgMob implements RpgMob {
     private final long xp;
     private final NamespacedKey mobIdKey;
     private final CoreHealthService healthService;
+    // Optional boss bar def — null means no boss bar
+    private final BossBarDef bossBarDef;
     // Optional death animation — null means "no custom effect"
     private final org.bukkit.Particle deathParticle;
     private final int    deathParticleCount;
@@ -58,6 +62,7 @@ public final class CoreRpgMob implements RpgMob {
                       List<String> lootPoolIds,
                       MobAiProfile aiProfile,
                       long xp,
+                      BossBarDef bossBarDef,
                       org.bukkit.Particle deathParticle, int deathParticleCount, double deathParticleSpread,
                       org.bukkit.Sound deathSound,
                       NamespacedKey mobIdKey, CoreHealthService healthService) {
@@ -80,6 +85,7 @@ public final class CoreRpgMob implements RpgMob {
         this.lootPoolIds = lootPoolIds == null ? List.of() : List.copyOf(lootPoolIds);
         this.aiProfile = aiProfile == null ? MobAiProfile.DEFAULT : aiProfile;
         this.xp = xp;
+        this.bossBarDef         = bossBarDef;
         this.deathParticle      = deathParticle;
         this.deathParticleCount = deathParticleCount;
         this.deathParticleSpread = deathParticleSpread;
@@ -111,6 +117,7 @@ public final class CoreRpgMob implements RpgMob {
     @Override public ItemStack offHand() { return offHand; }
     @Override public String customHeadTexture() { return customHeadTexture; }
     @Override public long xp() { return xp; }
+    @Override public Optional<BossBarDef> bossBar() { return Optional.ofNullable(bossBarDef); }
 
     public List<MobAbilityBinding> abilityBindings() { return bindings; }
     public CoreLootTable lootTable() { return lootTable; }
