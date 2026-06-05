@@ -1,6 +1,6 @@
 # Regions (`rpg-regions`)
 
-> **Status:** In Progress — Cube-shaped regions placed via `/region define <id> <radius>`. Persistence via DataStore. `/region delete`, `/region list`, `/region info` (at your location), `/region flag <id> <flag> <value>` (boolean / int / string). Flag enforcement v1: `pvp` (cancels player-vs-player damage when false), `no-break`, `no-place`. `RegionEnterEvent` and `RegionLeaveEvent` fire from a periodic polling task (default every 5 ticks). Polygonal regions, region-bounds GUI editor, and the wand-based two-point definition come later — for v1, cube-around-player is the only definition mode.
+> **Status:** Working (v0.6.0+) — Cube-shaped regions placed via `/region define <id> <radius>` or wand selection. Persistence via DataStore. `/region delete`, `/region list`, `/region info`, `/region flag <id> <flag> <value>`. Enter/exit messages, `no-mob-spawn`, `no-damage`, `fly`, `no-item-drop`, `keep-inventory` all enforced. `RegionEnterEvent` and `RegionLeaveEvent` fire from a periodic polling task (default every 5 ticks). Polygonal regions and a bounds GUI editor come later — for v1, cube-around-player is the only definition mode.
 
 Admin-defined 3D box regions with flags. Built ourselves rather than depending on WorldGuard.
 
@@ -33,18 +33,50 @@ flags:
 
 Built-in flags (extensible by addons):
 
+### Block / interaction
 | Flag | Default | Effect |
 |---|---|---|
-| `pvp` | true | PvP allowed |
-| `no-natural-spawning` | false | Disables natural-spawning rules in this region |
+| `no-break` | false | Cancel all block breaks (including custom blocks) |
+| `no-break-vanilla` | false | Cancel vanilla block breaks; custom block breaks still allowed; creative players bypass |
+| `no-place` | false | Cancel all block placements |
+
+### Combat / damage
+| Flag | Default | Effect |
+|---|---|---|
+| `pvp` | true | PvP allowed. Set `false` to prevent player-on-player damage |
+| `no-damage` | false | Players inside take **no damage** from any source (safe zone) |
+| `damage-multiplier` | 1.0 | Multiplies all damage dealt inside the region |
+
+### Spawning
+| Flag | Default | Effect |
+|---|---|---|
+| `no-mob-spawn` | false | Prevents natural spawning and spawner-based spawning. Admin `/summon` and plugin spawns bypass this |
+
+### Player state
+| Flag | Default | Effect |
+|---|---|---|
+| `fly` | false | Grants flight to players while inside; revoked on exit (unless they have flight from permission) |
+| `no-item-drop` | false | Items the player tries to drop are returned to their inventory immediately |
+| `keep-inventory` | false | Players who die inside keep their items and XP |
+
+### Messages
+| Flag | Type | Effect |
+|---|---|---|
+| `enter-message` | String | Shown as a title when a player enters the region. Supports `{player}` and `{region}` placeholders and `&` colour codes. Prefix with `[actionbar]` to show in the action bar instead. Use `\n` to split title and subtitle: `Welcome to {region}\nWatch your step.` |
+| `leave-message` | String | Same, shown on exit |
+
+**Setting a message flag:**
+```
+/region flag spawn enter-message &6Welcome to Spawn, {player}!
+/region flag spawn enter-message [actionbar]&aYou are now in the &eSpawn&a zone.
+/region flag spawn leave-message &7Leaving Spawn...
+```
+
+### Misc
+| Flag | Default | Effect |
+|---|---|---|
 | `no-ability-use` | false | Cancels all custom abilities cast inside |
-| `no-break` | false | Cancels all block breaks (including custom) |
-| `no-place` | false | Cancels all block placements |
-| `no-explosion-damage` | false | Cancels explosion damage to entities |
-| `block-explosion-damage` | true | Whether explosions break blocks (cancelled by default per vanilla suppression) |
-| `damage-multiplier` | 1.0 | Multiplies dealt damage |
-| `health-regen-multiplier` | 1.0 | Multiplies out-of-combat regen |
-| `no-mob-spawning` | false | Disables all mob spawning (admin spawners + natural) in this region |
+| `health-regen-multiplier` | 1.0 | Multiplies out-of-combat regen rate |
 | `no-dungeon-entry` | false | Disables `/dungeon join` from inside |
 | `apply-status` | `[]` | Auto-applies these status effects while a player is inside the region |
 

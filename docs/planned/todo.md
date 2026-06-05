@@ -65,6 +65,8 @@
 - Telekinesis effect — `telekinesis` enchant + `telekinetic` reforge + `telekinesis_scroll` upgrade all give `auto_loot: 1`; deployed via `ensureExample` on startup; `rpg-enchanting 0.6.0`
 - Ability DSL: Target selection — `nearest_enemy{}`, `farthest_enemy{}`, `nearest_ally{priority=nearest|lowest_health|lowest_mana}`, `random_enemy{}`, `self{}`; each sets `ctx.target` via radius query; `allow_pvp=true` opt-in; null-safe (no target = downstream no-ops); `rpg-core 1.7.0`
 - Ability DSL: Conditional flow — `if_health_below/above{percent=}`, `if_mana_below/above{percent=}`, `if_marked{}`, `if_target_has_status{id=}`, `if_flag{name=}`, `if_not_flag{name=}`, `set_flag{name=}`, `clear_flag{name=}`; all use same `blocked` mechanism as `chance{}`; flags stored in entity metadata (auto-cleared on death); boss phase-transition pattern documented; `rpg-core 1.7.0`
+- Region enter/exit messages + more flags — `enter-message`/`leave-message` (title or `[actionbar]` prefix; `{player}`/`{region}` placeholders); `no-mob-spawn`, `no-damage`, `fly` (granted/revoked on enter/leave), `no-item-drop`, `keep-inventory`; flag table in docs rewritten; `rpg-regions 0.6.0`
+- Stats GUI redesign — `/stats [player]` now opens 54-slot inventory GUI; gear column shows equipped items; 7 stat-category items (Combat/Survival/Caster/Mobility/Loot/Wisdom/Skills) with full lore breakdowns; Trade button when viewing another player; nav bar with Close; `rpg-core 1.7.0`
 
 ---
 
@@ -95,9 +97,9 @@
 23. ✅ **Vanilla suppression remaining flags** — added `BeaconEffectEvent` handler (only truly missing flag); removed dead `onPortalCreate`; updated Javadoc + doc status; `rpg-core 1.6.1`
 24. ✅ **Ability DSL: Target selection effects** — `nearest_enemy{}`, `farthest_enemy{}`, `nearest_ally{}`, `random_enemy{}`, `self{}` each set `ctx.target`; unlocks targeting logic in mob timers + passive procs. `rpg-core 1.7.0`
 25. ✅ **Ability DSL: Conditional flow** — `if_health_below/above{}`, `if_mana_below/above{}`, `if_marked{}`, `if_target_has_status{}`, `if_flag{}`, `if_not_flag{}`, `set_flag{}`, `clear_flag{}`; flags in entity metadata; phase-transition pattern documented. `rpg-core 1.7.0`
-26. 🟠 🟡 **Region enter/exit messages + more flags** — high-value QoL
+26. ✅ **Region enter/exit messages + more flags** — `enter-message`, `leave-message`, `no-mob-spawn`, `no-damage`, `fly`, `no-item-drop`, `keep-inventory`. `rpg-regions 0.6.0`
 27. 🟠 ⚫ **Dungeon flesh-out** — entry requirements + loot grants (fix enter bug first)
-28. 🟠 🔴 **Stats GUI redesign** — highest-visibility player feature
+28. ✅ **Stats GUI redesign** — 54-slot inventory GUI with gear column + 7 stat categories + Trade button. `rpg-core 1.7.0`
 29. 🔴 🔴 **Achievement system** — player retention + milestone tracking
 30. 🔴 🟡 **Leaderboards** — community engagement
 31. 🔴 🟡 **Boss bar system** — needed by dungeons + world events

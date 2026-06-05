@@ -2,7 +2,7 @@
 
 # Master stat reference
 
-> **Status:** Working — stat registry, lore rendering, and aggregation from gear/accessories/status effects all active. `speed`, `ferocity`, and `swing_range` are now wired (rpg-core 1.1.0). `magic_find` is defined but loot-roll integration is pending audit.
+> **Status:** Working — stat registry, lore rendering, and aggregation from gear/accessories/status effects all active. `speed`, `ferocity`, and `swing_range` wired. `/stats [player]` opens a **54-slot inventory GUI** (rpg-core 1.7.0+): gear column shows equipped items, centre shows stat categories with full lore breakdowns, Trade button visible when viewing another player. `magic_find` is defined but loot-roll integration is pending audit.
 
 Every stat in the framework. Built-in stats are part of `rpg-api`'s `BuiltinStat` enum so any addon can reference them. Custom stats can be registered at runtime via `StatRegistry.register(new CustomStat(...))`.
 

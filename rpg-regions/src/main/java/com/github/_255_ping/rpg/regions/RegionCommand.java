@@ -19,13 +19,19 @@ import java.util.Map;
 public final class RegionCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> KNOWN_FLAGS = List.of(
-            "pvp", "no-break", "no-break-vanilla", "no-place",
-            "no-mob-spawning", "no-natural-spawning", "mob-spawning", "mob-damage",
-            "fall-damage", "fire-damage", "explosion-damage",
-            "no-ability-use", "damage-multiplier", "health-regen-multiplier",
-            "entry", "exit", "fly", "god",
-            "greeting", "farewell",
-            "apply-status");
+            // ── Block / break ─────────────────────────────────────────────────
+            "no-break", "no-break-vanilla", "no-place",
+            // ── Combat / damage ───────────────────────────────────────────────
+            "pvp", "no-damage", "damage-multiplier",
+            // ── Spawning ──────────────────────────────────────────────────────
+            "no-mob-spawn",
+            // ── Player movement / state ───────────────────────────────────────
+            "fly", "keep-inventory", "no-item-drop",
+            // ── Messages ──────────────────────────────────────────────────────
+            "enter-message", "leave-message",
+            // ── Misc / legacy ─────────────────────────────────────────────────
+            "no-ability-use", "health-regen-multiplier",
+            "no-dungeon-entry", "apply-status");
 
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
@@ -274,7 +280,13 @@ public final class RegionCommand implements CommandExecutor, TabCompleter {
         // /region flag <id> <flagName>
         if (sub.equals("flag") && args.length == 3) return filter(args[2], KNOWN_FLAGS);
         // /region flag <id> <flagName> <value>
-        if (sub.equals("flag") && args.length == 4) return filter(args[3], List.of("true", "false", "clear"));
+        if (sub.equals("flag") && args.length == 4) {
+            String flagName = args[2].toLowerCase(Locale.ROOT);
+            if (flagName.equals("enter-message") || flagName.equals("leave-message")) {
+                return List.of(); // free-text — no suggestions for message strings
+            }
+            return filter(args[3], List.of("true", "false", "clear"));
+        }
 
         // /region global flag <flagName>
         if (sub.equals("global") && args.length == 3 && args[1].equalsIgnoreCase("flag"))

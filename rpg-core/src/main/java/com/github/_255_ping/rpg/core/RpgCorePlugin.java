@@ -29,6 +29,7 @@ import com.github._255_ping.rpg.core.spawners.SpawnerManager;
 import com.github._255_ping.rpg.core.command.RpgCommand;
 import com.github._255_ping.rpg.core.command.SkillCommand;
 import com.github._255_ping.rpg.core.command.StatsCommand;
+import com.github._255_ping.rpg.core.command.StatsGui;
 import com.github._255_ping.rpg.core.cooldown.CoreCooldownService;
 import com.github._255_ping.rpg.core.currency.CoreCurrencyRegistry;
 import com.github._255_ping.rpg.core.death.DeathRulesListener;
@@ -365,7 +366,12 @@ public final class RpgCorePlugin extends JavaPlugin {
         RpgCommand handler = new RpgCommand(this);
         rpg.setExecutor(handler);
         rpg.setTabCompleter(handler);
-        Objects.requireNonNull(getCommand("stats")).setExecutor(new StatsCommand(this));
+        StatsGui statsGui = new StatsGui(this);
+        getServer().getPluginManager().registerEvents(statsGui, this);
+        var statsCmd = Objects.requireNonNull(getCommand("stats"));
+        StatsCommand statsCommand = new StatsCommand(this, statsGui);
+        statsCmd.setExecutor(statsCommand);
+        statsCmd.setTabCompleter(statsCommand);
         Objects.requireNonNull(getCommand("skill")).setExecutor(new SkillCommand(this));
         Objects.requireNonNull(getCommand("effects")).setExecutor(new EffectsCommand(this));
 

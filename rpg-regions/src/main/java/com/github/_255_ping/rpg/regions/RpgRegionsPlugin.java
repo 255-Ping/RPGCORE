@@ -21,6 +21,7 @@ public final class RpgRegionsPlugin extends JavaPlugin {
         regionCmd.setExecutor(regionCommand);
         regionCmd.setTabCompleter(regionCommand);
         getServer().getPluginManager().registerEvents(new RegionEnforcer(regions), this);
+        getServer().getPluginManager().registerEvents(new RegionEffectsListener(regions), this);
 
         long pollTicks = Math.max(1, getConfig().getLong("move-poll-ticks", 5));
         getServer().getScheduler().runTaskTimer(
