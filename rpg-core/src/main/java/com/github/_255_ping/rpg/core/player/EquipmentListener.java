@@ -8,6 +8,8 @@ import com.github._255_ping.rpg.core.health.CoreHealthService;
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -77,6 +79,14 @@ public final class EquipmentListener implements Listener {
         plugin.getServer().getScheduler().runTask(plugin, () -> recalc(p));
     }
 
+    /**
+     * Public entry-point for external callers (e.g. the admin {@code /rpg fix} command) to
+     * force a complete stat + attribute resync without going through an equipment-change event.
+     */
+    public void resync(Player player) {
+        recalc(player);
+    }
+
     private void recalc(Player player) {
         if (player == null || !player.isOnline()) return;
         RpgPlayer rp = RpgServices.player(player);
@@ -118,6 +128,19 @@ public final class EquipmentListener implements Listener {
     private void applyMovementSpeed(Player player) {
         AttributeInstance attr = player.getAttribute(Attribute.MOVEMENT_SPEED);
         if (attr == null) return;
+
+        // Scrub orphaned MOVEMENT_SPEED modifiers. Vanilla Speed/Slowness potion effects add
+        // MULTIPLY_TOTAL modifiers that stack on top of the base value — they survive a server
+        // restart even if the potion effect itself expired during downtime, leaving the player
+        // permanently slowed with no visible potion icon. We only do this cleanup when the
+        // player has neither effect active, so we never disturb legitimate vanilla modifiers.
+        if (!player.hasPotionEffect(PotionEffectType.SLOWNESS)
+                && !player.hasPotionEffect(PotionEffectType.SPEED)) {
+            for (AttributeModifier mod : java.util.List.copyOf(attr.getModifiers())) {
+                attr.removeModifier(mod);
+            }
+        }
+
         double speed = RpgServices.player(player).get(BuiltinStat.SPEED);
         double pctPerPoint = plugin.getConfig().getDouble("stats.speed-per-point", 1.0);
         attr.setBaseValue(DEFAULT_MOVEMENT_SPEED * (1.0 + speed * pctPerPoint / 100.0));

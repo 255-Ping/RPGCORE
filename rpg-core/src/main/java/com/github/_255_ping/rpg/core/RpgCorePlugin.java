@@ -140,6 +140,7 @@ public final class RpgCorePlugin extends JavaPlugin {
     private PassiveAbilityFirer passiveAbilityFirer;
     private ArmorSetListener armorSetListener;
     private CoreSignInputService signInputService;
+    private EquipmentListener equipmentListener;
 
     public static RpgCorePlugin get() {
         return instance;
@@ -301,8 +302,8 @@ public final class RpgCorePlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new DamageIndicatorListener(this), this);
         getServer().getPluginManager().registerEvents(new ResourcePackListener(this), this);
         getServer().getPluginManager().registerEvents(new ConsumableItemListener(itemIdKey), this);
-        getServer().getPluginManager().registerEvents(
-                new EquipmentListener(this, healthService), this);
+        equipmentListener = new EquipmentListener(this, healthService);
+        getServer().getPluginManager().registerEvents(equipmentListener, this);
         getServer().getPluginManager().registerEvents(
                 new ItemAbilityListener(this, abilityRegistry), this);
         getServer().getPluginManager().registerEvents(armorSetListener, this);
@@ -464,6 +465,7 @@ public final class RpgCorePlugin extends JavaPlugin {
     public ParticleManager particleManager() { return particleManager; }
     public LootChestRegistry lootChestRegistry() { return lootChestRegistry; }
     public NamespacedKey blockItemKey() { return blockItemKey; }
+    public EquipmentListener equipmentListener() { return equipmentListener; }
 
     private DataStore openDataStore(File dataDir) {
         String backend = getConfig().getString("persistence.backend", "yaml").toLowerCase();

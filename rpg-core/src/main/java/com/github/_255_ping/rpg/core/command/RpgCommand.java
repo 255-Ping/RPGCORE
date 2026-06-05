@@ -9,6 +9,10 @@ import com.github._255_ping.rpg.core.blocks.CoreBlockRegistry;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.Material;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -54,6 +58,7 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
             case "loot-chest", "lootchest" -> handleLootChest(sender, args);
             case "effects" -> handleEffects(sender, args);
             case "particle" -> handleParticle(sender, args);
+            case "fix" -> handleFix(sender, args);
             default -> sender.sendMessage(plugin.messages().component("command.unknown",
                     Map.of("sub", args[0])));
         }
@@ -409,6 +414,60 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    /**
+     * /rpg fix [player] — clears stuck vanilla Slowness + orphaned MOVEMENT_SPEED modifiers,
+     * wipes all RPG status effects, then forces a full attribute resync.
+     * Use this when a player has permanent slowness with no visible potion icon.
+     */
+    private void handleFix(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("rpg.core.fix")) {
+            sender.sendMessage(plugin.messages().component("command.no-permission"));
+            return;
+        }
+        Player target;
+        if (args.length >= 2) {
+            target = Bukkit.getPlayerExact(args[1]);
+            if (target == null) {
+                sender.sendMessage(plugin.messages().component("player.not-found",
+                        Map.of("name", args[1])));
+                return;
+            }
+        } else if (sender instanceof Player p) {
+            target = p;
+        } else {
+            sender.sendMessage(net.kyori.adventure.text.Component.text(
+                    "§cSpecify a player name when running from console."));
+            return;
+        }
+
+        // 1. Remove the vanilla SLOWNESS effect (the most common stuck-state culprit).
+        target.removePotionEffect(PotionEffectType.SLOWNESS);
+
+        // 2. Clear any orphaned MOVEMENT_SPEED attribute modifiers. These are the
+        //    invisible part — they survive a server restart even after the potion
+        //    expires, causing permanent slowdown with no visible icon.
+        AttributeInstance movespeed = target.getAttribute(Attribute.MOVEMENT_SPEED);
+        if (movespeed != null) {
+            for (AttributeModifier mod : List.copyOf(movespeed.getModifiers())) {
+                movespeed.removeModifier(mod);
+            }
+        }
+
+        // 3. Clear all in-memory RPG status effects (e.g. stuck slow debuff).
+        RpgServices.statusEffects().clearAll(target);
+
+        // 4. Force a full stat + attribute recalc so movement speed, attack speed,
+        //    and swing range are all recomputed from current gear + (now empty) effects.
+        plugin.equipmentListener().resync(target);
+
+        sender.sendMessage(net.kyori.adventure.text.Component.text(
+                "§aFixed §e" + target.getName() + "§a — cleared stuck effects and resynced stats."));
+        if (!target.equals(sender)) {
+            target.sendMessage(net.kyori.adventure.text.Component.text(
+                    "§aAn admin cleared your stuck effects and resynced your stats."));
+        }
+    }
+
     private void handleHelp(CommandSender sender) {
         sender.sendMessage(net.kyori.adventure.text.Component.text("§6§l=== RPG Plugin Commands ==="));
         String[] lines = {
@@ -432,6 +491,7 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
             "§e/rpg skill set <skill> level <n> [player] §7— Set skill level",
             "§e/rpg ability cast <id> §7— Debug-cast an ability",
             "§e/rpg effects [player] §7— Show active status effects",
+            "§e/rpg fix [player] §7— Clear stuck movement-speed debuffs and resync stats",
             "§e/rpg particle create <id> [type] [count] [spread] [pattern] §7— Place world particle effect",
             "§e/rpg particle delete/list/move §7— Manage particle effects",
             "§e/region global flag <key> <value> §7— Set server-wide default region flag",
@@ -561,7 +621,7 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
             return filtered(args[0], List.of(
                     "help", "version", "reload",
                     "item", "mob", "block",
-                    "wand", "loot-chest", "effects", "particle"));
+                    "wand", "loot-chest", "effects", "fix", "particle"));
         }
         String sub = args[0].toLowerCase();
         if (args.length == 2) {
@@ -572,6 +632,7 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
                 case "wand" -> filtered(args[1], List.of("give", "mode"));
                 case "loot-chest" -> filtered(args[1], List.of("define", "delete", "count"));
                 case "effects" -> filtered(args[1], onlinePlayerNames());
+                case "fix"    -> filtered(args[1], onlinePlayerNames());
                 case "particle" -> filtered(args[1], List.of("create", "delete", "list", "move"));
                 default -> List.of();
             };

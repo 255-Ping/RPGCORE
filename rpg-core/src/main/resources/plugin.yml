@@ -74,6 +74,9 @@ permissions:
   rpg.core.effects.other:
     description: Show another player's active status effects
     default: op
+  rpg.core.fix:
+    description: Clear stuck movement-speed debuffs and resync stats for self or another player
+    default: op
   rpg.spawners.admin.create:
     description: Create a spawner
     default: op

@@ -89,16 +89,21 @@ Triple-damage and hologram refresh issues both resolved.
 
 ---
 
-### Dual-Cast Wand: Solar Beam Deals No Damage (`rpg-core`) 🟢
+### ~~Dual-Cast Wand: Solar Beam Deals No Damage (`rpg-core`)~~ ✅ Fixed in `rpg-core 1.5.0`
 
-Right-click "Solar Beam" fires `beam{range=15.0,damage_multiplier=1.8}` with no effect after it. `beam{}` sets `ctx.target` and scales `carriedDamage` but never delivers damage on its own — a `damage{}` call at the end of the chain is what actually hits the target. The ability spends mana and consumes the cooldown but does nothing.
+Appended `damage{}` to the right-click ability chain in `items/example.yml`. `beam{}` sets `ctx.target` and scales `carriedDamage` but never delivers damage on its own — a trailing `damage{}` is required.
 
-**Fix:** append `damage{}` to the right-click sequence in `items/example.yml`:
-```yaml
-- "mana_cost{amount=30} cooldown{ticks=20} beam{range=15.0,damage_multiplier=1.8} damage{}"
-```
+---
 
-Left-click self-heal is unaffected.
+### ~~Mob Ability Stuck Slowness — Permanent Speed Debuff With No Potion Icon (`rpg-core`)~~ ✅ Fixed in `rpg-core 1.8.1`
+
+**Symptom:** Player receives permanent slowness from a mob ability that persists across server restarts with no visible potion effect icon. Only a `/attribute` reset or server-side intervention could clear it.
+
+**Root cause:** Vanilla Speed/Slowness potion effects add a `MULTIPLY_TOTAL` `AttributeModifier` to `MOVEMENT_SPEED`. If the server stops while the effect is ticking, the modifier is saved to player NBT but the effect may expire during downtime — the modifier becomes orphaned, reducing speed permanently with no corresponding visible effect. This compounded with the `freeze{}` effect or zone-applied `slow` status.
+
+**Fix (two-part):**
+1. `EquipmentListener.applyMovementSpeed()` — when no vanilla Speed or Slowness potion is active, scrubs all `MOVEMENT_SPEED` modifiers before setting the RPG base value. This handles the restart-orphan case automatically on every gear-change or join recalc.
+2. `/rpg fix [player]` command (permission `rpg.core.fix`, default: op) — immediately removes vanilla SLOWNESS, clears all MOVEMENT_SPEED modifiers, wipes in-memory RPG status effects, and forces a full attribute resync. Use this when a player reports permanent slowness.
 
 ---
 
