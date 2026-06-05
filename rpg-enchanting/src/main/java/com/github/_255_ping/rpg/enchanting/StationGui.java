@@ -331,7 +331,15 @@ public final class StationGui implements Listener {
                 if (cur >= def.maxLevel()) {
                     p.sendMessage(plugin.messages().get("enchant.at-max")); return;
                 }
+                // Pre-check XP levels before charging currency — read-only check first
+                // so neither cost is taken if either is insufficient.
+                boolean chargeXp = plugin.getConfig().getBoolean("charge-xp", true) && def.xpCost() > 0;
+                if (chargeXp && p.getLevel() < def.xpCost()) {
+                    p.sendMessage(plugin.messages().get("not-enough-xp", Map.of("levels", def.xpCost())));
+                    return;
+                }
                 if (!checkAndCharge(p, def.currencyCost(), def.requiredSkillLevel())) return;
+                if (chargeXp) p.setLevel(p.getLevel() - (int) def.xpCost());
                 modifier.setEnchant(target, def.id(), cur + 1);
                 modifier.rewriteLore(target, registry);
                 modifier.rewriteName(target, registry);
@@ -442,6 +450,10 @@ public final class StationGui implements Listener {
         if (!def.description().isEmpty()) lore.add(Component.empty());
         if (def.currencyCost() > 0) {
             lore.add(ni(LEGACY.deserialize("&7Cost: &e" + fmtCurrency(def.currencyCost()))));
+        }
+        if (def.xpCost() > 0) {
+            lore.add(ni(LEGACY.deserialize("&7XP: &b" + def.xpCost()
+                    + " level" + (def.xpCost() == 1 ? "" : "s"))));
         }
         if (def.requiredSkillLevel() > 1) {
             lore.add(ni(LEGACY.deserialize("&7Requires Enchanting Lv &e" + def.requiredSkillLevel())));

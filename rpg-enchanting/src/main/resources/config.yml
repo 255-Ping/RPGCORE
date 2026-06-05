@@ -32,6 +32,11 @@ xp:
 # false = all operations are free regardless of per-entry costs
 charge-currency: true
 
+# Whether enchants require vanilla Minecraft XP levels (as specified by XpCost: in each enchant YAML).
+# true  = XP levels are deducted on successful enchant (shown in the GUI slot lore)
+# false = XP cost is informational only — not deducted
+charge-xp: true
+
 # Vanilla suppression mirror. Set false here to allow the vanilla mechanic (rpg-core's
 # vanilla-suppression block holds the canonical flags; these are convenience overrides).
 suppress:

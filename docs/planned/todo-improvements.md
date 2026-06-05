@@ -157,15 +157,9 @@ Same timed-crafting treatment as cooking and brewing — apply when building `rp
 
 ---
 
-### Enchanting: Costs Minecraft XP (`rpg-enchanting`) — 🟡 Medium
-Currently enchanting costs in-game currency only. Add Minecraft (vanilla) XP cost:
+### ✅ Enchanting: Costs Minecraft XP (`rpg-enchanting`) — shipped in 0.5.0
 
-- Each enchant YAML gains an optional `XpCost` field (integer levels; e.g., `XpCost: 5` costs 5 XP levels). The unit is always levels, not raw points, to match the mental model players have from vanilla enchanting.
-- The XP cost is shown on the **apply button** in the enchanting GUI — e.g., `&aApply &7| &b5 XP levels &7| &e250 coins`. Both costs must be met; if either is insufficient the button shows in red with the blocking reason.
-- The cost is deducted from the player's vanilla XP bar on apply; if they don't have enough XP the apply is blocked with a clear message
-- **Mob XP drops** — add an `Exp` field to mob YAML (separate from skill XP / `CombatExp`). This is vanilla XP orbs dropped on death. Currently custom mobs drop 0 XP. This feeds the enchanting economy.
-- **Loot pool XP** — loot pool entries (see Loot Pool System below) support an `Exp` field for vanilla XP orbs on that entry rolling
-- Admins can set `XpCost: 0` or omit the field to keep an enchant currency-only
+`XpCost:` field (integer XP levels) wired on enchants. Shown in the enchant slot lore (`&b5 levels`). Deducted on apply after a read-only pre-check — if either XP or currency is insufficient, neither is taken. Global switch: `charge-xp: false` in config. Mob XP drops (via `XP:` on mob YAML) and loot-pool `exp:` both ship in rpg-core 1.4.0 — see loot pools docs.
 
 ---
 

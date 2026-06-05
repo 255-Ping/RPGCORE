@@ -2,7 +2,7 @@
 
 # Enchanting (`rpg-enchanting`)
 
-> **Status:** Working (v0.4.0+) — Custom enchants, reforges, and item upgrades all functional. Reforge stones and upgrade books are physical items applied in the anvil GUI. Enchant descriptions render in item lore. GUIs open from custom enchanting/anvil blocks (admins must copy `blocks-example.yml` into `plugins/rpg-core/blocks/`). Vanilla enchanting-table + anvil + smithing-table outputs suppressed. Minecraft XP cost for enchanting is planned but not yet wired (see [todo-improvements](../planned/todo-improvements.md)).
+> **Status:** Working (v0.5.0+) — Custom enchants, reforges, and item upgrades all functional. Reforge stones and upgrade books are physical items applied in the anvil GUI. Enchant descriptions render in item lore. GUIs open from custom enchanting/anvil blocks. Vanilla enchanting-table + anvil suppressed. **Minecraft XP level cost** is wired: each enchant YAML specifies `XpCost:` (integer levels); the cost is shown in the enchant slot lore and deducted on apply.
 
 One addon bundling four related "improve your gear" features. Each sub-feature is individually toggleable.
 
@@ -46,6 +46,10 @@ xp:
 # Whether enchants/reforges/upgrades require currency in addition to materials.
 charge-currency: true
 
+# Whether XpCost: in each enchant YAML deducts vanilla XP levels on apply.
+# false = XP cost is informational only — not deducted
+charge-xp: true
+
 # Mirror of rpg-core vanilla-suppression flags (convenience overrides).
 suppress:
   enchanting-table: true
@@ -71,19 +75,34 @@ Enchants fall into four patterns — they can be mixed on a single enchant:
 
 ```yaml
 sharpness:
-  display: "&7Sharpness"
-  applies-to: [SWORD]
-  max-level: 5
-  levels:
-    1: { stats: { strength: 5 } }
-    2: { stats: { strength: 12 } }
-    3: { stats: { strength: 20 } }
-    4: { stats: { strength: 30 } }
-    5: { stats: { strength: 42 } }
-  apply-requirements:
-    enchanting-level: 0          # min enchanting skill level to apply
-  conflicts: []                  # list of enchant IDs that cannot coexist with this one
+  DisplayName: "&7Sharpness"
+  Description:
+    - "Increases Strength by +5 per level."
+  MaxLevel: 5
+  AppliesTo: [sword]
+  Stats:
+    strength: 5
+  ScalePerLevel: 1.0
+  XpCost: 5        # vanilla Minecraft XP levels consumed on apply; 0 or omit = no XP cost
+  CurrencyCost: 250
+  RequiredLevel: 1  # min enchanting skill level
 ```
+
+### Enchant fields
+
+| Field | Default | Description |
+|---|---|---|
+| `DisplayName` | id | Color-coded name shown in GUI and item lore |
+| `Description` | `[]` | Lines of lore shown below the enchant name in the GUI slot |
+| `MaxLevel` | `1` | Maximum enchant level for this enchant |
+| `AppliesTo` | `[]` | List of item type IDs, or `[any]` for all items |
+| `Stats` | `{}` | Stat bonuses at level 1; scaled by `ScalePerLevel` each level |
+| `ScalePerLevel` | `1.0` | Linear multiplier — level 2 = 2×, level 3 = 3×, etc. |
+| `XpCost` | `0` | Vanilla Minecraft XP **levels** deducted from the player on apply. Shown in the GUI slot lore. Set `0` or omit for currency-only enchants. Global switch: `charge-xp: false` in config disables deduction. |
+| `CurrencyCost` | `0` | rpg-economy cost deducted on apply (requires rpg-economy). Global switch: `charge-currency: false` |
+| `RequiredLevel` | `1` | Minimum Enchanting skill level required to apply |
+
+Both `XpCost` and `CurrencyCost` are checked before either is deducted — if the player can't afford both, they get an error and nothing is charged.
 
 ### Ability enchant example
 

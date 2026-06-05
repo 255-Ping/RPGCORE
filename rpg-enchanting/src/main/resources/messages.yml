@@ -16,3 +16,4 @@ stone:
   reagent-missing: "&cMissing reagent: &f{reagent}&c."
 requires-level: "&eRequires Enchanting level {level}."
 not-enough-currency: "&cNot enough currency."
+not-enough-xp: "&cNot enough XP levels. Need &b{levels} &clevel(s)."

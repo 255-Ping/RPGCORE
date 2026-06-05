@@ -12,6 +12,11 @@ public record EnchantDef(
         List<String> appliesTo,
         Map<String, Double> baseStats,
         double scalePerLevel,
+        /**
+         * Vanilla Minecraft XP levels deducted from the player when the enchant is applied.
+         * 0 = no XP cost (currency-only). Always expressed in levels, not raw XP points.
+         * Deduction is skipped when {@code charge-xp: false} in config.
+         */
         long xpCost,
         double currencyCost,
         int requiredSkillLevel

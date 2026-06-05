@@ -21,7 +21,7 @@ sharpness:
   Stats:
     strength: 5
   ScalePerLevel: 1.0
-  XpCost: 0
+  XpCost: 5        # vanilla Minecraft XP levels consumed on apply (0 = no XP cost)
   CurrencyCost: 250
   RequiredLevel: 1
 
@@ -34,6 +34,6 @@ protection:
   Stats:
     defense: 10
   ScalePerLevel: 1.0
-  XpCost: 0
+  XpCost: 5        # vanilla Minecraft XP levels consumed on apply (0 = no XP cost)
   CurrencyCost: 250
   RequiredLevel: 1

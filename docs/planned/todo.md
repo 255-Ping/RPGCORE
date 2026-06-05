@@ -53,7 +53,7 @@
 5. 🟠 🔴 **New built-in ability effects** — unlocks all the interesting new ability content
 6. 🟠 🟡 **Expand example mobs, abilities, items** — depends on new effects
 7. 🟠 🔴 **Loot pool system** — needed by mobs, dungeons, and enchanting XP all at once
-8. 🟠 🟡 **Enchanting: Minecraft XP cost** — requires loot pool XP drops first
+8. ✅ **Enchanting: Minecraft XP cost** — `XpCost:` field wired; levels deducted + shown in GUI (rpg-enchanting 0.5.0)
 9. 🟠 🟡 **Ability trigger types expansion** (`~onAttack`, `~onKill`, `~onBlock`, `~onJump`) — small but unlocks good mob/item designs
 10. 🟠 🟡 **Timed cooking + brewing** — QoL, self-contained
 11. 🟠 🟡 **Mob death animation** — polish, self-contained
