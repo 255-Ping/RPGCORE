@@ -69,6 +69,7 @@ import com.github._255_ping.rpg.core.persistence.BackendMigrator;
 import com.github._255_ping.rpg.core.persistence.MysqlDataStore;
 import com.github._255_ping.rpg.core.persistence.YamlDataStore;
 import com.github._255_ping.rpg.api.persistence.DataStore;
+import com.github._255_ping.rpg.core.input.CoreSignInputService;
 import com.github._255_ping.rpg.core.wand.CoreWandService;
 import com.github._255_ping.rpg.core.wand.WandListener;
 import com.github._255_ping.rpg.core.player.CoreManaService;
@@ -137,6 +138,7 @@ public final class RpgCorePlugin extends JavaPlugin {
     private ArmorSetLoader armorSetLoader;
     private PassiveAbilityFirer passiveAbilityFirer;
     private ArmorSetListener armorSetListener;
+    private CoreSignInputService signInputService;
 
     public static RpgCorePlugin get() {
         return instance;
@@ -235,6 +237,10 @@ public final class RpgCorePlugin extends JavaPlugin {
         RpgServices.setCurrencies(currencyRegistry);
         RpgServices.setLootTables(lootTableRegistry);
         RpgServices.setLootPools(lootPoolRegistry);
+
+        signInputService = new CoreSignInputService(this);
+        getServer().getPluginManager().registerEvents(signInputService, this);
+        RpgServices.setSignInput(signInputService);
 
         ItemAbilityListener.registerBuiltins(abilityRegistry, this);
 

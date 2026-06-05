@@ -344,6 +344,7 @@ RpgServices.guilds()        // GuildService (rpg-guilds)
 RpgServices.regionService() // RegionService (rpg-regions)
 RpgServices.wands()         // WandService (rpg-core)
 RpgServices.stations()      // StationService (rpg-core) — central right-click dispatch for Interactable blocks by StationType
+RpgServices.signInput()     // SignInputService (rpg-core 1.8.0) — virtual sign text prompts; .ask(player, label, callback)
 ```
 
 ### Persistence API

@@ -2,6 +2,7 @@ package com.github._255_ping.rpg.api;
 
 import com.github._255_ping.rpg.api.abilities.AbilityRegistry;
 import com.github._255_ping.rpg.api.accessories.AccessoryService;
+import com.github._255_ping.rpg.api.input.SignInputService;
 import com.github._255_ping.rpg.api.sets.ArmorSetRegistry;
 import com.github._255_ping.rpg.api.gui.GuiConfig;
 import com.github._255_ping.rpg.api.hud.ActionBarService;
@@ -77,6 +78,7 @@ public final class RpgServices {
     private static ActionBarService actionBar;
     private static StationService stationService;
     private static ArmorSetRegistry armorSets;
+    private static SignInputService signInput;
 
     private RpgServices() {}
 
@@ -115,6 +117,7 @@ public final class RpgServices {
     public static ActionBarService actionBar() { return require(actionBar, "ActionBarService"); }
     public static StationService stations() { return require(stationService, "StationService"); }
     public static ArmorSetRegistry armorSets() { return require(armorSets, "ArmorSetRegistry"); }
+    public static SignInputService signInput() { return require(signInput, "SignInputService"); }
 
     // ----- Setters (rpg-core only) -----
 
@@ -150,6 +153,7 @@ public final class RpgServices {
     public static void setActionBar(ActionBarService svc) { actionBar = svc; }
     public static void setStations(StationService svc) { stationService = svc; }
     public static void setArmorSets(ArmorSetRegistry svc) { armorSets = svc; }
+    public static void setSignInput(SignInputService svc) { signInput = svc; }
 
     private static <T> T require(T svc, String name) {
         if (svc == null) throw new IllegalStateException(name + " not bootstrapped — is rpg-core loaded?");

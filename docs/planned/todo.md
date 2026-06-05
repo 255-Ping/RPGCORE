@@ -67,6 +67,7 @@
 - Ability DSL: Conditional flow — `if_health_below/above{percent=}`, `if_mana_below/above{percent=}`, `if_marked{}`, `if_target_has_status{id=}`, `if_flag{name=}`, `if_not_flag{name=}`, `set_flag{name=}`, `clear_flag{name=}`; all use same `blocked` mechanism as `chance{}`; flags stored in entity metadata (auto-cleared on death); boss phase-transition pattern documented; `rpg-core 1.7.0`
 - Region enter/exit messages + more flags — `enter-message`/`leave-message` (title or `[actionbar]` prefix; `{player}`/`{region}` placeholders); `no-mob-spawn`, `no-damage`, `fly` (granted/revoked on enter/leave), `no-item-drop`, `keep-inventory`; flag table in docs rewritten; `rpg-regions 0.6.0`
 - Stats GUI redesign — `/stats [player]` now opens 54-slot inventory GUI; gear column shows equipped items; 7 stat-category items (Combat/Survival/Caster/Mobility/Loot/Wisdom/Skills) with full lore breakdowns; Trade button when viewing another player; nav bar with Close; `rpg-core 1.7.0`
+- Sign-entry utility — `SignInputService` in `rpg-api 0.5.2` + `CoreSignInputService` in `rpg-core 1.8.0`; virtual sign editor, 60s timeout, null on cancel/disconnect; `RpgServices.signInput().ask(player, label, callback)`
 
 ---
 
@@ -103,7 +104,7 @@
 29. 🔴 🔴 **Achievement system** — player retention + milestone tracking
 30. 🔴 🟡 **Leaderboards** — community engagement
 31. 🔴 🟡 **Boss bar system** — needed by dungeons + world events
-32. 🔴 🟡 **Sign-entry utility** — needed before AH, Bazaar, or Guild Bank GUI
+32. ✅ **Sign-entry utility** — `SignInputService` interface in `rpg-api 0.5.2` + `CoreSignInputService` in `rpg-core 1.8.0`; virtual sign, 60s timeout, null callback on cancel/disconnect; `RpgServices.signInput().ask(player, label, callback)`
 33. 🔴 🔴 **Offline mail / inbox system** — needed before AH and offline achievement rewards
 34. 🟠 🟡 **HUD improvements** — scoreboard, tablist, PAPI support, ability cooldowns
 35. 🔴 🟡 **PlaceholderAPI support** — integrates with HUD improvements
