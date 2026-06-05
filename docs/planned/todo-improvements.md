@@ -65,6 +65,180 @@ Every ability invocation tracks a `Set<UUID>` of entities already hit **this tic
 
 ---
 
+### Ability DSL: Random Chance Gate (`rpg-core`) — 🟢 Easy
+
+A `chance{}` effect that acts as an inline probability gate. When the ability chain reaches it, a random roll is made — if it fails the rest of the chain is silently skipped.
+
+```yaml
+# 25% chance to apply poison on hit
+- "chance{percent=25} apply_status{id=poison,duration=100,amplifier=1} ~onHit"
+
+# Boss ability: 40% chance to chain-lightning after a beam hit
+- "beam{range=12.0,damage_multiplier=1.0} damage{} chance{percent=40} chain{count=2,range=8.0,damage_multiplier=0.5} ~onTimer:40"
+```
+
+**Behaviour:**
+- `chance{percent=N}` — rolls `random(0,100) < N`. If the roll fails, all effects *after* `chance{}` in the same chain are skipped. Effects *before* it have already executed.
+- `percent` is a double (supports `percent=12.5`)
+- Stacking two `chance{}` calls is AND logic: `chance{percent=50} chance{percent=50}` = ~25% net
+- No `seed` — each invocation rolls independently
+
+**Implementation:** `ChanceEffect` sets a `boolean ChanceEffect.BLOCKED_KEY` flag on the `AbilityContext` if the roll fails. Subsequent effects check this flag at the start of `apply()` and no-op if set. The flag is cleared after the full chain finishes (reset in the chain runner, not by individual effects). This is cleaner than throwing an exception or returning an enum — context already has a carried-state bag.
+
+---
+
+### Ability DSL: Target Selection Effects (`rpg-core`) — 🟡 Medium
+
+Explicit target-selection effects that override `ctx.target` before downstream effects run. Currently `beam{}` is the only way to acquire a target — these give mob and item designers a richer palette.
+
+```yaml
+# Mob: every 3 seconds, drain the nearest enemy
+- "nearest_enemy{range=12.0} drain{amount=15,leech=0.8} ~onTimer:60"
+
+# Item: heal the lowest-health ally in range
+- "nearest_ally{range=20.0,priority=lowest_health} heal{amount=50} right_click"
+
+# Boss: pull the farthest enemy toward the caster, then slam
+- "farthest_enemy{range=30.0} launch{force=2.0,direction=toward} aoe{radius=5.0,damage=20.0} ~onTimer:100"
+```
+
+**Effects to add:**
+
+| Effect | Parameters | Sets `ctx.target` to |
+|---|---|---|
+| `nearest_enemy{}` | `range=` | Nearest hostile entity within range (enemy of caster) |
+| `farthest_enemy{}` | `range=` | Farthest hostile entity within range |
+| `nearest_ally{}` | `range=`, `priority=nearest\|lowest_health\|lowest_mana` | Nearest friendly entity (same team / player) |
+| `random_enemy{}` | `range=`, `count=1` | Random hostile entity; `count>1` stores multiple for `chain{}` |
+| `self{}` | — | Caster itself; useful to chain self-buffs after targeting an enemy |
+
+**"Hostile" definition:** for mobs, hostile = any player; for players, hostile = any mob that `CoreDamagePipeline` would consider a valid target. Friendly fire between players is off by default — `allow_pvp=true` param opts in.
+
+**Interaction with `beam{}`:** `nearest_enemy{}` and `beam{}` both set `ctx.target`. They can be combined — `beam{}` locks on via raycast, `nearest_enemy{}` locks on via radius. Use whichever fits the ability's feel.
+
+**Implementation:** Each is a simple `TargetSelectEffect` subclass that queries the world for `LivingEntity` instances, applies the priority/filter, and writes the result to `ctx.target`. Returns early if no valid target found (subsequent effects no-op on null target as they already do).
+
+---
+
+### Ability DSL: Conditional Flow (`rpg-core`) — 🟡 Medium
+
+Inline `if_*{}` effects that act as gates — they let the rest of the chain proceed only if a condition is true. This unlocks reactive, state-aware abilities without needing separate trigger lines for every case.
+
+```yaml
+# Mob enrage: if below 50% HP, deal bonus damage
+- "if_health_below{percent=50} aoe{radius=6.0,damage=25.0,particle=FLAME} ~onTimer:40"
+
+# Only detonate mark if the target is actually marked
+- "nearest_enemy{range=10.0} if_marked{} damage{multiplier=3.0} ~onTimer:60"
+
+# Item ability: heal only if the caster is below 30% HP
+- "if_health_below{percent=30} heal{amount=80} cooldown{ticks=200} right_click"
+
+# Boss phase transition: at 25% HP, spawn adds and shield
+- "if_health_below{percent=25} if_not_flag{name=phase2_triggered} set_flag{name=phase2_triggered} spawn_mob{id=golem_shard,count=3,radius=5.0} shield{amount=500,duration=200,target=caster} ~onTimer:20"
+```
+
+**Conditions to add:**
+
+| Effect | Parameters | Passes when |
+|---|---|---|
+| `if_health_below{}` | `percent=` | Caster's HP% < percent |
+| `if_health_above{}` | `percent=` | Caster's HP% > percent |
+| `if_mana_below{}` | `percent=` | Caster's mana% < percent |
+| `if_mana_above{}` | `percent=` | Caster's mana% > percent |
+| `if_marked{}` | — | `ctx.target` currently has an active `MarkEffect` |
+| `if_target_has_status{}` | `id=` | `ctx.target` has the given status effect active |
+| `if_not_flag{}` | `name=` | The named context/caster flag is NOT set (see Variables below) |
+| `if_flag{}` | `name=` | The named context/caster flag IS set |
+
+**Behaviour:** a failing condition sets the same `BLOCKED_KEY` flag on `AbilityContext` as `chance{}` — effects downstream are skipped. Multiple conditions AND together naturally. Conditions before the gate have already fired.
+
+**`if_health_below` on mobs:** reads `CoreHealthService.currentHp(entity) / maxHp`. Requires mobs to be tracked in `CoreHealthService` — they already are via `MobSpawnListener`.
+
+---
+
+### Ability DSL: Spawn Mob Effect (`rpg-core`) — 🟡 Medium
+
+A `spawn_mob{}` effect that spawns a registered custom mob at or near the caster or target. Enormous design space — summon mechanics, boss adds, on-death spawns, trap abilities.
+
+```yaml
+# Boss spawns adds when hurt
+- "spawn_mob{id=golem_shard,count=2,radius=4.0,offset_y=0} ~onHurt"
+
+# On-death: the corpse spawns a weakened version
+- "spawn_mob{id=shadow_fragment,count=1,at=caster} ~onDeath"
+
+# Summoner item: right-click to summon a temporary ally
+- "mana_cost{amount=50} cooldown{ticks=400} spawn_mob{id=summoned_skeleton,count=1,at=caster,radius=2.0,owned=true} right_click"
+```
+
+**Parameters:**
+
+| Parameter | Default | Description |
+|---|---|---|
+| `id` | required | Mob ID from the mob registry |
+| `count` | `1` | How many to spawn |
+| `at` | `caster` | Spawn anchor: `caster` or `target` |
+| `radius` | `0` | Spread radius around the anchor (spawns within a circle of this radius) |
+| `offset_y` | `0` | Y offset from anchor (use `1.0` to spawn above the caster, etc.) |
+| `owned` | `false` | If true, the spawned mob does not attack the caster (ally semantics) |
+
+**`owned` semantics:** the spawned mob's `LivingEntity` is tagged with the caster's UUID in PDC. `MobAbilityEventListener` and `DamagePipelineListener` skip damage between a mob and its owner. Owned mobs despawn when the caster logs out or after a configurable `max_lifetime_ticks` (default from `abilities.spawn-mob.default-lifetime` in config).
+
+**Safety cap:** `abilities.spawn-mob.max-per-caster: 10` in config. If a caster already has `N` owned mobs alive, `spawn_mob{}` with `owned=true` silently no-ops. Without `owned`, no cap (spawn is purely environmental, like a zone).
+
+**Implementation:** `SpawnMobEffect.apply()` calls `MobRegistry.spawn(id, location)` for each instance. Uses the same path as `/rpg mob spawn`. For `owned=true`, tags the entity and registers a cleanup listener.
+
+---
+
+### Ability DSL: Context Variables + Flags (`rpg-core`) — 🔴 Hard
+
+Persistent per-caster variables stored alongside the ability context, enabling stateful ability scripting. Two tiers:
+
+**Tier 1 — Session flags** (boolean, per-caster lifetime): simpler to implement, high immediate value.
+
+```yaml
+# One-time phase transition: fires once when HP drops below 25%, never again
+- "if_health_below{percent=25} if_not_flag{name=phase2} set_flag{name=phase2} spawn_mob{id=golem_shard,count=3,radius=5.0} shield{amount=500,duration=200,target=caster} ~onTimer:20"
+```
+
+| Effect | Description |
+|---|---|
+| `set_flag{name=X}` | Sets boolean flag `X` on the caster (persists until caster dies or logs out) |
+| `clear_flag{name=X}` | Clears flag `X` |
+| `if_flag{name=X}` | Gate: pass if flag `X` is set |
+| `if_not_flag{name=X}` | Gate: pass if flag `X` is NOT set |
+
+Flags are stored in a `Map<String, Boolean>` on `AbilityContext` (session) or on `CoreRpgPlayer` (cross-ability-invocation persistence). For mobs, stored on a `Map` hanging off the mob entity's metadata. Flags clear on mob death and on player disconnect.
+
+**Tier 2 — Numeric variables** (int/double counters, per-caster): enables combo counters, stacks, escalating abilities.
+
+```yaml
+# Combo counter: every 3rd hit fires a power strike
+- "increment{name=combo_hits} ~onHit"
+- "if_var_gte{name=combo_hits,value=3} reset{name=combo_hits} aoe{radius=4.0,damage=40.0,particle=CRIT} ~onHit"
+
+# Stack tracker: boss gains power stacks below 50% HP
+- "if_health_below{percent=50} increment{name=enrage_stacks,max=5} ~onTimer:100"
+- "if_var_gte{name=enrage_stacks,value=1} damage{multiplier_from_var=enrage_stacks,multiplier_scale=0.2} ~onHit"
+```
+
+| Effect | Parameters | Description |
+|---|---|---|
+| `set_var{name=X,value=N}` | `name`, `value` (double) | Set variable `X` to `N` |
+| `increment{name=X}` | `name`, `amount=1`, `max=` | Add `amount` to `X`; clamp to `max` if specified |
+| `decrement{name=X}` | `name`, `amount=1`, `min=0` | Subtract `amount`; clamp to `min` |
+| `reset{name=X}` | `name` | Set `X` to 0 |
+| `if_var_gte{name=X,value=N}` | `name`, `value` | Gate: pass if `X >= N` |
+| `if_var_lte{name=X,value=N}` | `name`, `value` | Gate: pass if `X <= N` |
+| `if_var_eq{name=X,value=N}` | `name`, `value` | Gate: pass if `X == N` (within epsilon for doubles) |
+
+Variables are stored in `Map<String, Double>` on `CoreRpgPlayer` (survives across ability invocations within a session) and on mob metadata. Cross-session persistence for players is opt-in: `persistent=true` on `set_var{}` writes to `DataStore` (saves on quit, loads on join). Non-persistent variables clear on disconnect.
+
+**Implementation order:** Ship Tier 1 (flags only) first — it's a `HashMap` + 4 effect classes. Tier 2 (numeric vars) is larger and can be a separate pass.
+
+---
+
 ### MagicFind Stat: Implement or Suppress (`rpg-core`) — 🟡 Medium
 `magic_find` is referenced in the loot pool spec as `MagicFindAffected: true` on individual loot entries, but there's no evidence the stat is actually read when rolling those entries. Confirm and implement:
 
