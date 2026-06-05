@@ -206,7 +206,7 @@ When `suiteVersion` bumps:
 | Module | Property | Current |
 |---|---|---|
 | rpg-api | `apiVersion` | 0.4.2 |
-| rpg-core | `coreVersion` | 1.2.0 |
+| rpg-core | `coreVersion` | 1.3.0 |
 | rpg-mining | `miningVersion` | 0.2.3 |
 | rpg-combat | `combatVersion` | 0.2.0 |
 | rpg-economy | `economyVersion` | 0.1.0 |
@@ -407,12 +407,15 @@ stored per player. When adding new persistent player fields, update both the sav
 | `MysqlDataStore` / `MysqlRepository` | MySQL backend (falls back to YAML on connect failure) |
 | `CoreExpressionEvaluator` | Formula parser used by damage formulas and skill curves |
 | `MobLoader` / `ItemLoader` / `AbilityLoader` / `ArmorSetLoader` | YAML content loaders; errors skip the bad file, not crash |
-| `ItemAbilityListener` | Fires active click bindings (`right_click`, `left_click`, `shift_*`) from held item |
+| `ItemAbilityListener` | Fires active click bindings (`right_click`, `left_click`, `shift_*`) from held item; `registerBuiltins(registry, plugin)` registers all built-in effects + wires zone/shield infrastructure |
 | `PassiveAbilityFirer` | Shared helper — collects + fires passive/proc bindings from equipped items + active set bonuses |
 | `PlayerHitAbilityListener` / `PlayerHurtAbilityListener` / `PlayerJumpAbilityListener` | Event listeners for `on_hit`, `on_hurt`, `on_jump` triggers |
 | `PlayerPassiveAbilityTask` | Repeating task that fires `passive` trigger bindings; interval: `abilities.passive-interval-ticks` |
 | `ArmorSetListener` | Counts set pieces on armor change; updates `CoreRpgPlayer.setSetBonusStats()` (Layer 2.5) + caches active passive bindings |
 | `CoreArmorSetRegistry` | In-memory store of all `ArmorSetDef`s loaded from `sets/*.yml` |
+| `ZoneEffect` | Persistent AoE ground zones; static `ACTIVE` list ticked every server tick; `ZoneCleanupListener` removes zones on player quit; cap via `abilities.zone.max-active` |
+| `ShieldEffect` | Damage-absorbing shield; static `absorb(UUID, double)` called from `CoreHealthService.damage()` before HP reduction; `ShieldCleanupListener` removes shields on quit |
+| `MarkEffect` | Per-entity damage multiplier mark; `consumeMark(UUID)` called from `DamageEffect`; auto-expires via `runTaskLater` |
 
 ### Content authoring
 

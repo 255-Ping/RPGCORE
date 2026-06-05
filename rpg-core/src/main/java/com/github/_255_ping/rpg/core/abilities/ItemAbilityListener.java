@@ -121,8 +121,12 @@ public final class ItemAbilityListener implements Listener {
         };
     }
 
-    /** Register all built-in effects. Called once on plugin enable. */
-    public static void registerBuiltins(CoreAbilityRegistry registry) {
+    /**
+     * Register all built-in effects. Called once on plugin enable.
+     * Also wires up the zone tick task and shield/zone cleanup listeners.
+     */
+    public static void registerBuiltins(CoreAbilityRegistry registry, RpgCorePlugin plugin) {
+        // ── Existing effects ──────────────────────────────────────────────────
         registry.register("damage",       com.github._255_ping.rpg.core.abilities.effects.DamageEffect::new);
         registry.register("heal",         com.github._255_ping.rpg.core.abilities.effects.HealEffect::new);
         registry.register("beam",         com.github._255_ping.rpg.core.abilities.effects.BeamEffect::new);
@@ -134,5 +138,33 @@ public final class ItemAbilityListener implements Listener {
         registry.register("apply_status", com.github._255_ping.rpg.core.abilities.effects.ApplyStatusEffect::new);
         registry.register("mana_cost",    com.github._255_ping.rpg.core.abilities.effects.ManaCostEffect::new);
         registry.register("cooldown",     com.github._255_ping.rpg.core.abilities.effects.CooldownEffect::new);
+
+        // ── New effects ───────────────────────────────────────────────────────
+        registry.register("knockback",    com.github._255_ping.rpg.core.abilities.effects.KnockbackEffect::new);
+        registry.register("launch",       com.github._255_ping.rpg.core.abilities.effects.LaunchEffect::new);
+        registry.register("blink",        com.github._255_ping.rpg.core.abilities.effects.BlinkEffect::new);
+        registry.register("drain",        com.github._255_ping.rpg.core.abilities.effects.DrainEffect::new);
+        registry.register("restore_mana", com.github._255_ping.rpg.core.abilities.effects.RestoreManaEffect::new);
+        registry.register("freeze",       com.github._255_ping.rpg.core.abilities.effects.FreezeEffect::new);
+        registry.register("chain",        com.github._255_ping.rpg.core.abilities.effects.ChainEffect::new);
+        registry.register("zone",         com.github._255_ping.rpg.core.abilities.effects.ZoneEffect::new);
+        registry.register("shield",       com.github._255_ping.rpg.core.abilities.effects.ShieldEffect::new);
+        registry.register("mark",         com.github._255_ping.rpg.core.abilities.effects.MarkEffect::new);
+
+        // ── Zone infrastructure ───────────────────────────────────────────────
+        int zoneMax = plugin.getConfig().getInt("abilities.zone.max-active", 50);
+        com.github._255_ping.rpg.core.abilities.effects.ZoneEffect.init(zoneMax);
+        plugin.getServer().getScheduler().runTaskTimer(
+                plugin,
+                com.github._255_ping.rpg.core.abilities.effects.ZoneEffect::tickAll,
+                1L, 1L);
+        plugin.getServer().getPluginManager().registerEvents(
+                new com.github._255_ping.rpg.core.abilities.effects.ZoneEffect.ZoneCleanupListener(),
+                plugin);
+
+        // ── Shield cleanup ────────────────────────────────────────────────────
+        plugin.getServer().getPluginManager().registerEvents(
+                new com.github._255_ping.rpg.core.abilities.effects.ShieldEffect.ShieldCleanupListener(),
+                plugin);
     }
 }

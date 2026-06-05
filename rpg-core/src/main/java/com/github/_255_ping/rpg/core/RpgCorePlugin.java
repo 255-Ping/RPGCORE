@@ -228,7 +228,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         RpgServices.setCurrencies(currencyRegistry);
         RpgServices.setLootTables(lootTableRegistry);
 
-        ItemAbilityListener.registerBuiltins(abilityRegistry);
+        ItemAbilityListener.registerBuiltins(abilityRegistry, this);
 
         // Armor set loader
         File setsDir = new File(getDataFolder(), "sets");

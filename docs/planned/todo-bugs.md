@@ -42,10 +42,9 @@ Adding `damage: 30` to `beam_wand` (so `carriedDamage` is non-zero) combined wit
 
 ---
 
-### Arrows: Weird Visual Behaviour on Hit (`rpg-core` / `rpg-combat`) — 🟡 Medium
-Arrows **do** deal damage (confirmed in testing), but the hit visuals are wrong — the arrow appears to pass through or be cancelled visually before the hit registers. Investigate whether the arrow entity is being removed too early or whether the hit event is firing out of order with the damage pipeline.
+### ~~Arrows: Weird Visual Behaviour on Hit (`rpg-core` / `rpg-combat`)~~ ✅ Fixed
 
-**Also:** Bows, swords, and wands should all apply knockback. All example weapons and wands in the default item YAML files are missing a `knockback` stat entry — add one to every example item so the behaviour is demonstrated out of the box.
+Arrow hit visuals corrected; knockback stat added to example weapons and wands.
 
 ---
 
@@ -60,17 +59,9 @@ Three causes fixed:
 
 ---
 
-### Stats Shown in Lore That Do Nothing (`rpg-core` / `rpg-combat`) — 🔴 Hard
-Several `BuiltinStat` entries appear on example items and show up in lore, but are never read by any system. Players see the stat and get nothing from it:
+### ~~Stats Shown in Lore That Do Nothing (`rpg-core` / `rpg-combat`)~~ ✅ Resolved
 
-| Stat | Defined | Implemented | Notes |
-|---|---|---|---|
-| `speed` | ✅ | ✅ `rpg-core 1.1.0` | Sets `generic.movement_speed` in `EquipmentListener`. Formula: `0.1 × (1 + speed × speedPerPoint / 100)`. |
-| `ferocity` | ✅ | ✅ `rpg-core 1.1.0` | Extra melee swings in `DamagePipelineListener`. Each 100 ferocity = 1 guaranteed extra hit; remainder = % chance. |
-| `swing_range` | ✅ | ✅ `rpg-core 1.1.0` | Sets `entity_interaction_range` in `EquipmentListener`. Formula: `3.0 + swingRange × blocksPerPoint`. |
-| `magic_find` | ✅ | ❓ | Referenced in loot pool spec as `MagicFindAffected: true` — verify whether any loot roll reads it. |
-
-Remaining: `magic_find` (needs audit). `pristine`, `pet_luck`, `enchanting_luck` removed from `BuiltinStat` — will be re-added when the systems that use them are built.
+`speed`, `ferocity`, `swing_range` all implemented (`rpg-core 1.1.0`). `magic_find` wired into loot rolls. `pristine`, `pet_luck`, `enchanting_luck` deferred until their systems are built.
 
 ---
 
@@ -84,17 +75,9 @@ Added a `GameMode.CREATIVE` guard in `DamageEffect.apply()` before the `RpgServi
 
 ---
 
-### Beam Wand: Damage Applied 3× + Health Display Doesn't Refresh (`rpg-core`) — 🟡 Medium
+### ~~Beam Wand: Damage Applied 3× + Health Display Doesn't Refresh (`rpg-core`)~~ ✅ Fixed
 
-Three distinct issues confirmed in testing (zombie set to 100 HP):
-
-1. **Damage applied ~3× per cast** — beam wand shows `23.3` on the indicator but the zombie drops from 100 HP to ~30 (≈70 actual damage). `23.3 × 3 ≈ 69.9` — the damage is being applied exactly three times per trigger. Most likely cause: `BeamEffect` fires `entity.damage()` or calls `DamageEffect` once per tick while the beam is active and the beam lingers for 3 ticks, or `DamageEffect` itself is being invoked three times through the ability pipeline. Needs logging around every damage call in the beam path to confirm hit count.
-
-2. **Damage indicator sourcing wrong value** — the `23.3` shown is the RPG-pipeline damage (probably post-mitigation), but the actual HP removed is `~70`. The indicator is not wrong per se — it's showing one application correctly — but it's showing it once while the entity is hit three times. So the indicator fires on the first hit and the remaining two hits land silently.
-
-3. **Health display hologram doesn't update on beam damage** (`rpg-holograms`) — the TextDisplay nameplate showing mob HP doesn't refresh after the beam wand hits. A fist hit immediately after does update it. The relevant listener is in `rpg-holograms` (a `DamageIndicatorListener` or equivalent), not `rpg-core`. It likely watches `EntityDamageEvent` or `PostDamageEvent` to schedule a nameplate refresh; the beam's damage path may be bypassing whichever event it hooks into, or the update fires before the HP value is actually written.
-
-Fix approach: (a) cap beam damage to one application per cast via the per-tick dedup set in `BeamEffect` (see pierce-cap improvement entry); (b) ensure `rpg-holograms`' health display refresh is triggered after `entity.damage()` regardless of the damage source path — may need to fire a custom event or ensure `PostDamageEvent` is always published by the beam path.
+Triple-damage and hologram refresh issues both resolved.
 
 ---
 

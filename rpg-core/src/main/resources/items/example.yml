@@ -707,3 +707,188 @@ berserker_boots:
     ferocity: 10
     knockback: 10
   Rarity: '&5&lEPIC'
+
+# ════════════════════════════════════════════════════════════════════════════
+#  NEW EFFECT SHOWCASE — demonstrates the 10 new built-in effects
+#  Each item shows one or two effects clearly. Obtain: /rpg item give <id>
+# ════════════════════════════════════════════════════════════════════════════
+
+# ── knockback{} + launch{} ───────────────────────────────────────────────────
+# Right-click launches the caster upward + forward. On-hit: knocks the target away.
+thunder_hammer:
+  MinecraftItem: iron_axe
+  Type: SWORD
+  DisplayName: '&eThunder Hammer'
+  AttackCooldown: 20
+  Stats:
+    damage: 55
+    strength: 25
+    knockback: 15
+    crit_chance: 8
+    crit_damage: 40
+  Abilities:
+  - "mana_cost{amount=35} cooldown{ticks=60} launch{force=1.8,horizontal=0.8,target=caster}"
+  - "~on_hit knockback{force=1.4,up=0.3,target=target}"
+  Lore:
+  - '&7Right-click: &eLeap &8(35 mana)'
+  - '&7Every hit sends enemies flying.'
+  Rarity: '&9&lRARE'
+
+# ── blink{} ──────────────────────────────────────────────────────────────────
+# Shift + right-click: teleport forward up to 14 blocks, then drop a small AoE at landing.
+blink_dagger:
+  MinecraftItem: stone_sword
+  Type: SWORD
+  DisplayName: '&5Blink Dagger'
+  AttackCooldown: 10
+  Stats:
+    damage: 35
+    strength: 15
+    speed: 8
+    crit_chance: 18
+    crit_damage: 70
+  Abilities:
+  - "~shift_right_click mana_cost{amount=40} cooldown{ticks=100} blink{range=14.0} explode{radius=2.5,damage=20.0,particle=PORTAL}"
+  Lore:
+  - '&7Shift + Right-click: &5Blink Strike &8(40 mana)'
+  - '&7Teleport to your destination and detonate on arrival.'
+  Rarity: '&5&lEPIC'
+
+# ── drain{} ──────────────────────────────────────────────────────────────────
+# Left-click: a beam that drains life from the target and gives it to the caster.
+# Right-click: standard beam damage with no leech.
+soul_siphon:
+  MinecraftItem: bone
+  Type: WAND
+  DisplayName: '&4Soul Siphon'
+  ItemCooldown: 6
+  Stats:
+    damage: 30
+    intelligence: 60
+    max_mana: 80
+    mana_regen: 4
+  Abilities:
+  - "mana_cost{amount=20} cooldown{ticks=30} beam{range=10.0,damage_multiplier=1.0}"
+  - "~left_click mana_cost{amount=35} cooldown{ticks=40} beam{range=10.0} drain{amount=0,damage_multiplier=1.2,leech=0.8}"
+  Lore:
+  - '&7Right-click: &fSpectral Bolt &8(20 mana)'
+  - '&7Left-click: &4Soul Drain &8(35 mana, 80% lifesteal)'
+  Rarity: '&9&lRARE'
+
+# ── freeze{} ─────────────────────────────────────────────────────────────────
+# Right-click: beam then freeze the target solid.
+frost_lance:
+  MinecraftItem: blaze_rod
+  Type: WAND
+  DisplayName: '&bFrost Lance'
+  ItemCooldown: 8
+  Stats:
+    damage: 40
+    intelligence: 90
+    max_mana: 100
+    mana_regen: 6
+    crit_chance: 12
+    crit_damage: 60
+  Abilities:
+  - "mana_cost{amount=30} cooldown{ticks=50} beam{range=14.0,damage_multiplier=1.3,particle=SNOWFLAKE} freeze{duration=80,amplifier=4}"
+  Lore:
+  - '&7Right-click: &bIce Bolt &8(30 mana)'
+  - '&7Strikes the target and locks them in ice for 4 seconds.'
+  Rarity: '&9&lRARE'
+
+# ── chain{} ──────────────────────────────────────────────────────────────────
+# Right-click: beam the primary target, then lightning bounces to 4 nearby enemies.
+chain_lightning_wand:
+  MinecraftItem: blaze_rod
+  Type: WAND
+  DisplayName: '&eChain Lightning'
+  ItemCooldown: 6
+  Stats:
+    damage: 50
+    intelligence: 100
+    max_mana: 120
+    mana_regen: 8
+    cooldown_reduction: 10
+  Abilities:
+  - "mana_cost{amount=50} cooldown{ticks=60} beam{range=16.0,damage_multiplier=1.5} damage{} chain{count=4,range=8.0,damage_multiplier=0.6}"
+  Lore:
+  - '&7Right-click: &eLightning Strike &8(50 mana)'
+  - '&7Hits the target and bounces to 4 nearby enemies.'
+  Rarity: '&6&lLEGENDARY'
+
+# ── zone{} ───────────────────────────────────────────────────────────────────
+# Right-click: drop a fire zone at your feet. Deals damage every second for 10 seconds.
+# Shift + right-click: beam out, then drop the zone at the beam hit point.
+inferno_totem:
+  MinecraftItem: blaze_powder
+  Type: MATERIAL
+  DisplayName: '&6Inferno Totem'
+  Stats:
+    damage: 20
+    intelligence: 40
+  Abilities:
+  - "mana_cost{amount=40} cooldown{ticks=120} zone{radius=4.0,duration=200,interval=20,damage=10.0,particle=FLAME}"
+  - "~shift_right_click mana_cost{amount=60} cooldown{ticks=200} beam{range=20.0} zone{radius=5.0,duration=300,interval=20,damage=12.0,particle=FLAME,use_point=true}"
+  Lore:
+  - '&7Right-click: &6Drop zone at your feet &8(40 mana)'
+  - '&7Shift + Right-click: &cRemote inferno &8(60 mana)'
+  - '&7Zone burns enemies every second for up to 15 seconds.'
+  Rarity: '&5&lEPIC'
+
+# ── shield{} ─────────────────────────────────────────────────────────────────
+# Shift + right-click: throw up a 150-HP shield that lasts 10 seconds.
+# Passive: slowly regenerates mana while held.
+guardian_shield:
+  MinecraftItem: shield
+  Type: MATERIAL
+  DisplayName: '&fGuardian Shield'
+  Stats:
+    defense: 30
+    max_health: 40
+    max_mana: 60
+    intelligence: 20
+  Abilities:
+  - "~shift_right_click mana_cost{amount=60} cooldown{ticks=200} shield{amount=150,duration=200,target=caster} particles{type=ENCHANT,count=20}"
+  - "~passive restore_mana{amount=3,target=caster}"
+  Lore:
+  - '&7Shift + Right-click: &fForce Shield &8(60 mana)'
+  - '&7Absorbs up to &f150 HP &7of damage for 10 seconds.'
+  - '&7Slowly regenerates mana while held.'
+  Rarity: '&6&lLEGENDARY'
+
+# ── mark{} — combo weapon ────────────────────────────────────────────────────
+# Right-click: mark the target (CRIT sparkle, doubles next damage{} hit).
+# Left-click (or on_hit with beam): beam hit that detonates the mark for 2× damage.
+executioner_blade:
+  MinecraftItem: golden_sword
+  Type: SWORD
+  DisplayName: '&6Executioner''s Blade'
+  AttackCooldown: 16
+  Stats:
+    damage: 60
+    strength: 30
+    intelligence: 50
+    max_mana: 80
+    crit_chance: 15
+    crit_damage: 80
+  Abilities:
+  - "mana_cost{amount=20} cooldown{ticks=40} beam{range=12.0} mark{bonus=2.5,duration=300,consume=true}"
+  - "~left_click mana_cost{amount=30} cooldown{ticks=30} beam{range=12.0,damage_multiplier=1.8} damage{}"
+  Lore:
+  - '&7Right-click: &6Mark &8(20 mana) — tag the target'
+  - '&7Left-click: &cExecute &8(30 mana) — 2.5× on marked targets'
+  Rarity: '&6&lLEGENDARY'
+
+# ── restore_mana{} ────────────────────────────────────────────────────────────
+# Right-click to restore 75 mana. ItemCooldown prevents spamming.
+mana_crystal:
+  MinecraftItem: amethyst_shard
+  Type: MATERIAL
+  DisplayName: '&bMana Crystal'
+  ItemCooldown: 600   # 30-second cooldown between uses
+  Abilities:
+  - "restore_mana{amount=75,target=caster} particles{type=ENCHANT,count=15}"
+  Lore:
+  - '&7Right-click to instantly restore &b75 mana&7.'
+  - '&830-second cooldown.'
+  Rarity: '&9&lRARE'

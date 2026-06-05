@@ -131,19 +131,26 @@ voidblade:
 
 | Effect | Purpose |
 |---|---|
-| `damage` | Deals damage to context target |
+| `damage` | Deals damage to context target; detonates [marks](#mark) |
 | `heal` | Restores HP |
+| `drain` | Deals damage and heals caster for a fraction (vampiric) |
 | `beam` | Ray-cast to first entity; sets target + point |
 | `explode` / `aoe` | AoE damage at point / caster location |
-| `projectile` | Traveling hitbox — chain suspends until impact |
-| `apply_status` | Applies a status effect to target or caster |
+| `knockback` | Push/pull a target or send them upward |
+| `launch` | Vertical (+ optional forward) velocity on caster or target |
+| `blink` | Teleport caster forward up to N blocks |
+| `chain` | Bounce damage to N nearest surrounding entities |
+| `zone` | Persistent area that deals damage/status every interval |
+| `shield` | Damage-absorbing buffer; intercepts all damage sources |
+| `mark` | Tag a target for a bonus-damage detonate on next `damage{}` |
+| `freeze` | Apply extreme Slowness for a duration |
+| `restore_mana` | Restore mana to caster or a player target |
+| `apply_status` | Applies a custom status effect |
 | `particles` | Visual burst at point |
 | `sound` | Plays a sound at caster |
 | `delay` | Pauses chain N ticks without blocking server |
 | `mana_cost` | Deducts mana; aborts chain if insufficient |
 | `cooldown` | Starts a soft cooldown for this ability |
-| `teleport` | Moves caster forward / backward / randomly |
-| `summon` | Spawns a custom mob |
 
 Full parameter tables: **[Effects Reference →](ability-effects.md)**
 

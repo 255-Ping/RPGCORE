@@ -209,6 +209,10 @@ stats:
 # Passive ability tick rate — how often PASSIVE-trigger bindings fire on all online players.
 abilities:
   passive-interval-ticks: 20   # 20 = once per second. Lower = more frequent regen/proc effects.
+  zone:
+    max-active: 50             # server-wide cap on concurrent zone{} effects. Prevents lag from
+                               # players spamming zones. New zones are silently dropped when the
+                               # cap is reached.
 
 # Ferocity extra swings.
 ferocity:

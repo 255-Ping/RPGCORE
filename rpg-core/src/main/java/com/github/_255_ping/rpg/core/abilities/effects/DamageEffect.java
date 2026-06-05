@@ -11,6 +11,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
+import org.bukkit.Particle;
+
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -38,7 +40,19 @@ public final class DamageEffect implements AbilityEffect {
     @Override
     public CompletableFuture<AbilityContext> apply(AbilityContext ctx) {
         if (ctx.target() == null) return CompletableFuture.completedFuture(ctx);
-        double base = amount + ctx.carriedDamage() * damageMultiplier;
+
+        // Mark detonation: multiply damage if the target is marked.
+        // consumeMark returns the bonus multiplier and removes the mark when consume=true.
+        double markMult = MarkEffect.consumeMark(ctx.target().getUniqueId());
+        double base = (amount + ctx.carriedDamage() * damageMultiplier) * markMult;
+
+        // Burst particles at the target when a mark detonates
+        if (markMult != 1.0) {
+            ctx.target().getWorld().spawnParticle(
+                    Particle.CRIT,
+                    ctx.target().getLocation().add(0, 1.5, 0),
+                    25, 0.4, 0.6, 0.4, 0.2);
+        }
         if (base <= 0) return CompletableFuture.completedFuture(ctx);
         // Respect creative mode — abilities (including mob abilities) must not damage creative players.
         if (ctx.target() instanceof org.bukkit.entity.Player p

@@ -1,331 +1,325 @@
-# Built-In Effects Reference
+# Built-in Ability Effects — Reference
 
-Every `AbilityEffect` registered by `rpg-core` is documented here. For each effect:
+> **Status:** Working — all effects listed here are implemented and available in `rpg-core 1.3.0`.
 
-- **Parameters** — DSL arguments in the `{...}` block
-- **Reads / Writes** — what fields the effect reads from `AbilityContext` and what it leaves behind
-- **Example** — a typical sequence fragment
-
-Effects execute in order. Later effects in a chain see every mutation made by earlier ones. See [Abilities → AbilityContext](abilities.md#abilitycontext) for field definitions.
+Full parameter reference for every built-in effect. All effects accept their parameters via the DSL: `effectName{key=value, key2=value2}`.
 
 ---
 
-## `beam`
+## damage
 
-Traces a ray from the caster along their look direction. Marks the first entity hit as `target` and the ray endpoint as `point`.
+Deals damage to `ctx.target`. Applies any pending [mark](#mark) multiplier automatically.
 
 | Param | Default | Description |
 |---|---|---|
-| `range` | `5.0` | Max distance in blocks |
-| `damage_multiplier` | `1.0` | Scales `carriedDamage` on hit before writing it back |
-| `particle` | `CRIT` | Particle drawn along the beam each tick |
-| `pierce` | `0` | Extra entities to pass through after the first hit |
-
-| | Field | Detail |
-|---|---|---|
-| **Reads** | `caster` | Ray origin + look direction |
-| **Reads** | `carriedDamage` | Multiplied on hit; result stored back into `carriedDamage` |
-| **Writes** | `target` | First entity the ray struck; `null` if nothing in range |
-| **Writes** | `point` | Endpoint — the block-face it stopped at or the max-range location |
+| `amount` | `0` | Flat damage (stacks with carriedDamage) |
+| `damage_multiplier` | `1.0` | Multiplier applied to `carriedDamage` |
+| `type` | `physical` | `physical` or `true` (true damage bypasses defense) |
 
 ```yaml
-# Snipe: long beam, pierce one extra target, then deal damage to the first hit
-- beam{range=20.0, pierce=1}
-- damage{}
+- "beam{range=10} damage{amount=20, damage_multiplier=1.5}"
 ```
 
 ---
 
-## `projectile`
+## heal
 
-Launches a moving hitbox. The ability chain **suspends here** until the projectile hits an entity or expires — effects after `projectile` run at impact time, not at cast time.
+Restores HP to the caster or target.
 
 | Param | Default | Description |
 |---|---|---|
-| `speed` | `1.5` | Blocks per tick |
-| `gravity` | `0.05` | Downward acceleration per tick; `0.0` = perfectly straight |
-| `damage_multiplier` | `1.0` | Scales `carriedDamage` on impact |
-| `lifetime` | `60` | Ticks before auto-despawn if no hit |
-| `particle` | `FLAME` | Trail particle |
+| `amount` | `0` | HP to restore |
+| `target` | `caster` | `caster` or `target` |
 
-| | Field | Detail |
+---
+
+## drain
+
+Deals damage to `ctx.target` and heals the caster for a fraction of that damage. Unlike chaining `damage{} heal{}`, `drain` ties the heal amount directly to the damage number, making lifesteal feel consistent.
+
+| Param | Default | Description |
 |---|---|---|
-| **Reads** | `caster` | Launch origin + direction |
-| **Reads** | `carriedDamage` | Multiplied on impact |
-| **Writes** | `target` | Entity hit (if any; `null` if it expired without a hit) |
-| **Writes** | `point` | Impact location |
-
-> If the projectile expires without a hit, `target` stays `null`. Any `damage{}` or `apply_status{}` after it will silently no-op or fall back to caster.
+| `amount` | `10.0` | Flat drain damage |
+| `damage_multiplier` | `0.0` | Additional multiplier on `carriedDamage` (stacks with `amount`) |
+| `leech` | `1.0` | Fraction of damage converted to healing (0.5 = 50%) |
 
 ```yaml
-# Fireball: straight shot, on hit deal damage then apply burn
-- projectile{speed=2.0, gravity=0.0, particle=FLAME}
-- damage{}
-- apply_status{id=burn, duration=80}
+- "~on_hit drain{amount=8, leech=0.5}"
+- "beam{range=10} drain{amount=0, damage_multiplier=1.5, leech=1.0}"
 ```
 
 ---
 
-## `explode`
+## beam
 
-AoE blast centered on `point`. Falls back to the caster's location if `point` is not set. Does **not** set `target` — if you need to act on individual hit entities, use `aoe` or chain from a prior targeting effect.
+Ray-casts from the caster's eye in the look direction. Sets `ctx.target` on hit and `ctx.point` to the endpoint. Does not deal damage — follow with `damage{}` or `explode{}`.
 
 | Param | Default | Description |
 |---|---|---|
-| `radius` | `3.0` | Blast radius in blocks |
-| `damage_multiplier` | `1.0` | Scales `carriedDamage` per entity hit |
-| `particle` | `EXPLOSION_NORMAL` | Burst particle |
-| `falloff` | `none` | `linear` = damage reduces from center to edge; `none` = flat |
+| `range` | `5` | Max distance in blocks |
+| `damage_multiplier` | `1.0` | Scales `carriedDamage` on hit |
+| `particle` | `CRIT` | Particle type for the beam trail |
 
-| | Field | Detail |
+---
+
+## explode / aoe
+
+AoE damage centered at `ctx.point` (or caster location). Both names are identical aliases.
+
+| Param | Default | Description |
 |---|---|---|
-| **Reads** | `point` | Blast center (falls back to `caster` location if null) |
-| **Reads** | `carriedDamage` | Base damage before multiplier |
-| **Writes** | _(nothing)_ | |
+| `radius` | `3` | Blast radius in blocks |
+| `damage_multiplier` | `1.0` | Multiplier on `carriedDamage` |
+| `damage` | `0` | Additional flat damage |
+| `particle` | `EXPLOSION_EMITTER` | Particle type for the blast |
+
+---
+
+## knockback
+
+Pushes a target entity away from (or toward) the caster, or straight up.
+
+| Param | Default | Description |
+|---|---|---|
+| `force` | `1.0` | Horizontal velocity magnitude (blocks/tick) |
+| `up` | `0.2` | Upward Y component added to the push |
+| `target` | `target` | `target` or `caster` |
+| `direction` | `away` | `away` (from caster), `toward` (to caster), or `up` (pure vertical) |
 
 ```yaml
-# Rocket: projectile flies to target, then detonates with falloff
-- projectile{speed=1.5, lifetime=100}
-- explode{radius=5.0, falloff=linear, damage_multiplier=1.5}
+- "~on_hit knockback{force=1.2, up=0.3}"
+- "~on_hurt knockback{force=0.8, direction=away}"
 ```
 
 ---
 
-## `aoe`
+## launch
 
-Damages all entities within radius of the **caster's current location**.
+Launches an entity upward, with an optional horizontal forward boost.
 
 | Param | Default | Description |
 |---|---|---|
-| `radius` | `4.0` | Radius in blocks |
-| `damage_multiplier` | `1.0` | Scales `carriedDamage` per entity hit |
-
-| | Field | Detail |
-|---|---|---|
-| **Reads** | `caster` location | Center of the AoE hit-scan |
-| **Reads** | `carriedDamage` | Base damage before multiplier |
-| **Writes** | _(nothing)_ | |
+| `force` | `1.5` | Upward Y velocity (1.5 ≈ very high jump) |
+| `horizontal` | `0.0` | Forward velocity in caster's look direction |
+| `target` | `caster` | `caster` or `target` |
 
 ```yaml
-# Ground slam: sound cue, then hit everything nearby
-- sound{key=entity.generic.explode, pitch=0.7}
-- aoe{radius=5.0, damage_multiplier=1.2}
+- "mana_cost{amount=30} launch{force=2.0, horizontal=1.0}"
+- "~on_hurt launch{force=1.0, target=target}"
 ```
 
 ---
 
-## `damage`
+## blink
 
-Deals damage to `target` through the full damage pipeline (strength scaling, crit, defense reduction, `PreDamageEvent`, `PostDamageEvent`).
+Teleports the caster forward in their look direction, stopping before the first solid block. Sets `ctx.point` to the landing location so following effects act at the destination.
 
 | Param | Default | Description |
 |---|---|---|
-| `amount` | `carriedDamage` | Explicit base damage; omit to use the carried value |
-| `type` | `physical` | `magic` skips strength scaling; `true` bypasses defense entirely |
-
-| | Field | Detail |
-|---|---|---|
-| **Reads** | `target` | Recipient — must be set by a prior effect; no-ops silently if null |
-| **Reads** | `carriedDamage` | Used as `amount` when no explicit value is given |
-| **Writes** | _(nothing)_ | |
+| `range` | `12.0` | Max distance in blocks |
+| `safe` | `true` | Snap to a safe standing spot; `false` = raw endpoint |
+| `particles` | `true` | PORTAL particle trail along blink path |
 
 ```yaml
-# Beam snipe dealing true (unmitigated) damage
-- beam{range=15.0}
-- damage{type=true}
+- "~shift_right_click mana_cost{amount=40} blink{range=16.0} explode{radius=3.0, damage=20}"
 ```
 
 ---
 
-## `heal`
+## chain
 
-Restores HP. Targets the caster by default.
+Bounces `carriedDamage * damage_multiplier` from `ctx.target` (or `ctx.point`) to the N nearest surrounding entities within the given radius. Draws enchantment-particle arcs between hops.
+
+Chain does not change `ctx.target` — it applies independent damage to each found entity.
 
 | Param | Default | Description |
 |---|---|---|
-| `amount` | _(required)_ | HP to restore |
-| `target` | `caster` | `caster` or `target` (context target) |
-
-| | Field | Detail |
-|---|---|---|
-| **Reads** | `caster` | Healed when `target=caster` (default) |
-| **Reads** | `target` | Healed when `target=target`; no-ops silently if null |
-| **Writes** | _(nothing)_ | |
+| `count` | `3` | Max bounce targets |
+| `range` | `8.0` | Search radius from the origin |
+| `damage_multiplier` | `0.7` | Fraction of `carriedDamage` dealt per bounce |
 
 ```yaml
-# Vampiric strike: beam hits an enemy, drains HP back to caster
-- beam{range=8.0, damage_multiplier=1.2}
-- damage{}
-- heal{amount=15, target=caster}
+- "beam{range=16} damage{} chain{count=4, range=8, damage_multiplier=0.6}"
 ```
 
 ---
 
-## `apply_status`
+## zone
 
-Applies a registered status effect to an entity.
+Creates a persistent ground zone that damages and/or applies status effects at regular intervals. The zone expires after `duration` ticks. The zone outline redraws itself every second with configurable particles.
+
+By default, zones drop at the caster's feet. Use `use_point=true` to place the zone at `ctx.point` (e.g. after a `beam{}`).
+
+Server-wide cap: `abilities.zone.max-active` in `config.yml` (default 50). Zones for disconnected players are removed immediately.
 
 | Param | Default | Description |
 |---|---|---|
-| `id` | _(required)_ | Status effect ID — must exist in the registry |
+| `radius` | `4.0` | Zone radius in blocks |
+| `duration` | `100` | Lifetime in ticks |
+| `interval` | `20` | Ticks between damage/effect pulses |
+| `damage` | `5.0` | RPG HP per pulse (0 = no damage) |
+| `status` | _(empty)_ | Status effect ID applied each pulse |
+| `status_level` | `1` | Level of the applied status effect |
+| `status_duration` | `60` | Ticks the applied status lasts |
+| `particle` | `FLAME` | Particle enum name for outline ring and pulse burst |
+| `use_point` | `false` | `true` = place at `ctx.point`; `false` = caster's feet |
+
+```yaml
+# Fire zone at caster's feet
+- "zone{radius=4, duration=200, interval=20, damage=10, particle=FLAME}"
+
+# Poison cloud at beam endpoint
+- "beam{range=20} zone{radius=5, damage=5, status=poison, status_duration=100, particle=SPORE_BLOSSOM, use_point=true}"
+```
+
+---
+
+## shield
+
+Grants the caster (or target) a damage-absorbing shield that intercepts all damage sources at the `HealthService` level. Multiple casts stack additively and expire independently.
+
+| Param | Default | Description |
+|---|---|---|
+| `amount` | `50` | HP the shield can absorb |
+| `duration` | `100` | Ticks before it expires even if not depleted |
+| `target` | `caster` | `caster` or `target` |
+
+```yaml
+- "~shift_right_click mana_cost{amount=60} shield{amount=200, duration=300}"
+- "~passive shield{amount=10, duration=40}"   # small ticking shield refresh on armor
+```
+
+---
+
+## mark
+
+Tags `ctx.target` with a mark. The next `damage{}` hit against the marked entity applies a damage multiplier and (if `consume=true`) removes the mark.
+
+Only `damage{}` detonates marks. `drain{}`, `chain{}`, and zone pulses do not.
+
+| Param | Default | Description |
+|---|---|---|
+| `bonus` | `2.0` | Damage multiplier on the detonating `damage{}` hit |
+| `duration` | `200` | Ticks before mark expires if not consumed |
+| `consume` | `true` | `true` = one-shot; `false` = bonus applies to all `damage{}` hits in window |
+| `target` | `target` | `target` or `caster` |
+
+```yaml
+# Two-step combo
+- "mana_cost{amount=20} beam{range=12} mark{bonus=2.5, duration=300}"
+- "~left_click mana_cost{amount=30} beam{range=12, damage_multiplier=1.8} damage{}"
+```
+
+---
+
+## freeze
+
+Applies extreme vanilla SLOWNESS to the target for the given duration. No custom status-effect YAML required. Accompanied by a snowflake particle burst.
+
+| Param | Default | Description |
+|---|---|---|
+| `duration` | `60` | Ticks (60 = 3 seconds) |
+| `amplifier` | `4` | Slowness amplifier (0 = Slowness I … 4 = Slowness V) |
+| `target` | `target` | `target` or `caster` |
+
+```yaml
+- "beam{range=12} freeze{duration=80}"
+- "~on_hurt freeze{duration=40, target=target}"
+```
+
+---
+
+## restore_mana
+
+Restores mana to a player. No-op on non-player entities.
+
+| Param | Default | Description |
+|---|---|---|
+| `amount` | `25` | Mana to restore |
+| `target` | `caster` | `caster` or `target` |
+
+```yaml
+- "~passive restore_mana{amount=5}"        # ticking mana regen on armor
+- "restore_mana{amount=75}"               # right-click mana crystal
+```
+
+---
+
+## apply_status
+
+Applies a custom RPG status effect (defined in `status-effects/*.yml`).
+
+| Param | Default | Description |
+|---|---|---|
+| `id` | _(required)_ | Status effect ID |
 | `level` | `1` | Effect level |
-| `duration` | `200` | Duration in ticks |
-| `target` | `target` | `target` (context target) or `caster` |
+| `duration` | `100` | Ticks |
+| `target` | `target` | `target` or `caster` |
 
-| | Field | Detail |
+---
+
+## mana_cost
+
+Deducts mana from the caster. Chain aborts with an action bar message if mana is insufficient. **Always put this first** in active ability sequences.
+
+| Param | Default | Description |
 |---|---|---|
-| **Reads** | `target` | Default recipient; falls back to `caster` if `target` is null |
-| **Reads** | `caster` | Recipient when `target=caster` |
-| **Writes** | _(nothing)_ | |
+| `amount` | `0` | Mana to consume |
+
+---
+
+## cooldown
+
+Records a per-ability cooldown, reducible by the `cooldown_reduction` stat.
+
+| Param | Default | Description |
+|---|---|---|
+| `ticks` | `0` | Soft-floor cooldown duration |
+
+---
+
+## particles
+
+Spawns a particle burst at `ctx.point` (or caster location).
+
+| Param | Default | Description |
+|---|---|---|
+| `type` | `CRIT` | Particle enum name |
+| `count` | `10` | Particle count |
+| `spread` | `0.5` | XZ spread radius |
+| `height` | `1.0` | Y offset from the spawn point |
+
+---
+
+## sound
+
+Plays a sound at the caster's location.
+
+| Param | Default | Description |
+|---|---|---|
+| `key` | _(required)_ | Bukkit sound key |
+| `volume` | `1.0` | Volume |
+| `pitch` | `1.0` | Pitch |
+
+---
+
+## delay
+
+Pauses the ability chain for N ticks without blocking the server thread. Context (`target`, `point`, `carriedDamage`) is preserved across the delay.
+
+| Param | Default | Description |
+|---|---|---|
+| `ticks` | `0` | Pause duration |
 
 ```yaml
-# Cursed arrow: on hit, apply 5 seconds of poison level 2
-- projectile{speed=3.0, gravity=0.1}
-- apply_status{id=poison, level=2, duration=100}
+- "particles{type=ENCHANT} delay{ticks=10} explode{radius=5}"
 ```
 
 ---
 
-## `teleport`
+## Related
 
-Moves the caster. Updates the caster's in-world position; effects after `teleport` use the new location.
-
-| Param | Default | Description |
-|---|---|---|
-| `distance` | `8.0` | Distance in blocks |
-| `mode` | `eyeline` | `eyeline` = forward along look; `random` = random XZ direction; `back` = behind caster |
-
-| | Field | Detail |
-|---|---|---|
-| **Reads** | `caster` | Current position and look direction |
-| **Writes** | Caster world position | The caster moves; `caster.getLocation()` reflects the new spot for later effects |
-
-```yaml
-# Blink: particles at origin, dash forward, particles at destination
-- particles{type=PORTAL, count=20}
-- teleport{distance=12.0, mode=eyeline}
-- particles{type=PORTAL, count=20}
-```
-
----
-
-## `summon`
-
-Spawns a custom mob from the mob registry at the caster's location.
-
-| Param | Default | Description |
-|---|---|---|
-| `mob` | _(required)_ | Mob ID — must exist in the mob registry |
-| `count` | `1` | Number of mobs to spawn |
-| `lifetime` | `600` | Ticks until auto-despawn; `0` = permanent |
-
-| | Field | Detail |
-|---|---|---|
-| **Reads** | `caster` location | Spawn point |
-| **Writes** | _(nothing)_ | |
-
-```yaml
-# Mob ability: every 5 seconds summon 2 skeleton minions (live 30 seconds)
-- summon{mob=skeleton_minion, count=2, lifetime=600}
-```
-
----
-
-## `particles`
-
-Spawns a particle burst. Visual only — no damage or targeting side effects.
-
-| Param | Default | Description |
-|---|---|---|
-| `type` | `CRIT` | Bukkit `Particle` name |
-| `count` | `10` | Number of particles |
-| `spread` | `0.3` | XYZ scatter radius |
-| `spread_x` / `spread_y` / `spread_z` | `spread` | Per-axis override |
-
-| | Field | Detail |
-|---|---|---|
-| **Reads** | `point` | Burst origin; falls back to `caster` location if null |
-| **Writes** | _(nothing)_ | |
-
----
-
-## `sound`
-
-Plays a sound at the caster's current location. Volume controls attenuation radius.
-
-| Param | Default | Description |
-|---|---|---|
-| `key` | _(required)_ | Bukkit sound key, e.g. `entity.generic.explode` |
-| `volume` | `1.0` | Attenuation range |
-| `pitch` | `1.0` | `0.5`–`2.0` |
-
-| | Field | Detail |
-|---|---|---|
-| **Reads** | `caster` location | Where the sound is anchored |
-| **Writes** | _(nothing)_ | |
-
----
-
-## `delay`
-
-Pauses the ability chain for N ticks on a scheduler thread without blocking the server. Context passes through unchanged — `target`, `point`, and `carriedDamage` are preserved across the wait.
-
-| Param | Default | Description |
-|---|---|---|
-| `ticks` | `20` | Server ticks to wait (20 ticks = 1 second) |
-
-| | Field | Detail |
-|---|---|---|
-| **Reads** | _(nothing)_ | |
-| **Writes** | _(nothing)_ | |
-
-```yaml
-# Delayed mine: mark the spot with a sound, wait 2 seconds, then explode there
-- sound{key=block.note_block.hat, pitch=1.5}
-- particles{type=FLAME, count=5}
-- delay{ticks=40}
-- explode{radius=3.5}
-```
-
----
-
-## `mana_cost`
-
-Deducts mana from the caster. If the caster does not have enough mana, the **entire chain stops** — no further effects (including those listed after `mana_cost`) run. Place this **first** to avoid running visual effects before hitting the mana gate.
-
-| Param | Default | Description |
-|---|---|---|
-| `amount` | _(required)_ | Mana to deduct |
-
-| | Field | Detail |
-|---|---|---|
-| **Reads** | `caster` mana | Compared to `amount` |
-| **Writes** | `caster` mana | Deducted if sufficient; chain aborted if insufficient |
-
----
-
-## `cooldown`
-
-Starts a cooldown for this ability keyed to `(caster, abilityId)`. Soft cooldown — reducible by the `cooldown_reduction` stat, but cannot go below the ability YAML's hard-floor `Cooldown:` value.
-
-| Param | Default | Description |
-|---|---|---|
-| `ticks` | _(required)_ | Soft cooldown duration |
-
-| | Field | Detail |
-|---|---|---|
-| **Reads** | Ability ID (from invocation source) | Key used in `CooldownService` |
-| **Writes** | `CooldownService` state | Starts the timer |
-
----
-
-## Addon effects
-
-Skill addons can register additional effects via `RpgServices.abilityRegistry().register(effect)`. Two are currently bundled:
-
-| Effect | Addon | Description |
-|---|---|---|
-| `fishing_lure` | `rpg-fishing` | Applies a lure marker to the player's active bobber |
-| `mining_charge` | `rpg-mining` | Triggers an area-break on the block the caster is looking at |
-
-To write your own, implement `AbilityEffect` from `rpg-api` — see [Developer Guide → Extension Points](../development.md#extension-points).
+- [Abilities overview + trigger system](abilities.md)
+- [Armor Sets](../core/armor-sets.md)
+- [Status effects](../core/status-effects.md)
+- [Stats reference](../stats.md)

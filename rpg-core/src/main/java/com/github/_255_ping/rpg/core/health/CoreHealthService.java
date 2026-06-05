@@ -71,10 +71,14 @@ public final class CoreHealthService implements HealthService {
 
     @Override
     public void damage(LivingEntity entity, double amount, String source) {
-        setCurrentHp(entity, currentHp(entity) - amount);
-        // Hurt animation — we bypass EntityDamageEvent so vanilla never sends the
-        // red-flash status packet. Play it explicitly so the hit is always visible.
+        // Shield absorption: intercepts all damage sources (melee, ability, zone, etc.).
+        // If the entity has an active shield, it absorbs from the shield first.
+        double residual = com.github._255_ping.rpg.core.abilities.effects.ShieldEffect
+                .absorb(entity.getUniqueId(), amount);
+        // Always play the hurt animation (the entity was "hit" even if shielded).
         entity.playHurtAnimation(0f);
+        if (residual <= 0) return; // fully absorbed by shield
+        setCurrentHp(entity, currentHp(entity) - residual);
     }
 
     @Override
