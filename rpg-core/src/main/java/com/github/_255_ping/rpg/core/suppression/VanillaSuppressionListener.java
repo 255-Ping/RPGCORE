@@ -5,6 +5,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import com.destroystokyo.paper.event.block.BeaconEffectEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -24,7 +25,6 @@ import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.raid.RaidTriggerEvent;
-import org.bukkit.event.world.PortalCreateEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -33,9 +33,11 @@ import org.bukkit.plugin.java.JavaPlugin;
  *
  * <p>Wired flags: mob-spawning, hunger, player-regen, xp-orbs, raids, enchanting-table,
  * anvil, brewing-stand, crafting, fishing, mob-loot, mob-ai (player-targeting),
- * smelting, villager-trading, beacons (potion-effect side), death-drops,
- * block-explosion-damage, pillager-patrols. The {@code damage} and {@code block-break-tagged}
- * flags are handled by their respective listeners (DamagePipelineListener, BlockBreakHandler).
+ * smelting, villager-trading, beacons, death-drops, block-explosion-damage,
+ * pillager-patrols (covered by SpawnReason.PATROL in onSpawn).
+ * The {@code damage} and {@code block-break-tagged} flags are handled by their own
+ * listeners (DamagePipelineListener, BlockBreakHandler). The {@code durability} flag
+ * is handled by DurabilityListener.
  */
 public final class VanillaSuppressionListener implements Listener {
 
@@ -226,10 +228,10 @@ public final class VanillaSuppressionListener implements Listener {
         e.blockList().clear();
     }
 
+    // ----- beacons: cancel the potion-effect application from beacon blocks -----
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-    public void onPortalCreate(PortalCreateEvent e) {
-        // Side-effect of pillager-patrols suppression: nothing useful here yet, kept hookable.
-        if (!flag("pillager-patrols")) return;
-        // Patrol spawns flow through CreatureSpawnEvent.SpawnReason.PATROL — already covered above.
+    public void onBeaconEffect(BeaconEffectEvent e) {
+        if (!flag("beacons")) return;
+        e.setCancelled(true);
     }
 }

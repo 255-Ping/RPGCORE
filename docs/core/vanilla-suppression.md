@@ -1,6 +1,6 @@
 # Vanilla suppression
 
-> **Status:** Wired for `mob-spawning`, `hunger`, `player-regen`, `xp-orbs`, `raids`, `enchanting-table`, `anvil`, `brewing-stand`, `crafting`, `fishing`. Remaining flags accepted in config but not yet enforced.
+> **Status:** All flags wired. `damage` and `block-break-tagged` are handled by `DamagePipelineListener` and `BlockBreakHandler` respectively. `durability` is handled by `DurabilityListener`. Every other flag is handled in `VanillaSuppressionListener`.
 
 The project's design goal is **total vanilla replacement**. Mana, defense, damage, crits, status effects, XP, levels, brewing, food saturation, regeneration, mob spawning, mob loot, mob AI, fishing, enchanting, anvils, smelting, crafting recipes, villager trading, raids, pillager patrols, beacons — all custom-coded.
 

@@ -6,6 +6,7 @@ load: POSTWORLD
 authors: [Ping]
 description: Currency, balances, /pay, /balance, /eco admin commands.
 depend: [rpg-core]
+softdepend: [Vault]
 commands:
   balance:
     description: View your or another player's balance

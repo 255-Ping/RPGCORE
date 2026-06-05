@@ -34,6 +34,17 @@ public final class RpgEconomyPlugin extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new PlayerBalanceListener(economy), this);
 
+        // Register as a Vault economy provider if Vault is loaded.
+        if (getServer().getPluginManager().getPlugin("Vault") != null) {
+            getServer().getServicesManager().register(
+                    net.milkbowl.vault.economy.Economy.class,
+                    new VaultEconomyProvider(economy, currency),
+                    this,
+                    org.bukkit.plugin.ServicePriority.Normal
+            );
+            getLogger().info("Vault economy provider registered.");
+        }
+
         EconomyCommands handler = new EconomyCommands(this, economy);
         for (String cmd : new String[]{"balance", "pay", "eco", "baltop"}) {
             PluginCommand pc = Objects.requireNonNull(getCommand(cmd), "command '" + cmd + "' missing from plugin.yml");

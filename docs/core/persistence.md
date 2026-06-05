@@ -25,6 +25,12 @@ persistence:
 
 If `backend: mysql` and the connection fails on startup, core falls back to YAML with a loud warning. Fix credentials and run `/rpg reloadall`.
 
+> **`backend.yml` is not `config.yml`.** After the first startup, rpg-core writes a file called
+> `plugins/rpg-core/backend.yml` that records which backend was last active. This file is
+> **internal bookkeeping for `BackendMigrator`** — it is read on the next startup to detect whether
+> the admin changed `persistence.backend` between runs and needs data migrated. Do not edit it
+> manually. The only file you should touch is `config.yml`.
+
 ## Where data lives
 
 | Backend | Layout |

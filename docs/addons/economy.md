@@ -2,7 +2,7 @@
 
 # Economy (`rpg-economy`)
 
-> **Status:** In Progress — `rpg-economy` module ships. Single primary currency configurable in `config.yml` (id, prefix, suffix, decimals, starting balance, max balance). Commands: `/balance`, `/pay`, `/eco set|add|remove|reset`, `/baltop` (all with documented permissions). Balances persist via core's `DataStore` as one record per UUID under `balances/`. Vault provider integration not yet shipped — non-suite plugins can use the `Economy` API from `rpg-api` directly.
+> **Status:** In Progress — `rpg-economy` module ships. Single primary currency configurable in `config.yml` (id, prefix, suffix, decimals, starting balance, max balance). Commands: `/balance`, `/pay`, `/eco set|add|remove|reset`, `/baltop` (all with documented permissions). Balances persist via core's `DataStore` as one record per UUID under `balances/`. Vault provider is registered when Vault is present, bridging third-party plugin compatibility.
 
 Currency, balances, payments. Replaces the previously-considered `CURRENCY` ItemType.
 
@@ -61,9 +61,13 @@ Config (in core, under `death-rules`):
 
 See [damage pipeline](../core/damage.md#death-rules).
 
-## Vault compatibility (planned)
+## Vault compatibility
 
-`rpg-economy` registers itself as a Vault economy provider so non-suite plugins (shops, perks) can read/write balances. Soft-depend on Vault; works fine without it.
+`rpg-economy` registers itself as a Vault economy provider so non-suite plugins (shops, perks, permission-cost plugins, etc.) can read and write balances through the standard Vault API. It is a soft-depend — the plugin works normally without Vault. When Vault is present, `VaultEconomyProvider` is registered at `ServicePriority.Normal`.
+
+Bank operations are **not** supported (`hasBankSupport()` returns `false`). All bank methods return `NOT_IMPLEMENTED`.
+
+No extra configuration is needed — the bridge activates automatically if Vault is on the server.
 
 ## API
 

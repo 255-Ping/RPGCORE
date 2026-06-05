@@ -58,6 +58,9 @@
 - Mob death animation — `DeathParticle`/`DeathParticleCount`/`DeathParticleSpread`/`DeathSound` YAML fields; `MobDeathAnimListener` plays particle burst + sound, zeroes knockback velocity at death (`rpg-core 1.6.0`)
 - Extract crafting — `rpg-crafting 0.1.0`; shaped + shapeless recipes from `plugins/rpg-crafting/recipes/`; `/crafting reload|list`; removed from rpg-core loader
 - Timed smelting — `rpg-smelting 0.1.0`; BLAST_FURNACE station block, orange progress-bar GUI, single input slot, DataStore persist/restore, optional vanilla FurnaceRecipe registration, XP → Mining skill; suiteVersion bumped to 21
+- Doc note: `backend.yml` vs `config.yml` — added callout to `docs/core/persistence.md` clarifying that `backend.yml` is internal `BackendMigrator` bookkeeping; admins only touch `config.yml`
+- Vault provider bridge — `VaultEconomyProvider` wraps `CoreEconomy`; registered at `ServicePriority.Normal` when Vault is present; no bank support; `rpg-economy 0.2.0`
+- Vanilla suppression remaining flags — `BeaconEffectEvent` handler added (was the only unwired flag); dead `onPortalCreate` removed; doc status updated; `rpg-core 1.6.1`
 
 ---
 
@@ -83,9 +86,9 @@
 18. ✅ **Timed smelting** — `rpg-smelting 0.1.0`; single input slot GUI, orange progress bar, BLAST_FURNACE station block, DataStore save/restore, vanilla FurnaceRecipe registration toggle; XP → Mining skill
 19. 🟠 🟡 **Permission system consistency audit** — every command gets a permission, all nodes follow `rpg.<plugin>.<verb>[.<qualifier>]` convention, add `docs/permissions.md`
 20. 🟠 🟡 **Telekinesis effect** — drops → inventory enchant/reforge/upgrade; ships as enchant + reforge stone + upgrade scroll
-21. 🟠 🟢 **Document `backend.yml` vs `config.yml`** — quick doc note only
-22. 🟠 🟢 **Vault provider bridge** — quick adapter, enables third-party plugin compatibility
-23. 🟠 🟢 **Vanilla suppression remaining flags** — audit + wire missing handlers
+21. ✅ **Document `backend.yml` vs `config.yml`** — callout added to `docs/core/persistence.md`; `backend.yml` is internal `BackendMigrator` state — do not edit manually
+22. ✅ **Vault provider bridge** — `VaultEconomyProvider` registered at `ServicePriority.Normal` when Vault is on the server; no banks; `rpg-economy 0.2.0`
+23. ✅ **Vanilla suppression remaining flags** — added `BeaconEffectEvent` handler (only truly missing flag); removed dead `onPortalCreate`; updated Javadoc + doc status; `rpg-core 1.6.1`
 24. 🟠 🟡 **Ability DSL: Target selection effects** — `nearest_enemy{}`, `farthest_enemy{}`, `nearest_ally{}`, `random_enemy{}`, `self{}` each set `ctx.target`; unlocks targeting logic in mob timers + passive procs. Full spec in [Improvements](todo-improvements.md)
 25. 🟠 🟡 **Ability DSL: Conditional flow** — `if_health_below{}`, `if_health_above{}`, `if_mana_*{}`, `if_marked{}`, `if_flag{}`, `if_not_flag{}`; same `BLOCKED_KEY` mechanism as `chance{}`; enables phase-transition boss logic. Full spec in [Improvements](todo-improvements.md)
 26. 🟠 🟡 **Region enter/exit messages + more flags** — high-value QoL
