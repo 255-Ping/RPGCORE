@@ -63,6 +63,8 @@
 - Vanilla suppression remaining flags — `BeaconEffectEvent` handler added (was the only unwired flag); dead `onPortalCreate` removed; doc status updated; `rpg-core 1.6.1`
 - Permission system consistency audit — `rpg.core.particle` + `rpg.regions.admin.global` added to plugin.ymls; `docs/permissions.md` fully rewritten covering all 25 plugins; `rpg-regions 0.5.1`
 - Telekinesis effect — `telekinesis` enchant + `telekinetic` reforge + `telekinesis_scroll` upgrade all give `auto_loot: 1`; deployed via `ensureExample` on startup; `rpg-enchanting 0.6.0`
+- Ability DSL: Target selection — `nearest_enemy{}`, `farthest_enemy{}`, `nearest_ally{priority=nearest|lowest_health|lowest_mana}`, `random_enemy{}`, `self{}`; each sets `ctx.target` via radius query; `allow_pvp=true` opt-in; null-safe (no target = downstream no-ops); `rpg-core 1.7.0`
+- Ability DSL: Conditional flow — `if_health_below/above{percent=}`, `if_mana_below/above{percent=}`, `if_marked{}`, `if_target_has_status{id=}`, `if_flag{name=}`, `if_not_flag{name=}`, `set_flag{name=}`, `clear_flag{name=}`; all use same `blocked` mechanism as `chance{}`; flags stored in entity metadata (auto-cleared on death); boss phase-transition pattern documented; `rpg-core 1.7.0`
 
 ---
 
@@ -91,8 +93,8 @@
 21. ✅ **Document `backend.yml` vs `config.yml`** — callout added to `docs/core/persistence.md`; `backend.yml` is internal `BackendMigrator` state — do not edit manually
 22. ✅ **Vault provider bridge** — `VaultEconomyProvider` registered at `ServicePriority.Normal` when Vault is on the server; no banks; `rpg-economy 0.2.0`
 23. ✅ **Vanilla suppression remaining flags** — added `BeaconEffectEvent` handler (only truly missing flag); removed dead `onPortalCreate`; updated Javadoc + doc status; `rpg-core 1.6.1`
-24. 🟠 🟡 **Ability DSL: Target selection effects** — `nearest_enemy{}`, `farthest_enemy{}`, `nearest_ally{}`, `random_enemy{}`, `self{}` each set `ctx.target`; unlocks targeting logic in mob timers + passive procs. Full spec in [Improvements](todo-improvements.md)
-25. 🟠 🟡 **Ability DSL: Conditional flow** — `if_health_below{}`, `if_health_above{}`, `if_mana_*{}`, `if_marked{}`, `if_flag{}`, `if_not_flag{}`; same `BLOCKED_KEY` mechanism as `chance{}`; enables phase-transition boss logic. Full spec in [Improvements](todo-improvements.md)
+24. ✅ **Ability DSL: Target selection effects** — `nearest_enemy{}`, `farthest_enemy{}`, `nearest_ally{}`, `random_enemy{}`, `self{}` each set `ctx.target`; unlocks targeting logic in mob timers + passive procs. `rpg-core 1.7.0`
+25. ✅ **Ability DSL: Conditional flow** — `if_health_below/above{}`, `if_mana_below/above{}`, `if_marked{}`, `if_target_has_status{}`, `if_flag{}`, `if_not_flag{}`, `set_flag{}`, `clear_flag{}`; flags in entity metadata; phase-transition pattern documented. `rpg-core 1.7.0`
 26. 🟠 🟡 **Region enter/exit messages + more flags** — high-value QoL
 27. 🟠 ⚫ **Dungeon flesh-out** — entry requirements + loot grants (fix enter bug first)
 28. 🟠 🔴 **Stats GUI redesign** — highest-visibility player feature

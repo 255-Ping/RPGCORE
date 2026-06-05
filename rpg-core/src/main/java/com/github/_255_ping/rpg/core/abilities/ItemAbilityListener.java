@@ -152,6 +152,25 @@ public final class ItemAbilityListener implements Listener {
         registry.register("mark",         com.github._255_ping.rpg.core.abilities.effects.MarkEffect::new);
         registry.register("chance",       com.github._255_ping.rpg.core.abilities.effects.ChanceEffect::new);
 
+        // ── #24 Target selection ──────────────────────────────────────────────
+        registry.register("nearest_enemy",  p -> new com.github._255_ping.rpg.core.abilities.effects.TargetSelectEffect(com.github._255_ping.rpg.core.abilities.effects.TargetSelectEffect.Mode.NEAREST_ENEMY, p));
+        registry.register("farthest_enemy", p -> new com.github._255_ping.rpg.core.abilities.effects.TargetSelectEffect(com.github._255_ping.rpg.core.abilities.effects.TargetSelectEffect.Mode.FARTHEST_ENEMY, p));
+        registry.register("nearest_ally",   p -> new com.github._255_ping.rpg.core.abilities.effects.TargetSelectEffect(com.github._255_ping.rpg.core.abilities.effects.TargetSelectEffect.Mode.NEAREST_ALLY, p));
+        registry.register("random_enemy",   p -> new com.github._255_ping.rpg.core.abilities.effects.TargetSelectEffect(com.github._255_ping.rpg.core.abilities.effects.TargetSelectEffect.Mode.RANDOM_ENEMY, p));
+        registry.register("self",           p -> new com.github._255_ping.rpg.core.abilities.effects.TargetSelectEffect(com.github._255_ping.rpg.core.abilities.effects.TargetSelectEffect.Mode.SELF, p));
+
+        // ── #25 Conditional flow ──────────────────────────────────────────────
+        registry.register("if_health_below",      p -> new com.github._255_ping.rpg.core.abilities.effects.IfHealthEffect(com.github._255_ping.rpg.core.abilities.effects.IfHealthEffect.Mode.BELOW, p));
+        registry.register("if_health_above",      p -> new com.github._255_ping.rpg.core.abilities.effects.IfHealthEffect(com.github._255_ping.rpg.core.abilities.effects.IfHealthEffect.Mode.ABOVE, p));
+        registry.register("if_mana_below",        p -> new com.github._255_ping.rpg.core.abilities.effects.IfManaEffect(com.github._255_ping.rpg.core.abilities.effects.IfManaEffect.Mode.BELOW, p));
+        registry.register("if_mana_above",        p -> new com.github._255_ping.rpg.core.abilities.effects.IfManaEffect(com.github._255_ping.rpg.core.abilities.effects.IfManaEffect.Mode.ABOVE, p));
+        registry.register("if_marked",            com.github._255_ping.rpg.core.abilities.effects.IfMarkedEffect::new);
+        registry.register("if_target_has_status", com.github._255_ping.rpg.core.abilities.effects.IfTargetHasStatusEffect::new);
+        registry.register("if_flag",              p -> new com.github._255_ping.rpg.core.abilities.effects.FlagEffect(com.github._255_ping.rpg.core.abilities.effects.FlagEffect.Mode.IF_FLAG, p));
+        registry.register("if_not_flag",          p -> new com.github._255_ping.rpg.core.abilities.effects.FlagEffect(com.github._255_ping.rpg.core.abilities.effects.FlagEffect.Mode.IF_NOT_FLAG, p));
+        registry.register("set_flag",             p -> new com.github._255_ping.rpg.core.abilities.effects.FlagEffect(com.github._255_ping.rpg.core.abilities.effects.FlagEffect.Mode.SET_FLAG, p));
+        registry.register("clear_flag",           p -> new com.github._255_ping.rpg.core.abilities.effects.FlagEffect(com.github._255_ping.rpg.core.abilities.effects.FlagEffect.Mode.CLEAR_FLAG, p));
+
         // ── Zone infrastructure ───────────────────────────────────────────────
         int zoneMax = plugin.getConfig().getInt("abilities.zone.max-active", 50);
         com.github._255_ping.rpg.core.abilities.effects.ZoneEffect.init(zoneMax);

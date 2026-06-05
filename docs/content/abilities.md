@@ -2,7 +2,7 @@
 
 # Abilities
 
-> **Status:** Working — Built-in effects library, custom ability YAML, full player trigger system (active click, passive proc, ticking passive), armor set ability bonuses, and mob ability triggers all implemented. Items and mobs share the same ability registry.
+> **Status:** Working — Built-in effects library, custom ability YAML, full player trigger system (active click, passive proc, ticking passive), armor set ability bonuses, and mob ability triggers all implemented. Target selection effects (`nearest_enemy{}`, `farthest_enemy{}`, `nearest_ally{}`, `random_enemy{}`, `self{}`), conditional gates (`if_health_*`, `if_mana_*`, `if_marked{}`, `if_flag{}`, `if_not_flag{}`), and per-entity flags (`set_flag{}`, `clear_flag{}`) all implemented. Items and mobs share the same ability registry.
 
 ## Design intent
 
@@ -159,15 +159,64 @@ voidblade:
 | `delay` | Pauses chain N ticks without blocking server |
 | `mana_cost` | Deducts mana; aborts chain if insufficient |
 | `cooldown` | Starts a soft cooldown for this ability |
-| `chance` | Probability gate — skips all subsequent effects in the chain if the roll fails |
+| `chance` | Probability gate — skips rest of chain on a failed roll |
+| **Target selection** | |
+| `nearest_enemy` | Sets `ctx.target` to nearest hostile within range |
+| `farthest_enemy` | Sets `ctx.target` to farthest hostile within range |
+| `nearest_ally` | Sets `ctx.target` to nearest (or lowest-HP/mana) friendly within range |
+| `random_enemy` | Sets `ctx.target` to a random hostile within range |
+| `self` | Sets `ctx.target` to the caster |
+| **Conditional gates** | |
+| `if_health_below` | Gate: pass when caster HP% &lt; threshold |
+| `if_health_above` | Gate: pass when caster HP% &gt; threshold |
+| `if_mana_below` | Gate: pass when caster mana% &lt; threshold (player only) |
+| `if_mana_above` | Gate: pass when caster mana% &gt; threshold (player only) |
+| `if_marked` | Gate: pass when `ctx.target` has an active `mark{}` |
+| `if_target_has_status` | Gate: pass when `ctx.target` has a specific status effect active |
+| `if_flag` | Gate: pass when named flag is set on caster |
+| `if_not_flag` | Gate: pass when named flag is NOT set on caster |
+| `set_flag` | Set a named boolean flag on the caster (persists until death) |
+| `clear_flag` | Clear a named flag from the caster |
 
 Full parameter tables: **[Effects Reference →](ability-effects.md)**
 
 ---
 
+## Target selection
+
+Target selection effects override `ctx.target` before downstream effects run. Without a targeting effect, `ctx.target` is null until something like `beam{}` sets it. Use these when you want radius-based acquisition (mobs, healing allies, boss slam patterns) instead of a raycast.
+
+```yaml
+# Mob drains nearest player every 3 seconds
+- "nearest_enemy{range=14.0} drain{amount=12, leech=0.8} ~onTimer:60"
+
+# Item heals the most-wounded nearby ally
+- "~right_click mana_cost{amount=25} nearest_ally{range=18.0,priority=lowest_health} heal{amount=35,target=target}"
+
+# Boss slams the farthest player away
+- "farthest_enemy{range=30.0} launch{force=2.0,direction=toward} aoe{radius=5.0,damage=20.0} ~onTimer:100"
+```
+
+If no valid target is found, `ctx.target` remains unchanged and downstream effects no-op (as they already do on null target).
+
+| Effect | Parameters | Sets target to |
+|---|---|---|
+| `nearest_enemy{range=12.0}` | `range`, `allow_pvp=false` | Nearest hostile within radius |
+| `farthest_enemy{range=12.0}` | `range`, `allow_pvp=false` | Farthest hostile within radius |
+| `nearest_ally{range=12.0}` | `range`, `priority=nearest\|lowest_health\|lowest_mana` | Best friendly per priority |
+| `random_enemy{range=12.0}` | `range`, `allow_pvp=false` | Random hostile within radius |
+| `self{}` | — | Caster itself |
+
+**Hostile / ally rules:**
+- *Player caster*: hostile = any non-player mob; ally = other players.
+- *Mob caster*: hostile = players; ally = other non-player entities.
+- `allow_pvp=true` on any enemy selector lets a player target other players.
+
+---
+
 ## Gate effects
 
-Gate effects short-circuit the chain when their condition isn't met. Effects *before* the gate have already fired and are unaffected. Effects *after* the gate are skipped.
+Gate effects short-circuit the chain when their condition isn't met. Effects *before* the gate have already fired and are unaffected. Effects *after* the gate are skipped. Multiple gates AND together naturally (every gate that fails blocks the rest).
 
 ### `chance{percent=N}`
 
@@ -183,7 +232,59 @@ Rolls a random number. If it fails, the rest of the chain is skipped.
 
 - `percent` is a double — `percent=12.5` works
 - Stacking two `chance{}` calls is AND logic: `chance{percent=50} chance{percent=50}` ≈ 25% net
-- The pipeline handles the skip — no other effects need to be modified
+
+### Health and mana gates
+
+| Effect | Passes when |
+|---|---|
+| `if_health_below{percent=50}` | Caster HP% < threshold |
+| `if_health_above{percent=50}` | Caster HP% > threshold |
+| `if_mana_below{percent=30}` | Caster mana% < threshold (player only; fails for mobs) |
+| `if_mana_above{percent=70}` | Caster mana% > threshold (player only; fails for mobs) |
+
+```yaml
+# Execute strike: triple damage only when the target is below 30% HP
+- "~right_click mana_cost{amount=30} beam{range=10.0} if_health_below{percent=30} damage{damage_multiplier=3.0}"
+
+# Player item: heal yourself only when critically wounded
+- "~right_click if_health_below{percent=25} heal{amount=80} cooldown{ticks=200}"
+```
+
+### Mark and status gates
+
+| Effect | Passes when |
+|---|---|
+| `if_marked{}` | `ctx.target` currently has an active `mark{}` on it |
+| `if_target_has_status{id=X}` | `ctx.target` has status effect `X` active |
+
+```yaml
+# Detonate mark on nearest enemy — no-ops safely if target isn't marked
+- "nearest_enemy{range=12.0} if_marked{} damage{damage_multiplier=3.5} explode{radius=3.0}"
+
+# Bonus damage against poisoned targets
+- "~on_hit if_target_has_status{id=poison} damage{damage_multiplier=1.5}"
+```
+
+### Flag gates
+
+Per-entity named boolean flags that persist across separate ability invocations for the lifetime of the entity (until death or disconnect). Stored in entity metadata — automatic cleanup on death.
+
+| Effect | Behaviour |
+|---|---|
+| `if_flag{name=X}` | Gate: pass when flag X is set on caster |
+| `if_not_flag{name=X}` | Gate: pass when flag X is NOT set on caster |
+| `set_flag{name=X}` | Set flag X on caster (not a gate — always passes through) |
+| `clear_flag{name=X}` | Clear flag X from caster (not a gate) |
+
+The key use case is **one-shot boss phase transitions** — a timer fires every tick, but the transition only happens once:
+
+```yaml
+# Mob timer: enrage once when HP drops below 25%. Never re-triggers because set_flag
+# prevents if_not_flag from passing a second time.
+- "if_health_below{percent=25} if_not_flag{name=enraged} set_flag{name=enraged}
+   shield{amount=200,target=caster} particles{type=soul_fire_flame,count=40,offset=1.0}
+   sound{key=entity.wither.spawn,volume=1.0,pitch=0.8} ~onTimer:20"
+```
 
 ---
 
@@ -204,10 +305,11 @@ Every ability cast creates one `AbilityContext` that flows through the entire ef
 | Field | Type | Description |
 |---|---|---|
 | `caster` | `LivingEntity` | The casting entity. Never null, never changes. |
-| `target` | `LivingEntity` | Current entity target. **Starts null.** Set by `beam`/`projectile` on hit. |
+| `target` | `LivingEntity` | Current entity target. **Starts null.** Set by `beam{}` (raycast) or any target-selection effect. |
 | `point` | `Location` | Current world position. **Starts null.** Set by `beam`/`projectile`/`teleport`. |
 | `carriedDamage` | `double` | Running damage. Initialized from item `damage` stat. Consumed by `damage{}` when no `amount` param. |
 | `pierceRemaining` | `int` | Entities the beam/projectile can still pass through. |
+| `blocked` | `boolean` | Set by gate effects (`chance{}`, `if_*{}`) when their condition fails. The pipeline skips every subsequent effect while this is true. |
 | `bag` | `Map<String,Object>` | Open key-value store for addon-defined cross-effect state. |
 
 Context flows through `delay` and `projectile` suspension — `target`, `point`, and `carriedDamage` are still set when the chain resumes after a wait.

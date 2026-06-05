@@ -13,6 +13,26 @@
 #   apply_status{id=, level=, duration=, target=caster/target}
 #   mana_cost{amount=}                                 throws on insufficient
 #   cooldown{ticks=, key=}
+#
+# Target selection (set ctx.target before downstream effects):
+#   nearest_enemy{range=12.0}
+#   farthest_enemy{range=12.0}
+#   nearest_ally{range=12.0, priority=nearest|lowest_health|lowest_mana}
+#   random_enemy{range=12.0}
+#   self{}                                             target = caster
+#   (allow_pvp=true on any enemy selector lets players target other players)
+#
+# Conditional gates (skip remaining chain if condition fails):
+#   if_health_below{percent=50}
+#   if_health_above{percent=50}
+#   if_mana_below{percent=30}
+#   if_mana_above{percent=70}
+#   if_marked{}                                        ctx.target must have an active mark{}
+#   if_target_has_status{id=poison}                    ctx.target must have status active
+#   if_flag{name=X}                                    caster must have flag X set
+#   if_not_flag{name=X}                                caster must NOT have flag X set
+#   set_flag{name=X}                                   set flag X on caster (persists until death)
+#   clear_flag{name=X}                                 clear flag X from caster
 
 testability:
   AbilitySequence:
@@ -37,3 +57,69 @@ poison_dart:
   - beam{range=12, damage_multiplier=0.5, particle=witch}
   - apply_status{id=poison, level=1, duration=200, target=target}
   Cooldown: 20
+
+# ── Target selection examples ─────────────────────────────────────────────────
+
+# Drain the nearest enemy in range — good for mob timers.
+# If no enemy is within 14 blocks the target remains null and drain{} no-ops.
+mob_leech:
+  Name: "&5Leech"
+  Description:
+    - "Siphon life from the nearest enemy."
+  AbilitySequence:
+  - nearest_enemy{range=14.0}
+  - drain{amount=12, leech=0.8}
+  - particles{type=soul_fire_flame, count=8, offset=0.5}
+  Cooldown: 60
+
+# Heal the most-wounded nearby ally.
+triage_pulse:
+  Name: "&aField Medic"
+  Description:
+    - "Heals the ally with the lowest HP."
+  AbilitySequence:
+  - mana_cost{amount=25}
+  - nearest_ally{range=18.0, priority=lowest_health}
+  - heal{amount=35, target=target}
+  - particles{type=heart, count=10, offset=0.4}
+  Cooldown: 80
+
+# ── Conditional flow examples ─────────────────────────────────────────────────
+
+# Execute strike: triple damage only when the target is below 30% HP.
+execute_strike:
+  Name: "&cExecute"
+  Description:
+    - "Triple damage against targets below 30% HP."
+  AbilitySequence:
+  - mana_cost{amount=30}
+  - beam{range=10.0}
+  - if_health_below{percent=30}
+  - damage{damage_multiplier=3.0}
+  - particles{type=crit, count=20, offset=0.3}
+  Cooldown: 40
+
+# Detonate a mark on the nearest enemy — only fires if target is marked.
+mark_detonator:
+  Name: "&dDetonation"
+  Description:
+    - "Detonates your mark on the nearest enemy."
+  AbilitySequence:
+  - mana_cost{amount=20}
+  - nearest_enemy{range=12.0}
+  - if_marked{}
+  - damage{damage_multiplier=3.5}
+  - explode{radius=3.5, damage_multiplier=0.5, particle=crit_magic}
+  Cooldown: 20
+
+# Boss phase-2 trigger: enrage once when HP drops below 25%.
+# set_flag{} prevents re-entry on subsequent timer ticks.
+# (Put this in a mob YAML as a ~onTimer ability line.)
+boss_phase2_trigger:
+  AbilitySequence:
+  - if_health_below{percent=25}
+  - if_not_flag{name=enraged}
+  - set_flag{name=enraged}
+  - shield{amount=200, duration=100, target=caster}
+  - particles{type=soul_fire_flame, count=40, offset=1.0}
+  - sound{key=entity.wither.spawn, volume=1.0, pitch=0.8}
