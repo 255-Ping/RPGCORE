@@ -20,7 +20,7 @@ When `suiteVersion` goes from N → N+1:
 
 | Suite | Status | Highlights |
 |-------|--------|-----------|
-| [21](changelog/suite-21.md) | **current** | `rpg-crafting`, `rpg-smelting`, mob death animation, timed smelting station |
+| [21](changelog/suite-21.md) | **current** | `rpg-crafting`, `rpg-smelting`, mob death animation, timed smelting station; 15 new ability DSL effects (target selection + conditional gates); `/stats` inventory GUI; `rpg-regions` 7 new flags; telekinesis enchant; Vault bridge in `rpg-economy` |
 | [20](changelog/suite-20.md) | closed | `rpg-homes`, `rpg-kits`, timed cooking/brewing, mob death anim, resource pack delivery, crafting/smelting extracted |
 | [19](changelog/suite-19.md) | closed | Ability trigger system, 10 new effects, loot pools, enchanting XP cost, NPC overhaul, timed crafting |
 | [18](changelog/suite-18.md) | closed | Per-player drops, global region, vanilla enchanting intercept, accessories, HUD effects placeholder |

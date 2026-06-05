@@ -1,6 +1,6 @@
 # Built-in Ability Effects — Reference
 
-> **Status:** Working — all effects listed here are implemented and available in `rpg-core 1.3.0`.
+> **Status:** Working — all effects listed here are implemented and available in `rpg-core 1.7.0`.
 
 Full parameter reference for every built-in effect. All effects accept their parameters via the DSL: `effectName{key=value, key2=value2}`.
 
@@ -314,6 +314,153 @@ Pauses the ability chain for N ticks without blocking the server thread. Context
 ```yaml
 - "particles{type=ENCHANT} delay{ticks=10} explode{radius=5}"
 ```
+
+---
+
+---
+
+## Target selection effects
+
+_Added in rpg-core 1.7.0._ These effects set `ctx.target` before the effects that follow them. Place them at the start of a sequence (or after a trigger gate) to pick who the next `damage{}`, `heal{}`, `mark{}`, etc. acts on.
+
+### nearest_enemy
+
+Sets `ctx.target` to the nearest hostile entity within range.
+
+| Param | Default | Description |
+|---|---|---|
+| `range` | `12.0` | Search radius in blocks |
+
+```yaml
+- "nearest_enemy{range=12} damage{amount=30}"
+```
+
+---
+
+### farthest_enemy
+
+Sets `ctx.target` to the farthest hostile entity within range (useful for long-range snipe abilities).
+
+| Param | Default | Description |
+|---|---|---|
+| `range` | `12.0` | Search radius in blocks |
+
+---
+
+### nearest_ally
+
+Sets `ctx.target` to the nearest friendly player within range. The optional `priority` controls what counts as "nearest" when multiple allies are present.
+
+| Param | Default | Description |
+|---|---|---|
+| `range` | `12.0` | Search radius in blocks |
+| `priority` | `nearest` | `nearest` (closest), `lowest_health` (ally with the least HP%), or `lowest_mana` (player ally with the least mana%) |
+
+```yaml
+- "nearest_ally{range=20, priority=lowest_health} heal{amount=50, target=target}"
+```
+
+---
+
+### random_enemy
+
+Sets `ctx.target` to a randomly chosen hostile entity within range.
+
+| Param | Default | Description |
+|---|---|---|
+| `range` | `12.0` | Search radius in blocks |
+
+---
+
+### self
+
+Sets `ctx.target` to the caster. Useful for making a sequence explicitly self-target after a previous effect may have changed the target.
+
+_(No parameters.)_
+
+---
+
+## Conditional gates
+
+_Added in rpg-core 1.7.0._ These effects abort the ability chain if their condition is not met. They are zero-side-effect tests — place them before costly effects to gate execution.
+
+### if_health_below / if_health_above
+
+Continues the chain only if the caster's HP (as a percent of max) is below or above the threshold.
+
+| Param | Default | Description |
+|---|---|---|
+| `percent` | _(required)_ | HP threshold as a whole number (e.g. `50` = 50%) |
+
+```yaml
+# Execute only when below half HP
+- "if_health_below{percent=50} heal{amount=80}"
+```
+
+---
+
+### if_mana_below / if_mana_above
+
+Same as `if_health_*` but tests the caster's current mana.
+
+| Param | Default | Description |
+|---|---|---|
+| `percent` | _(required)_ | Mana threshold as a whole number |
+
+---
+
+### if_marked
+
+Continues only if `ctx.target` currently has a mark applied (see [`mark{}`](#mark)).
+
+_(No parameters.)_
+
+```yaml
+# Big finisher that only fires if the target is already marked
+- "if_marked{} beam{range=12} damage{amount=80}"
+```
+
+---
+
+### if_target_has_status
+
+Continues only if `ctx.target` currently has the specified status effect active.
+
+| Param | Default | Description |
+|---|---|---|
+| `id` | _(required)_ | Status effect ID to check |
+
+```yaml
+- "if_target_has_status{id=poison} damage{amount=20}"
+```
+
+---
+
+### if_flag / if_not_flag
+
+Tests a named boolean flag on the caster. `if_flag` continues if the flag is set; `if_not_flag` continues if it is **not** set (or was never set). Flags are stored in entity `PersistentDataContainer` under the key `rpg_flag_<name>`. For mobs they clear on death. For players they persist across sessions (PDC is saved with the player data).
+
+| Param | Default | Description |
+|---|---|---|
+| `name` | _(required)_ | Flag name (any string key) |
+
+```yaml
+# Combo: first hit sets a flag, second hit checks and clears it for a bonus
+- "~on_hit if_not_flag{name=combo_ready} set_flag{name=combo_ready}"
+- "~on_hit if_flag{name=combo_ready} clear_flag{name=combo_ready} damage{amount=60}"
+```
+
+---
+
+### set_flag / clear_flag
+
+Sets or clears a named boolean flag on the caster. These are side-effecting and intended to be used alongside `if_flag` / `if_not_flag` to build stateful combo sequences.
+
+| Param | Default | Description |
+|---|---|---|
+| `name` | _(required)_ | Flag name to set or clear |
+
+_(See `if_flag` example above.)_
 
 ---
 

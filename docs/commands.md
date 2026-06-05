@@ -1,6 +1,6 @@
 # Master command reference
 
-> **Status:** Working (synced with plugin.ymls as of suite 19)
+> **Status:** Working (synced with plugin.ymls as of suite 21)
 
 Every command across every module. Permissions follow `rpg.<module>.<command>[.<sub>]`. Self-use commands default to true; admin commands default to op; moderation commands declared per-command.
 
@@ -27,7 +27,7 @@ Every command across every module. Permissions follow `rpg.<module>.<command>[.<
 | `/rpg status apply <effect> [player] [duration]` | `rpg.core.status.apply` | op | Apply a status effect |
 | `/rpg status clear [player] [effect]` | `rpg.core.status.clear` | op | Clear status effects |
 | `/rpg skill set <skill> <level\|xp> <amount> [player]` | `rpg.core.skill.set` | op | Adjust skill state |
-| `/stats [player]` | `rpg.core.stats` / `rpg.core.stats.other` | true / op | Open stats GUI |
+| `/stats [player]` | `rpg.core.stats` / `rpg.core.stats.other` | true / op | Open 54-slot inventory stats GUI (rpg-core 1.7.0+; replaces old chat output) |
 | `/skill [player]` | `rpg.core.skill` / `rpg.core.skill.other` | true / op | Open skills GUI |
 | `/skill pin <skill>` | `rpg.core.skill.pin` | true | Pin a skill to the vanilla XP bar |
 | `/effects` | `rpg.core.effects` | true | Open active status effects GUI |
