@@ -6,6 +6,197 @@ _Full features or systems that don't exist at all yet._
 
 ---
 
+### Salvaging System (`rpg-salvaging`) — 🔴 Hard
+
+Players feed unwanted items into a **Salvager block** to recover coins, XP levels, and occasionally the reforges/upgrades that were applied to those items. Yield scales with item rarity and the player's Salvaging skill level.
+
+---
+
+#### Block
+
+A new custom RPG block type (`salvager`, defined in `blocks/`) that opens the Salvage GUI on right-click. Placed by admins via `/rpg item give salvager_block`. Hooks into the existing `BlockInteractListener` dispatch.
+
+```yaml
+# blocks/salvager.yml
+id: salvager
+DisplayName: "&6Salvager"
+Material: GRINDSTONE          # or a resource-pack custom-model-data override
+Interactable: true
+# no Toughness / RequiredPower — can't be broken by players in protected areas
+```
+
+---
+
+#### GUI — 54-slot inventory
+
+```
+[ 0  1  2  3  4  5  6  7  8 ]   ← row 1 \
+[ 9 10 11 12 13 14 15 16 17 ]   ← row 2  |
+[18 19 20 21 22 23 24 25 26 ]   ← row 3  | 36 input slots (rows 1–4)
+[27 28 29 30 31 32 33 34 35 ]   ← row 4 /
+[36 37 38 39 40 41 42 43 44 ]   ← row 5 (border separator)
+[45 46 47 48 49 50 51 52 53 ]   ← row 6 (action bar)
+                  ↑        ↑
+              close(49)  scrap(52)
+         yield-preview(46)
+```
+
+**Row 5** — all border panes (visual separator between input grid and action bar).
+
+**Row 6 slots:**
+| Slot | Item | Behaviour |
+|---|---|---|
+| 45, 47, 48, 50, 51, 53 | Border pane | Static filler |
+| 46 | **Yield Preview** | Updates live as items are added/removed. Shows estimated coin yield, XP levels, and recovery chances in lore. Icon = `GOLD_NUGGET`; turns `EMERALD` if the grid is non-empty. |
+| 49 | **Close** (standard nav bar) | Returns all items in the grid to the player's inventory (same as closing the GUI normally). |
+| 52 | **Scrap All** | Executes salvage of every item in the grid; credits rewards; closes the GUI. `LIME_DYE` icon, turns `GRAY_DYE` (with lore "Add items first") when grid is empty. |
+
+**On any close** (whether via ✕, Close button, or server/disconnect): every `ItemStack` in slots 0–35 that is non-null is returned to the player's inventory; overflow drops at their feet.
+
+---
+
+#### What can be salvaged
+
+An item is salvageable unless any of the following is true:
+- Its YAML definition includes `Salvageable: false` (per-item opt-out).
+- Its material is in `salvaging.blocked-materials` config list.
+- Its RPG item ID is in `salvaging.blocked-items` config list.
+- It is a vanilla item (no RPG stats) AND `salvaging.block-vanilla-items: true` (default true).
+- It has the PDC key `rpg_no_salvage` set to `1` (runtime flag, for quest items etc.).
+
+Non-salvageable items placed in the grid are immediately returned with an action-bar warning: `"&c<item name> cannot be salvaged."` They are never held in the grid.
+
+---
+
+#### Yield calculation
+
+**Coins:**
+```
+base_value      = item's ShopValue (defined on RpgItem YAML), or 0 if absent
+rarity_mult     = config rarity-multipliers[item.Rarity]   (see config below)
+skill_bonus     = 1.0 + (salvagingLevel × config.yield-per-level)
+variance        = random in [1.0 - yield-variance, 1.0 + yield-variance]
+coin_yield      = base_value × rarity_mult × skill_bonus × variance
+```
+Minimum coin yield is 1 (never zero if the item was salvageable).
+
+**XP levels** (only if the item has at least one vanilla enchantment):
+```
+raw_xp = sum of (enchant.level × config.enchant-xp-per-level) for each enchantment
+xp_yield = ceil(raw_xp × skill_bonus)
+```
+Granted via `player.giveExpLevels(xpYield)`.
+
+**Reforge recovery** (only if item has a reforge applied):
+```
+roll < config.reforge-recovery-chance + (salvagingLevel × config.recovery-per-level)
+→ give the matching reforge stone ItemStack to the player
+```
+
+**Upgrade recovery** (for each upgrade scroll applied to the item):
+```
+roll < config.upgrade-recovery-chance + (salvagingLevel × config.recovery-per-level)
+→ give one matching upgrade scroll ItemStack to the player
+```
+
+Recovery items go directly to the player's inventory (overflow drops at feet). Each reforge/upgrade is rolled independently.
+
+---
+
+#### Yield Preview item
+
+The preview icon in slot 46 recalculates every time the contents of slots 0–35 change (`InventoryClickEvent` / `InventoryDragEvent`). Lore shows the summed estimate across all items currently in the grid:
+
+```
+§6Estimated yield
+§e  Coins:     ~$1,240 – $1,560
+§b  XP Levels: ~4
+§a  Reforges:  2 items (15% chance each)
+§a  Upgrades:  3 items (10% chance each)
+§7
+§7Salvaging skill bonus: +12%
+```
+
+Ranges are shown using the variance bounds so the player understands it's not a fixed number.
+
+---
+
+#### Config (`plugins/rpg-salvaging/config.yml`)
+
+```yaml
+salvaging:
+  # Fraction of ShopValue returned as coins, by rarity.
+  rarity-multipliers:
+    COMMON:    0.10
+    UNCOMMON:  0.15
+    RARE:      0.25
+    EPIC:      0.40
+    LEGENDARY: 0.60
+    MYTHIC:    1.00
+
+  # Vanilla XP levels granted per enchantment level on the salvaged item.
+  enchant-xp-per-level: 1
+
+  # Base probability (0.0–1.0) of recovering a reforge stone.
+  reforge-recovery-chance: 0.15
+
+  # Base probability (0.0–1.0) of recovering each applied upgrade scroll.
+  upgrade-recovery-chance: 0.10
+
+  # Additive yield bonus per Salvaging skill level (e.g. 0.005 = +0.5%/level).
+  yield-per-level: 0.005
+
+  # Additive recovery-chance bonus per Salvaging skill level.
+  recovery-per-level: 0.005
+
+  # Yield variance: actual coins = calculated ± this fraction.
+  yield-variance: 0.15
+
+  # Prevent vanilla (non-RPG) items from being salvaged.
+  block-vanilla-items: true
+
+  # RPG item IDs that cannot be salvaged.
+  blocked-items: []
+
+  # Vanilla materials that cannot be salvaged.
+  blocked-materials: []
+
+  # Salvaging XP formula: 1 skill-XP per this many coins of yield.
+  xp-per-coin: 10.0
+```
+
+---
+
+#### Salvaging skill
+
+New `BuiltinSkill.SALVAGING` entry in `rpg-api`. XP is awarded at the moment of scrapping, proportional to total coin yield (`yield / config.xp-per-coin`).
+
+Milestone bonuses (applied passively via `SkillsService.snapshot()`; stored in stat sheet as `salvaging_yield_bonus` and `salvaging_recovery_bonus` virtual stats):
+
+| Level | Bonus |
+|---|---|
+| 1–49 | +0.5% yield and +0.5% recovery per level (from `yield-per-level` / `recovery-per-level` config) |
+| 50 | **Expert Salvager** — reforge recovery floor raised to 50%; upgrade recovery floor raised to 25% |
+| 100 | **Master Salvager** — guaranteed at least one reforge or upgrade returned per salvage (if any were applied) |
+
+Milestone bonuses at 50 and 100 are additive on top of the base formula, not replacing it.
+
+---
+
+#### Implementation notes
+
+- New Gradle module `rpg-salvaging`. Depends on `rpg-api` and `rpg-core`.
+- `SalvageGui` — 54-slot inventory; `Map<UUID, SalvageSession>` tracks open sessions.
+- `SalvageSession` — holds the `Inventory`, `Player`, and the current calculated yield (recalculated on every grid change).
+- Grid change detection: `InventoryClickEvent` + `InventoryDragEvent` filtered to the salvage inventory instance; both re-run `recalculate()` after the event resolves (scheduled 1-tick-later so item moves have settled).
+- Close handling: `InventoryCloseEvent` — if session was closed without scrapping, return all items and remove session.
+- `SalvageBlockListener` — `PlayerInteractEvent` on the salvager custom block → open GUI.
+- Reforge/upgrade item lookup: need a way to turn the stored reforge ID / upgrade ID back into an ItemStack. Add `EnchantingService.reforgeItem(id)` and `upgradeItem(id)` to `rpg-api` (or look up from `ItemRegistry` if reforge stones are registered RPG items).
+- `BuiltinSkill.SALVAGING` — add to `rpg-api`; `CoreSkillRegistry` picks it up automatically.
+- Add `Salvageable: true` field to `RpgItem` YAML (default `true`); loaded in `ItemLoader`, stored on `CoreRpgItem`, checked by `SalvageGui`.
+
+---
+
 ### Main Menu Item (`rpg-core`) — 🟡 Medium
 
 A persistent hotbar item that acts as a hub into all major player-facing GUIs. Every player always has it; it cannot be removed, dropped, or moved.

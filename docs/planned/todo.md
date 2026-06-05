@@ -123,7 +123,7 @@
 48. 🟠 🔴 **Mob patrol waypoints** — admin-defined walk paths for mobs + NPCs
 49. 🔴 🔴 **Ability DSL: Context variables + flags** — Tier 1 (boolean flags: `set_flag{}`, `clear_flag{}`, `if_flag{}`; ship first), Tier 2 (numeric: `increment{}`, `decrement{}`, `if_var_gte{}`); ship Tier 1 first. Full spec in [Improvements](todo-improvements.md)
 50. 🔴 ⚫ **World events + world boss**
-51. 🔴 🟡 **Salvaging system**
+51. 🔴 🔴 **Salvaging system** — Salvager block → 54-slot GUI; 36 input slots; live yield preview; Scrap All button; coins by rarity, XP from enchants, chance to recover reforges/upgrades; new `salvaging` skill boosts yield + recovery; full spec in [New Features](todo-features.md)
 52. 🔴 ⚫ **Auction House** (needs sign-entry ✅ + mail first) — reference SurvivalCore `auction/` + `gui/AuctionGui.java`; swap `CoinProvider` → `RpgServices.economy()`
 53. 🔴 🔴 **Bazaar** — reference SurvivalCore `bazaar/` + `gui/BazaarGui.java`; swap `CoinProvider` → `RpgServices.economy()`
 54. 🟠 🔴 **Display entity suite** (`rpg-holograms`) — ItemDisplay, BlockDisplay, physical `/de` editor with inventory replacement, fine-detail GUI, YAML persistence for all types
