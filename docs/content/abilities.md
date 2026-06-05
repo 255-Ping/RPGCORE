@@ -27,14 +27,19 @@ Every entry in an item's `Abilities:` list can be bound to a specific **trigger*
 | `left_click` | `~left_click ` | Player left-clicks |
 | `shift_right_click` | `~shift_right_click ` | Player sneaks + right-clicks |
 | `shift_left_click` | `~shift_left_click ` | Player sneaks + left-clicks |
-| `on_hit` | `~on_hit ` | Player deals melee or projectile damage |
+| `on_hit` | `~on_hit ` | Player deals melee or projectile damage (after pipeline confirms hit) |
 | `on_hurt` | `~on_hurt ` | Player receives damage (any source) |
 | `on_jump` | `~on_jump ` | Player jumps |
+| `on_attack` | `~on_attack ` | Player initiates an attack — fires before the damage pipeline, even if the hit is later cancelled |
+| `on_kill` | `~on_kill ` | Player kills an RPG mob |
+| `on_block` | `~on_block ` | Player is hit while holding a shield (`isBlocking()`); attacker is `ctx.target` |
 | `passive` | `~passive ` | Ticking — fires every `abilities.passive-interval-ticks` while item is held/equipped |
 
 **Active vs passive:**
 - **Active** triggers (`right_click`, `left_click`, `shift_*`) require the player to act and typically use `mana_cost{}`.  
-- **Passive / proc** triggers (`on_hit`, `on_hurt`, `on_jump`, `passive`) fire automatically. **No mana cost is applied unless you add `mana_cost{}` explicitly.**
+- **Passive / proc** triggers (`on_hit`, `on_hurt`, `on_jump`, `on_attack`, `on_kill`, `on_block`, `passive`) fire automatically. **No mana cost is applied unless you add `mana_cost{}` explicitly.**
+
+**`on_attack` vs `on_hit`:** `on_attack` fires the moment the player swings (LOWEST priority, before cancellation) — useful for pre-hit self-buffs and visual effects on every swing. `on_hit` fires after the RPG pipeline confirms the hit landed and damage was dealt.
 
 ```yaml
 phantom_blade:
@@ -67,10 +72,13 @@ testmob:
 | Mob trigger | When it fires |
 |---|---|
 | `~onTimer:N` | Every N ticks while the mob is alive |
-| `~onHit` | When the mob deals damage |
+| `~onHit` | When the mob deals damage (after RPG pipeline confirms hit) |
 | `~onHurt` | When the mob takes damage |
 | `~onSpawn` | Once on spawn |
 | `~onDeath` | Once on death |
+| `~onAttack` | When the mob initiates a melee attack — fires before the damage pipeline, even if cancelled |
+| `~onKill` | When this mob lands the killing blow on any entity |
+| `~onJump` | Each time the mob jumps |
 
 See [Mobs → Ability triggers](mobs.md#ability-triggers) for full mob documentation.
 
@@ -151,8 +159,31 @@ voidblade:
 | `delay` | Pauses chain N ticks without blocking server |
 | `mana_cost` | Deducts mana; aborts chain if insufficient |
 | `cooldown` | Starts a soft cooldown for this ability |
+| `chance` | Probability gate — skips all subsequent effects in the chain if the roll fails |
 
 Full parameter tables: **[Effects Reference →](ability-effects.md)**
+
+---
+
+## Gate effects
+
+Gate effects short-circuit the chain when their condition isn't met. Effects *before* the gate have already fired and are unaffected. Effects *after* the gate are skipped.
+
+### `chance{percent=N}`
+
+Rolls a random number. If it fails, the rest of the chain is skipped.
+
+```yaml
+# 20% chance to freeze on hit
+- "~on_hit chance{percent=20} freeze{duration=60,amplifier=4}"
+
+# beam always hits; chain only bounces 35% of the time
+- "mana_cost{amount=30} beam{range=14.0} damage{} chance{percent=35} chain{count=3,range=8.0}"
+```
+
+- `percent` is a double — `percent=12.5` works
+- Stacking two `chance{}` calls is AND logic: `chance{percent=50} chance{percent=50}` ≈ 25% net
+- The pipeline handles the skip — no other effects need to be modified
 
 ---
 

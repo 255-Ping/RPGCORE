@@ -73,5 +73,7 @@ The main `config.yml` covers:
 - Status-effect stacking defaults
 - Chat name-format defaults (LuckPerms wiring)
 - i18n locale
+- **Resource pack auto-delivery** — `resource-pack.enabled/url/sha1/prompt/required`; sends pack to players on join. Disabled by default.
+- **Damage indicators** — `damage-indicators.enabled/duration-ticks/rise-blocks`; TextDisplay entities animate via a sine arc (rise then fall) with linear scale shrink 1→0.
 
 Each field has a comment block in the generated `config.yml` describing it.

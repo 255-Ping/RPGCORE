@@ -1,0 +1,32 @@
+# kits/example.yml — each top-level key is one kit.
+#
+# Fields:
+#   DisplayName    : colored name shown to players (& codes)
+#   Description    : list of lore lines shown in /kit list
+#   Items          : list of {Item: <rpg-id or material>, Amount: <n>}
+#   Permission     : permission node required to claim (leave blank = everyone with rpg.kits.use)
+#   OneTime        : true = can only be claimed once ever per player; false = cooldown-based
+#   Cooldown       : seconds between claims (ignored if OneTime: true; 0 = no cooldown)
+
+starter:
+  DisplayName: "&aStarter Kit"
+  Description:
+  - "&7Everything a new adventurer needs."
+  - "&8One-time only."
+  Items:
+  - { Item: iron_sword,  Amount: 1 }
+  - { Item: iron_pickaxe, Amount: 1 }
+  - { Item: bread,       Amount: 16 }
+  - { Item: torch,       Amount: 32 }
+  OneTime: true
+  Cooldown: 0
+
+daily:
+  DisplayName: "&6Daily Rations"
+  Description:
+  - "&7A small daily supply of food."
+  Items:
+  - { Item: cooked_beef, Amount: 8 }
+  - { Item: golden_apple, Amount: 1 }
+  OneTime: false
+  Cooldown: 86400   # 24 hours in seconds

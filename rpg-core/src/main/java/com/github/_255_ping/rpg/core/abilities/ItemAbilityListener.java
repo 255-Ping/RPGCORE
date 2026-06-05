@@ -150,6 +150,7 @@ public final class ItemAbilityListener implements Listener {
         registry.register("zone",         com.github._255_ping.rpg.core.abilities.effects.ZoneEffect::new);
         registry.register("shield",       com.github._255_ping.rpg.core.abilities.effects.ShieldEffect::new);
         registry.register("mark",         com.github._255_ping.rpg.core.abilities.effects.MarkEffect::new);
+        registry.register("chance",       com.github._255_ping.rpg.core.abilities.effects.ChanceEffect::new);
 
         // ── Zone infrastructure ───────────────────────────────────────────────
         int zoneMax = plugin.getConfig().getInt("abilities.zone.max-active", 50);

@@ -1,0 +1,28 @@
+name: rpg-kits
+version: '${version}'
+main: com.github._255_ping.rpg.kits.RpgKitsPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Starter / reward kits claimable by players.
+depend: [rpg-core]
+commands:
+  kit:
+    description: Claim or list available kits
+    usage: /kit [name]
+  givenkit:
+    description: Force-give a kit to a player (admin)
+    usage: /givenkit <player> <kit>
+  kitreset:
+    description: Reset a player's kit claim history (admin)
+    usage: /kitreset <player> [kit]
+permissions:
+  rpg.kits.use:
+    description: Use /kit to claim kits
+    default: true
+  rpg.kits.admin:
+    description: Use /givenkit and /kitreset
+    default: op
+  rpg.kits.reload:
+    description: Reload kits
+    default: op

@@ -18,7 +18,12 @@ public final class AbilityPipeline {
     public CompletableFuture<AbilityContext> cast(AbilityContext initial, AbilityRegistry registry) {
         CompletableFuture<AbilityContext> chain = CompletableFuture.completedFuture(initial);
         for (AbilityInvocation inv : invocations) {
-            chain = chain.thenCompose(ctx -> registry.build(inv.effectName(), inv.params()).apply(ctx));
+            chain = chain.thenCompose(ctx -> {
+                // Gate effects (chance{}, and future if_*{}) set ctx.blocked = true when their
+                // condition fails. Skip every subsequent effect without executing it.
+                if (ctx.isBlocked()) return CompletableFuture.completedFuture(ctx);
+                return registry.build(inv.effectName(), inv.params()).apply(ctx);
+            });
         }
         return chain;
     }

@@ -161,6 +161,15 @@ chat-name-format:
 # Locale for messages.yml selection (en is shipped; others come later).
 locale: en
 
+# Resource pack auto-delivery. Sends the pack to players when they join.
+# Leave url blank to disable even if enabled: true.
+resource-pack:
+  enabled: false
+  url: ""            # direct download URL (must be https and publicly reachable)
+  sha1: ""           # hex SHA-1 of the pack ZIP; leave empty to skip hash check
+  prompt: "&7This server uses a custom resource pack for the best experience."
+  required: false    # true = kick players who decline
+
 # Floating damage indicators (TextDisplay entities above the hit mob).
 damage-indicators:
   enabled: true

@@ -5,9 +5,12 @@ import com.github._255_ping.rpg.core.abilities.AbilityLoader;
 import com.github._255_ping.rpg.core.abilities.CoreAbilityRegistry;
 import com.github._255_ping.rpg.core.abilities.ItemAbilityListener;
 import com.github._255_ping.rpg.core.abilities.PassiveAbilityFirer;
+import com.github._255_ping.rpg.core.abilities.PlayerAttackAbilityListener;
+import com.github._255_ping.rpg.core.abilities.PlayerBlockAbilityListener;
 import com.github._255_ping.rpg.core.abilities.PlayerHitAbilityListener;
 import com.github._255_ping.rpg.core.abilities.PlayerHurtAbilityListener;
 import com.github._255_ping.rpg.core.abilities.PlayerJumpAbilityListener;
+import com.github._255_ping.rpg.core.abilities.PlayerKillAbilityListener;
 import com.github._255_ping.rpg.core.abilities.PlayerPassiveAbilityTask;
 import com.github._255_ping.rpg.core.sets.ArmorSetListener;
 import com.github._255_ping.rpg.core.sets.ArmorSetLoader;
@@ -72,6 +75,7 @@ import com.github._255_ping.rpg.core.player.CoreManaService;
 import com.github._255_ping.rpg.core.player.CorePlayerLookup;
 import com.github._255_ping.rpg.core.player.EquipmentListener;
 import com.github._255_ping.rpg.core.player.PlayerLifecycleListener;
+import com.github._255_ping.rpg.core.player.ResourcePackListener;
 import com.github._255_ping.rpg.core.scheduler.CoreSchedulerService;
 import com.github._255_ping.rpg.core.skills.CoreSkillRegistry;
 import com.github._255_ping.rpg.core.skills.CoreSkillsService;
@@ -287,6 +291,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         damagePipeline = new DamagePipelineListener(this, healthService);
         getServer().getPluginManager().registerEvents(damagePipeline, this);
         getServer().getPluginManager().registerEvents(new DamageIndicatorListener(this), this);
+        getServer().getPluginManager().registerEvents(new ResourcePackListener(this), this);
         getServer().getPluginManager().registerEvents(new ConsumableItemListener(itemIdKey), this);
         getServer().getPluginManager().registerEvents(
                 new EquipmentListener(this, healthService), this);
@@ -299,6 +304,12 @@ public final class RpgCorePlugin extends JavaPlugin {
                 new PlayerHurtAbilityListener(passiveAbilityFirer), this);
         getServer().getPluginManager().registerEvents(
                 new PlayerJumpAbilityListener(passiveAbilityFirer), this);
+        getServer().getPluginManager().registerEvents(
+                new PlayerAttackAbilityListener(passiveAbilityFirer), this);
+        getServer().getPluginManager().registerEvents(
+                new PlayerKillAbilityListener(passiveAbilityFirer, damagerTracker), this);
+        getServer().getPluginManager().registerEvents(
+                new PlayerBlockAbilityListener(passiveAbilityFirer), this);
 
         long passiveInterval = getConfig().getLong("abilities.passive-interval-ticks", 20L);
         getServer().getScheduler().runTaskTimer(

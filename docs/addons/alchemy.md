@@ -2,7 +2,7 @@
 
 # Alchemy (`rpg-alchemy`)
 
-> **Status:** Working — Station right-click dispatch active via `StationType: brewing` on the block definition. Recipe matching (ingredient check + consume + output potion) fully implemented. XP on brewing-station recipe completion, scaled by `ALCHEMY_WISDOM`. All vanilla brewing-stand mechanics are cancelled.
+> **Status:** Working — Station right-click dispatch, timed brewing with progress bar + DataStore persistence, recipe matching, and XP all implemented. All vanilla brewing-stand mechanics are cancelled.
 
 Custom potion-style brewing at a brewing station block. Vanilla brewing stand recipes are fully replaced; admins define every recipe.
 
@@ -46,6 +46,18 @@ speed_elixir:
   Output: { Item: speed_elixir, Amount: 1 }
   RequiredLevel: 20
 ```
+
+## Timed brewing
+
+When `BrewTicks` is greater than 0 on a recipe, clicking it starts a **timed brew**:
+
+1. Ingredients are consumed immediately.
+2. A 9-slot progress bar fills row 0 — purple/gray glass panes plus a brewing stand icon showing the recipe name and seconds remaining.
+3. Ingredient slots show locked display copies (visual only).
+4. Closing the GUI mid-brew saves progress to DataStore; reopening any brewing station resumes.
+5. On completion the `BLOCK_BREWING_STAND_BREW` sound plays and the output is delivered.
+
+`BrewTicks: 0` (or omitting) = instant brew.
 
 ## Station block
 

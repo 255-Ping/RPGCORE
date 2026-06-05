@@ -20,7 +20,8 @@ When `suiteVersion` goes from N → N+1:
 
 | Suite | Status | Highlights |
 |-------|--------|-----------|
-| 19 | **current** — summary written at close |  |
+| [20](changelog/suite-20.md) | **current** | `rpg-homes`, `rpg-kits`, timed cooking/brewing, ability DSL gates, resource pack delivery |
+| [19](changelog/suite-19.md) | closed | Ability trigger system, 10 new effects, loot pools, enchanting XP cost, NPC overhaul, timed crafting |
 | [18](changelog/suite-18.md) | closed | Per-player drops, global region, vanilla enchanting intercept, accessories, HUD effects placeholder |
 | [16](changelog/suite-16.md) | closed | Initial ship — core pipeline, mining, combat, guilds, dungeons, NPCs, quests, HUD |
 
@@ -31,6 +32,6 @@ When `suiteVersion` goes from N → N+1:
 The old per-session development logs are preserved for reference. They record every version bump
 in detail but the format is retired — new entries are no longer added.
 
-- [Suite 19 dev log](changelog/suite-19.md) *(active suite — read-only)*
+- [Suite 19 dev log](changelog/suite-19.md)
 - [Suite 18 dev log](changelog/suite-18.md)
 - [Suite 16 dev log](changelog/suite-16.md)

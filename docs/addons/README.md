@@ -25,6 +25,8 @@ Each addon is its own plugin jar. All addons hard-depend on `rpg-core`. To enabl
 | `rpg-npcs` | Shipped | [npcs](npcs.md) | Shop / dialogue / quest NPCs (replaces villagers) |
 | `rpg-holograms` | Shipped | [holograms](holograms.md) | DisplayEntity holograms + damage indicators |
 | `rpg-quests` | Shipped | [quests](quests.md) | Quest system with objective DSL, NPC hand-off |
+| `rpg-homes` | Shipped | [homes](homes.md) | Player homes + server warps |
+| `rpg-kits` | Shipped | [kits](kits.md) | Starter and reward kits (one-time + cooldown) |
 
 ## Skill addons
 

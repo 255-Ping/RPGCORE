@@ -646,12 +646,112 @@ Current: nametags show name + prefix/suffix. Deferred:
 
 ---
 
+### Mob Factions + AI Goals (`rpg-core`) — 🟡 Medium
+
+Mobs belong to a **faction** (a string tag), and their targeting behaviour is defined by an ordered **goal list** instead of a single profile kind. This replaces the blunt `aggressive / defensive / passive / stationary` enum with fine-grained, composable targeting rules — and unlocks mob-vs-mob conflict, faction alliances, and dungeon faction warfare.
+
+#### Faction field
+
+```yaml
+forest_guard:
+  Faction: guards    # string ID — no separate registry needed; factions are just labels
+
+undead_minion:
+  Faction: undead
+```
+
+Any mob without a `Faction:` field is **neutral** — attacked by aggressive mobs but doesn't trigger faction defence chains.
+
+**Special reserved faction:** `player` — any online player. `attack_faction{faction=player}` is equivalent to `attack_player` (which remains as a shorthand).
+
+#### AiGoals list
+
+`AiGoals:` is an ordered list of goal entries. The AI evaluates them top-to-bottom and acts on the first one whose condition is currently met.
+
+```yaml
+forest_guard:
+  Faction: guards
+  AiGoals:
+  - attack_faction{faction=undead}      # primary target: any undead mob in range
+  - attack_faction{faction=bandits}     # secondary: bandits
+  - defend_faction{faction=guards}      # if a guard is under attack, target that attacker
+  - assist_faction{faction=guards, radius=20}  # if a nearby guard is in combat, join them
+  - idle                                # wander if nothing to do
+
+undead_minion:
+  Faction: undead
+  AiGoals:
+  - attack_player
+  - attack_faction{faction=guards}
+  - idle
+
+skittish_villager:
+  Faction: villagers
+  AiGoals:
+  - flee_from{faction=undead, health_threshold=100}  # always flees from undead
+  - flee_from{faction=player, health_threshold=30}   # flees players when low HP
+  - idle
+```
+
+#### Goal reference
+
+| Goal | Parameters | Behaviour |
+|---|---|---|
+| `attack_player` | — | Target nearest player in aggro range |
+| `attack_faction{faction=X}` | `faction`, `range=` | Target nearest mob of faction X in range |
+| `defend_faction{faction=X}` | `faction`, `radius=` | If a member of faction X is attacked, target that attacker |
+| `assist_faction{faction=X}` | `faction`, `radius=` | If a member of faction X is already in combat, help them by targeting their target |
+| `flee_from{faction=X}` | `faction`, `range=`, `health_threshold=100` | Flee from the nearest entity of faction X; `health_threshold` sets the HP% at or below which fleeing activates (100 = always flee) |
+| `call_for_help{faction=X}` | `faction`, `radius=` | When this mob is hurt, alert nearby faction X members to target the attacker |
+| `guard_radius{radius=N}` | `radius` | If mob is pulled more than N blocks from spawn, disengage and return (leash behaviour) |
+| `idle` | — | Wander / stand; no combat target. Fallback when no other goal is active |
+
+Goals evaluate top-to-bottom each AI tick. First goal with a valid target wins.
+
+#### Backwards compatibility
+
+The existing `MobAiProfile.Kind` enum continues to work unchanged. Internally, each kind maps to an equivalent goal list:
+
+| Old kind | Equivalent AiGoals |
+|---|---|
+| `aggressive` | `[attack_player, idle]` |
+| `defensive` | `[defend_player, idle]` |
+| `passive` | `[idle]` |
+| `stationary` | `[idle]` + no movement |
+
+Mobs that specify `AiGoals:` ignore `MobAiProfile.Kind`. Mobs without `AiGoals:` continue using the kind as before.
+
+#### Faction-awareness in ability DSL
+
+Once target-selection effects (todo #24) land, `nearest_enemy{}` and `nearest_ally{}` both accept an optional `faction=` parameter:
+
+```yaml
+# Mob timer: drain the nearest undead ally
+- "nearest_ally{faction=undead, range=10.0} heal{amount=10, target=target} ~onTimer:40"
+
+# Boss: pull the nearest guard toward the boss then slam
+- "nearest_enemy{faction=guards, range=20.0} launch{force=1.5, direction=toward} aoe{radius=4.0, damage=30.0} ~onTimer:80"
+```
+
+Without `faction=`, `nearest_enemy{}` uses existing hostile-detection logic; with it, it targets only entities of that specific faction.
+
+#### Implementation
+
+- `CoreRpgMob` gets a `faction()` field (`String`, nullable). Added to mob YAML loader and `MobDef`.
+- A new `AiGoalDef` sealed interface mirrors `MobAbilityTrigger` — one record per goal type, parsed from the YAML list.
+- `MobAiTask` currently dispatches on `MobAiProfile.Kind`; add a second branch: if `mob.hasGoals()`, evaluate the goal list instead.
+- For `defend_faction` and `assist_faction`, `MobAbilityEventListener.onPostDamage` fires a lightweight `FactionDefendEvent` that nearby faction members can react to — or simpler: a `FactionAlertMap` (victim UUID → attacker) that the AI task checks each tick.
+- Faction membership check: `RpgServices.mobs().from(entity).map(m -> faction.equals(m.faction())).orElse(false)`.
+- `guard_radius`: store spawn location in mob PDC on `OnSpawn`; check distance each AI tick.
+
+---
+
 ### Mob AI Profiles Flesh-out (`rpg-core`) — 🔴 Hard
 Current: `aggressive`, `passive`, `defensive`, `stationary` work. All others fall back to aggressive. Deferred:
 - `ranged_kiter` — back up if player within melee range, fire ranged ability
 - `boss` — phase transitions, ability rotations
-- `swarming` — call nearby same-type mobs when aggro'd
-- `pack_hunter` — coordinate target focus with nearby pack members
+- `swarming` — call nearby same-type mobs when aggro'd (implement via `call_for_help` goal once factions land)
+- `pack_hunter` — coordinate target focus with nearby pack members (implement via `assist_faction` + `attack_faction` goals once factions land)
 - `flying` — 3D pathfinding, strafe patterns
 
 ---

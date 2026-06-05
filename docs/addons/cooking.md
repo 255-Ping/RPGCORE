@@ -2,7 +2,7 @@
 
 # Cooking (`rpg-cooking`)
 
-> **Status:** Working — Station right-click dispatch active via `StationType: cooking` on the block definition. Recipe matching (ingredient check + consume + output) fully implemented. XP on cooking-station recipe completion, scaled by `COOKING_WISDOM`.
+> **Status:** Working — Station right-click dispatch, timed crafting with progress bar + DataStore persistence, recipe matching, and XP all implemented.
 
 Custom food / consumable crafting at a cooking station block. All vanilla furnace recipes are cancelled; admins define every recipe.
 
@@ -43,6 +43,18 @@ hearty_stew:
   Output: { Item: hearty_stew, Amount: 1 }
   RequiredLevel: 20
 ```
+
+## Timed crafting
+
+When `CookTicks` is greater than 0 on a recipe, clicking it starts a **timed craft**:
+
+1. Ingredients are consumed immediately (can't be taken back).
+2. A 9-slot progress bar fills row 0 of the GUI — lime/gray glass panes plus a clock item showing the recipe name and seconds remaining.
+3. The ingredient slots show locked copies of what was consumed (visual only).
+4. If the player closes the GUI mid-craft, progress is saved to the DataStore. Reopening any cooking station resumes from where it left off.
+5. On completion a chime plays and the output is delivered to the player's inventory (overflow drops at their feet).
+
+`CookTicks: 0` (or omitting the field) means instant — output delivered immediately on click, the same as before.
 
 ## Station block
 

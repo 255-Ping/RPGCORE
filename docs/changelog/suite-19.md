@@ -1,12 +1,27 @@
-# Suite 19 — Dev Log (Archived)
+# Suite 19 — Closed
 
 ← [Back to changelog index](../changelog.md)
 
+## Highlights
+
+- **Ability trigger system** (`rpg-api 0.4.2`, `rpg-core 1.2.0`) — `~on_hit`, `~on_hurt`, `~on_jump`, `~passive`, plus `~on_attack`, `~on_kill`, `~on_block` (`rpg-core 1.5.0`). Mob triggers extended with `~onAttack`, `~onKill`, `~onJump`.
+- **10 new built-in ability effects** (`rpg-core 1.3.0`) — `knockback`, `blink`, `chain`, `zone`, `shield`, `drain`, `mark`, `launch`, `freeze`, `restore_mana`. 5 showcase mobs added.
+- **Ability DSL `chance{}` gate** (`rpg-core 1.5.1`, `rpg-api 0.5.1`) — inline probability gate; blocked flag propagated through pipeline; stacking = AND logic.
+- **Loot pool system** (`rpg-core 1.4.0`, `rpg-api 0.4.3`) — named reusable loot pools; mobs reference by ID; vanilla XP + combat XP per pool.
+- **Enchanting: vanilla XP cost** (`rpg-enchanting 0.5.0`) — `XpCost:` field wired; levels shown in GUI and deducted on apply.
+- **NPC command overhaul** (`rpg-npcs 0.6.0`) — per-NPC entity types, in-game dialogue/shop editing, look-at-player, `/npc info`.
+- **Timed cooking + brewing** (`rpg-cooking 0.4.0`, `rpg-alchemy 0.4.0`) — `CookTicks`/`BrewTicks` now drive a progress bar + DataStore-persisted mid-craft state.
+- **New addon plugins** — `rpg-homes 0.1.0` (player homes + server warps) and `rpg-kits 0.1.0` (starter/reward kits).
+- **Damage indicators polish** (`rpg-core 1.5.2`) — sin-arc position + linear scale shrink 1→0.
+- **Resource pack auto-delivery** (`rpg-core 1.5.2`) — `resource-pack:` config block; sends pack on join.
+
+---
+
+## Granular dev log (archived)
+
 !!! note "Archived format"
-    This was the granular per-change development log maintained during Suite 19.
-    **New entries are no longer added here.** When the suite version increments to 20, a
-    concise suite summary will be written at this path from `git log`. Until then this file
-    is read-only reference.
+    The entries below are the granular per-change development log maintained during Suite 19.
+    New entries are no longer added here.
 
 ---
 

@@ -1,0 +1,34 @@
+name: rpg-homes
+version: '${version}'
+main: com.github._255_ping.rpg.homes.RpgHomesPlugin
+api-version: '26.1.2'
+load: POSTWORLD
+authors: [Ping]
+description: Player homes (/home) and admin-defined warps (/warp).
+depend: [rpg-core]
+commands:
+  home:
+    description: Teleport to or manage personal homes
+    usage: /home [name] | set [name] | delete <name> | list
+  warp:
+    description: Teleport to a server warp point
+    usage: /warp [name]
+  setwarp:
+    description: Create or overwrite a warp at your location (admin)
+    usage: /setwarp <name>
+  delwarp:
+    description: Delete a warp (admin)
+    usage: /delwarp <name>
+  warps:
+    description: List all server warps
+    usage: /warps
+permissions:
+  rpg.homes.use:
+    description: Use /home and /warp
+    default: true
+  rpg.homes.admin:
+    description: Use /setwarp and /delwarp
+    default: op
+  rpg.homes.reload:
+    description: Reload rpg-homes config
+    default: op

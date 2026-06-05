@@ -205,8 +205,8 @@ When `suiteVersion` bumps:
 
 | Module | Property | Current |
 |---|---|---|
-| rpg-api | `apiVersion` | 0.4.3 |
-| rpg-core | `coreVersion` | 1.4.0 |
+| rpg-api | `apiVersion` | 0.5.1 |
+| rpg-core | `coreVersion` | 1.5.2 |
 | rpg-mining | `miningVersion` | 0.2.3 |
 | rpg-combat | `combatVersion` | 0.2.0 |
 | rpg-economy | `economyVersion` | 0.1.0 |
@@ -221,14 +221,16 @@ When `suiteVersion` bumps:
 | rpg-farming | `farmingVersion` | 0.1.0 |
 | rpg-guilds | `guildsVersion` | 0.1.0 |
 | rpg-enchanting | `enchantingVersion` | 0.5.0 |
-| rpg-alchemy | `alchemyVersion` | 0.3.2 |
+| rpg-alchemy | `alchemyVersion` | 0.4.0 |
 | rpg-npcs | `npcsVersion` | 0.6.1 |
 | rpg-quests | `questsVersion` | 0.0.3 |
 | rpg-dungeons | `dungeonsVersion` | 0.0.3 |
-| rpg-cooking | `cookingVersion` | 0.3.1 |
+| rpg-cooking | `cookingVersion` | 0.4.0 |
 | rpg-admin | `adminVersion` | 0.1.0 |
 | rpg-trade | `tradeVersion` | 0.1.1 |
-| suite-wide suffix | `suiteVersion` | 19 |
+| rpg-homes | `homesVersion` | 0.1.0 |
+| rpg-kits  | `kitsVersion`  | 0.1.0 |
+| suite-wide suffix | `suiteVersion` | 20 |
 
 **Keep this table in sync** — update it in the same commit as any version bump.
 

@@ -1,0 +1,24 @@
+# rpg-homes configuration.
+# Player homes are stored per-player in the DataStore (backend set in rpg-core's config.yml).
+# Server warps are stored in warps.yml in this plugin's data folder.
+
+# Maximum number of homes a player may set.
+# Players with the rpg.homes.use permission get this limit by default.
+max-homes: 3
+
+# Messages support & color codes.
+messages:
+  home-set: "&aHome '{name}' set."
+  home-deleted: "&aHome '{name}' deleted."
+  home-not-found: "&cNo home named '{name}'."
+  home-limit: "&cYou can only have {max} homes. Delete one first."
+  home-list-header: "&6Your homes:"
+  home-list-entry:  "&7  {name} &8— &7{world} {x},{y},{z}"
+  home-list-empty:  "&7You have no homes set."
+  warp-not-found: "&cWarp '{name}' not found. Use /warps to list available warps."
+  warp-set: "&aWarp '{name}' set."
+  warp-deleted: "&aWarp '{name}' deleted."
+  warp-list-header: "&6Server warps:"
+  warp-list-entry:  "&7  {name} &8— &7{world} {x},{y},{z}"
+  warp-list-empty:  "&7No warps have been set yet."
+  no-permission: "&cYou don't have permission to do that."

@@ -1,5 +1,6 @@
 brew:
   success: "&aBrewed {item}."
+  started: "&eBrewing {item}&e... ({time}s)"
   missing-ingredients: "&cMissing ingredients."
   requires-level: "&eRequires Alchemy level {level}."
   unknown-recipe: "&cRecipe output is unknown."

@@ -43,6 +43,26 @@ public enum PlayerAbilityTrigger {
     ON_JUMP,
 
     /**
+     * Fires when the player initiates a melee or projectile attack — before the damage pipeline
+     * processes or cancels the event. Useful for pre-hit self-buffs, visual effects on swing,
+     * and effects that should fire even if the hit is later cancelled by another plugin.
+     *
+     * <p>Contrast with {@link #ON_HIT}: {@code ON_ATTACK} fires on the attack attempt regardless
+     * of outcome; {@code ON_HIT} fires only after the RPG damage pipeline confirms the hit.
+     */
+    ON_ATTACK,
+
+    /** Fires once when the player kills an RPG mob. */
+    ON_KILL,
+
+    /**
+     * Fires when the player successfully blocks an attack with a shield.
+     * The attacker is passed as {@code ctx.target} so that effects like
+     * {@code knockback{target=target}} can push the blocked attacker away.
+     */
+    ON_BLOCK,
+
+    /**
      * Ticking passive — fires on a repeating schedule while the item is held or equipped.
      * The interval (ticks) is controlled by {@code abilities.passive-interval-ticks} in
      * {@code config.yml}; defaults to 20.
@@ -59,10 +79,13 @@ public enum PlayerAbilityTrigger {
             case "on_hit"             -> ON_HIT;
             case "on_hurt"            -> ON_HURT;
             case "on_jump"            -> ON_JUMP;
+            case "on_attack"          -> ON_ATTACK;
+            case "on_kill"            -> ON_KILL;
+            case "on_block"           -> ON_BLOCK;
             case "passive"            -> PASSIVE;
             default -> throw new IllegalArgumentException("unknown player ability trigger: '" + s
                     + "'. Valid values: right_click, left_click, shift_right_click, "
-                    + "shift_left_click, on_hit, on_hurt, on_jump, passive");
+                    + "shift_left_click, on_hit, on_hurt, on_jump, on_attack, on_kill, on_block, passive");
         };
     }
 
@@ -76,6 +99,9 @@ public enum PlayerAbilityTrigger {
             case ON_HIT             -> "On Hit";
             case ON_HURT            -> "On Hurt";
             case ON_JUMP            -> "On Jump";
+            case ON_ATTACK          -> "On Attack";
+            case ON_KILL            -> "On Kill";
+            case ON_BLOCK           -> "On Block";
             case PASSIVE            -> "Passive";
         };
     }
