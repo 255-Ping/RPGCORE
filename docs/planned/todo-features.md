@@ -719,14 +719,12 @@ Per-player persistent storage vaults — extra inventory pages players unlock ov
 
 ```yaml
 vaults:
-  # How many vault pages exist (numbered 1 to N). Players unlock them one by one.
-  count: 5
-
   # Default row count for a vault if not overridden per-vault (1-6 rows → 9-54 slots).
   default-rows: 6
 
-  # Per-vault unlock requirements and optional row override.
-  # Vault 1 is always unlocked (starter vault).
+  # Vault definitions — add as many entries as you want, numbered 1 upward.
+  # The vault count is derived from however many entries you define here; there is no cap.
+  # Vault 1 is always unlocked (starter vault). All others require the configured unlock.
   unlocks:
     1:
       name: "Vault I"
@@ -761,6 +759,14 @@ vaults:
       requires:
         type: permission
         permission: rpg.vault.5  # granted by rank/LuckPerms; no cost deducted
+
+    # Add more entries to create more vaults — no limit.
+    # 6:
+    #   name: "Vault VI"
+    #   rows: 6
+    #   requires:
+    #     type: coins
+    #     amount: 500000
 ```
 
 **Unlock types:**
@@ -777,11 +783,13 @@ vaults:
 
 #### Vault Selector GUI
 
-54-slot overview. Each vault is represented by a chest (or custom icon) at a fixed slot:
+54-slot paginated overview. Each vault is represented by a chest (or custom icon). Content area is slots 0–44 (rows 1–5, 45 slots per page). Row 6 is the nav bar with Previous / Next page arrows when there are more than 45 vaults.
 
 ```
-Slot 10 → Vault 1    Slot 11 → Vault 2    Slot 12 → Vault 3 ...
+Slot 0 → Vault 1    Slot 1 → Vault 2    Slot 2 → Vault 3 ...
 ```
+
+Since the vault count is unlimited, pagination is required for large configs. Most servers will have ≤ 10 vaults and never hit the second page.
 
 **Unlocked vault icon:**
 - Material: `CHEST`
@@ -800,12 +808,12 @@ Slot 10 → Vault 1    Slot 11 → Vault 2    Slot 12 → Vault 3 ...
 
 #### Implementation notes
 
-- `VaultConfig` — loads `vaults.yml`. Holds per-vault definitions (`VaultDef`: name, rows, `UnlockRequirement`). Reloaded via `/rpg reload`.
+- `VaultConfig` — loads `vaults.yml`. Holds a `Map<Integer, VaultDef>` (`VaultDef`: name, rows, `UnlockRequirement`) keyed by vault number. The map can have any number of entries — no upper limit. `maxVault()` returns the highest defined key. Reloaded via `/rpg reload`.
 - `VaultService` — interface in `rpg-api`. Methods: `isUnlocked(Player, int vault)`, `unlock(Player, int vault)`, `openVault(Player, int vault)`, `openSelector(Player)`.
 - `CoreVaultService` — implementation. Stores per-player unlock state in `DataStore` under key `"vaults"` (map of vault number → `true`). Vault 1 always marked unlocked on first access. Item contents stored under `"vault_contents_<n>"` (serialized `ItemStack[]`).
 - `VaultGui` — standard 54-slot (or configured rows × 9) inventory. Nav bar on last row. Items shift up if rows < 6 so the nav bar is always on the visible bottom row.
-- `VaultSelectorGui` — 54-slot selector grid. Clicking a locked vault shows requirements; clicking an unlocked vault opens it nested (Back → selector).
-- `VaultCommand` — `/vault [n]`, tab-completes to unlocked vault count + 1 (the next locked one, to show requirements).
+- `VaultSelectorGui` — paginated selector (45 vaults per page, nav bar on row 6). Clicking a locked vault shows requirements; clicking an unlocked vault opens it nested (Back → selector).
+- `VaultCommand` — `/vault [n]`, tab-completes to all defined vault numbers (so players can inspect locked ones' requirements).
 - Vault contents are saved on `InventoryCloseEvent` and on `PlayerQuitEvent` as serialized `ItemStack[]`. Loaded lazily on first open.
 - **Contents on permission-revoke:** vault contents are never wiped on lock. If a permission-gated vault locks again, contents stay in `DataStore` until access is re-granted.
 - Add `vault` command to `plugin.yml` with permission `rpg.core.vault` (default: true) and `rpg.core.vault.other` (default: op).
