@@ -32,6 +32,10 @@ commands:
     description: View your achievements
     aliases: [ach, achievement]
     usage: /achievements [player]
+  menu:
+    description: Open the RPGCORE main menu
+    aliases: [m]
+    usage: /menu
 permissions:
   rpg.core.version:
     description: View loaded modules and versions
@@ -81,6 +85,9 @@ permissions:
   rpg.core.fix:
     description: Clear stuck movement-speed debuffs and resync stats for self or another player
     default: op
+  rpg.core.menu:
+    description: Open the main menu
+    default: true
   rpg.core.achievements:
     description: View your own achievements
     default: true

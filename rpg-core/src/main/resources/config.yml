@@ -262,6 +262,15 @@ gui:
   background-name: " "                           # supports & color codes; " " = invisible name
   border-name: " "
 
+# Main Menu persistent hotbar item.
+# The item is given to every player on join and re-given if missing.
+# It cannot be dropped or moved out of its slot.
+main-menu:
+  enabled: true
+  slot: 8                 # hotbar slot (0 = far left, 8 = far right)
+  material: COMPASS       # any valid Material name
+  name: "&6✦ Menu &6✦"   # supports & color codes
+
 # Debug logging per-system. Verbose builds are noisy — leave off in prod.
 debug:
   damage: false

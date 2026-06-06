@@ -133,5 +133,5 @@
 56. 🔴 ⚫ **Pets system** (`rpg-pets`) — long-term, build in phases
 57. 🟠 🟡 **Unit test coverage** — ongoing, add tests alongside any new system
 58. 📄 🟢 **Docs pass** — fill stubs, add missing plugin pages
-59. 🔵 🟡 **Main Menu Item + GUI** — persistent item locked to hotbar slot 8, right-click opens a hub GUI with buttons to every major player-facing feature; see [GUI Redesigns](todo-gui.md)
-60. 🔵 🟢 **GUI Navigation Standard** — all GUIs get a bottom-bar close button; nested GUIs (opened from inside another GUI) also get a back button that returns to the previous screen; see [GUI Redesigns](todo-gui.md)
+59. ✅ **Main Menu Item + GUI** — persistent COMPASS item in slot 8; right-click opens hub GUI with Stats, Skills, Achievements, Economy (nested with Back), plus grayed stubs for Quests/Party/Guild/Warps/Mail. `/menu` command also opens it. `MainMenuGui`, `MainMenuListener`, `MenuCommand`. coreVersion 1.10.0.
+60. ✅ **GUI Navigation Standard** — all GUIs have bottom-row nav bar (`placeNavBar` / `placeNavBarNested`). Back-callback pattern (`Map<UUID, Runnable> backCallbacks`, `runTask` on close) consistent across `StatsGui`, `SkillsGui`, `AchievementGui`, `WalletGui`, `MainMenuGui`. `SkillsGui` and `WalletGui` are new. coreVersion 1.10.0.

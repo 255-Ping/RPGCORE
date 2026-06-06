@@ -75,6 +75,11 @@ import com.github._255_ping.rpg.core.achievement.AchievementGui;
 import com.github._255_ping.rpg.core.achievement.AchievementLoader;
 import com.github._255_ping.rpg.core.achievement.CoreAchievementService;
 import com.github._255_ping.rpg.core.command.AchievementsCommand;
+import com.github._255_ping.rpg.core.command.MainMenuGui;
+import com.github._255_ping.rpg.core.command.MainMenuListener;
+import com.github._255_ping.rpg.core.command.MenuCommand;
+import com.github._255_ping.rpg.core.command.SkillsGui;
+import com.github._255_ping.rpg.core.command.WalletGui;
 import com.github._255_ping.rpg.core.mobs.EliteService;
 import com.github._255_ping.rpg.core.mobs.OwnedMobTracker;
 import com.github._255_ping.rpg.core.wand.CoreWandService;
@@ -415,12 +420,37 @@ public final class RpgCorePlugin extends JavaPlugin {
         CoreAchievementService achievementService = new CoreAchievementService(this, achievementLoader.loadAll());
         RpgServices.setAchievements(achievementService);
         getServer().getPluginManager().registerEvents(achievementService, this);
-        AchievementGui achievementGui = new AchievementGui();
+        AchievementGui achievementGui = new AchievementGui(this);
         getServer().getPluginManager().registerEvents(achievementGui, this);
         var achCmd = Objects.requireNonNull(getCommand("achievements"));
         AchievementsCommand achCommand = new AchievementsCommand(achievementGui);
         achCmd.setExecutor(achCommand);
         achCmd.setTabCompleter(achCommand);
+
+        // Main menu item + hub GUI (#59)
+        SkillsGui skillsGui = new SkillsGui(this);
+        getServer().getPluginManager().registerEvents(skillsGui, this);
+        WalletGui walletGui = new WalletGui(this);
+        getServer().getPluginManager().registerEvents(walletGui, this);
+        MainMenuGui mainMenuGui = new MainMenuGui(this, statsGui, skillsGui, achievementGui, walletGui);
+        getServer().getPluginManager().registerEvents(mainMenuGui, this);
+        {
+            boolean mmEnabled  = getConfig().getBoolean("main-menu.enabled", true);
+            int     mmSlot     = getConfig().getInt("main-menu.slot", 8);
+            String  mmMat      = getConfig().getString("main-menu.material", "COMPASS");
+            String  mmName     = getConfig().getString("main-menu.name", "&6✦ Menu &6✦");
+            org.bukkit.Material mmMaterial;
+            try { mmMaterial = org.bukkit.Material.valueOf(mmMat.toUpperCase(java.util.Locale.ROOT)); }
+            catch (IllegalArgumentException ex) {
+                getLogger().warning("main-menu.material '" + mmMat + "' is not a valid Material; falling back to COMPASS.");
+                mmMaterial = org.bukkit.Material.COMPASS;
+            }
+            NamespacedKey mmKey = new NamespacedKey(this, "rpg_main_menu");
+            MainMenuListener mainMenuListener = new MainMenuListener(
+                    this, mainMenuGui, mmKey, mmEnabled, mmSlot, mmMaterial, mmName);
+            getServer().getPluginManager().registerEvents(mainMenuListener, this);
+            Objects.requireNonNull(getCommand("menu")).setExecutor(new MenuCommand(mainMenuGui));
+        }
 
         wandService = new CoreWandService();
         wandListener = new WandListener(this, wandService);

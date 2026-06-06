@@ -108,6 +108,8 @@ public final class StatsGui implements Listener {
     private final Map<UUID, UUID> openViews = new HashMap<>();
     /** inventory reference → viewer UUID, for click routing */
     private final Map<Inventory, UUID> invToViewer = new HashMap<>();
+    /** viewer UUID → back callback (null = top-level, no Back button) */
+    private final Map<UUID, Runnable> backCallbacks = new HashMap<>();
 
     private final JavaPlugin plugin;
 
@@ -117,8 +119,18 @@ public final class StatsGui implements Listener {
 
     // ── Public API ─────────────────────────────────────────────────────────────
 
-    /** Opens (or refreshes) the stats GUI for {@code viewer} showing {@code target}'s stats. */
+    /** Opens the stats GUI as a top-level screen (Close only). */
     public void open(Player viewer, Player target) {
+        open(viewer, target, null);
+    }
+
+    /**
+     * Opens the stats GUI, optionally as a nested screen.
+     *
+     * @param onBack when non-null, a ← Back button is added; clicking it closes the GUI and
+     *               runs {@code onBack} on the next tick to reopen the parent.
+     */
+    public void open(Player viewer, Player target, Runnable onBack) {
         Component title = Component.text(target.getName(), NamedTextColor.GOLD,
                 TextDecoration.BOLD).append(GUI_TITLE_SUFFIX);
         Inventory inv = Bukkit.createInventory(null, 54, title);
@@ -161,11 +173,17 @@ public final class StatsGui implements Listener {
 
         // ── Background + nav bar ───────────────────────────────────────────
         RpgServices.guiConfig().fillBackground(inv);
-        RpgServices.guiConfig().placeNavBar(inv);
+        if (onBack != null) {
+            RpgServices.guiConfig().placeNavBarNested(inv);
+        } else {
+            RpgServices.guiConfig().placeNavBar(inv);
+        }
 
         // ── Track and open ─────────────────────────────────────────────────
-        openViews.put(viewer.getUniqueId(), target.getUniqueId());
-        invToViewer.put(inv, viewer.getUniqueId());
+        UUID viewerId = viewer.getUniqueId();
+        openViews.put(viewerId, target.getUniqueId());
+        invToViewer.put(inv, viewerId);
+        if (onBack != null) backCallbacks.put(viewerId, onBack);
         viewer.openInventory(inv);
     }
 
@@ -183,9 +201,15 @@ public final class StatsGui implements Listener {
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR) return;
 
-        // Close button
+        // Nav bar buttons
         if (RpgServices.guiConfig().isCloseButton(clicked)) {
             viewer.closeInventory();
+            return;
+        }
+        if (RpgServices.guiConfig().isBackButton(clicked)) {
+            Runnable cb = backCallbacks.get(viewerId);
+            viewer.closeInventory();
+            if (cb != null) plugin.getServer().getScheduler().runTask(plugin, cb);
             return;
         }
 
@@ -211,6 +235,7 @@ public final class StatsGui implements Listener {
         if (!invToViewer.containsKey(inv)) return;
         openViews.remove(viewerId);
         invToViewer.remove(inv);
+        backCallbacks.remove(viewerId);
     }
 
     // ── Builders ───────────────────────────────────────────────────────────────
