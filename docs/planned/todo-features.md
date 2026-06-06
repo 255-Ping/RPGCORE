@@ -580,3 +580,234 @@ This is a large plugin — build in phases. Phase 1: pet item + summon + follow 
 - See `docs/planned/bazaar.md` for full layout spec
 
 ---
+
+### Waypoints System (`rpg-core`) — 🟡 Medium
+
+A player-facing fast-travel / spawn-point system using a **custom placeable block** (not admin warps — those stay in `/warp`). Waypoints are physical blocks placed by admins in the world; players interact with them to bind their respawn point.
+
+**Why not use warps:** `/warp` destinations are admin-only lists. Waypoints are world objects players discover and interact with — exploration-flavoured spawn binding rather than a menu of teleport commands.
+
+---
+
+#### Block
+
+New custom RPG block type (`waypoint`, defined in `blocks/`):
+
+```yaml
+# blocks/waypoint.yml
+id: waypoint
+DisplayName: "&b✦ Waypoint"
+Material: BEACON        # or any material; resource-pack can replace it
+Interactable: true
+```
+
+The block is placed by admins via `/rpg item give waypoint_block` and cannot be broken by non-creative players (standard custom-block protection from `BlockBreakHandler`).
+
+---
+
+#### Visual effects
+
+Both configurable in the block's YAML definition or in a `waypoints.yml` config:
+
+**Particles:**
+```yaml
+waypoint:
+  particles:
+    enabled: true
+    type: END_ROD       # any Particle enum name
+    count: 5
+    offset-x: 0.3
+    offset-y: 0.5
+    offset-z: 0.3
+    speed: 0.02
+    interval-ticks: 10  # how often particles spawn (10 = twice/sec)
+```
+
+**Hologram:**
+```yaml
+waypoint:
+  hologram:
+    enabled: true
+    lines:
+      - "&b✦ Waypoint"
+      - "&7Right-click to set spawn"
+    height-offset: 1.5  # blocks above the block's top face
+```
+
+The hologram line can include the waypoint's `Name` field (set by the admin via `/waypoint setname <id> <name>`), so different waypoints display different names: `"&b✦ Starting Village"` vs `"&b✦ The Ruins"`.
+
+---
+
+#### Player interaction
+
+**Non-creative players — right-click:**
+1. Check cost (see below). If the player can't afford it, send action-bar message and cancel.
+2. Deduct cost.
+3. Set the player's spawn point to the waypoint block's location + Y+1 (so they respawn standing on it).
+4. Send confirmation message + play a sound (`BLOCK_BEACON_ACTIVATE` or configurable).
+5. Grant an achievement trigger `waypoint_set` (for discovery-based achievements).
+
+**Creative players (or players with `rpg.waypoint.free` permission):** no cost charged.
+
+**Setting your spawn at the same waypoint twice** is free (idempotent — no re-charge).
+
+---
+
+#### Cost configuration
+
+Per-waypoint cost override OR a global default in `waypoints.yml`:
+
+```yaml
+waypoints:
+  default-cost:
+    type: none            # none | coins | experience | item
+    amount: 0             # coins / XP levels; ignored for "item" type
+    item: null            # item id for type:item, e.g. "teleport_crystal"
+    item-amount: 1
+    # "experience" = Minecraft vanilla XP levels (player.getLevel())
+
+  # Per-waypoint overrides (keyed by waypoint block UUID or admin-assigned ID):
+  overrides:
+    "uuid-or-id-here":
+      type: coins
+      amount: 500
+```
+
+The cost is charged every time a player sets their spawn, not on each respawn. "Item" type consumes one (or more) of the specified RPG item from the player's inventory.
+
+---
+
+#### Admin commands
+
+| Command | Description |
+|---|---|
+| `/waypoint list` | List all placed waypoints (UUID, location, name, cost) |
+| `/waypoint setname <id> <name>` | Give a waypoint a display name (shown in hologram) |
+| `/waypoint setcost <id> <type> <amount>` | Set the interaction cost for a specific waypoint |
+| `/waypoint reload` | Reload `waypoints.yml` config |
+
+Waypoints are identified by the block UUID (stored in `BlockPersistence`) — no separate data file needed.
+
+---
+
+#### Implementation notes
+
+- Hook into `BlockInteractListener`'s existing dispatch — when a player right-clicks a block with PDC id `waypoint`, fire `WaypointInteractHandler`.
+- `WaypointInteractHandler` reads cost from `WaypointsConfig`, deducts it via `RpgServices.economy()` (coins) or `player.setLevel/getLevel()` (XP), then calls `player.setBedSpawnLocation(block.getLocation(), true)`.
+- Particle emission: a repeating `BukkitTask` per placed waypoint. Spawned in `WaypointBlockListener` on `BlockPlaceEvent` for the custom block; cancelled on `BlockBreakEvent`. Tasks stored in `Map<Location, BukkitTask>` in `WaypointParticleManager`. On reload, all tasks are cancelled and restarted.
+- Holograms: use `BlockHologramService` (already exists in `rpg-core`) — each waypoint block registers a hologram on place, unregisters on break. Or build atop `rpg-holograms` if loaded (soft-dep).
+- Achievement trigger: `WaypointInteractHandler` calls `RpgServices.achievements().grant(player, "waypoint_set")` for a manual-type achievement.
+
+---
+
+### Vault / Storage System (`rpg-core`) — 🔴 Hard
+
+Per-player persistent storage vaults — extra inventory pages players unlock over time, similar to Hypixel's storage upgrades. Admins configure how many vaults exist, their sizes, and what each one requires to unlock.
+
+---
+
+#### Player experience
+
+- `/vault [n]` — opens vault number `n` (defaults to 1). Tab-completes to the player's unlocked vault numbers.
+- Players can see all vaults via a **vault selector GUI** (opened with `/vault` or `/vault list`) — a 54-slot overview showing each vault slot as a chest icon, with lock status and unlock requirements in lore.
+- Items in vaults persist between sessions (stored in `DataStore`).
+- Vaults are **per-player** — not shared, not accessible by other players (admins can use `/vault <player> [n]` to inspect).
+
+---
+
+#### Admin configuration (`plugins/rpg-core/vaults.yml`)
+
+```yaml
+vaults:
+  # How many vault pages exist (numbered 1 to N). Players unlock them one by one.
+  count: 5
+
+  # Default row count for a vault if not overridden per-vault (1-6 rows → 9-54 slots).
+  default-rows: 6
+
+  # Per-vault unlock requirements and optional row override.
+  # Vault 1 is always unlocked (starter vault).
+  unlocks:
+    1:
+      name: "Vault I"
+      rows: 3            # starter vault is smaller
+      requires: none     # always unlocked
+
+    2:
+      name: "Vault II"
+      rows: 6
+      requires:
+        type: coins
+        amount: 10000
+
+    3:
+      name: "Vault III"
+      rows: 6
+      requires:
+        type: experience  # Minecraft XP levels
+        amount: 30
+
+    4:
+      name: "Vault IV"
+      rows: 6
+      requires:
+        type: item
+        item: vault_key   # RPG item id
+        amount: 1         # consumes this many on unlock
+
+    5:
+      name: "Vault V"
+      rows: 6
+      requires:
+        type: permission
+        permission: rpg.vault.5  # granted by rank/LuckPerms; no cost deducted
+```
+
+**Unlock types:**
+
+| Type | Behaviour |
+|---|---|
+| `none` | Always unlocked |
+| `coins` | Deducts via `RpgServices.economy()`. One-time payment. |
+| `experience` | Deducts Minecraft XP levels (`player.setLevel`). One-time payment. |
+| `item` | Consumes N of the specified RPG item from inventory. One-time. |
+| `permission` | Checks `player.hasPermission(...)`. No deduction — grants access while permission holds. If permission is removed, vault is re-locked but **contents are preserved** (player can't access them until permission is re-granted or they unlock another way). |
+
+---
+
+#### Vault Selector GUI
+
+54-slot overview. Each vault is represented by a chest (or custom icon) at a fixed slot:
+
+```
+Slot 10 → Vault 1    Slot 11 → Vault 2    Slot 12 → Vault 3 ...
+```
+
+**Unlocked vault icon:**
+- Material: `CHEST`
+- Name: `"&6Vault I"` (or configured name)
+- Lore: `"&7Slots: 54"`, `"&aUnlocked"`, `"&7Click to open"`
+
+**Locked vault icon:**
+- Material: `TRAPPED_CHEST` (or BARRIER)
+- Name: `"&7Vault II"` (grayed)
+- Lore: `"&cLocked"`, `"&7Requires: &e$10,000"` (using currency formatting)
+- Left-click → shows requirements in chat and plays a deny sound; does NOT auto-deduct
+
+**Unlock button:** when a player clicks a locked vault they can afford/qualify for, a confirm prompt appears — either a second click on the same item ("Click again to unlock") or a confirmation slot that pops up. On confirm, cost is deducted and vault is unlocked.
+
+---
+
+#### Implementation notes
+
+- `VaultConfig` — loads `vaults.yml`. Holds per-vault definitions (`VaultDef`: name, rows, `UnlockRequirement`). Reloaded via `/rpg reload`.
+- `VaultService` — interface in `rpg-api`. Methods: `isUnlocked(Player, int vault)`, `unlock(Player, int vault)`, `openVault(Player, int vault)`, `openSelector(Player)`.
+- `CoreVaultService` — implementation. Stores per-player unlock state in `DataStore` under key `"vaults"` (map of vault number → `true`). Vault 1 always marked unlocked on first access. Item contents stored under `"vault_contents_<n>"` (serialized `ItemStack[]`).
+- `VaultGui` — standard 54-slot (or configured rows × 9) inventory. Nav bar on last row. Items shift up if rows < 6 so the nav bar is always on the visible bottom row.
+- `VaultSelectorGui` — 54-slot selector grid. Clicking a locked vault shows requirements; clicking an unlocked vault opens it nested (Back → selector).
+- `VaultCommand` — `/vault [n]`, tab-completes to unlocked vault count + 1 (the next locked one, to show requirements).
+- Vault contents are saved on `InventoryCloseEvent` and on `PlayerQuitEvent` as serialized `ItemStack[]`. Loaded lazily on first open.
+- **Contents on permission-revoke:** vault contents are never wiped on lock. If a permission-gated vault locks again, contents stay in `DataStore` until access is re-granted.
+- Add `vault` command to `plugin.yml` with permission `rpg.core.vault` (default: true) and `rpg.core.vault.other` (default: op).
+
+---

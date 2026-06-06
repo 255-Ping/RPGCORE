@@ -68,14 +68,20 @@ public final class WalletGui implements Listener {
             balance = BigDecimal.ZERO;
         }
 
-        String currencyName = "Coins";
+        // Format using the primary currency's own formatter; fall back to plain "$x.xx".
+        // Capture balance as effectively-final so it can be used in lambdas.
+        final BigDecimal balanceFinal = balance;
+        String balanceFormatted = String.format("$%,.2f", balanceFinal);
+        String currencyName     = "Coins";
         try {
-            currencyName = RpgServices.currencies().primary()
-                    .map(c -> c.displayPlural())
-                    .orElse("Coins");
+            var opt = RpgServices.currencies().primary();
+            if (opt.isPresent()) {
+                balanceFormatted = opt.get().format(balanceFinal);
+                currencyName     = opt.get().displayPlural();
+            }
         } catch (IllegalStateException ignored) {}
 
-        inv.setItem(SLOT_BALANCE, buildBalance(balance, currencyName));
+        inv.setItem(SLOT_BALANCE, buildBalance(balanceFormatted, currencyName));
         inv.setItem(SLOT_LOG,     buildLogShortcut());
         inv.setItem(SLOT_TIPS,    buildTips());
 
@@ -140,13 +146,11 @@ public final class WalletGui implements Listener {
 
     // ── Item builders ─────────────────────────────────────────────────────────
 
-    private static ItemStack buildBalance(BigDecimal balance, String currencyName) {
+    private static ItemStack buildBalance(String formatted, String currencyName) {
         ItemStack item = new ItemStack(Material.EMERALD);
         ItemMeta  meta = item.getItemMeta();
         if (meta == null) return item;
 
-        // Format with commas, up to 2 decimal places
-        String formatted = String.format("$%,.2f", balance);
         meta.displayName(Component.text(formatted, NamedTextColor.GREEN, TextDecoration.BOLD)
                 .decoration(TextDecoration.ITALIC, false));
         meta.lore(List.of(

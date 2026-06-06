@@ -41,7 +41,6 @@ import java.util.UUID;
  * Slot 14: ⚑ Party      — grayed placeholder
  * Slot 15: 🛡 Guild      — grayed placeholder
  *
- * Slot 19: ⌂ Warps      — grayed placeholder
  * Slot 20: ✉ Mail       — grayed placeholder
  * Slot 21: 💰 Economy   — opens WalletGui nested
  *
@@ -59,7 +58,6 @@ public final class MainMenuGui implements Listener {
     private static final int SLOT_ACHIEVEMENTS = 13;
     private static final int SLOT_PARTY        = 14;
     private static final int SLOT_GUILD        = 15;
-    private static final int SLOT_WARPS        = 19;
     private static final int SLOT_MAIL         = 20;
     private static final int SLOT_ECONOMY      = 21;
 
@@ -105,7 +103,6 @@ public final class MainMenuGui implements Listener {
         inv.setItem(SLOT_ACHIEVEMENTS, buildButton(Material.DIAMOND,        "🏆 Achievements",  NamedTextColor.GOLD,   "View your achievements.", false));
         inv.setItem(SLOT_PARTY,        buildButton(Material.IRON_SWORD,     "⚑ Party",          NamedTextColor.AQUA,   "Party management.", true));
         inv.setItem(SLOT_GUILD,        buildButton(Material.SHIELD,         "🛡 Guild",          NamedTextColor.LIGHT_PURPLE, "Guild features.", true));
-        inv.setItem(SLOT_WARPS,        buildButton(Material.COMPASS,        "⌂ Warps",          NamedTextColor.WHITE,  "Teleport to locations.", true));
         inv.setItem(SLOT_MAIL,         buildButton(Material.PAPER,          "✉ Mail",           NamedTextColor.WHITE,  "Player mail.", true));
         inv.setItem(SLOT_ECONOMY,      buildButton(Material.EMERALD,        "💰 Economy",        NamedTextColor.GREEN,  "View your balance.", false));
 

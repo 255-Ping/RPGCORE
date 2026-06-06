@@ -55,7 +55,7 @@ These replace or supplement existing command interfaces. All are in `docs/planne
 
 | GUI | Plugin | Current state | Difficulty |
 |---|---|---|---|
-| Main Menu GUI (menu item right-click) | `rpg-core` | Not built yet — hub for all major player GUIs | 🟡 Medium |
+| ✅ Main Menu GUI (menu item right-click) | `rpg-core` | **Done** — `MainMenuGui`, `MainMenuListener`, `MenuCommand` in coreVersion 1.10.0. Configurability pass still pending (see below). | ✅ Done |
 | Party GUI (`/party`) | `rpg-parties` | All commands work; no GUI | 🟡 Medium |
 | Guild GUI (`/guild`) | `rpg-guilds` | All commands work; no GUI | 🔴 Hard |
 | Quest log GUI (`/quests`) | `rpg-quests` | Chat-list only | 🔴 Hard |
@@ -76,11 +76,13 @@ Opened by right-clicking the [Main Menu Item](todo-features.md). This is a **top
 ```
 [ Glass ] [ Glass ] [ Glass ] [ Glass ] [  Title ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
 [ Glass ] [ Stats ] [Skills ] [Quests ] [ Achieve] [ Party ] [ Guild ] [ Glass ] [ Glass ]
-[ Glass ] [Warps  ] [ Mail  ] [Economy] [        ] [        ] [        ] [ Glass ] [ Glass ]
+[ Glass ] [ Glass ] [ Mail  ] [Economy] [ Vault  ] [        ] [        ] [ Glass ] [ Glass ]
 [ Glass ] [        ] [        ] [        ] [        ] [        ] [        ] [ Glass ] [ Glass ]
 [ Glass ] [        ] [        ] [        ] [        ] [        ] [        ] [ Glass ] [ Glass ]
 [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Close  ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
 ```
+
+_(Note: Warps removed from player menu — use `/warp` admin command instead. Slot 19 currently empty; will become Waypoints once that system ships. Vault at slot 22 once vault system ships.)_
 
 **Feature buttons** — each opens the relevant GUI as a nested screen (so that GUI gets Back → Main Menu + Close):
 
@@ -92,8 +94,9 @@ Opened by right-clicking the [Main Menu Item](todo-features.md). This is a **top
 | 13 | DIAMOND | `🏆 Achievements` | Achievements GUI | Grayed out until achievement system is built |
 | 14 | IRON_SWORD | `⚑ Party` | Party GUI | Grayed out until party GUI is built |
 | 15 | SHIELD | `🛡 Guild` | Guild GUI | Grayed out until guild GUI is built |
-| 19 | COMPASS | `⌂ Warps` | Warps list GUI (simple paginated list of `/warp` destinations) | Grayed out until warps are built |
+| 19 | NETHER_STAR | `✦ Waypoints` | Waypoints GUI (list of discovered spawn points) | Grayed out placeholder until Waypoints system is built; **Warps removed** — admin warps are a separate `/warp` command, not exposed here |
 | 20 | PAPER | `✉ Mail` | Inbox GUI | Shows unread count in item name if > 0; grayed out until mail system is built |
+| 22 | CHEST | `🗄 Vault` | Vault Selector GUI | Grayed out until Vault/Storage system is built |
 | 21 | EMERALD | `💰 Economy` | Economy / wallet summary GUI | Always available |
 | 4 | NETHER_STAR | `✦ RPGCORE ✦` | — | Decorative title item, not clickable |
 
@@ -106,6 +109,152 @@ Opened by right-clicking the [Main Menu Item](todo-features.md). This is a **top
 **Building notes:**
 - The PLAYER_HEAD for Stats uses `SkullMeta` with the viewer's own `PlayerProfile` — call `Bukkit.createPlayerProfile(player.getUniqueId())` and `skullMeta.setOwnerProfile(...)`.
 - As new GUIs are built, swap their placeholder items for the real buttons — no other changes needed.
+
+---
+
+### Main Menu GUI — Configurability Pass (`rpg-core`) — 🟡 Medium
+
+The existing `MainMenuGui` hardcodes slot positions, icon materials, names, and which buttons are visible. Admins should be able to fully customize the menu from `config.yml`.
+
+**Config shape (`main-menu.buttons.<id>:`):**
+
+```yaml
+main-menu:
+  enabled: true
+  slot: 8
+  material: COMPASS
+  name: "&6✦ Menu &6✦"
+  title: "&6✦ RPGCORE ✦"    # GUI title bar text
+
+  buttons:
+    stats:
+      slot: 10
+      enabled: true
+      name: "⚔ Stats"
+    skills:
+      slot: 11
+      enabled: true
+      name: "✦ Skills"
+    quests:
+      slot: 12
+      enabled: true
+      name: "📜 Quests"
+    achievements:
+      slot: 13
+      enabled: true
+      name: "🏆 Achievements"
+    party:
+      slot: 14
+      enabled: true
+      name: "⚑ Party"
+    guild:
+      slot: 15
+      enabled: true
+      name: "🛡 Guild"
+    waypoints:
+      slot: 19
+      enabled: true        # only visible once waypoints system is built
+      name: "✦ Waypoints"
+    mail:
+      slot: 20
+      enabled: true
+      name: "✉ Mail"
+    economy:
+      slot: 21
+      enabled: true
+      name: "💰 Economy"
+    vault:
+      slot: 22
+      enabled: true        # only visible once vault system is built
+      name: "🗄 Vault"
+```
+
+**Behaviour:**
+- `enabled: false` → button not rendered at all (slot stays background filler).
+- `slot` override → button moves to that slot; if two buttons share a slot, the one defined first wins and a warning is logged.
+- `name` supports `&` color codes.
+- Materials are **not** configurable per-button (icons are semantic and would break UX to change); only name/slot/visibility are exposed.
+- A new `MainMenuConfig` class reads the `main-menu.buttons` section and exposes `ButtonDef(String id, int slot, boolean enabled, String name)`. `MainMenuGui` reads from this instead of constants.
+- Reload: `MainMenuConfig` re-reads on `/rpg reload`. Already-open menus update on next open.
+
+---
+
+### Skills GUI Redesign + Per-Skill Detail GUI (`rpg-core`) — 🔴 Hard
+
+The current `SkillsGui` lists all skills in a flat grid with a simple progress bar. This redesign makes it significantly more polished and adds a per-skill detail screen inspired by Hypixel SkyBlock's skill pages.
+
+---
+
+#### Skills Overview GUI (improved)
+
+Replace the flat grid with a cleaner layout:
+
+- **Header row (row 1):** total XP summary at slot 4. Slots 0–3 and 5–8: decorative glass.
+- **Skill items (rows 2–5):** one item per skill in a centered grid (up to 36 skills). Each item shows:
+  - Icon: skill-specific material (existing `SKILL_ICONS` map)
+  - Name: `"<color><skill display name>"` (bold, coloured by skill category — combat = red, gathering = green, crafting = yellow, etc.)
+  - Lore:
+    - `"&7Level: &f<N> &7/ &f<max>"`
+    - Progress bar: `"[████████░░] &e80%"` (20-char bar, gold fill `█`, dark gray empty `░`, percentage in gold)
+    - `"&7XP to next: &f<formatted>"`
+    - `"&7Total XP: &f<formatted>"`
+    - `""`
+    - `"&e▶ Click for details"`
+- **Nav bar (row 6):** standard.
+
+Clicking a skill item opens the Per-Skill Detail GUI for that skill (nested, Back → Overview).
+
+---
+
+#### Per-Skill Detail GUI (snake / path design)
+
+A 54-slot GUI displaying the level progression as a **snake path** — the same visual pattern Hypixel SkyBlock uses for skill pages. Each node on the snake represents one milestone level (not every level — just the levels that grant rewards or notable XP thresholds).
+
+**Snake layout:**
+
+The path zigzags across rows 1–5 (slots 0–44). Nodes are placed in a snake pattern:
+
+```
+Row 1 (left→right):  [1] [2] [3] [4] [5] [6] [7] [8] [9]
+Row 2 (right→left):  [ ] [ ] [ ] [ ] [ ] [10][11][12][13][14]
+Row 3 (left→right):  [15][16][17]...
+...
+```
+
+Each node is a coloured item:
+- **Reached level:** `LIME_DYE` (or skill's accent color) — player has reached this level
+- **Current level:** `YELLOW_DYE` + enchant glint — the level the player is at right now
+- **Future level:** `GRAY_DYE` — not yet reached
+
+**Node lore:**
+```
+&6Level <N>
+&7Rewards:
+  &a+<stat> <display-name>       (per-level stat gains if configured)
+  &e+<xp> XP                    (if a milestone bonus)
+  &d<special reward text>        (if a milestone ability or item reward)
+&7
+&7XP required: &f<formatted>
+&7Total XP at this level: &f<formatted>
+```
+
+Levels without any reward still show the level number and XP required. Levels with milestone rewards (from the skill's `milestones:` config) get a highlighted lore entry.
+
+**Header (slot 4):** skill name, icon, and current level summary. Same as the overview item for this skill but with more XP context.
+
+**Pagination:** if the skill has more than 45 milestone nodes (unlikely for max level 50, but possible for max 100), use Previous/Next nav. Otherwise no pagination needed.
+
+**Nav bar (row 6):** Back at slot 45 (returns to Skills Overview), Close at slot 53.
+
+---
+
+#### Implementation notes
+
+- `SkillDetailGui` — new class, same package as `SkillsGui`.
+- Snake path ordering: pre-compute a `List<Integer>` of slot indices in snake order. For a 5-row × 9-col grid, row 0 goes L→R (slots 0–8), row 1 R→L (slots 17–9), row 2 L→R (slots 18–26), etc.
+- Level nodes: only milestone levels (those in the skill's `milestones:` map) get reward lore. All other levels get minimal lore (level number + XP required).
+- `SkillsService.xpForLevel(skillId, level)` — may need adding to the API if it's not already exposed (currently `xpToNext` gives the delta, but we need the cumulative total for each level). Add `long xpRequired(String skillId, int level)` to `SkillsService` in `rpg-api`.
+- Color coding by category: define a `Map<String, NamedTextColor>` in `SkillsGui` — `combat → RED`, `gathering → GREEN`, `crafting → YELLOW`, `utility → AQUA`. Skill IDs not in the map default to `WHITE`.
 
 ---
 

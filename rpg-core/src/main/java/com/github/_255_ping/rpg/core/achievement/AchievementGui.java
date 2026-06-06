@@ -21,7 +21,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -162,14 +161,10 @@ public final class AchievementGui implements Listener {
         ItemMeta  meta;
 
         if (unlocked) {
-            Material mat;
-            try { mat = Material.valueOf(def.icon().toUpperCase(Locale.ROOT)); }
-            catch (IllegalArgumentException ex) { mat = Material.BOOK; }
-
-            item = new ItemStack(mat);
+            item = new ItemStack(Material.LIME_DYE);
             meta = item.getItemMeta();
             if (meta == null) return item;
-            meta.displayName(Component.text("✔ " + def.title(), NamedTextColor.GREEN)
+            meta.displayName(Component.text("✔ " + def.title(), NamedTextColor.GREEN, TextDecoration.BOLD)
                     .decoration(TextDecoration.ITALIC, false));
             List<Component> lore = new ArrayList<>();
             lore.add(Component.text(def.description(), NamedTextColor.GRAY)
@@ -188,7 +183,7 @@ public final class AchievementGui implements Listener {
             }
             meta.lore(lore);
         } else {
-            item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+            item = new ItemStack(Material.GRAY_DYE);
             meta = item.getItemMeta();
             if (meta == null) return item;
             meta.displayName(Component.text("???", NamedTextColor.DARK_GRAY)
