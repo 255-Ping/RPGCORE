@@ -15,6 +15,16 @@
 #   Abilities    — list of ability invocations + trigger suffix
 #                  (~onTimer:N | ~onHit | ~onHurt | ~onSpawn | ~onDeath).
 #                  No trigger = ~onSpawn.
+#   Elite        — optional elite-variant config. When present, a random roll on spawn
+#                  may promote the mob to an elite: larger name prefix, glow, multiplied
+#                  HP, bonus damage output, and extra loot rolls on death.
+#                    Chance:          0.0–1.0 probability per spawn (default 0.05 = 5%)
+#                    HpMultiplier:    multiplies max HP after level scaling (default 3.0)
+#                    DamageMultiplier: multiplies outgoing damage (default 1.5)
+#                    LootMultiplier:  floor(N) guaranteed extra loot rolls, fractional =
+#                                    chance for one more (default 2.0 = always 2× loot)
+#                    Prefix:         legacy-colour prefix prepended to the display name
+#                    Glow:           true/false — ambient glow outline (default true)
 #   LootPool     — single named pool ID (defined in loot-pools/*.yml).
 #   LootPools    — list of pool IDs; each rolls independently on death.
 #   LootTable    — inline drop table (optional; rolls alongside any LootPool references):
@@ -43,6 +53,14 @@ testmob:
   Abilities:
   - particles{type=flame,count=8} ~onSpawn
   - explode{radius=5,damage_multiplier=0.5,particle=flame} ~onTimer:100
+  # 10% chance this zombie spawns as an elite: 3× HP, 1.5× damage, double loot.
+  Elite:
+    Chance: 0.10
+    HpMultiplier: 3.0
+    DamageMultiplier: 1.5
+    LootMultiplier: 2.0
+    Prefix: '&6✦ Elite &r'
+    Glow: true
   # Named pool — defined in loot-pools/example.yml.
   # Drop contents live in one place; any mob can reference the same pool.
   LootPool: basic_mob_drops

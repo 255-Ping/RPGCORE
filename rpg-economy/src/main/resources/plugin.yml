@@ -49,3 +49,9 @@ permissions:
   rpg.economy.admin.reload:
     description: Reload rpg-economy config
     default: op
+  rpg.economy.log:
+    description: View your own transaction log (/money log)
+    default: true
+  rpg.economy.log.others:
+    description: View another player's transaction log (/money log <player>)
+    default: op

@@ -126,16 +126,22 @@ public final class HudTask implements Runnable {
         }
 
         List<String> lines = plugin.getConfig().getStringList("scoreboard.lines");
-        // Bukkit ranks scores high → low; assign descending so they render in declared order.
-        int score = lines.size();
-        Set<String> used = new HashSet<>();
+        // Pre-expand all lines. Placeholders like {party_members} may return \n-separated content.
+        List<String> expanded = new ArrayList<>();
         for (String raw : lines) {
             String resolved = PlaceholderResolver.resolve(player, raw);
-            // Scoreboard entry keys need § codes. Parse & codes via Adventure, re-serialize to §.
-            String colorized = LEGACY_SECTION.serialize(LEGACY.deserialize(resolved));
+            for (String subline : resolved.split("\n", -1)) {
+                if (!subline.isEmpty()) {
+                    // Scoreboard entry keys need § codes. Parse & codes via Adventure, re-serialize to §.
+                    expanded.add(LEGACY_SECTION.serialize(LEGACY.deserialize(subline)));
+                }
+            }
+        }
+        int score = expanded.size();
+        Set<String> used = new HashSet<>();
+        for (String colorized : expanded) {
             String entry = uniquify(colorized, used);
-            Score s = obj.getScore(entry);
-            s.setScore(score--);
+            obj.getScore(entry).setScore(score--);
         }
         player.setScoreboard(sb);
     }

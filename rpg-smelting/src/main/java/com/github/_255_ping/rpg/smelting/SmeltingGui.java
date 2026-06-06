@@ -19,6 +19,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitTask;
@@ -327,6 +328,7 @@ public final class SmeltingGui implements Listener {
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             meta.displayName(Component.empty().decoration(TextDecoration.ITALIC, false));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             stack.setItemMeta(meta);
         }
         return stack;
@@ -342,6 +344,7 @@ public final class SmeltingGui implements Listener {
                     Component.text("⏱ " + secsRemaining + "s remaining")
                             .color(NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false)
             ));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             stack.setItemMeta(meta);
         }
         return stack;
@@ -390,6 +393,7 @@ public final class SmeltingGui implements Listener {
             meta.displayName(LEGACY.deserialize(label).decoration(TextDecoration.ITALIC, false));
             meta.lore(List.of(LEGACY.deserialize("&8Page &7" + (pg + 1) + " &8/ &7" + total)
                     .decoration(TextDecoration.ITALIC, false)));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             item.setItemMeta(meta);
         }
         return item;
@@ -419,6 +423,7 @@ public final class SmeltingGui implements Listener {
                 lore.add(LEGACY.deserialize("&8▶ &7Left-click to smelt").decoration(TextDecoration.ITALIC, false));
             }
             meta.lore(lore);
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             stack.setItemMeta(meta);
         }
         return stack;

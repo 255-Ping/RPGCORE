@@ -16,6 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -256,6 +257,7 @@ public final class StatsGui implements Listener {
             }
         }
         meta.lore(lore);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         item.setItemMeta(meta);
         return item;
     }
@@ -265,6 +267,7 @@ public final class StatsGui implements Listener {
         ItemMeta meta = item.getItemMeta();
         meta.displayName(LEGACY.deserialize(label).decoration(TextDecoration.ITALIC, false));
         meta.lore(List.of());
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         item.setItemMeta(meta);
         return item;
     }
@@ -278,6 +281,7 @@ public final class StatsGui implements Listener {
             lore.add(LEGACY.deserialize(l).decoration(TextDecoration.ITALIC, false));
         }
         meta.lore(lore);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         item.setItemMeta(meta);
         return item;
     }

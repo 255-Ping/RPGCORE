@@ -63,6 +63,7 @@ import com.github._255_ping.rpg.core.spawning.NaturalSpawnTask;
 import com.github._255_ping.rpg.core.mobs.DamagerTracker;
 import com.github._255_ping.rpg.core.mobs.MobAbilityEventListener;
 import com.github._255_ping.rpg.core.mobs.MobAbilityTimerTask;
+import com.github._255_ping.rpg.core.mobs.CoreLootTable;
 import com.github._255_ping.rpg.core.mobs.MobLoader;
 import com.github._255_ping.rpg.core.mobs.MobLootListener;
 import com.github._255_ping.rpg.core.persistence.BackendMigrator;
@@ -70,6 +71,11 @@ import com.github._255_ping.rpg.core.persistence.MysqlDataStore;
 import com.github._255_ping.rpg.core.persistence.YamlDataStore;
 import com.github._255_ping.rpg.api.persistence.DataStore;
 import com.github._255_ping.rpg.core.input.CoreSignInputService;
+import com.github._255_ping.rpg.core.achievement.AchievementGui;
+import com.github._255_ping.rpg.core.achievement.AchievementLoader;
+import com.github._255_ping.rpg.core.achievement.CoreAchievementService;
+import com.github._255_ping.rpg.core.command.AchievementsCommand;
+import com.github._255_ping.rpg.core.mobs.EliteService;
 import com.github._255_ping.rpg.core.mobs.OwnedMobTracker;
 import com.github._255_ping.rpg.core.wand.CoreWandService;
 import com.github._255_ping.rpg.core.wand.WandListener;
@@ -240,6 +246,8 @@ public final class RpgCorePlugin extends JavaPlugin {
         RpgServices.setLootTables(lootTableRegistry);
         RpgServices.setLootPools(lootPoolRegistry);
 
+        CoreLootTable.setMagicFindMultiplierCap(getConfig().getDouble("loot.max-magic-find-multiplier", 3.0));
+
         signInputService = new CoreSignInputService(this);
         getServer().getPluginManager().registerEvents(signInputService, this);
         RpgServices.setSignInput(signInputService);
@@ -388,6 +396,7 @@ public final class RpgCorePlugin extends JavaPlugin {
 
         spawnerManager = new SpawnerManager(this, healthService);
         spawnerManager.loadAll();
+        new EliteService(this);   // registers itself as the static singleton
         damagePipeline.setMobKeys(mobIdKey, spawnerManager.mobLevelKey());
         MobAbilityRuntime.setMobLevelKey(spawnerManager.mobLevelKey());
         SpawnerCommand spawnerCommand = new SpawnerCommand(this, spawnerManager);
@@ -395,6 +404,23 @@ public final class RpgCorePlugin extends JavaPlugin {
         spawnerCmd.setExecutor(spawnerCommand);
         spawnerCmd.setTabCompleter(spawnerCommand);
         getServer().getScheduler().runTaskTimer(this, spawnerManager::tick, 20L, 20L);
+
+        // Achievement system
+        File achievementsDir = new File(getDataFolder(), "achievements");
+        if (!achievementsDir.isDirectory()) achievementsDir.mkdirs();
+        if (!new File(achievementsDir, "example.yml").exists()) {
+            saveResource("achievements/example.yml", false);
+        }
+        AchievementLoader achievementLoader = new AchievementLoader(achievementsDir, getLogger());
+        CoreAchievementService achievementService = new CoreAchievementService(this, achievementLoader.loadAll());
+        RpgServices.setAchievements(achievementService);
+        getServer().getPluginManager().registerEvents(achievementService, this);
+        AchievementGui achievementGui = new AchievementGui();
+        getServer().getPluginManager().registerEvents(achievementGui, this);
+        var achCmd = Objects.requireNonNull(getCommand("achievements"));
+        AchievementsCommand achCommand = new AchievementsCommand(achievementGui);
+        achCmd.setExecutor(achCommand);
+        achCmd.setTabCompleter(achCommand);
 
         wandService = new CoreWandService();
         wandListener = new WandListener(this, wandService);

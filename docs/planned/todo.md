@@ -108,11 +108,11 @@
 31. ✅ **Boss bar system** — `rpg-bossbar 0.1.0`; `BossBar:` YAML section on mobs; proximity task shows/hides bar; `PostDamageEvent` updates HP fraction; `RpgServices.bossBar()`
 32. ✅ **Sign-entry utility** — `SignInputService` interface in `rpg-api 0.5.2` + `CoreSignInputService` in `rpg-core 1.8.0`; virtual sign, 60s timeout, null callback on cancel/disconnect; `RpgServices.signInput().ask(player, label, callback)`
 33. 🔴 🔴 **Offline mail / inbox system** — needed before AH and offline achievement rewards
-34. 🟠 🟡 **HUD improvements** — scoreboard, tablist, PAPI support, ability cooldowns
-35. 🔴 🟡 **PlaceholderAPI support** — integrates with HUD improvements
-36. 🟠 🟡 **MagicFind stat implementation** — wire up the `MagicFindAffected` loot pool flag
-37. 🟠 🟡 **Economy transaction log** — admin debugging + player history
-38. 🟠 🟡 **Item set bonuses**
+34. ✅ **HUD improvements** — scoreboard, tablist, PAPI support, ability cooldowns (`rpg-hud 0.4.1`)
+35. ✅ **PlaceholderAPI support** — `RpgPlaceholderExpansion` registers `%rpg_X%` placeholders from all HUD keys; softdepend on PlaceholderAPI; skill keys translate `skill_id_prop` → `skill:id:prop` (`rpg-hud 0.4.1`)
+36. ✅ **MagicFind stat implementation** — configurable `loot.max-magic-find-multiplier` cap applied in both SHARED and PER_PLAYER roll modes (`rpg-core 1.8.2`)
+37. ✅ **Economy transaction log** — `TxLog` with DataStore persistence; `/money log [player] [page]`; reason-tagged deposits/withdrawals/transfers; mob drops tagged `mob_drop` (`rpg-economy 0.2.1`)
+38. ✅ **Item set bonuses** — `ArmorSetListener` / `ArmorSetLoader` / `SetBonus` already in rpg-core
 39. 🟠 🟡 **Fishing content slice**
 40. 🟠 🟡 **Quest log GUI + chains + repeatable quests**
 41. 🟠 🔴 **Guild bank + rank GUI**

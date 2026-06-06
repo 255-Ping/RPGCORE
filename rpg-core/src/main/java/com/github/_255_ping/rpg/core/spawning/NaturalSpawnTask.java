@@ -2,6 +2,9 @@ package com.github._255_ping.rpg.core.spawning;
 
 import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.mobs.RpgMob;
+import com.github._255_ping.rpg.core.mobs.CoreRpgMob;
+import com.github._255_ping.rpg.core.mobs.EliteService;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -56,7 +59,14 @@ public final class NaturalSpawnTask implements Runnable {
                 Optional<RpgMob> mob = RpgServices.mobs().get(mobId);
                 if (mob.isEmpty()) continue;
 
-                mob.get().spawn(candidate);
+                LivingEntity spawned = mob.get().spawn(candidate);
+                if (spawned != null
+                        && EliteService.get() != null
+                        && mob.get() instanceof CoreRpgMob cMob
+                        && cMob.eliteDef() != null
+                        && ThreadLocalRandom.current().nextDouble() < cMob.eliteDef().chance()) {
+                    EliteService.get().promote(spawned, cMob.eliteDef());
+                }
             }
         }
     }

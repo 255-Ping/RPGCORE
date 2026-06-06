@@ -15,8 +15,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -49,6 +51,10 @@ public final class EconomyCommands implements CommandExecutor, TabCompleter {
     }
 
     private void handleBalance(CommandSender sender, String[] args) {
+        if (args.length >= 1 && args[0].equalsIgnoreCase("log")) {
+            handleLog(sender, args);
+            return;
+        }
         if (args.length == 0) {
             if (!(sender instanceof Player p)) {
                 sender.sendMessage(msg("command.player-only"));
@@ -104,7 +110,7 @@ public final class EconomyCommands implements CommandExecutor, TabCompleter {
             sender.sendMessage(msg("pay.cooldown")); return;
         }
 
-        if (!economy.transfer(payer, target, amount)) {
+        if (!economy.transfer(payer, target, amount, "player_pay")) {
             sender.sendMessage(msg("pay.insufficient")); return;
         }
         if (cooldownSec > 0) {
@@ -139,13 +145,13 @@ public final class EconomyCommands implements CommandExecutor, TabCompleter {
             case "add" -> {
                 if (!sender.hasPermission("rpg.economy.admin.add")) { sender.sendMessage(msg("command.no-permission")); return; }
                 BigDecimal amount = parseAmountOrReject(sender, args, 2); if (amount == null) return;
-                economy.deposit(target, amount);
+                economy.deposit(target, amount, "admin_add");
                 sender.sendMessage(msg("eco.added", Map.of("player", fmt(target), "amount", economy.currency().format(amount))));
             }
             case "remove" -> {
                 if (!sender.hasPermission("rpg.economy.admin.remove")) { sender.sendMessage(msg("command.no-permission")); return; }
                 BigDecimal amount = parseAmountOrReject(sender, args, 2); if (amount == null) return;
-                economy.withdraw(target, amount);
+                economy.withdraw(target, amount, "admin_remove");
                 sender.sendMessage(msg("eco.removed", Map.of("player", fmt(target), "amount", economy.currency().format(amount))));
             }
             case "reset" -> {
@@ -154,6 +160,73 @@ public final class EconomyCommands implements CommandExecutor, TabCompleter {
                 economy.set(target, start);
                 sender.sendMessage(msg("eco.reset", Map.of("player", fmt(target), "amount", economy.currency().format(start))));
             }
+        }
+    }
+
+    private void handleLog(CommandSender sender, String[] args) {
+        // /money log [player] [page]
+        UUID targetId;
+        String targetName;
+        if (args.length >= 2 && !args[1].matches("\\d+")) {
+            if (!sender.hasPermission("rpg.economy.log.others")) {
+                sender.sendMessage(msg("command.no-permission")); return;
+            }
+            OfflinePlayer op = resolveOfflinePlayer(args[1]);
+            if (op == null) {
+                sender.sendMessage(msg("command.player-not-found", Map.of("name", args[1]))); return;
+            }
+            targetId = op.getUniqueId();
+            targetName = op.getName() == null ? args[1] : op.getName();
+        } else {
+            if (!sender.hasPermission("rpg.economy.log")) {
+                sender.sendMessage(msg("command.no-permission")); return;
+            }
+            if (!(sender instanceof org.bukkit.entity.Player p)) {
+                sender.sendMessage(msg("command.player-only")); return;
+            }
+            targetId = p.getUniqueId();
+            targetName = p.getName();
+        }
+
+        TxLog txLog = economy.txLog();
+        if (txLog == null) {
+            sender.sendMessage("§cTransaction log is not enabled."); return;
+        }
+
+        List<TxLog.Entry> entries = txLog.get(targetId);
+        if (entries == null || entries.isEmpty()) {
+            sender.sendMessage("§7No transactions recorded for §e" + targetName + "§7.");
+            return;
+        }
+
+        int pageSize = plugin.getConfig().getInt("transaction-log.page-size", 10);
+        int page = 1;
+        // last arg might be a page number
+        String lastArg = args[args.length - 1];
+        if (lastArg.matches("\\d+")) {
+            try { page = Math.max(1, Integer.parseInt(lastArg)); } catch (NumberFormatException ignored) {}
+        }
+        int pages = Math.max(1, (entries.size() + pageSize - 1) / pageSize);
+        page = Math.min(page, pages);
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, entries.size());
+
+        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd HH:mm");
+        sender.sendMessage("§6=== Transaction Log: §e" + targetName + " §6[" + page + "/" + pages + "] ===");
+        for (int i = start; i < end; i++) {
+            TxLog.Entry e = entries.get(i);
+            String kindColor = switch (e.kind()) {
+                case DEPOSIT, TRANSFER_IN -> "§a";
+                case WITHDRAW, TRANSFER_OUT -> "§c";
+                case SET -> "§e";
+            };
+            String reason = e.reason().isEmpty() ? "" : " §8(" + e.reason() + ")";
+            sender.sendMessage("§7" + sdf.format(new Date(e.timestampMs())) + " "
+                    + kindColor + e.kind().name().toLowerCase().replace('_', ' ') + " §f"
+                    + economy.currency().format(e.amount()) + reason);
+        }
+        if (pages > 1) {
+            sender.sendMessage("§7Page §e" + page + "§7/§e" + pages + "§7 — §7/money log " + targetName + " <page>");
         }
     }
 
@@ -215,7 +288,11 @@ public final class EconomyCommands implements CommandExecutor, TabCompleter {
             if (args.length == 1) return filter(args[0], List.of("set", "add", "remove", "reset", "reload"));
             if (args.length == 2 && !args[0].equalsIgnoreCase("reload")) return filterPlayers(args[1]);
         }
-        if (name.equals("balance") || name.equals("baltop")) {
+        if (name.equals("balance")) {
+            if (args.length == 1) return filter(args[0], List.of("log"));
+            if (args.length == 2 && args[0].equalsIgnoreCase("log")) return filterPlayers(args[1]);
+        }
+        if (name.equals("baltop")) {
             if (args.length == 1) return filterPlayers(args[0]);
         }
         if (name.equals("pay")) {

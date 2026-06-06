@@ -16,6 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -278,6 +279,7 @@ public final class StationGui implements Listener {
         if (meta != null) {
             meta.displayName(ni(LEGACY.deserialize(label)));
             meta.lore(List.of(ni(LEGACY.deserialize("&8Page &7" + (page + 1) + " &8/ &7" + totalPages))));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             item.setItemMeta(meta);
         }
         return item;
@@ -289,6 +291,7 @@ public final class StationGui implements Listener {
         if (meta != null) {
             meta.displayName(ni(LEGACY.deserialize("&7Page &f" + (page + 1) + " &7/ &f" + totalPages)));
             meta.lore(List.of());
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             item.setItemMeta(meta);
         }
         return item;
@@ -613,6 +616,7 @@ public final class StationGui implements Listener {
         if (meta != null) {
             meta.displayName(ni(LEGACY.deserialize(legacyName)));
             meta.lore(List.of());
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             stack.setItemMeta(meta);
         }
         return stack;
@@ -623,6 +627,7 @@ public final class StationGui implements Listener {
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             meta.lore(List.of(Component.empty(), ni(LEGACY.deserialize(hint))));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             stack.setItemMeta(meta);
         }
         return stack;
@@ -633,6 +638,7 @@ public final class StationGui implements Listener {
         ItemMeta meta = stack.getItemMeta();
         if (meta != null && !lore.isEmpty()) {
             meta.lore(lore);
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             stack.setItemMeta(meta);
         }
         return stack;

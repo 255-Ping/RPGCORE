@@ -10,6 +10,13 @@
 #   {skill:<id>:level}                — skill level (e.g., {skill:combat:level})
 #   {skill:<id>:total_xp}             — total skill XP
 #   {skill:<id>:to_next}              — XP needed to reach next level
+#   {tps}                             — server TPS (1-min average, color-coded green/yellow/red)
+#   {ram_used}, {ram_max}             — JVM heap usage in MB
+#   {ping}                            — player's current ping in ms
+#   {party_members}                   — newline-joined list of party members with HP; empty when solo
+#   {cooldowns}                       — compact list of active ability cooldowns (e.g. "Ability (10s)")
+#   {recent_xp}                       — last skill XP gain, fades after recent-xp.fade-ms milliseconds
+#   {effects}                         — active status effects with duration
 # Color codes: & followed by 0-9 or a-f for color, l/o/n/m/k/r for formatting.
 
 scoreboard:
@@ -25,6 +32,9 @@ scoreboard:
   - "&7Combat: &c{skill:combat:level}"
   - "&7Mining: &6{skill:mining:level}"
   - "&7&m                  "
+  - "{recent_xp}"
+  - "{party_members}"
+  - "{cooldowns}"
   - "&e{coins}"
 
 tablist:
@@ -35,14 +45,16 @@ tablist:
   player-name-format: "{prefix}{name}{suffix}"
   header:
   - "&6&lRPG SERVER"
-  - "&7Players online: &f{online}"
+  - "&7Players online: &f{online}  &7TPS: {tps}  &7RAM: &f{ram_used}&7/{ram_max}"
+  - "&7Ping: &f{ping}"
   footer:
   - "&7Combat: &c{skill:combat:level} &8| &7Mining: &6{skill:mining:level}"
+  - "{effects}"
 
 action-bar:
   enabled: true
   update-ticks: 5          # action bar refreshes frequently for smooth stat display (5 = 4/sec)
-  idle-format: "&c❤ {health}/{max_health}  &b✦ {mana}/{max_mana}  &a✤ {defense}"
+  idle-format: "&c❤ {health}/{max_health}  &b✦ {mana}/{max_mana}  &a✤ {defense}  {cooldowns}"
   # idle-format shows when no other system is pushing a higher-priority action bar message.
   # Other systems (combat, skills) override this with their own messages temporarily.
 
@@ -54,3 +66,8 @@ nametag:
   hide-when-sneaking: true              # true = nametag disappears while player is sneaking
   y-offset: 0.5                         # blocks above the player's head (applied as Display translation)
   update-ticks: 10                      # how often the nametag re-renders (10 = twice per second)
+
+# How long the {recent_xp} placeholder stays visible after a skill XP gain.
+# Gains for the same skill within this window are accumulated. Requires restart to change.
+recent-xp:
+  fade-ms: 5000

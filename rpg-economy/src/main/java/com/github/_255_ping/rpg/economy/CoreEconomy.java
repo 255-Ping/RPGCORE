@@ -23,10 +23,19 @@ public final class CoreEconomy implements Economy {
     private final Currency currency;
     private final BigDecimal startingBalance;
     private final ConcurrentHashMap<UUID, BigDecimal> balances = new ConcurrentHashMap<>();
+    private TxLog txLog;
 
     public CoreEconomy(Currency currency, BigDecimal startingBalance) {
         this.currency = currency;
         this.startingBalance = startingBalance;
+    }
+
+    public void setTxLog(TxLog log) {
+        this.txLog = log;
+    }
+
+    public TxLog txLog() {
+        return txLog;
     }
 
     public Currency currency() {
@@ -122,6 +131,31 @@ public final class CoreEconomy implements Economy {
         BigDecimal clamped = amount.signum() < 0 ? BigDecimal.ZERO : amount;
         if (clamped.compareTo(currency.maxBalance()) > 0) clamped = currency.maxBalance();
         balances.put(player.getUniqueId(), clamped);
+        if (txLog != null) txLog.append(player.getUniqueId(), TxLog.Kind.SET, clamped, "admin_set");
         return CompletableFuture.runAsync(() -> saveOne(player.getUniqueId()));
+    }
+
+    @Override
+    public CompletableFuture<Void> deposit(OfflinePlayer player, BigDecimal amount, String reason) {
+        if (txLog != null) txLog.append(player.getUniqueId(), TxLog.Kind.DEPOSIT, amount, reason);
+        return deposit(player, amount);
+    }
+
+    @Override
+    public boolean withdraw(OfflinePlayer player, BigDecimal amount, String reason) {
+        boolean ok = withdraw(player, amount);
+        if (ok && txLog != null) txLog.append(player.getUniqueId(), TxLog.Kind.WITHDRAW, amount, reason);
+        return ok;
+    }
+
+    @Override
+    public boolean transfer(OfflinePlayer from, OfflinePlayer to, BigDecimal amount, String reason) {
+        if (!withdraw(from, amount)) return false;
+        deposit(to, amount);
+        if (txLog != null) {
+            txLog.append(from.getUniqueId(), TxLog.Kind.TRANSFER_OUT, amount, reason + " → " + to.getName());
+            txLog.append(to.getUniqueId(), TxLog.Kind.TRANSFER_IN,  amount, reason + " ← " + from.getName());
+        }
+        return true;
     }
 }

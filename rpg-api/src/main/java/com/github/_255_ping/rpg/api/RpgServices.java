@@ -1,5 +1,6 @@
 package com.github._255_ping.rpg.api;
 
+import com.github._255_ping.rpg.api.achievement.AchievementService;
 import com.github._255_ping.rpg.api.abilities.AbilityRegistry;
 import com.github._255_ping.rpg.api.accessories.AccessoryService;
 import com.github._255_ping.rpg.api.bossbar.BossBarService;
@@ -81,6 +82,7 @@ public final class RpgServices {
     private static ArmorSetRegistry armorSets;
     private static SignInputService signInput;
     private static BossBarService bossBar;
+    private static AchievementService achievements;
 
     private RpgServices() {}
 
@@ -121,6 +123,7 @@ public final class RpgServices {
     public static ArmorSetRegistry armorSets() { return require(armorSets, "ArmorSetRegistry"); }
     public static SignInputService signInput() { return require(signInput, "SignInputService"); }
     public static BossBarService bossBar() { return require(bossBar, "BossBarService"); }
+    public static AchievementService achievements() { return require(achievements, "AchievementService"); }
 
     // ----- Setters (rpg-core only) -----
 
@@ -158,6 +161,7 @@ public final class RpgServices {
     public static void setArmorSets(ArmorSetRegistry svc) { armorSets = svc; }
     public static void setSignInput(SignInputService svc) { signInput = svc; }
     public static void setBossBar(BossBarService svc) { bossBar = svc; }
+    public static void setAchievements(AchievementService svc) { achievements = svc; }
 
     private static <T> T require(T svc, String name) {
         if (svc == null) throw new IllegalStateException(name + " not bootstrapped — is rpg-core loaded?");

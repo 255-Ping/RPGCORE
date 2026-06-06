@@ -2,6 +2,8 @@ package com.github._255_ping.rpg.core.spawners;
 
 import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.mobs.RpgMob;
+import com.github._255_ping.rpg.core.mobs.CoreRpgMob;
+import com.github._255_ping.rpg.core.mobs.EliteService;
 import com.github._255_ping.rpg.api.persistence.DataStore;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
 import org.bukkit.Bukkit;
@@ -172,6 +174,14 @@ public final class SpawnerManager {
                                     net.kyori.adventure.text.format.NamedTextColor.GRAY);
                     spawned.customName(existing != null ? levelPrefix.append(existing) : levelPrefix);
                     spawned.setCustomNameVisible(true);
+                }
+
+                // Elite promotion — roll AFTER level scaling so HP multiplier stacks on top of leveled HP.
+                if (EliteService.get() != null
+                        && mob.get() instanceof CoreRpgMob cMob
+                        && cMob.eliteDef() != null
+                        && ThreadLocalRandom.current().nextDouble() < cMob.eliteDef().chance()) {
+                    EliteService.get().promote(spawned, cMob.eliteDef());
                 }
             }
             lastSpawnTick.put(def.id(), currentTick);

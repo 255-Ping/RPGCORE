@@ -1,0 +1,87 @@
+# Achievement definitions for rpg-core.
+# Each top-level key is an achievement ID (must be unique across all achievement files).
+#
+# Fields:
+#   Title:       Short display name shown in the GUI and unlock notification.
+#   Description: One-line hint / flavour text.
+#   Category:    Grouping label (Combat, Economy, Exploration, General, …).
+#   Icon:        Bukkit Material name for the GUI icon (default: BOOK).
+#   Trigger:     MANUAL — granted explicitly via code / /rpg achievement grant
+#                COUNTER — unlocked when a named counter reaches Target.
+#   Counter:     Counter key (required for COUNTER achievements).
+#                Common keys: mob_kills, player_kills, blocks_broken, …
+#   Target:      Counter threshold to unlock (required for COUNTER achievements).
+#   Reward:      Optional. Both fields default to 0.
+#     Money: 1000      # added to player's economy balance (requires rpg-economy)
+#     XP:    500       # awarded to the "combat" skill
+
+# ── Counter achievements ─────────────────────────────────────────────────────
+
+first_blood:
+  Title: First Blood
+  Description: Kill your first mob.
+  Category: Combat
+  Icon: IRON_SWORD
+  Trigger: COUNTER
+  Counter: mob_kills
+  Target: 1
+
+# Ten kills
+getting_started:
+  Title: Getting Started
+  Description: Kill 10 mobs.
+  Category: Combat
+  Icon: STONE_SWORD
+  Trigger: COUNTER
+  Counter: mob_kills
+  Target: 10
+  Reward:
+    Money: 100
+    XP: 50
+
+# One hundred kills
+mob_hunter:
+  Title: Mob Hunter
+  Description: Kill 100 mobs.
+  Category: Combat
+  Icon: IRON_SWORD
+  Trigger: COUNTER
+  Counter: mob_kills
+  Target: 100
+  Reward:
+    Money: 1000
+    XP: 500
+
+# One thousand kills
+mob_slayer:
+  Title: Mob Slayer
+  Description: Kill 1,000 mobs.
+  Category: Combat
+  Icon: DIAMOND_SWORD
+  Trigger: COUNTER
+  Counter: mob_kills
+  Target: 1000
+  Reward:
+    Money: 10000
+    XP: 5000
+
+# ── Manual achievements (granted from code at specific events) ───────────────
+
+elite_slayer:
+  Title: Elite Slayer
+  Description: Slay your first elite mob.
+  Category: Combat
+  Icon: BLAZE_ROD
+  Trigger: MANUAL
+  Reward:
+    Money: 500
+    XP: 250
+
+adventurer:
+  Title: Adventurer
+  Description: Reach combat level 10.
+  Category: General
+  Icon: MAP
+  Trigger: MANUAL
+  Reward:
+    XP: 1000

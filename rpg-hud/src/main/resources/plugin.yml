@@ -6,6 +6,7 @@ load: POSTWORLD
 authors: [Ping]
 description: Scoreboard, tablist, action-bar HUD with configurable placeholders.
 depend: [rpg-core]
+softdepend: [PlaceholderAPI]
 commands:
   hud:
     description: HUD admin / toggle command

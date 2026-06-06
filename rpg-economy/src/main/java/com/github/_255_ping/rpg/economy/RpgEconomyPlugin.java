@@ -11,6 +11,7 @@ public final class RpgEconomyPlugin extends JavaPlugin {
 
     private CoreEconomy economy;
     private CoreCurrency currency;
+    private TxLog txLog;
 
     @Override
     public void onEnable() {
@@ -30,9 +31,11 @@ public final class RpgEconomyPlugin extends JavaPlugin {
         BigDecimal starting = BigDecimal.valueOf(getConfig().getLong("currency.starting-balance", 100));
         economy = new CoreEconomy(currency, starting);
         economy.loadAll();
+        txLog = new TxLog(getConfig().getInt("transaction-log.max-entries", 100));
+        economy.setTxLog(txLog);
         RpgServices.setEconomy(economy);
 
-        getServer().getPluginManager().registerEvents(new PlayerBalanceListener(economy), this);
+        getServer().getPluginManager().registerEvents(new PlayerBalanceListener(economy, txLog), this);
 
         // Register as a Vault economy provider if Vault is loaded.
         if (getServer().getPluginManager().getPlugin("Vault") != null) {

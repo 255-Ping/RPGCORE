@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * On RPG mob death:
@@ -72,16 +73,47 @@ public final class MobLootListener implements Listener {
 
         if (victim.getWorld() == null) return;
 
+        // Elite loot multiplier: floor(mult) guaranteed rolls + fractional chance for one extra.
+        // Non-elite mobs return 1.0 → exactly one roll as normal.
+        double lootMult = EliteService.get() != null ? EliteService.get().lootMultiplier(victim) : 1.0;
+        int fullRolls = (int) lootMult;
+        double extraChance = lootMult - fullRolls;
+        int totalRolls = fullRolls
+                + (extraChance > 0 && ThreadLocalRandom.current().nextDouble() < extraChance ? 1 : 0);
+
         // ── Roll inline LootTable ──────────────────────────────────────────────
         if (inlineTable != null) {
-            dropItems(victim, inlineTable.roll(ctx));
-            depositCurrency(inlineTable.rollCurrency(ctx));
+            for (int i = 0; i < totalRolls; i++) {
+                dropItems(victim, inlineTable.roll(ctx));
+                depositCurrency(inlineTable.rollCurrency(ctx));
+            }
         }
 
         // ── Roll each named LootPool ───────────────────────────────────────────
         for (LootPool pool : resolvedPools) {
-            dropItems(victim, pool.roll(ctx));
-            if (pool instanceof CoreLootPool cp) depositCurrency(cp.rollCurrency(ctx));
+            for (int i = 0; i < totalRolls; i++) {
+                dropItems(victim, pool.roll(ctx));
+                if (pool instanceof CoreLootPool cp) depositCurrency(cp.rollCurrency(ctx));
+            }
+        }
+
+        // ── Achievement: mob kills counter ────────────────────────────────────
+        // Increment for every player who dealt damage, not just the killer.
+        if (!damagers.isEmpty()) {
+            try {
+                var achievements = RpgServices.achievements();
+                for (Player p : damagers.keySet()) {
+                    if (p != null && p.isOnline()) {
+                        achievements.increment(p, "mob_kills", 1L);
+                        // Also track elite kills separately
+                        if (EliteService.get() != null && EliteService.get().isElite(victim)) {
+                            achievements.grant(p, "elite_slayer");
+                        }
+                    }
+                }
+            } catch (IllegalStateException ignored) {
+                // Achievement service not loaded — silently skip.
+            }
         }
 
         // ── Combat skill XP ───────────────────────────────────────────────────
@@ -142,7 +174,7 @@ public final class MobLootListener implements Listener {
             Economy economy = RpgServices.economy();
             for (Map.Entry<Player, BigDecimal> entry : currency.entrySet()) {
                 if (entry.getValue().compareTo(BigDecimal.ZERO) > 0) {
-                    economy.deposit(entry.getKey(), entry.getValue());
+                    economy.deposit(entry.getKey(), entry.getValue(), "mob_drop");
                 }
             }
         } catch (IllegalStateException ignored) {

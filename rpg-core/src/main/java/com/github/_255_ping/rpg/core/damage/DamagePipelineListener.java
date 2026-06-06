@@ -11,6 +11,7 @@ import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import com.github._255_ping.rpg.api.stats.StatHolder;
 import com.github._255_ping.rpg.core.RpgCorePlugin;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
+import com.github._255_ping.rpg.core.mobs.EliteService;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -115,6 +116,11 @@ public final class DamagePipelineListener implements Listener {
 
         // Mob level stat bonuses — leveled mobs deal more damage and absorb more.
         finalDamage = applyMobLevelStatScaling(attacker, victim, finalDamage);
+
+        // Elite mob damage multiplier — applied after level scaling so it stacks on top.
+        if (attacker != null && !(attacker instanceof Player) && EliteService.get() != null) {
+            finalDamage *= EliteService.get().damageMultiplier(attacker);
+        }
 
         // Level scaling: reduce damage dealt to/by over-leveled mobs.
         finalDamage = applyLevelScaling(attacker, victim, finalDamage);

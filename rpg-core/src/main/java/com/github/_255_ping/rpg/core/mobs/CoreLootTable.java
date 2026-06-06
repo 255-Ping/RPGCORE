@@ -32,6 +32,13 @@ public class CoreLootTable implements LootTable {
     /** A currency drop: rolls a random amount in [min, max] with the given chance. Uses the primary currency. */
     public record CurrencyRoll(double chancePercent, long min, long max) {}
 
+    /** Maximum multiplier applied to magic-find-affected drop chances. Configurable via rpg-core config. */
+    private static double magicFindMultiplierCap = 3.0;
+
+    public static void setMagicFindMultiplierCap(double cap) {
+        magicFindMultiplierCap = Math.max(1.0, cap);
+    }
+
     private final String id;
     private final Attribution attribution;
     private final RollMode rollMode;
@@ -97,7 +104,7 @@ public class CoreLootTable implements LootTable {
             int who = 0;
             for (Roll r : rolls) {
                 double effective = r.magicFindAffected() && context.magicFindLoadout() != null
-                        ? r.chancePercent() * (1 + magicFind(context.magicFindLoadout()) / 100.0)
+                        ? r.chancePercent() * Math.min(magicFindMultiplierCap, 1 + magicFind(context.magicFindLoadout()) / 100.0)
                         : r.chancePercent();
                 if (ThreadLocalRandom.current().nextDouble(100.0) < effective) {
                     Player target = eligible.get(who % eligible.size());
@@ -110,8 +117,9 @@ public class CoreLootTable implements LootTable {
             // PER_PLAYER — each eligible player rolls the whole table independently.
             for (Player p : eligible) {
                 double mf = magicFind(p);
+                double mfMult = Math.min(magicFindMultiplierCap, 1 + mf / 100.0);
                 for (Roll r : rolls) {
-                    double effective = r.magicFindAffected() ? r.chancePercent() * (1 + mf / 100.0) : r.chancePercent();
+                    double effective = r.magicFindAffected() ? r.chancePercent() * mfMult : r.chancePercent();
                     if (ThreadLocalRandom.current().nextDouble(100.0) < effective) {
                         ItemStack stack = resolve(r.itemId(), rolled(r.min(), r.max()));
                         if (stack != null) out.computeIfAbsent(p, k -> new ArrayList<>()).add(stack);

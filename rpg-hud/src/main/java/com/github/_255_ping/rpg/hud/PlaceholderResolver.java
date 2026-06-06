@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,7 +17,13 @@ public final class PlaceholderResolver {
 
     private static final Pattern PLACEHOLDER = Pattern.compile("\\{([^}]+)}");
 
+    private static volatile RecentXpTracker tracker;
+
     private PlaceholderResolver() {}
+
+    public static void setTracker(RecentXpTracker t) {
+        tracker = t;
+    }
 
     public static String resolve(Player player, String template) {
         Matcher m = PLACEHOLDER.matcher(template);
@@ -29,7 +36,7 @@ public final class PlaceholderResolver {
         return sb.toString();
     }
 
-    private static String lookup(Player player, String key) {
+    static String lookup(Player player, String key) {
         if (key.startsWith("skill:")) {
             String[] parts = key.split(":");
             if (parts.length < 3) return "";
@@ -55,6 +62,13 @@ public final class PlaceholderResolver {
             case "max_mana" -> formatNumber(RpgServices.player(player).maxMana());
             case "coins" -> coinsBalance(player);
             case "effects" -> activeEffects(player);
+            case "tps" -> serverTps();
+            case "ram_used" -> ramUsedMb() + "MB";
+            case "ram_max" -> ramMaxMb() + "MB";
+            case "ping" -> player.getPing() + "ms";
+            case "party_members" -> partyMembers(player);
+            case "cooldowns" -> activeCooldowns(player);
+            case "recent_xp" -> tracker != null ? tracker.get(player.getUniqueId()) : "";
             default -> statValue(player, key);
         };
     }
@@ -121,5 +135,77 @@ public final class PlaceholderResolver {
     private static String formatNumber(double v) {
         if (v == Math.floor(v) && !Double.isInfinite(v)) return Long.toString((long) v);
         return String.format("%.1f", v);
+    }
+
+    private static String serverTps() {
+        double[] tps = Bukkit.getServer().getTPS();
+        double t = Math.min(20.0, tps.length > 0 ? tps[0] : 20.0);
+        String color = t >= 19.0 ? "§a" : t >= 15.0 ? "§e" : "§c";
+        return color + String.format("%.1f", t);
+    }
+
+    private static long ramUsedMb() {
+        Runtime rt = Runtime.getRuntime();
+        return (rt.totalMemory() - rt.freeMemory()) / (1024L * 1024L);
+    }
+
+    private static long ramMaxMb() {
+        return Runtime.getRuntime().maxMemory() / (1024L * 1024L);
+    }
+
+    /**
+     * Returns a newline-joined list of party member health lines for use in the scoreboard.
+     * Each line: {@code §7Name §c/§a current/max HP}.
+     * Returns {@code ""} when the player is not in a party so the scoreboard line is suppressed.
+     */
+    private static String partyMembers(Player player) {
+        try {
+            var partyOpt = RpgServices.parties().partyOf(player);
+            if (partyOpt.isEmpty()) return "";
+            var party = partyOpt.get();
+            StringBuilder sb = new StringBuilder();
+            for (Player m : party.members()) {
+                if (!sb.isEmpty()) sb.append('\n');
+                double hp = RpgServices.health().currentHp(m);
+                double maxHp = RpgServices.health().maxHp(m);
+                double ratio = maxHp > 0 ? hp / maxHp : 1.0;
+                String hpColor = ratio >= 0.5 ? "§a" : ratio >= 0.25 ? "§e" : "§c";
+                sb.append("§7").append(m.getName()).append(" ")
+                  .append(hpColor).append(formatNumber(hp))
+                  .append("§7/§a").append(formatNumber(maxHp));
+            }
+            return sb.toString();
+        } catch (IllegalStateException ex) {
+            return "";
+        }
+    }
+
+    /**
+     * Returns a compact list of active ability cooldowns, e.g. {@code §7Ability §c(10s)}.
+     * Filters to keys with the {@code "cooldown:"} prefix used by CooldownEffect.
+     * Returns {@code ""} if no cooldowns are active.
+     */
+    private static String activeCooldowns(Player player) {
+        try {
+            Map<String, Long> active = RpgServices.cooldowns().active(player.getUniqueId());
+            if (active.isEmpty()) return "";
+            StringBuilder sb = new StringBuilder();
+            for (Map.Entry<String, Long> entry : active.entrySet()) {
+                String k = entry.getKey();
+                if (!k.startsWith("cooldown:")) continue;
+                String label = capitalize(k.substring("cooldown:".length()));
+                long secs = Math.max(1L, entry.getValue() / 20L);
+                if (!sb.isEmpty()) sb.append("  ");
+                sb.append("§7").append(label).append(" §c(").append(secs).append("s)");
+            }
+            return sb.toString();
+        } catch (IllegalStateException ex) {
+            return "";
+        }
+    }
+
+    private static String capitalize(String s) {
+        if (s.isEmpty()) return s;
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 }

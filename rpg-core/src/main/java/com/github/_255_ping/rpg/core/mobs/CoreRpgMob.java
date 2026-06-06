@@ -1,6 +1,7 @@
 package com.github._255_ping.rpg.core.mobs;
 
 import com.github._255_ping.rpg.api.mobs.BossBarDef;
+import com.github._255_ping.rpg.api.mobs.EliteDef;
 import com.github._255_ping.rpg.api.mobs.RpgMob;
 import com.github._255_ping.rpg.api.stats.Stat;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
@@ -45,6 +46,8 @@ public final class CoreRpgMob implements RpgMob {
     private final CoreHealthService healthService;
     // Optional boss bar def — null means no boss bar
     private final BossBarDef bossBarDef;
+    // Optional elite config — null means this mob type is never promoted to elite
+    private final EliteDef eliteDef;
     // Optional death animation — null means "no custom effect"
     private final org.bukkit.Particle deathParticle;
     private final int    deathParticleCount;
@@ -63,6 +66,7 @@ public final class CoreRpgMob implements RpgMob {
                       MobAiProfile aiProfile,
                       long xp,
                       BossBarDef bossBarDef,
+                      EliteDef eliteDef,
                       org.bukkit.Particle deathParticle, int deathParticleCount, double deathParticleSpread,
                       org.bukkit.Sound deathSound,
                       NamespacedKey mobIdKey, CoreHealthService healthService) {
@@ -86,6 +90,7 @@ public final class CoreRpgMob implements RpgMob {
         this.aiProfile = aiProfile == null ? MobAiProfile.DEFAULT : aiProfile;
         this.xp = xp;
         this.bossBarDef         = bossBarDef;
+        this.eliteDef           = eliteDef;
         this.deathParticle      = deathParticle;
         this.deathParticleCount = deathParticleCount;
         this.deathParticleSpread = deathParticleSpread;
@@ -118,6 +123,7 @@ public final class CoreRpgMob implements RpgMob {
     @Override public String customHeadTexture() { return customHeadTexture; }
     @Override public long xp() { return xp; }
     @Override public Optional<BossBarDef> bossBar() { return Optional.ofNullable(bossBarDef); }
+    public EliteDef eliteDef() { return eliteDef; }
 
     public List<MobAbilityBinding> abilityBindings() { return bindings; }
     public CoreLootTable lootTable() { return lootTable; }

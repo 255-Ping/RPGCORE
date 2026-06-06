@@ -7,6 +7,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -127,6 +128,7 @@ public final class CoreGuiConfig implements GuiConfig {
         ItemMeta  meta = item.getItemMeta();
         meta.displayName(LEGACY.deserialize(legacyName).decoration(TextDecoration.ITALIC, false));
         meta.getPersistentDataContainer().set(NAV_ACTION_KEY, PersistentDataType.STRING, action);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         item.setItemMeta(meta);
         return item;
     }
@@ -137,6 +139,7 @@ public final class CoreGuiConfig implements GuiConfig {
         Component name = LEGACY.deserialize(legacyName)
                 .decoration(TextDecoration.ITALIC, false);
         meta.displayName(name);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         is.setItemMeta(meta);
         return is;
     }

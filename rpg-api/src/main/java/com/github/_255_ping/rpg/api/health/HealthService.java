@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 public interface HealthService {
     double currentHp(LivingEntity entity);
     double maxHp(LivingEntity entity);
+    void setMaxHp(LivingEntity entity, double max);
     void setCurrentHp(LivingEntity entity, double hp);
     void heal(LivingEntity entity, double amount);
     void damage(LivingEntity entity, double amount, String source);

@@ -20,6 +20,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -533,6 +534,7 @@ public final class TradeGui implements Listener {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.displayName(LEGACY.deserialize(legacyText).decoration(TextDecoration.ITALIC, false));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             item.setItemMeta(meta);
         }
         return item;
@@ -543,6 +545,7 @@ public final class TradeGui implements Listener {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.displayName(Component.text(" "));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             item.setItemMeta(meta);
         }
         return item;
@@ -559,6 +562,7 @@ public final class TradeGui implements Listener {
                     Component.empty(),
                     LEGACY.deserialize("&8▶ &7Left-click to set coin amount")
                             .decoration(TextDecoration.ITALIC, false)));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             item.setItemMeta(meta);
         }
         return item;
@@ -570,6 +574,7 @@ public final class TradeGui implements Listener {
         if (meta != null) {
             meta.displayName(LEGACY.deserialize("&6" + otherName + " offers: &e" + coins + " coins")
                     .decoration(TextDecoration.ITALIC, false));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             item.setItemMeta(meta);
         }
         return item;
@@ -588,6 +593,7 @@ public final class TradeGui implements Listener {
                             Component.empty(),
                             LEGACY.deserialize("&8▶ &7Left-click to cancel the trade")
                                     .decoration(TextDecoration.ITALIC, false)));
+                    meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
                     item.setItemMeta(meta);
                 }
                 yield item;
@@ -608,6 +614,7 @@ public final class TradeGui implements Listener {
                                 LEGACY.deserialize("&8▶ &7Left-click to confirm")
                                         .decoration(TextDecoration.ITALIC, false)));
                     }
+                    meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
                     item.setItemMeta(meta);
                 }
                 yield item;

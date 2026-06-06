@@ -29,4 +29,23 @@ public interface Economy {
 
     /** Sets the balance to {@code amount} regardless of current value (admin). */
     CompletableFuture<Void> set(OfflinePlayer player, BigDecimal amount);
+
+    /**
+     * Deposits with a human-readable reason tag for the transaction log
+     * (e.g. {@code "mob_drop"}, {@code "quest_reward"}, {@code "npc_shop"}).
+     * Default delegates to {@link #deposit(OfflinePlayer, BigDecimal)} with no log entry.
+     */
+    default CompletableFuture<Void> deposit(OfflinePlayer player, BigDecimal amount, String reason) {
+        return deposit(player, amount);
+    }
+
+    /** Withdraws with a reason tag. Default delegates to {@link #withdraw(OfflinePlayer, BigDecimal)}. */
+    default boolean withdraw(OfflinePlayer player, BigDecimal amount, String reason) {
+        return withdraw(player, amount);
+    }
+
+    /** Transfers with a reason tag. Default delegates to {@link #transfer(OfflinePlayer, OfflinePlayer, BigDecimal)}. */
+    default boolean transfer(OfflinePlayer from, OfflinePlayer to, BigDecimal amount, String reason) {
+        return transfer(from, to, amount);
+    }
 }

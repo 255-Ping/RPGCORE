@@ -18,16 +18,25 @@ public final class RpgHudPlugin extends JavaPlugin implements Listener, CommandE
 
     private HudTask hudTask;
     private NametagManager nametagManager;
+    private RecentXpTracker recentXpTracker;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        long fadeMs = getConfig().getLong("recent-xp.fade-ms", 5000L);
+        recentXpTracker = new RecentXpTracker(fadeMs);
+        PlaceholderResolver.setTracker(recentXpTracker);
         hudTask = new HudTask(this);
         nametagManager = new NametagManager(this);
         hudTask.setNametagManager(nametagManager);
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(nametagManager, this);
+        getServer().getPluginManager().registerEvents(recentXpTracker, this);
         getServer().getScheduler().runTaskTimer(this, hudTask, 20L, 1L);
+        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new RpgPlaceholderExpansion(this).register();
+            getLogger().info("PlaceholderAPI expansion registered.");
+        }
         var cmd = Objects.requireNonNull(getCommand("hud"), "command 'hud' missing");
         cmd.setExecutor(this);
         cmd.setTabCompleter(this);
@@ -44,6 +53,7 @@ public final class RpgHudPlugin extends JavaPlugin implements Listener, CommandE
     public void onQuit(PlayerQuitEvent e) {
         hudTask.onQuit(e.getPlayer());
         nametagManager.onQuit(e.getPlayer());
+        recentXpTracker.onQuit(e.getPlayer().getUniqueId());
     }
 
     @Override

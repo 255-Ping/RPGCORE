@@ -16,6 +16,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -235,6 +236,7 @@ public final class BankerGui implements Listener {
         if (lines.length > 1) {
             meta.lore(List.of(LEGACY.deserialize(lines[1]).decoration(TextDecoration.ITALIC, false)));
         }
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         item.setItemMeta(meta);
         inv.setItem(slot, item);
     }
@@ -251,6 +253,7 @@ public final class BankerGui implements Listener {
             new org.bukkit.NamespacedKey("rpg", "banker_action"),
             org.bukkit.persistence.PersistentDataType.STRING,
             actionType + ":" + (long) amount);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         item.setItemMeta(meta);
         inv.setItem(slot, item);
     }
@@ -268,6 +271,7 @@ public final class BankerGui implements Listener {
             new org.bukkit.NamespacedKey("rpg", "banker_action"),
             org.bukkit.persistence.PersistentDataType.STRING,
             action);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         item.setItemMeta(meta);
         inv.setItem(slot, item);
     }

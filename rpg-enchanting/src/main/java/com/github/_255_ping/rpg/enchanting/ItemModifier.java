@@ -9,6 +9,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -140,6 +141,7 @@ public final class ItemModifier {
         lore.add(noItalic(LEGACY.deserialize("&8▶ &7Place in anvil to reforge an item")));
         meta.lore(lore);
         meta.getPersistentDataContainer().set(reforgeStoneKey, PersistentDataType.STRING, def.id());
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         stone.setItemMeta(meta);
         return stone;
     }
@@ -177,6 +179,7 @@ public final class ItemModifier {
         lore.add(noItalic(LEGACY.deserialize("&8▶ &7Place in anvil to upgrade an item")));
         meta.lore(lore);
         meta.getPersistentDataContainer().set(upgradeBookKey, PersistentDataType.STRING, def.id());
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         book.setItemMeta(meta);
         return book;
     }
@@ -320,6 +323,7 @@ public final class ItemModifier {
         }
 
         meta.lore(lore);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         stack.setItemMeta(meta);
     }
 
@@ -341,12 +345,14 @@ public final class ItemModifier {
             ReforgeDef def = registry.reforge(reforgeId.get()).orElse(null);
             if (def != null) {
                 meta.displayName(noItalic(LEGACY.deserialize(def.displayName() + " " + baseName)));
+                meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
                 stack.setItemMeta(meta);
                 return;
             }
         }
         // No reforge (or unknown reforge) — reset to base name
         meta.displayName(noItalic(LEGACY.deserialize(baseName)));
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
         stack.setItemMeta(meta);
     }
 

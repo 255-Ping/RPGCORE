@@ -28,6 +28,10 @@ commands:
   spawner:
     description: Admin spawner management
     usage: /spawner <create|delete|list|tp|set>
+  achievements:
+    description: View your achievements
+    aliases: [ach, achievement]
+    usage: /achievements [player]
 permissions:
   rpg.core.version:
     description: View loaded modules and versions
@@ -76,6 +80,12 @@ permissions:
     default: op
   rpg.core.fix:
     description: Clear stuck movement-speed debuffs and resync stats for self or another player
+    default: op
+  rpg.core.achievements:
+    description: View your own achievements
+    default: true
+  rpg.core.achievements.others:
+    description: View another player's achievements
     default: op
   rpg.spawners.admin.create:
     description: Create a spawner

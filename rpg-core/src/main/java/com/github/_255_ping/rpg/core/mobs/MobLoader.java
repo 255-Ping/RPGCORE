@@ -15,6 +15,7 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import com.github._255_ping.rpg.api.mobs.EliteDef;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 
@@ -185,11 +186,12 @@ public final class MobLoader {
         }
 
         BossBarDef bossBarDef = parseBossBar(id, displayName, s.getConfigurationSection("BossBar"));
+        EliteDef eliteDef    = parseEliteDef(id, s.getConfigurationSection("Elite"));
 
         return new CoreRpgMob(id, displayName, type, health, damage, defense,
                 stats, helmet, chest, legs, boots, hand, off, null, bindings, lootTable,
                 lootPoolIds, aiProfile, xp,
-                bossBarDef,
+                bossBarDef, eliteDef,
                 deathParticle, deathParticleCount, deathParticleSpread, deathSound,
                 mobIdKey, healthService);
     }
@@ -226,6 +228,23 @@ public final class MobLoader {
 
         double range = s.getDouble("Range", BossBarDef.USE_CONFIG_RANGE);
         return new BossBarDef(name, color, style, range);
+    }
+
+    private EliteDef parseEliteDef(String mobId, ConfigurationSection s) {
+        if (s == null) return null;
+        double chance     = s.getDouble("Chance",          0.05);
+        double hpMult     = s.getDouble("HpMultiplier",    3.0);
+        double dmgMult    = s.getDouble("DamageMultiplier",1.5);
+        double lootMult   = s.getDouble("LootMultiplier",  2.0);
+        String prefix     = s.getString("Prefix",          "§6✦ Elite §r");
+        boolean glow      = s.getBoolean("Glow",           true);
+        return new EliteDef(
+                Math.max(0.0, Math.min(1.0, chance)),
+                Math.max(1.0, hpMult),
+                Math.max(1.0, dmgMult),
+                Math.max(1.0, lootMult),
+                prefix,
+                glow);
     }
 
     private MobAiProfile parseAiProfile(ConfigurationSection s) {

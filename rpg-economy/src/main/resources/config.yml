@@ -17,3 +17,7 @@ pay:
 
 baltop:
   page-size: 10              # how many players shown per page of /baltop
+
+transaction-log:
+  max-entries: 100           # maximum number of entries kept per player (newest first)
+  page-size: 10              # entries shown per page via /money log
