@@ -857,12 +857,19 @@ Players in a party have no way to see their teammates' health or status. Options
 
 ---
 
-### HUD: Ability Cooldown Display (`rpg-hud` / `rpg-core`) — 🟡 Medium
-There's currently no way for a player to see how long is left on an ability cooldown. Options:
+### Action Bar Cooldown Notification for Wand Abilities (`rpg-core`) — 🟢 Easy
+When a player uses a wand ability that has a `cooldown{}` in its chain, show a brief action bar message so the player knows how long until it's ready again. Currently there's no feedback — the ability just silently fails if it's on cooldown and the player clicks again.
 
-- Dedicated scoreboard section listing active cooldowns (`testability: 2.3s`)
-- Action bar suffix showing the currently-on-cooldown abilities
-- Configurable placeholder `{cooldowns}` that resolves to a compact list
+**Desired behaviour:**
+- On a blocked cast (ability fires but `cooldown{}` gate returns early), send an action bar message like: `&cAbility on cooldown — &e3.2s remaining`
+- Only show it when the player tries to cast while on cooldown (not passively every tick)
+- If multiple abilities are on cooldown, show the one the player just tried to cast
+
+**Implementation pointers:**
+- `CooldownEffect` in `rpg-core` is where `cooldown{}` checks remaining time — this is where the action bar message should fire
+- `AbilityContext` carries the caster; cast via `caster.sendActionBar(...)` if it's a `Player`
+- Time remaining: `(cooldownTicks - ticksElapsed) / 20.0` formatted to one decimal place
+- Should respect the `[Sync]` rules — action bar sends are already per-player/client-side, no network concern
 
 ---
 

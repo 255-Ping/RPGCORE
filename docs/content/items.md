@@ -48,6 +48,7 @@ Every `Abilities:` entry is a **binding**. A binding has a trigger (when it fire
 | `"~on_kill ..."` | Player kills an RPG mob |
 | `"~on_block ..."` | Player successfully blocks with a shield; attacker is `ctx.target` |
 | `"~passive ..."` | Ticking — every `abilities.passive-interval-ticks` while held/worn |
+| `"~on_login ..."` | Fires once when the holding player joins (rpg-core 1.10.4+) |
 
 Passive and proc triggers do not auto-apply mana cost. Add `mana_cost{amount=N}` at the start of the sequence if you want passive procs to cost mana.
 
@@ -217,6 +218,40 @@ apprentice_wand:
 Mana cost is enforced by the `mana_cost{}` effect at the top of the ability sequence — **not** by a `ManaCost:` field on the item or ability YAML. See [Abilities](abilities.md).
 
 ![An Apprentice Wand showing Mana, Intelligence, and Damage stats with the ability description in lore](../assets/screenshots/item_apprentice_wand.PNG){ .screenshot }
+
+## Lore rendering
+
+When `toItemStack()` builds the `ItemStack`, lore is assembled in this order:
+
+1. **Item type label** — the item's `Type` rendered as a capitalized dark-gray italic string (e.g. `Sword`, `Armor`, `Wand`), followed by a blank line.
+2. **Stats** — each `Stats:` entry, ordered by `stat-order.yml` (see below); unlisted stats follow alphabetically.
+3. **Extra `Lore:` lines** from YAML (preceded by a blank line if stats are also present).
+4. **Ability lines** — one line per registered ability in each binding. Active triggers show as `§5Ability: §d<name> §8(<trigger>[| <cd>])`. Passive/proc triggers show as `§2Passive: §a<name> §8(<trigger>)`. **If the binding contains `cooldown{ticks=N}`, the cooldown is appended to the hint** — e.g., `(Right-click | 5s cd)`.
+5. **Set membership** — set name and each tier's bonuses (if `SetId:` is set).
+6. **Not Tradeable** line (if `Tradeable: false`).
+7. **Rarity** line.
+
+### Stat display order — `stat-order.yml`
+
+`plugins/rpg-core/stat-order.yml` controls the order stats appear per item type. The file is created from a bundled default on first boot. Edit it and run `/rpg reload` — no restart needed.
+
+```yaml
+# stat-order.yml — list stat IDs per item type (lowercase)
+sword:
+  - damage
+  - crit_chance
+  - crit_damage
+  - attack_speed
+  # ... stats not listed here appear afterward, alphabetically
+
+armor:
+  - defense
+  - max_health
+  - speed
+  # ...
+```
+
+Stats present on an item but absent from the list are shown after the configured ones, sorted alphabetically — nothing is silently dropped.
 
 ## Lookup & PDC tagging
 

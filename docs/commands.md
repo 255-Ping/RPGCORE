@@ -19,11 +19,13 @@ Every command across every module. Permissions follow `rpg.<module>.<command>[.<
 | `/rpg version` | `rpg.core.version` | true | List loaded modules and versions |
 | `/rpg reloadall` | `rpg.core.reload-all` | op | Reload every plugin in the suite |
 | `/rpg item give <id> [player] [amount]` | `rpg.core.item.give` | op | Spawn a custom item |
+| `/rpg items` | `rpg.core.items.browse` | op | Open the Item Browser GUI (paginated; filter by type / rarity / search; shift-click to give ×64) |
 | `/rpg mob spawn <id> [count]` | `rpg.core.mob.spawn` | op | Spawn a custom mob at your location |
 | `/rpg ability cast <id>` | `rpg.core.ability.cast` | op | Debug-cast a custom ability |
 | `/rpg block give <id> [amount]` | `rpg.core.block.give` | op | Give a placeable form of a custom block |
 | `/rpg block convert <radius> <fromMaterial> <toBlockId>` | `rpg.core.block.convert` | op | Bulk-convert vanilla blocks in radius to a custom block |
 | `/rpg wand [mode]` | `rpg.core.wand` | op | Give selection wand; `mode` ∈ `dungeon`, `spawner`, `entrance`, `region`, `hologram` |
+| `/rpg fix [player]` | `rpg.core.fix` | op | Remove orphaned movement-speed modifiers, clear in-memory status effects, and force a full attribute resync — use when a player reports permanent slowness |
 | `/rpg status apply <effect> [player] [duration]` | `rpg.core.status.apply` | op | Apply a status effect |
 | `/rpg status clear [player] [effect]` | `rpg.core.status.clear` | op | Clear status effects |
 | `/rpg skill set <skill> <level\|xp> <amount> [player]` | `rpg.core.skill.set` | op | Adjust skill state |

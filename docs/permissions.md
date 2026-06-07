@@ -23,6 +23,8 @@ For the full command list, see [commands.md](commands.md).
 | `rpg.core.version` | true | List loaded modules and versions |
 | `rpg.core.reload-all` | op | Reload every plugin |
 | `rpg.core.item.give` | op | Give a custom item to a player |
+| `rpg.core.items.browse` | op | Open the Item Browser GUI (`/rpg items`) |
+| `rpg.core.fix` | op | Fix orphaned movement-speed modifiers on a player (`/rpg fix`) |
 | `rpg.core.mob.spawn` | op | Spawn a custom mob |
 | `rpg.core.block.give` | op | Give a placeable custom block |
 | `rpg.core.block.convert` | op | Bulk-convert vanilla blocks to a custom block |

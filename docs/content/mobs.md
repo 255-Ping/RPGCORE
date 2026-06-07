@@ -200,7 +200,9 @@ mini_boss:
     - elite_bonus_drops
 ```
 
-Pools carry `exp:` (vanilla XP orbs) and `combat-exp:` (skill XP) in addition to item and currency drops. Both still work alongside an inline `LootTable:` if present.
+Pools carry `exp:` (vanilla Minecraft XP) and `combat-exp:` (skill XP) in addition to item and currency drops. Both still work alongside an inline `LootTable:` if present.
+
+**XP delivery:** vanilla XP from `XP:`, `exp:` in loot tables, and `exp:` in loot pools is **split directly to all damagers** proportional to damage dealt — no orb entities spawn. Players who are offline at the time of the kill receive nothing.
 
 **Full docs:** [Loot Pools →](loot-pools.md)
 

@@ -1,6 +1,6 @@
 # Built-in Ability Effects — Reference
 
-> **Status:** Working — all effects listed here are implemented. Most built-in effects shipped in `rpg-core 1.7.0`; `spawn_mob` added in `1.8.0`. Current core version: `1.10.1`.
+> **Status:** Working — all effects listed here are implemented. Most built-in effects shipped in `rpg-core 1.7.0`; `spawn_mob` added in `1.8.0`. Current core version: `1.10.9`.
 
 Full parameter reference for every built-in effect. All effects accept their parameters via the DSL: `effectName{key=value, key2=value2}`.
 
@@ -59,6 +59,7 @@ Ray-casts from the caster's eye in the look direction. Sets `ctx.target` on hit 
 | `range` | `5` | Max distance in blocks |
 | `damage_multiplier` | `1.0` | Scales `carriedDamage` on hit |
 | `particle` | `CRIT` | Particle type for the beam trail |
+| `pierce_cap` | `1` | Max entities the beam can hit before stopping (`0` = unlimited). Added in rpg-core 1.10.4. |
 
 ---
 
@@ -270,11 +271,13 @@ Deducts mana from the caster. Chain aborts with an action bar message if mana is
 
 ## cooldown
 
-Records a per-ability cooldown, reducible by the `cooldown_reduction` stat.
+Records a per-ability cooldown, reducible by the `cooldown_reduction` stat. When a player tries to cast while the cooldown is active, an action bar message shows the remaining time.
+
+**Item lore:** if a binding's chain contains `cooldown{ticks=N}`, the duration is automatically appended to the ability's lore hint — e.g., `(Right-click | 5s cd)`. Whole-second values render as `5s`; fractional as `3.5s`.
 
 | Param | Default | Description |
 |---|---|---|
-| `ticks` | `0` | Soft-floor cooldown duration |
+| `ticks` | `0` | Soft-floor cooldown duration (divided by 20 for the lore display) |
 
 ---
 
