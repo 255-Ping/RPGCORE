@@ -180,10 +180,14 @@ public final class ItemBrowserGui implements Listener {
                     return true;
                 })
                 .sorted(Comparator
-                        .comparing((RpgItem i) -> i.type().id())
-                        .thenComparing(i -> i.rarity().id())
-                        .thenComparing(RpgItem::displayName)
-                        .thenComparing(RpgItem::id))
+                        .<RpgItem, String>comparing(i -> i.type() != null ? i.type().id() : "",
+                                Comparator.nullsFirst(Comparator.naturalOrder()))
+                        .thenComparing(i -> i.rarity() != null ? i.rarity().id() : "",
+                                Comparator.nullsFirst(Comparator.naturalOrder()))
+                        .thenComparing(i -> i.displayName() != null ? i.displayName() : "",
+                                Comparator.nullsFirst(Comparator.naturalOrder()))
+                        .thenComparing(i -> i.id() != null ? i.id() : "",
+                                Comparator.nullsFirst(Comparator.naturalOrder())))
                 .collect(Collectors.toList());
     }
 
