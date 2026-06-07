@@ -100,3 +100,66 @@ haste:
   hidden: false
   stat-modifiers:
     mining_speed: { kind: percent, value: 50 }
+
+# ── Additional debuffs ─────────────────────────────────────────────────────────
+
+weakness:
+  display: "&cWeakness"
+  category: debuff
+  stacking: take-max
+  hidden: false
+  stat-modifiers:
+    damage: { kind: percent, value: -30 }
+    strength: { kind: flat, value: -20 }
+
+vulnerability:
+  display: "&4Vulnerability"
+  category: debuff
+  stacking: refresh
+  hidden: false
+  stat-modifiers:
+    defense: { kind: percent, value: -35 }
+    true_defense: { kind: flat, value: -10 }
+
+# mana_drain collapses the target's mana pool and regen so casters run dry fast.
+# (Tick actions only support HP damage/heal; mana drain is handled via stat modifiers.)
+mana_drain:
+  display: "&5Mana Drain"
+  category: debuff
+  stacking: refresh
+  hidden: false
+  stat-modifiers:
+    max_mana: { kind: percent, value: -40 }
+    mana_regen: { kind: percent, value: -80 }
+
+blindness:
+  display: "&8Blindness"
+  category: debuff
+  stacking: refresh
+  hidden: false
+  # No direct vision API — simulated via aim/luck penalties.
+  stat-modifiers:
+    crit_chance: { kind: percent, value: -60 }
+    magic_find: { kind: percent, value: -40 }
+
+# ── Additional buffs ───────────────────────────────────────────────────────────
+
+speed_boost:
+  display: "&aSpeed Boost"
+  category: buff
+  stacking: take-max
+  hidden: false
+  stat-modifiers:
+    speed: { kind: percent, value: 40 }
+
+# thorns: reflect damage back to attackers when struck.
+# The retaliation mechanic is enforced in code via a StatusEffectService hook;
+# this entry defines the display, category, and a passive defense bonus.
+thorns:
+  display: "&2Thorns"
+  category: buff
+  stacking: refresh
+  hidden: false
+  stat-modifiers:
+    defense: { kind: flat, value: 20 }
+    true_defense: { kind: flat, value: 5 }

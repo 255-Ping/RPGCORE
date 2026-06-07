@@ -7,19 +7,46 @@
 #
 # Items can be custom RPG item IDs or vanilla Material names (e.g. DIAMOND_SWORD).
 
-# example_shaped:
-#   Shape:
-#   - "DDD"
-#   - " S "
-#   - " S "
-#   Ingredients:
-#     D: { item: diamond, amount: 1 }
-#     S: { item: stick, amount: 1 }
-#   Output: { item: diamond_sword, amount: 1 }
+# ── Shaped: vanilla ingredients → custom RPG item ─────────────────────────────
+# 2 iron ingots in a column + a stick = Iron Shortsword.
+shaped_iron_shortsword:
+  Shape:
+  - " I "
+  - " I "
+  - " S "
+  Ingredients:
+    I: { item: IRON_INGOT, amount: 1 }
+    S: { item: STICK, amount: 1 }
+  Output: { item: iron_shortsword, amount: 1 }
 
-# example_shapeless:
-#   Shapeless: true
-#   Ingredients:
-#   - { item: oak_planks, amount: 2 }
-#   - { item: stick, amount: 1 }
-#   Output: { item: crafting_table, amount: 1 }
+# ── Shaped: custom RPG ingredients → custom RPG item ──────────────────────────
+# 9 iron nuggets compressed into a Crude Iron Ingot (our custom material).
+shaped_crude_iron_ingot:
+  Shape:
+  - "NNN"
+  - "NNN"
+  - "NNN"
+  Ingredients:
+    N: { item: IRON_NUGGET, amount: 1 }
+  Output: { item: crude_iron_ingot, amount: 1 }
+
+# ── Shapeless: mix two items in any arrangement ────────────────────────────────
+# A red gem dissolved into a glass bottle becomes an Antidote Flask.
+shapeless_antidote_flask:
+  Shapeless: true
+  Ingredients:
+  - { item: red_gem, amount: 1 }
+  - { item: GLASS_BOTTLE, amount: 1 }
+  Output: { item: antidote_flask, amount: 1 }
+
+# ── Shaped: multi-amount output ────────────────────────────────────────────────
+# Redstone in a diamond pattern yields 3 Red Gems at once.
+# Use multi-amount recipes for bulk crafting and resource conversion.
+shaped_red_gems:
+  Shape:
+  - " R "
+  - "R R"
+  - " R "
+  Ingredients:
+    R: { item: REDSTONE, amount: 1 }
+  Output: { item: red_gem, amount: 3 }

@@ -58,10 +58,8 @@ creative-mode-bypass:
 
 # Repurposed vanilla bars.
 # Options:
-#   vanilla-xp-bar: most-recent (shows most-recently-gained skill XP) | pinned (always one skill) | hidden
-#   hunger-bar:     hidden | frozen-visible (bar stays full, still visible)
-#   armor-bar:      hidden | visible
-vanilla-xp-bar: most-recent
+#   hunger-bar: hidden | frozen-visible (bar stays full, still visible)
+#   armor-bar:  hidden | visible
 hunger-bar: hidden
 armor-bar: hidden
 

@@ -54,10 +54,9 @@ creative-mode-bypass:
 | Health | Heart-as-percent display ([health-display](health-display.md)) |
 | Hunger | **Hidden** (frozen at max) |
 | Armor | **Hidden** |
-| XP | Shows most-recently-active skill's XP progress; pinnable via `/skill pin <skill>` |
+| XP | Not repurposed — left at zero so vanilla enchanting displays correctly |
 
 ```yaml
-vanilla-xp-bar: most-recent      # most-recent | pinned | hidden
 hunger-bar: hidden               # hidden | frozen-visible
 armor-bar: hidden                # hidden | visible
 ```

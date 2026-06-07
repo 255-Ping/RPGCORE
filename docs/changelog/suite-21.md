@@ -8,6 +8,19 @@ _Suite 21 opened with the addition of `rpg-crafting` and `rpg-smelting`. The sui
 
 ## Notable changes
 
+### rpg-core — Remove vanilla XP bar config stub; add status effect examples
+
+- **`vanilla-xp-bar` config key removed.** The setting was never implemented in Java (no `player.setExp()` call existed) — it was documentation-only, making it a misleading stub. The vanilla XP bar is now left untouched so `rpg-enchanting`'s level cost display works correctly. `docs/core/vanilla-suppression.md` updated: XP row in the "Repurposed vanilla bars" table now notes the bar is intentionally unmodified.
+- **Six new status effects in `status-effects/example.yml`:** `weakness` (−30% damage, −20 strength), `vulnerability` (−35% defense, −10 true_defense), `mana_drain` (−40% max_mana, −80% mana_regen), `blindness` (−60% crit_chance, −40% magic_find), `speed_boost` (+40% speed), `thorns` (+20 defense, +5 true_defense — reflect mechanic needs a code hook to complete).
+
+### rpg-crafting — Fill out example recipes
+
+- Replaced the two commented-out stubs in `recipes/example.yml` with four live recipes that cover all four recipe patterns:
+  - `shaped_iron_shortsword` — shaped, vanilla ingredients → custom RPG item
+  - `shaped_crude_iron_ingot` — shaped, vanilla → custom (9 nuggets)
+  - `shapeless_antidote_flask` — shapeless, custom + vanilla → custom
+  - `shaped_red_gems` — shaped, multi-amount output (3× `red_gem`)
+
 ### rpg-core 1.10.11 — Loot tables consolidated into loot pools
 
 - The separate `loot-tables/` folder, `LootTableRegistry`, `CoreLootTableRegistry`, and `LootTableLoader` have been removed. There was only one loot system from this point on: **loot pools** (`loot-pools/*.yml`, `LootPoolRegistry`).
