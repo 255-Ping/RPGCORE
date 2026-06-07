@@ -171,11 +171,12 @@ public final class ItemBrowserGui implements Listener {
                                 || bt != TYPES[state.typeIndex]) return false;
                     }
                     if (state.rarityId != null
-                            && !state.rarityId.equals(item.rarity().id())) return false;
+                            && (item.rarity() == null || !state.rarityId.equals(item.rarity().id()))) return false;
                     if (state.search != null) {
                         String q = state.search.toLowerCase(Locale.ROOT);
+                        String name = item.displayName() != null ? item.displayName() : "";
                         return item.id().toLowerCase(Locale.ROOT).contains(q)
-                                || item.displayName().toLowerCase(Locale.ROOT).contains(q);
+                                || name.toLowerCase(Locale.ROOT).contains(q);
                     }
                     return true;
                 })
