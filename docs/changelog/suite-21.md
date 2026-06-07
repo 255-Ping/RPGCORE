@@ -8,6 +8,28 @@ _Suite 21 opened with the addition of `rpg-crafting` and `rpg-smelting`. The sui
 
 ## Notable changes
 
+### rpg-core 1.10.13 — Ability DSL: Numeric Variables (Tier 2)
+
+- **7 new numeric-variable ability effects**, stored as doubles in entity PDC under `rpg_var_<name>`. Auto-cleared on entity removal (death / logout). Available for both mob and item abilities.
+  - `set_var{name,value}` — set variable to an exact value
+  - `increment{name,amount=1,max=}` — add `amount`; clamp to `max` if specified
+  - `decrement{name,amount=1,min=0}` — subtract `amount`; clamp to `min`
+  - `reset{name}` — set variable to 0
+  - `if_var_gte{name,value}` — gate: chain continues only if var ≥ value
+  - `if_var_lte{name,value}` — gate: chain continues only if var ≤ value
+  - `if_var_eq{name,value}` — gate: chain continues only if var ≈ value (within 1e-9)
+- Gate effects respect the existing `ctx.isBlocked()` mechanism (same as `chance{}`, `if_health_below{}`).
+- Static `VarEffect.read(entity, name)` lets other effects query a variable value programmatically.
+- **4 showcase abilities** added to `abilities/example.yml`: `combo_strike` (3-hit combo), `enrage_stacks` (mob enrage cap), `enrage_hit` (companion hit effect), `escalating_beam` (charge-up wand).
+
+### rpg-quests 0.1.0 — Quest Chains + Repeatable Quests
+
+- **`Requires:` field** — scalar string or YAML list of quest IDs. A quest cannot be accepted until every listed prerequisite quest is in the player's completed list. Enables multi-stage quest chains.
+- **`Repeatable: true` + `CooldownSeconds: N`** — after completion a repeatable quest can be re-accepted once the cooldown elapses. Remaining time is formatted as a human-readable string (`1d 3h`, `45m`, `30s`). Repeatable quests stay in the `completed` list between runs so they continue to satisfy chain prerequisites on other quests.
+- **3 new messages** in `messages.yml`: `quest.already-completed`, `quest.requires-quest`, `quest.cooldown`.
+- **Example quests updated**: `forest_intro → goblin_menace → goblin_hunt_ii` three-quest chain; `daily_ore_run` 24-hour repeatable quest.
+- **Bug fix**: `complete()` now guards against adding duplicate IDs to the `completed` list (was possible if a quest was force-completed via command while already present).
+
 ### rpg-core 1.10.12 — Mob Factions + AI Goals
 
 - **`Faction:` field on mob YAML.** Any mob can now declare `Faction: <string>` — a plain label that identifies which group it belongs to. `"player"` is reserved and matches all players. No registry needed; factions are purely string comparisons.

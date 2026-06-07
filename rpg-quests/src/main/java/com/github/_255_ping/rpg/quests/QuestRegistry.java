@@ -60,6 +60,23 @@ public final class QuestRegistry {
         List<String> desc = s.getStringList("Description");
         int requiredLevel = s.getInt("RequiredLevel", 0);
 
+        // ── Chain prerequisites ────────────────────────────────────────────────
+        // Accepts both a scalar string and a list: "Requires: parent_quest" or
+        // "Requires: [quest_a, quest_b]"
+        List<String> requires;
+        Object rawReq = s.get("Requires");
+        if (rawReq instanceof List<?> list) {
+            requires = list.stream().map(Object::toString).map(String::toLowerCase).toList();
+        } else if (rawReq instanceof String str && !str.isBlank()) {
+            requires = List.of(str.toLowerCase());
+        } else {
+            requires = List.of();
+        }
+
+        // ── Repeatability ─────────────────────────────────────────────────────
+        boolean repeatable     = s.getBoolean("Repeatable", false);
+        long    cooldownSeconds = s.getLong("CooldownSeconds", 0L);
+
         List<QuestObjective> objectives = new ArrayList<>();
         for (Object o : s.getList("Objectives", List.of())) {
             if (o instanceof Map<?, ?> m) {
@@ -92,7 +109,7 @@ public final class QuestRegistry {
             }
         }
 
-        return new QuestDef(id, name, desc, requiredLevel, objectives, xp, currency, items);
+        return new QuestDef(id, name, desc, requiredLevel, requires, repeatable, cooldownSeconds, objectives, xp, currency, items);
     }
 
     @SuppressWarnings("unused")

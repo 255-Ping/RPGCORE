@@ -184,6 +184,15 @@ public final class ItemAbilityListener implements Listener {
         // ── #42 Mob spawning ──────────────────────────────────────────────────
         registry.register("spawn_mob", p -> new com.github._255_ping.rpg.core.abilities.effects.SpawnMobEffect(plugin, p));
 
+        // ── Numeric variable effects ──────────────────────────────────────────
+        registry.register("set_var",    p -> new com.github._255_ping.rpg.core.abilities.effects.VarEffect(com.github._255_ping.rpg.core.abilities.effects.VarEffect.Mode.SET_VAR, p));
+        registry.register("increment",  p -> new com.github._255_ping.rpg.core.abilities.effects.VarEffect(com.github._255_ping.rpg.core.abilities.effects.VarEffect.Mode.INCREMENT, p));
+        registry.register("decrement",  p -> new com.github._255_ping.rpg.core.abilities.effects.VarEffect(com.github._255_ping.rpg.core.abilities.effects.VarEffect.Mode.DECREMENT, p));
+        registry.register("reset",      p -> new com.github._255_ping.rpg.core.abilities.effects.VarEffect(com.github._255_ping.rpg.core.abilities.effects.VarEffect.Mode.RESET, p));
+        registry.register("if_var_gte", p -> new com.github._255_ping.rpg.core.abilities.effects.VarEffect(com.github._255_ping.rpg.core.abilities.effects.VarEffect.Mode.IF_VAR_GTE, p));
+        registry.register("if_var_lte", p -> new com.github._255_ping.rpg.core.abilities.effects.VarEffect(com.github._255_ping.rpg.core.abilities.effects.VarEffect.Mode.IF_VAR_LTE, p));
+        registry.register("if_var_eq",  p -> new com.github._255_ping.rpg.core.abilities.effects.VarEffect(com.github._255_ping.rpg.core.abilities.effects.VarEffect.Mode.IF_VAR_EQ, p));
+
         // ── Zone infrastructure ───────────────────────────────────────────────
         int zoneMax = plugin.getConfig().getInt("abilities.zone.max-active", 50);
         com.github._255_ping.rpg.core.abilities.effects.ZoneEffect.init(zoneMax);

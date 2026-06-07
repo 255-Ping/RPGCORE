@@ -93,6 +93,33 @@ public final class QuestManager {
                 return false;
             }
         }
+
+        // ── Chain prerequisite check ─────────────────────────────────────────
+        for (String req : def.requires()) {
+            if (!s.completed.contains(req)) {
+                p.sendMessage(plugin.messages().get("quest.requires-quest", Map.of("quest", req)));
+                return false;
+            }
+        }
+
+        // ── Already-completed check (repeatable cooldown) ────────────────────
+        if (s.completed.contains(def.id())) {
+            if (!def.repeatable()) {
+                p.sendMessage(plugin.messages().get("quest.already-completed"));
+                return false;
+            }
+            if (def.cooldownSeconds() > 0) {
+                long lastTime = s.lastCompletionEpochSeconds.getOrDefault(def.id(), 0L);
+                long elapsed  = System.currentTimeMillis() / 1000L - lastTime;
+                if (elapsed < def.cooldownSeconds()) {
+                    long remaining = def.cooldownSeconds() - elapsed;
+                    p.sendMessage(plugin.messages().get("quest.cooldown",
+                            Map.of("time", formatCooldown(remaining))));
+                    return false;
+                }
+            }
+        }
+
         s.active.add(new PlayerQuestState.Active(def.id(), new int[def.objectives().size()]));
         save(s);
         p.sendMessage(plugin.messages().get("quest.accepted", Map.of("name", def.displayName())));
@@ -174,7 +201,11 @@ public final class QuestManager {
     private void complete(Player p, QuestDef def, PlayerQuestState.Active active) {
         PlayerQuestState s = load(p.getUniqueId());
         s.active.removeIf(a -> a == active || a.questId.equals(def.id()));
-        s.completed.add(def.id());
+        // Avoid duplicates — repeatable quests stay in the list between runs so
+        // chain prerequisites continue to be satisfied.
+        if (!s.completed.contains(def.id())) {
+            s.completed.add(def.id());
+        }
         s.lastCompletionEpochSeconds.put(def.id(), System.currentTimeMillis() / 1000L);
         // Award rewards
         for (Map.Entry<String, Long> e : def.xpRewards().entrySet()) {
@@ -214,6 +245,21 @@ public final class QuestManager {
             if (a.progress[i] < def.objectives().get(i).count()) return false;
         }
         return true;
+    }
+
+    /** Format a cooldown in seconds as a human-readable string (e.g. "1d 3h", "45m", "30s"). */
+    private static String formatCooldown(long seconds) {
+        if (seconds <= 0) return "0s";
+        long days    = seconds / 86400;
+        long hours   = (seconds % 86400) / 3600;
+        long minutes = (seconds % 3600) / 60;
+        long secs    = seconds % 60;
+        StringBuilder sb = new StringBuilder();
+        if (days    > 0) sb.append(days).append("d ");
+        if (hours   > 0) sb.append(hours).append("h ");
+        if (minutes > 0) sb.append(minutes).append("m ");
+        if (secs    > 0 || sb.isEmpty()) sb.append(secs).append("s");
+        return sb.toString().trim();
     }
 
     private static void msg(Player p, String legacy) {

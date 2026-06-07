@@ -170,9 +170,9 @@ A `spawn_mob{}` effect that spawns a registered custom mob at or near the caster
 
 ---
 
-### Ability DSL: Context Variables + Flags (`rpg-core`) — 🔴 Hard
+### ✅ Ability DSL: Context Variables + Flags (`rpg-core`) — shipped in 1.10.13
 
-Persistent per-caster variables stored alongside the ability context, enabling stateful ability scripting. Two tiers:
+Tier 1 (boolean flags — `if_flag`, `if_not_flag`, `set_flag`, `clear_flag`) shipped in 1.7.0. Tier 2 (numeric variables) shipped in 1.10.13 — see suite-21 changelog. Original spec preserved below.
 
 **Tier 1 — Session flags** (boolean, per-caster lifetime): simpler to implement, high immediate value.
 
@@ -698,11 +698,9 @@ Per-NPC `EntityType` field + `/npc setentitytype` with tab-complete. `/npc setst
 
 ---
 
-### Quest: Chains + Repeatable Quests (`rpg-quests`) — 🟡 Medium
-Currently all quests are one-shot and independent. Missing:
+### ✅ Quest: Chains + Repeatable Quests (`rpg-quests`) — shipped in 0.1.0
 
-1. **Quest chains** — `Requires: [quest_id, ...]` field on a quest definition. The quest is not offerable until all prerequisites are completed.
-2. **Repeatable quests** — `Repeatable: true` + `CooldownSeconds: 86400` (e.g., daily quests). After completion, the quest becomes available again after the cooldown. Per-player last-completion timestamp tracked in `DataStore`.
+`Requires:` (scalar or list of quest IDs) gates acceptance until all named quests are in the player's completed list. `Repeatable: true` + `CooldownSeconds: N` allows re-acceptance after the cooldown; remaining time shown as a formatted string (e.g. `1d 3h`, `45m`, `30s`). Repeatable quests stay in the `completed` list between runs so they continue to satisfy chain prerequisites. Three new messages added: `quest.already-completed`, `quest.requires-quest`, `quest.cooldown`. Example quests updated: `forest_intro → goblin_menace → goblin_hunt_ii` chain; `daily_ore_run` repeatable.
 
 ---
 

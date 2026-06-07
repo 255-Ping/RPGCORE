@@ -6,6 +6,9 @@
 #     Description:
 #       - "&7Slay the goblins infesting the forest."
 #     RequiredLevel: 0                # min Combat level to accept (0 = none)
+#     Requires: parent_quest          # single ID, or a YAML list of IDs
+#     Repeatable: false               # if true, can be re-accepted after CooldownSeconds
+#     CooldownSeconds: 86400          # seconds between completions (0 = immediate re-accept)
 #     Objectives:
 #       - { Type: kill_mob,    Target: goblin,        Count: 10 }
 #       - { Type: mine_block,  Target: rpg_iron_ore,  Count: 16 }
@@ -17,11 +20,16 @@
 #       Items:
 #         - { Item: strength_potion, Amount: 2 }
 
+# ── Quest chain example ───────────────────────────────────────────────────────
+# The player must complete forest_intro before goblin_menace becomes available,
+# and goblin_menace before goblin_hunt_ii becomes available.
+
 forest_intro:
   DisplayName: "&aTrouble in the Forest"
   Description:
     - "&7Find the elder and learn what's wrong."
   RequiredLevel: 0
+  # No Requires — this is the chain entry point.
   Objectives:
     - { Type: talk_npc, Target: forest_elder }
   Rewards:
@@ -30,10 +38,44 @@ forest_intro:
 goblin_menace:
   DisplayName: "&cThe Goblin Menace"
   Description:
-    - "&7Slay 10 goblins."
+    - "&7Slay 10 goblins threatening the forest."
   RequiredLevel: 1
+  Requires: forest_intro    # must finish forest_intro first
   Objectives:
     - { Type: kill_mob, Target: goblin, Count: 10 }
   Rewards:
     Xp: { combat: 500 }
     Currency: 250
+
+goblin_hunt_ii:
+  DisplayName: "&4Goblin Menace II"
+  Description:
+    - "&7The goblins are back. Slay 25 and collect 5 tokens."
+  RequiredLevel: 3
+  Requires:
+    - goblin_menace    # list form — supports multiple prerequisites
+  Objectives:
+    - { Type: kill_mob,     Target: goblin,       Count: 25 }
+    - { Type: collect_item, Target: goblin_token,  Count: 5 }
+  Rewards:
+    Xp: { combat: 1500 }
+    Currency: 800
+    Items:
+      - { Item: iron_shortsword, Amount: 1 }
+
+# ── Repeatable daily quest example ────────────────────────────────────────────
+# Once completed, this quest can be accepted again after 86400 seconds (24 hours).
+# It stays in the player's completed list so it can still gate chain prerequisites.
+
+daily_ore_run:
+  DisplayName: "&eMiner's Daily Run"
+  Description:
+    - "&7Mine 32 iron ore for the blacksmith."
+    - "&8Resets every 24 hours."
+  Repeatable: true
+  CooldownSeconds: 86400      # 24 hours
+  Objectives:
+    - { Type: mine_block, Target: rpg_iron_ore, Count: 32 }
+  Rewards:
+    Xp: { mining: 300 }
+    Currency: 400

@@ -143,3 +143,44 @@ summon_ally:
   - mana_cost{amount=50}
   - cooldown{ticks=400}
   - spawn_mob{id=summoned_skeleton, count=1, at=caster, radius=2.0, owned=true}
+
+# ── Numeric variable showcase (increment / reset / if_var_gte) ───────────────
+# Variables are named doubles stored on the entity, cleared when it dies.
+# Typical uses: combo counters, boss enrage stacks, per-cast escalation.
+
+combo_strike:
+  # 3-hit combo. Every melee hit increments the counter. On the 3rd hit,
+  # reset and fire an AoE burst. Tap twice, then boom on the third.
+  # Attach to a weapon: "combo_strike ~onHit"
+  AbilitySequence:
+  - increment{name=combo}
+  - if_var_gte{name=combo,value=3} reset{name=combo} aoe{radius=4.0,damage_multiplier=2.5,particle=CRIT} sound{key=entity.player.attack.crit,volume=1.0,pitch=0.9}
+
+enrage_stacks:
+  # Mob enrage: gains a stack when below 50% HP (capped at 5).
+  # Attach on a timer: "enrage_stacks ~onTimer:100"
+  # Pair with a separate ~onHit line that reads the stack to amplify damage:
+  # "if_var_gte{name=enrage,value=1} damage{} ~onHit"
+  AbilitySequence:
+  - if_health_below{percent=50}
+  - increment{name=enrage,max=5}
+  - particles{type=FLAME,count=6}
+
+enrage_hit:
+  # Companion to enrage_stacks. Fires a bonus hit if at least 1 stack is active.
+  # Attach to the same mob: "enrage_hit ~onHit"
+  # Each stack adds a separate damage{} invocation. For graduated damage, pair
+  # if_var_gte thresholds: ≥1 = base, ≥3 = extra, ≥5 = critical bonus.
+  AbilitySequence:
+  - if_var_gte{name=enrage,value=1}
+  - damage{}
+
+escalating_beam:
+  # Player wand: each cast increments a charge counter (max 3).
+  # At max charge, fire a supercharged beam and reset to 0.
+  # Attach to a wand: "escalating_beam right_click"
+  AbilitySequence:
+  - mana_cost{amount=20}
+  - cooldown{ticks=10}
+  - increment{name=charge,max=3}
+  - if_var_gte{name=charge,value=3} reset{name=charge} beam{range=18.0,damage_multiplier=4.0,pierce_cap=3} chain{count=2,range=8.0,damage_multiplier=0.6} sound{key=entity.lightning_bolt.thunder,volume=0.6,pitch=1.4}
