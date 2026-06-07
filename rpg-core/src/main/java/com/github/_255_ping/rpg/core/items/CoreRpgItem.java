@@ -139,7 +139,7 @@ public final class CoreRpgItem implements RpgItem {
             lore.add(Component.text(capitalize(type.id()))
                     .color(NamedTextColor.DARK_GRAY)
                     .decoration(TextDecoration.ITALIC, true));
-            lore.add(Component.empty());
+            separateSections(lore);
         }
 
         // Stats — ordered by statOrder config; unlisted stats follow alphabetically.
@@ -160,16 +160,16 @@ public final class CoreRpgItem implements RpgItem {
             }
         }
 
-        if (!stats.isEmpty() && !extraLore.isEmpty()) {
-            lore.add(Component.empty());
-        }
-        for (String l : extraLore) {
-            lore.add(noItalic(LEGACY.deserialize(l)));
+        if (!extraLore.isEmpty()) {
+            separateSections(lore);
+            for (String l : extraLore) {
+                lore.add(noItalic(LEGACY.deserialize(l)));
+            }
         }
 
         // Abilities — grouped by trigger for clean lore presentation.
         if (!triggeredAbilities.isEmpty()) {
-            if (!lore.isEmpty()) lore.add(Component.empty());
+            separateSections(lore);
             for (ItemAbilityBinding binding : triggeredAbilities) {
                 renderAbilityBinding(binding, lore);
             }
@@ -180,7 +180,7 @@ public final class CoreRpgItem implements RpgItem {
         if (setId != null && !setId.isBlank()) {
             try {
                 RpgServices.armorSets().get(setId).ifPresent(def -> {
-                    if (!lore.isEmpty()) lore.add(Component.empty());
+                    separateSections(lore);
                     lore.add(noItalic(LEGACY.deserialize("&6" + def.name())));
                     def.bonuses().entrySet().stream()
                             .sorted(Map.Entry.comparingByKey())
@@ -218,11 +218,11 @@ public final class CoreRpgItem implements RpgItem {
         }
 
         if (!tradeable) {
-            if (!lore.isEmpty()) lore.add(Component.empty());
+            separateSections(lore);
             lore.add(noItalic(LEGACY.deserialize("&c✘ Not Tradeable")));
         }
         if (rarity != null) {
-            if (!lore.isEmpty()) lore.add(Component.empty());
+            separateSections(lore);
             lore.add(noItalic(LEGACY.deserialize(rarity.coloredDisplay())));
         }
         if (!lore.isEmpty()) meta.lore(lore);
@@ -329,6 +329,16 @@ public final class CoreRpgItem implements RpgItem {
             case "mana_cost", "cooldown", "delay", "particles", "sound" -> true;
             default -> false;
         };
+    }
+
+    /**
+     * Adds a blank separator line only when the last line in {@code lore} is not already blank.
+     * Centralises all blank-line insertion so no two consecutive empty lines can appear.
+     */
+    private static void separateSections(List<Component> lore) {
+        if (!lore.isEmpty() && !Component.empty().equals(lore.get(lore.size() - 1))) {
+            lore.add(Component.empty());
+        }
     }
 
     private static Component noItalic(Component c) {
