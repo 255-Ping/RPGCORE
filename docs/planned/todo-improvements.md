@@ -900,6 +900,56 @@ Added `rpg.core.particle` + `rpg.regions.admin.global` to plugin.ymls; `docs/per
 
 ---
 
+### Repurposed Vanilla Bars: Remove XP Bar (`rpg-core` / `rpg-hud`) — 🟢 Easy
+
+The `vanilla-xp-bar: most-recent` setting in `docs/core/vanilla-suppression.md` repurposes the vanilla XP bar to show skill progress. This directly conflicts with `rpg-enchanting`: the enchanting station charges vanilla XP levels, and the XP bar is the standard visual signal for that cost. When the bar is being hijacked to display skill progress, players see misleading numbers and can't tell at a glance how many levels they'll lose on an enchant.
+
+**Fix:** Remove the vanilla XP bar from the repurposed-bars feature entirely.
+
+- Drop `vanilla-xp-bar` from the `vanilla-suppression` config block (or change its default to `hidden` and remove the `most-recent` / `pinned` options)
+- Remove the skill-pinning logic that writes to the XP bar (`/skill pin`, `rpg.core.skill.pin` permission, `XpBarUpdater` or equivalent)
+- Skill progress is already shown in the scoreboard HUD and the Skills GUI — no replacement display needed
+- Update `docs/core/vanilla-suppression.md`: remove the XP row from the "Repurposed vanilla bars" table and the `vanilla-xp-bar:` config example
+- Update `docs/commands.md` and `docs/permissions.md`: remove the `/skill pin` and `rpg.core.skill.pin` entries
+
+---
+
+### Add More Example Status Effects (`rpg-core`) — 🟢 Easy
+
+The existing `status-effects/example.yml` ships four effects (`burning`, `frozen`, `silenced`, `haste`). That's enough to prove the system works but not enough to test the full range of what status effects can do. Add more built-in examples covering the remaining stat types and edge cases admins will actually want to copy from.
+
+Suggested additions (one effect per notable mechanic — add whatever makes sense):
+
+| ID | What it tests |
+|---|---|
+| `weakness` | Negative DAMAGE stat modifier |
+| `speed_boost` | Positive SPEED modifier (movement) |
+| `vulnerability` | Negative DEFENSE modifier (makes the player take more damage) |
+| `regeneration` | Positive HEALTH_REGEN modifier |
+| `mana_drain` | Negative max mana or mana_regen modifier |
+| `thorns` | Could reflect a % of damage — or just a damage-on-hit note if not yet implemented |
+| `blindness` | Applies vanilla blindness via `PotionEffect` block in effect YAML (if supported) |
+| `slow` | Negative SPEED modifier — counterpart to `frozen` but lighter (e.g., -30%) |
+
+Stick to effects that the existing `StatusEffectLoader` and `CoreStatusEffectService` can already handle — no new mechanics needed, just more YAML entries demonstrating existing params (`stat-modifiers`, `amplifier`, `duration`, `particles`, `apply-sound`).
+
+---
+
+### Fill Out Example Crafting Recipes (`rpg-crafting`) — 🟢 Easy
+
+`rpg-crafting 0.1.0` ships but the bundled `recipes/example.yml` is minimal. A tester picking up the plugin can't easily verify shaped vs shapeless, RPG-item ingredients, or multi-item outputs without building their own recipes from scratch. Fill out the example file so the system is end-to-end testable out of the box.
+
+Add at least:
+
+1. **Shaped recipe using vanilla materials** — e.g., a 3×3 `red_gem_block` from 9 `red_gem` items (mirrors vanilla block-crafting pattern; good smoke test for grid matching)
+2. **Shaped recipe mixing vanilla + RPG items** — e.g., craft an `iron_shortsword` from an iron ingot + a stick in a vertical pattern (tests that RPG item IDs resolve correctly in ingredient slots)
+3. **Shapeless recipe** — e.g., combine any 2 different potions to get a `mixed_brew` (tests that slot order doesn't matter)
+4. **Recipe with amount > 1 output** — e.g., 1 `bone` → 3 `bone_meal` shapeless (tests the `Amount:` field on the result)
+
+Each recipe should use item IDs that already exist in `items/example.yml` so there's no dependency on custom server content. Annotate each with a comment explaining which mechanic it demonstrates.
+
+---
+
 ### Unit Test Coverage (all plugins) — 🟡 Medium (ongoing)
 Currently only two test files exist: `QuestObjectiveTest.java` and `DamageMathTest.java`. For a codebase this size, untested code means regressions are invisible until they hit the live server. Priority areas:
 
