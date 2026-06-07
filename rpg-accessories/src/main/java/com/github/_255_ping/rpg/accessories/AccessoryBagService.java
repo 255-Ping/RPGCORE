@@ -6,17 +6,26 @@ import com.github._255_ping.rpg.api.items.BuiltinItemType;
 import com.github._255_ping.rpg.api.items.RpgItem;
 import com.github._255_ping.rpg.api.persistence.DataStore;
 import com.github._255_ping.rpg.api.stats.Stat;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -51,7 +60,90 @@ public final class AccessoryBagService implements AccessoryService {
             loadInto(player.getUniqueId(), inv);
             return inv;
         });
+        // Always (re)place the upgrade button in the last slot — last slot is reserved for UI.
+        refreshUpgradeButton(player, bag);
         return bag;
+    }
+
+    /**
+     * Returns the in-memory bag for the given player, or {@code null} if the bag has not been
+     * opened yet. Callers should call {@link #openBag} first to ensure the bag exists.
+     */
+    public Inventory getBag(UUID id) {
+        return bags.get(id);
+    }
+
+    /**
+     * Places (or refreshes) the upgrade button in the last slot of the bag.
+     * The last slot of every bag inventory is reserved as a UI element and is never saved.
+     */
+    public void refreshUpgradeButton(Player player, Inventory bag) {
+        bag.setItem(bag.getSize() - 1, buildUpgradeButton(player));
+    }
+
+    private ItemStack buildUpgradeButton(Player player) {
+        int current  = currentTier(player.getUniqueId());
+        double cost  = upgradeCost(current);
+
+        if (cost < 0) {
+            // Max tier — show a placeholder
+            ItemStack btn = new ItemStack(Material.BARRIER);
+            ItemMeta  meta = btn.getItemMeta();
+            meta.displayName(Component.text("Max Tier", NamedTextColor.GRAY)
+                    .decoration(TextDecoration.ITALIC, false)
+                    .decoration(TextDecoration.BOLD,   true));
+            meta.lore(List.of(
+                Component.text("Your bag is fully expanded.", NamedTextColor.DARK_GRAY)
+                        .decoration(TextDecoration.ITALIC, false),
+                Component.empty(),
+                Component.text("Tier " + current + "  —  " + contentSlots(current) + " accessory slots",
+                        NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false)
+            ));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+            btn.setItemMeta(meta);
+            return btn;
+        }
+
+        int nextTier     = current + 1;
+        int curSlots     = contentSlots(current);
+        int nextSlots    = contentSlots(nextTier);
+
+        ItemStack btn  = new ItemStack(Material.NETHER_STAR);
+        ItemMeta  meta = btn.getItemMeta();
+        meta.displayName(Component.text("✦ Upgrade Bag", NamedTextColor.GREEN)
+                .decoration(TextDecoration.ITALIC, false)
+                .decoration(TextDecoration.BOLD,   true));
+        meta.lore(List.of(
+            Component.text("Expand your accessory bag.", NamedTextColor.GRAY)
+                    .decoration(TextDecoration.ITALIC, false),
+            Component.empty(),
+            Component.text("Current: ", NamedTextColor.DARK_GRAY)
+                    .decoration(TextDecoration.ITALIC, false)
+                    .append(Component.text("Tier " + current + " (" + curSlots + " slots)",
+                            NamedTextColor.WHITE)),
+            Component.text("Next:    ", NamedTextColor.DARK_GRAY)
+                    .decoration(TextDecoration.ITALIC, false)
+                    .append(Component.text("Tier " + nextTier + " (" + nextSlots + " slots)",
+                            NamedTextColor.GREEN)),
+            Component.empty(),
+            Component.text("Cost: ", NamedTextColor.DARK_GRAY)
+                    .decoration(TextDecoration.ITALIC, false)
+                    .append(Component.text((long) cost + " coins", NamedTextColor.GOLD)),
+            Component.empty(),
+            Component.text("Click to upgrade!", NamedTextColor.YELLOW)
+                    .decoration(TextDecoration.ITALIC, false)
+        ));
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+        btn.setItemMeta(meta);
+        return btn;
+    }
+
+    /**
+     * Usable accessory slots for a given tier: all slots minus the 1 reserved for the
+     * upgrade button in the last position.
+     */
+    private int contentSlots(int tier) {
+        return Math.max(0, rowsForTier(tier) * 9 - 1);
     }
 
     /** Returns the current tier for this player; defaults to 1 if not stored. */
@@ -118,7 +210,12 @@ public final class AccessoryBagService implements AccessoryService {
             Map<String, Object> data = new HashMap<>();
             data.put("schema-version", 2);
             data.put("tier", currentTier(id));
-            if (bag != null) data.put("contents", serialize(bag.getContents()));
+            if (bag != null) {
+                // Snapshot contents and null the last slot (upgrade button) — never persisted.
+                ItemStack[] contents = bag.getContents();
+                contents[contents.length - 1] = null;
+                data.put("contents", serialize(contents));
+            }
             RpgServices.dataStore().repository(REPO).save(id.toString(), data);
         } catch (Exception ex) {
             plugin.getLogger().warning("Failed to save accessory bag for " + id + ": " + ex.getMessage());
@@ -136,32 +233,82 @@ public final class AccessoryBagService implements AccessoryService {
 
     @Override
     public Map<Stat, Double> aggregateStats(Player player) {
-        Map<Stat, Double> out = new HashMap<>();
+        return applyFamilyStacking(collectAccessories(player));
+    }
 
-        // Bag contents — always active.
+    /**
+     * Collects all RPG ACCESSORY items currently active for the player.
+     * Skips the last bag slot (always the upgrade button, never an accessory).
+     */
+    private List<RpgItem> collectAccessories(Player player) {
+        List<RpgItem> items = new ArrayList<>();
+
         Inventory bag = bags.get(player.getUniqueId());
         if (bag != null) {
-            for (ItemStack stack : bag.getContents()) {
-                addAccessoryStats(stack, out);
+            // Last slot is the upgrade-button UI element — skip it.
+            int contentSlots = bag.getSize() - 1;
+            for (int i = 0; i < contentSlots; i++) {
+                toAccessory(bag.getItem(i)).ifPresent(items::add);
             }
         }
 
-        // Inventory scan — opt-in via config (allows wearing accessories in hotbar/storage).
         if (plugin.getConfig().getBoolean("inventory-accessories.enabled", false)) {
             for (ItemStack stack : player.getInventory().getContents()) {
-                addAccessoryStats(stack, out);
+                toAccessory(stack).ifPresent(items::add);
             }
         }
 
+        return items;
+    }
+
+    /**
+     * Applies family stacking rules and returns the final stat map.
+     *
+     * <p>Items without a family always contribute. Items that share a family follow their
+     * declared {@code Stacking} rule:
+     * <ul>
+     *   <li>{@code highest} — only the item with the largest combined absolute stat value counts.</li>
+     *   <li>{@code sum} / {@code independent} — every copy in the family contributes.</li>
+     * </ul>
+     */
+    private static Map<Stat, Double> applyFamilyStacking(List<RpgItem> items) {
+        List<RpgItem> noFamily = new ArrayList<>();
+        Map<String, List<RpgItem>> byFamily = new LinkedHashMap<>();
+
+        for (RpgItem item : items) {
+            String fam = item.family();
+            if (fam == null || fam.isBlank()) {
+                noFamily.add(item);
+            } else {
+                byFamily.computeIfAbsent(fam, k -> new ArrayList<>()).add(item);
+            }
+        }
+
+        Map<Stat, Double> out = new HashMap<>();
+        for (RpgItem item : noFamily) addStats(item, out);
+
+        for (List<RpgItem> group : byFamily.values()) {
+            String mode = group.get(0).accessoryStacking();
+            if ("sum".equals(mode) || "independent".equals(mode)) {
+                for (RpgItem item : group) addStats(item, out);
+            } else {
+                // "highest" — pick the copy with the greatest combined stat magnitude.
+                group.stream()
+                     .max(Comparator.comparingDouble(
+                             it -> it.stats().values().stream().mapToDouble(Math::abs).sum()))
+                     .ifPresent(best -> addStats(best, out));
+            }
+        }
         return out;
     }
 
-    private static void addAccessoryStats(ItemStack stack, Map<Stat, Double> out) {
-        if (stack == null || stack.getType().isAir()) return;
-        Optional<RpgItem> opt = RpgServices.items().from(stack);
-        if (opt.isEmpty()) return;
-        RpgItem item = opt.get();
-        if (item.type() != BuiltinItemType.ACCESSORY) return;
+    private static Optional<RpgItem> toAccessory(ItemStack stack) {
+        if (stack == null || stack.getType().isAir()) return Optional.empty();
+        return RpgServices.items().from(stack)
+                .filter(it -> it.type() == BuiltinItemType.ACCESSORY);
+    }
+
+    private static void addStats(RpgItem item, Map<Stat, Double> out) {
         for (Map.Entry<Stat, Double> e : item.stats().entrySet()) {
             out.merge(e.getKey(), e.getValue(), Double::sum);
         }

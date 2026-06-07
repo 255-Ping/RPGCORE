@@ -153,12 +153,18 @@ public final class ItemLoader {
         boolean tradeable   = s.getBoolean("Tradeable", true);
         String setId        = s.getString("SetId");
 
+        // Accessory family stacking (only meaningful for Type: ACCESSORY items).
+        ConfigurationSection accessorySec = s.getConfigurationSection("Accessory");
+        String family        = accessorySec != null ? accessorySec.getString("Family") : null;
+        String stackingMode  = accessorySec != null
+                ? accessorySec.getString("Stacking", "highest") : "highest";
+
         List<String> statOrder = statOrderByType.getOrDefault(
                 type != null ? type.id().toLowerCase(Locale.ROOT) : "", List.of());
         return new CoreRpgItem(id, displayName, type, rarity, material, customModelData,
                 stats, triggeredAbilities, lore, consumeEffects,
                 attackCooldown, itemCooldown, ammoType, infiniteAmmo, projectileType,
-                tradeable, setId, itemIdKey, statOrder);
+                tradeable, setId, itemIdKey, statOrder, family, stackingMode);
     }
 
     /**

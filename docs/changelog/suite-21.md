@@ -8,6 +8,13 @@ _Suite 21 opened with the addition of `rpg-crafting` and `rpg-smelting`. The sui
 
 ## Notable changes
 
+### rpg-accessories 0.1.1 — Family stacking + in-bag upgrade button
+
+- **Family stacking:** `ACCESSORY` items now support an `Accessory: { Family:, Stacking: }` block. Three stacking modes: `highest` (default — only the best copy of a family counts), `sum` (every copy adds stats), `independent` (sum + each copy fires its own passive ability hooks). Items without a family always stack independently.
+- **Upgrade button:** the last slot of the bag is now a permanent UI button — a NETHER_STAR showing the current/next tier and upgrade cost. Clicking it charges the player and reopens the bag at the new size. The button slot is never saved or treated as an accessory slot. Usable slots per tier: 8 / 17 / 26 / 35 / 44 / 53.
+- `/accessories upgrade` also reopens the bag automatically after a successful upgrade.
+- `AccessoryService.aggregateStats` is now family-aware; the stat-skip for the button slot is baked in.
+
 ### rpg-core 1.10.10 — Cooldown gate blocks the ability chain with action-bar feedback
 
 - `cooldown{}` now acts as a **gate**: if the ability key is on cooldown when the effect fires, the chain is blocked (`ctx.setBlocked(true)`) and the caster sees an action-bar message — `Ability on cooldown — X.Xs remaining` (red + yellow, proper Adventure Component). Previously the effect only SET the cooldown and never checked it.

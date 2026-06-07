@@ -1,30 +1,46 @@
 # Accessories (`rpg-accessories`)
 
-> **Status:** In Progress — Per-player accessory bag (27 slots default, configurable rows 1-6). `/accessories` (alias `/bag`) opens it. Only `ACCESSORY`-type items can be placed inside (cursor + shift-click both validated). Stats from accessories in the bag aggregate into `CoreRpgPlayer.recalculateStats` via the new `AccessoryService` API. Persistence via DataStore — bag contents save on close/quit, load on first open/join. Tier upgrades + Family-based stacking rules deferred to a follow-up.
+> **Status:** Working — Per-player accessory bag with tier upgrades, in-bag upgrade button, and family-based stacking rules.
 
 Adds the `ACCESSORY` item type and the **accessory bag** — a separate inventory GUI carrying accessories. Accessories contribute stats to the player while sitting in the bag.
 
 ## Adding accessories
 
-Define them as normal items with `Type: ACCESSORY`. See [items.md](../content/items.md#accessory) for the schema.
+Define them as normal items with `Type: ACCESSORY`. The optional `Accessory:` subsection sets family stacking behaviour:
 
 ```yaml
-zombie_talisman:
-  MinecraftItem: zombie_head
+# plugins/rpg-core/items/rings.yml
+bronze_ring:
+  MinecraftItem: gold_ingot
   Type: ACCESSORY
-  DisplayName: "&aZombie Talisman"
+  DisplayName: "&6Bronze Ring"
+  Rarity: "&7&lCOMMON"
+  Stats:
+    max_health: 20
+    strength: 5
+  Accessory:
+    Family: ring        # see "Stacking" below
+    Stacking: highest   # highest | sum | independent
+
+silver_ring:
+  MinecraftItem: iron_ingot
+  Type: ACCESSORY
+  DisplayName: "&fSilver Ring"
   Rarity: "&a&lUNCOMMON"
   Stats:
-    max_health: 10
+    max_health: 35
+    strength: 10
+    crit_chance: 3
   Accessory:
-    Family: zombie_talisman      # see "Stacking"
+    Family: ring
+    Stacking: highest
 ```
 
-![An Adventurer's Ring tooltip — stats from accessories in the bag aggregate with armor and base stats](../assets/screenshots/item_adventurers_ring.PNG){ .screenshot }
+Items without `Accessory.Family` always stack independently (every copy in the bag adds stats).
 
 ## The bag
 
-A per-player inventory tab opened via `/accessories` (alias `/bag`). Default size 27 slots (3 rows); upgradeable.
+A per-player inventory tab opened via `/accessories` (alias `/bag`). The **last slot is always the upgrade button** — it shows the cost to advance to the next tier and can be clicked to upgrade in-place.
 
 ## Tiers
 
@@ -33,39 +49,49 @@ A per-player inventory tab opened via `/accessories` (alias `/bag`). Default siz
 bag:
   title: "&5&lAccessory Bag"
 
-# Each tier defines a row count (1–6 rows = 9–54 slots).
-# cost is in primary currency; the player upgrades from tier N to N+1
-# by paying the cost on tier N+1.
+# Each tier defines a row count (1–6 rows = 9–54 total slots).
+# The last slot of each tier is reserved for the upgrade button.
+# Usable accessory slots = rows × 9 − 1.
 tiers:
-  - { tier: 1, rows: 1, cost: 0 }
-  - { tier: 2, rows: 2, cost: 1000 }
-  - { tier: 3, rows: 3, cost: 5000 }
-  - { tier: 4, rows: 4, cost: 25000 }
-  - { tier: 5, rows: 5, cost: 100000 }
-  - { tier: 6, rows: 6, cost: 500000 }
+  - { tier: 1, rows: 1, cost: 0 }          # 8 accessory slots — starting tier, free
+  - { tier: 2, rows: 2, cost: 1000 }       # 17 slots
+  - { tier: 3, rows: 3, cost: 5000 }       # 26 slots
+  - { tier: 4, rows: 4, cost: 25000 }      # 35 slots
+  - { tier: 5, rows: 5, cost: 100000 }     # 44 slots
+  - { tier: 6, rows: 6, cost: 500000 }     # 53 slots — max
 ```
 
-`/accessories upgrade` opens the upgrade GUI.
+Upgrading can be done by:
+- Clicking the **NETHER_STAR upgrade button** inside the bag (closes + reopens at new size)
+- Running `/accessories upgrade`
 
 ## Stacking
 
-Accessories in the same `Family` only count once (highest-rarity wins) by default. Per-accessory override:
+The `Accessory.Stacking` field on each item controls how duplicates within the same `Family` behave:
+
+| Mode | Behaviour |
+|---|---|
+| `highest` (default) | Only the copy with the greatest combined stat magnitude counts. Prevents bag-stuffing with duplicates. |
+| `sum` | Every copy adds its stats to the total. |
+| `independent` | Like `sum`, and each copy also fires its own passive ability hooks independently. |
+
+Items with **no `Family`** are always counted in full regardless of duplicates.
+
+### Example
 
 ```yaml
-Accessory:
-  Family: zombie_talisman
-  Stacking: highest              # highest | sum | independent
-```
+# Bag contains: bronze_ring, silver_ring, silver_ring  (Family: ring, Stacking: highest)
+# Result: only the BEST silver_ring contributes — bronze_ring and the duplicate are ignored.
 
-- `highest` (default) — only the highest-stat copy in that family counts. Prevents bag-stuffing.
-- `sum` — every copy adds its stats.
-- `independent` — every copy adds its stats *and* runs its own status-effect hooks independently.
+# Bag contains: fortune_talisman, fortune_talisman  (no Family declared)
+# Result: both copies contribute (40 + 40 = 80 magic_find total).
+```
 
 ## Aggregation
 
-While in the bag (regardless of stacking), accessories feed their stats into the player's `StatHolder` along with armor and base stats. They're not "equipped" in vanilla slots — they're an aggregation source.
+While in the bag, accessories feed their stats into the player's `StatHolder` alongside armor and base stats. The aggregation runs via `AccessoryService.aggregateStats` during `CoreRpgPlayer.recalculateStats`.
 
-If an accessory item is removed from the bag (placed in normal inventory, dropped, deposited in a chest), its stats stop counting.
+If an accessory is removed from the bag (placed in normal inventory, dropped, or deposited), its stats stop counting immediately on the next recalculation.
 
 ## Commands
 
@@ -73,11 +99,11 @@ If an accessory item is removed from the bag (placed in normal inventory, droppe
 |---|---|
 | `/accessories` (`/bag`) | `rpg.accessories.open` |
 | `/accessories upgrade` | `rpg.accessories.upgrade` |
-| `/accessories reload` | `rpg.accessories.admin.reload` (op) |
+| `/accessories reload` | `rpg.accessories.admin.reload` |
 
 ## Persistence
 
-Bag contents and current tier persist via `DataStore` per player.
+Bag contents and current tier persist via `DataStore` per player. The upgrade button slot is never saved — it is always regenerated when the bag opens.
 
 ## Related
 

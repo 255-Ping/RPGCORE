@@ -84,4 +84,27 @@ public interface RpgItem {
      * Auction House. Set via {@code Tradeable: false} in item YAML. Defaults to {@code true}.
      */
     default boolean tradeable() { return true; }
+
+    // ── Accessory family stacking ──────────────────────────────────────────────
+
+    /**
+     * Accessory family this item belongs to, or {@code null} if it has none.
+     * Only meaningful for {@code ACCESSORY}-type items. Set via {@code Accessory.Family} in
+     * item YAML. Accessories in the same family are subject to the stacking rule returned by
+     * {@link #accessoryStacking()}.
+     */
+    default String family() { return null; }
+
+    /**
+     * How multiple copies of the same-family accessory stack in the bag:
+     * <ul>
+     *   <li>{@code "highest"} (default) — only the copy with the largest combined stat value
+     *       contributes; prevents bag-stuffing with duplicates.</li>
+     *   <li>{@code "sum"} — every copy adds its stats independently.</li>
+     *   <li>{@code "independent"} — like {@code sum}, and each copy also fires its own
+     *       passive ability hooks independently.</li>
+     * </ul>
+     * Set via {@code Accessory.Stacking} in item YAML.
+     */
+    default String accessoryStacking() { return "highest"; }
 }

@@ -82,11 +82,17 @@ public final class RpgAccessoriesPlugin extends JavaPlugin implements Listener, 
                 p.sendMessage("§cYou can't afford that.");
                 return;
             }
-            // Persist contents at current size, then resize on next open.
+            // Save contents at the current size, then release and resize on next open.
             bagService.release(p.getUniqueId());
             bagService.setTier(p.getUniqueId(), current + 1);
             bagService.save(p.getUniqueId());
             p.sendMessage("§aBag upgraded to tier " + (current + 1) + ".");
+            // Reopen the bag at the new size on the next tick. This works whether the
+            // player triggered the upgrade via the in-bag button or the /accessories upgrade command.
+            getServer().getScheduler().runTask(this, () -> {
+                p.closeInventory();
+                p.openInventory(bagService.openBag(p));
+            });
         } catch (IllegalStateException ex) {
             p.sendMessage("§cEconomy not loaded.");
         }
@@ -109,11 +115,24 @@ public final class RpgAccessoriesPlugin extends JavaPlugin implements Listener, 
     @EventHandler(priority = EventPriority.LOW)
     public void onClick(InventoryClickEvent event) {
         if (!bagService.isBagInventory(event.getInventory())) return;
-        // Only ACCESSORY items can enter the bag.
+
+        int buttonSlot = event.getInventory().getSize() - 1;
+
+        // Click directly on the upgrade-button slot (top inventory) → trigger upgrade.
+        if (event.getClickedInventory() == event.getInventory()
+                && event.getSlot() == buttonSlot) {
+            event.setCancelled(true);
+            if (event.getWhoClicked() instanceof Player p) {
+                handleUpgrade(p);
+            }
+            return;
+        }
+
+        // Cursor → bag slot: block non-accessories.
         ItemStack cursor = event.getCursor();
-        if (cursor != null && !cursor.getType().isAir()) {
-            // Click is putting cursor → bag (top inventory click)
-            if (event.getClickedInventory() == event.getInventory() && !isAccessory(cursor)) {
+        if (cursor != null && !cursor.getType().isAir()
+                && event.getClickedInventory() == event.getInventory()) {
+            if (!isAccessory(cursor)) {
                 event.setCancelled(true);
                 if (event.getWhoClicked() instanceof Player p) {
                     p.sendActionBar(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
@@ -122,12 +141,21 @@ public final class RpgAccessoriesPlugin extends JavaPlugin implements Listener, 
                 return;
             }
         }
-        // Shift-click from player inventory → bag: only allow accessories.
-        if (event.isShiftClick()
-                && event.getClickedInventory() != event.getInventory()
-                && event.getCurrentItem() != null
-                && !isAccessory(event.getCurrentItem())) {
-            event.setCancelled(true);
+
+        // Shift-click from player inventory → bag.
+        if (event.isShiftClick() && event.getClickedInventory() != event.getInventory()) {
+            ItemStack shiftItem = event.getCurrentItem();
+            if (shiftItem == null || shiftItem.getType().isAir()) return;
+
+            if (!isAccessory(shiftItem)) {
+                event.setCancelled(true);
+                return;
+            }
+            // Protect the button slot: cancel if the only available slot is the button.
+            int firstEmpty = event.getInventory().firstEmpty();
+            if (firstEmpty < 0 || firstEmpty == buttonSlot) {
+                event.setCancelled(true);
+            }
         }
     }
 
@@ -142,8 +170,13 @@ public final class RpgAccessoriesPlugin extends JavaPlugin implements Listener, 
     public void onClickRecalc(InventoryClickEvent event) {
         if (!bagService.isBagInventory(event.getInventory())) return;
         if (!(event.getWhoClicked() instanceof Player p)) return;
-        // Defer recalc one tick so the inventory mutation has settled.
-        getServer().getScheduler().runTask(this, () -> RpgServices.player(p).recalculateStats());
+        // Defer recalc one tick so the inventory mutation has settled,
+        // then also refresh the upgrade button in case a click displaced it.
+        getServer().getScheduler().runTask(this, () -> {
+            RpgServices.player(p).recalculateStats();
+            org.bukkit.inventory.Inventory bag = bagService.getBag(p.getUniqueId());
+            if (bag != null) bagService.refreshUpgradeButton(p, bag);
+        });
     }
 
     @Override

@@ -56,6 +56,10 @@ public final class CoreRpgItem implements RpgItem {
      * Loaded from {@code plugins/rpg-core/stat-order.yml} per item type.
      */
     private final List<String> statOrder;
+    /** Accessory family, or {@code null}. See {@link RpgItem#family()}. */
+    private final String family;
+    /** Accessory stacking mode: {@code "highest"} | {@code "sum"} | {@code "independent"}. */
+    private final String accessoryStacking;
 
     public CoreRpgItem(String id, String displayName, ItemType type, Rarity rarity,
                        Material material, int customModelData,
@@ -64,7 +68,7 @@ public final class CoreRpgItem implements RpgItem {
                        int attackCooldownTicks, int itemCooldownTicks,
                        String ammoType, boolean infiniteAmmo, String projectileType,
                        boolean tradeable, String setId, NamespacedKey itemIdKey,
-                       List<String> statOrder) {
+                       List<String> statOrder, String family, String accessoryStacking) {
         this.id = id;
         this.displayName = displayName;
         this.type = type;
@@ -84,6 +88,8 @@ public final class CoreRpgItem implements RpgItem {
         this.setId = setId;
         this.itemIdKey = itemIdKey;
         this.statOrder = statOrder != null ? List.copyOf(statOrder) : List.of();
+        this.family = family;
+        this.accessoryStacking = accessoryStacking != null ? accessoryStacking : "highest";
     }
 
     @Override public String id() { return id; }
@@ -115,6 +121,8 @@ public final class CoreRpgItem implements RpgItem {
     @Override public String projectileType() { return projectileType; }
     @Override public boolean tradeable() { return tradeable; }
     @Override public String setId() { return setId; }
+    @Override public String family() { return family; }
+    @Override public String accessoryStacking() { return accessoryStacking; }
 
     @Override
     public ItemStack toItemStack() {

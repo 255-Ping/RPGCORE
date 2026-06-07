@@ -16,12 +16,15 @@ inventory-accessories:
 # Ordered tier list. Tier 1 is the starting size for new players.
 # rows: 1–6 (number of inventory rows in the bag)
 # cost: coins charged to upgrade from the previous tier to this tier (via rpg-economy)
-# Players upgrade with /accessories upgrade (costs the price of the next tier).
-# Example flow: new player starts with 1 row (9 slots); pays 1000 to unlock 2 rows, etc.
+# Players upgrade with /accessories upgrade or by clicking the upgrade button inside the bag.
+#
+# Note: the last slot of each bag tier is reserved for the in-bag upgrade button.
+# Usable accessory slots = (rows × 9) − 1.
+# Tier 1 → 8 slots | Tier 2 → 17 | Tier 3 → 26 | Tier 4 → 35 | Tier 5 → 44 | Tier 6 → 53
 tiers:
-  - { tier: 1, rows: 1, cost: 0 }          # starting tier — free; 9 accessory slots
-  - { tier: 2, rows: 2, cost: 1000 }       # +9 slots; costs 1,000 coins to unlock
-  - { tier: 3, rows: 3, cost: 5000 }       # +9 slots; costs 5,000 coins
-  - { tier: 4, rows: 4, cost: 25000 }      # +9 slots; costs 25,000 coins
-  - { tier: 5, rows: 5, cost: 100000 }     # +9 slots; costs 100,000 coins
-  - { tier: 6, rows: 6, cost: 500000 }     # +9 slots (54 total); costs 500,000 coins
+  - { tier: 1, rows: 1, cost: 0 }          # starting tier — free; 8 accessory slots
+  - { tier: 2, rows: 2, cost: 1000 }       # 17 slots; costs 1,000 coins to unlock
+  - { tier: 3, rows: 3, cost: 5000 }       # 26 slots; costs 5,000 coins
+  - { tier: 4, rows: 4, cost: 25000 }      # 35 slots; costs 25,000 coins
+  - { tier: 5, rows: 5, cost: 100000 }     # 44 slots; costs 100,000 coins
+  - { tier: 6, rows: 6, cost: 500000 }     # 53 slots; costs 500,000 coins

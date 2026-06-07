@@ -90,6 +90,9 @@ test_talisman:
   Stats:
     max_health: 10
     health_regen: 1
+  Accessory:
+    Family: zombie           # accessories in the same family share a stacking rule
+    Stacking: highest        # highest | sum | independent
   Rarity: '&d&lRARE'
 
 beam_wand:
@@ -446,6 +449,14 @@ adventurers_ring:
     strength: 10
     mining_speed: 8
     speed: 3
+  # Accessory family: accessories in the same Family share a stacking rule.
+  # Stacking modes:
+  #   highest     — only the copy with the greatest combined stat value counts (default)
+  #   sum         — every copy in the bag adds its stats
+  #   independent — like sum, plus each copy fires its own passive ability hooks
+  Accessory:
+    Family: ring
+    Stacking: highest
   Lore:
   - '&7A simple ring worn by countless adventurers.'
   - '&7Balanced bonuses for any profession.'
@@ -469,6 +480,9 @@ scholars_pendant:
     # Bonus caster stats
     intelligence: 50
     max_mana: 40
+  Accessory:
+    Family: pendant
+    Stacking: highest
   Lore:
   - '&7Worn by the most dedicated scholars of the realm.'
   - '&7Increases all skill XP gains by &b+5% &7each.'
@@ -481,6 +495,7 @@ fortune_talisman:
   Stats:
     magic_find: 40         # % bonus rare-drop chance
     auto_loot: 1           # automatically picks up nearby drops (flat radius bonus)
+  # No Accessory.Family — every copy in the bag stacks independently.
   Lore:
   - '&7A talisman of extraordinary fortune.'
   - '&7All the luck of the cosmos, bound into one gem.'
