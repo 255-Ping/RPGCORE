@@ -74,7 +74,11 @@ public final class MobLootListener implements Listener {
 
         List<LootPool> resolvedPools = resolvePools(def);
         for (LootPool pool : resolvedPools) totalVanillaXp += pool.vanillaExp();
-        event.setDroppedExp(totalVanillaXp);
+
+        // Suppress orb spawning — split XP directly to each damager proportional to
+        // damage dealt so it lands in their level bar immediately instead of dropping.
+        event.setDroppedExp(0);
+        if (totalVanillaXp > 0) splitVanillaXp(damagers, totalVanillaXp);
 
         if (victim.getWorld() == null) return;
 
@@ -225,6 +229,24 @@ public final class MobLootListener implements Listener {
             }
         } catch (IllegalStateException ignored) {
             // rpg-combat (skills service) not loaded — silently skip.
+        }
+    }
+
+    /**
+     * Splits {@code totalXp} vanilla Minecraft XP among damagers proportional to damage dealt,
+     * awarding each player's share via {@link Player#giveExp(int)} so it goes straight to their
+     * level bar rather than spawning pick-up orbs on the ground.
+     * Players who are offline at the time of the kill receive nothing.
+     */
+    private void splitVanillaXp(Map<Player, Double> damagers, int totalXp) {
+        if (damagers.isEmpty()) return;
+        double totalDamage = damagers.values().stream().mapToDouble(Double::doubleValue).sum();
+        if (totalDamage <= 0) return;
+        for (Map.Entry<Player, Double> entry : damagers.entrySet()) {
+            Player p = entry.getKey();
+            if (p == null || !p.isOnline()) continue;
+            int share = (int) Math.round(entry.getValue() / totalDamage * totalXp);
+            if (share > 0) p.giveExp(share);
         }
     }
 }
