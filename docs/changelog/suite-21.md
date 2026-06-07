@@ -8,6 +8,17 @@ _Suite 21 opened with the addition of `rpg-crafting` and `rpg-smelting`. The sui
 
 ## Notable changes
 
+### rpg-core 1.10.10 — Cooldown gate blocks the ability chain with action-bar feedback
+
+- `cooldown{}` now acts as a **gate**: if the ability key is on cooldown when the effect fires, the chain is blocked (`ctx.setBlocked(true)`) and the caster sees an action-bar message — `Ability on cooldown — X.Xs remaining` (red + yellow, proper Adventure Component). Previously the effect only SET the cooldown and never checked it.
+- Remaining time is formatted as a whole number when it falls on an exact second (`3s`) and with one decimal otherwise (`3.5s`).
+
+### rpg-holograms 0.0.4 — Tab completions for `/holograms`
+
+- All `/holograms` subcommands now offer tab completions.
+- Subcommand name at arg 1; hologram IDs (from the live registry) at arg 2 for `delete`, `tp`, `move`; line ops (`add`/`set`/`remove`) at arg 2 for `line`; hologram IDs at arg 3 for line ops; existing line indices at arg 4 for `line set`/`line remove`.
+- All completions are case-insensitive prefix-filtered against what the player has typed so far.
+
 ### rpg-alchemy 0.4.1 — Configurable return item after drinking a potion
 
 - New global config key `drink-return.item` in `config.yml`. Accepts `none` (default — glass bottle is already suppressed), `glass_bottle`, any vanilla Material name, or any rpg-core item id.

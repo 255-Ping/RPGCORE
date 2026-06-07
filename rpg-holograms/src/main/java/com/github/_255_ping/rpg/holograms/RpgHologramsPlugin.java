@@ -3,15 +3,18 @@ package com.github._255_ping.rpg.holograms;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-public final class RpgHologramsPlugin extends JavaPlugin implements CommandExecutor {
+public final class RpgHologramsPlugin extends JavaPlugin implements CommandExecutor, TabCompleter {
 
     private HologramManager manager;
 
@@ -20,7 +23,9 @@ public final class RpgHologramsPlugin extends JavaPlugin implements CommandExecu
         saveDefaultConfig();
         manager = new HologramManager(this);
         manager.loadAll();
-        Objects.requireNonNull(getCommand("holograms"), "command 'holograms' missing").setExecutor(this);
+        var cmd = Objects.requireNonNull(getCommand("holograms"), "command 'holograms' missing");
+        cmd.setExecutor(this);
+        cmd.setTabCompleter(this);
         getLogger().info("rpg-holograms v" + getPluginMeta().getVersion()
                 + " enabled with " + manager.all().size() + " holograms.");
     }
@@ -167,5 +172,63 @@ public final class RpgHologramsPlugin extends JavaPlugin implements CommandExecu
             }
             default -> sender.sendMessage("§cUnknown line op: " + op);
         }
+    }
+
+    // ── Tab completion ─────────────────────────────────────────────────────────
+
+    private static final List<String> SUBCOMMANDS =
+            List.of("create", "delete", "list", "tp", "move", "line", "reload");
+    private static final List<String> LINE_OPS = List.of("add", "set", "remove");
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length == 1) {
+            return filterPrefix(SUBCOMMANDS, args[0]);
+        }
+
+        String sub = args[0].toLowerCase(Locale.ROOT);
+
+        if (args.length == 2) {
+            return switch (sub) {
+                case "delete", "tp", "move" -> hologramIds(args[1]);
+                case "line"                 -> filterPrefix(LINE_OPS, args[1]);
+                default                     -> List.of();
+            };
+        }
+
+        // /holograms line <op> <id> [index] [text...]
+        if (sub.equals("line")) {
+            String op = args[1].toLowerCase(Locale.ROOT);
+            if (args.length == 3) {
+                if (LINE_OPS.contains(op)) return hologramIds(args[2]);
+            } else if (args.length == 4) {
+                // set/remove need a line index; add starts free text
+                if (op.equals("set") || op.equals("remove")) {
+                    return manager.get(args[2]).map(def -> {
+                        List<String> indices = new ArrayList<>();
+                        for (int i = 0; i < def.lines().size(); i++) indices.add(String.valueOf(i));
+                        return filterPrefix(indices, args[3]);
+                    }).orElse(List.of());
+                }
+            }
+        }
+
+        return List.of();
+    }
+
+    /** Returns IDs of all registered holograms that start with {@code partial}. */
+    private List<String> hologramIds(String partial) {
+        return filterPrefix(
+                manager.all().stream().map(HologramDef::id).collect(Collectors.toList()),
+                partial);
+    }
+
+    /** Case-insensitive prefix filter. Returns the full list unchanged when {@code partial} is empty. */
+    private static List<String> filterPrefix(List<String> candidates, String partial) {
+        if (partial.isEmpty()) return candidates;
+        String lower = partial.toLowerCase(Locale.ROOT);
+        return candidates.stream()
+                .filter(s -> s.toLowerCase(Locale.ROOT).startsWith(lower))
+                .collect(Collectors.toList());
     }
 }
