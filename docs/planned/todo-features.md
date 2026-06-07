@@ -197,7 +197,7 @@ Milestone bonuses at 50 and 100 are additive on top of the base formula, not rep
 
 ---
 
-### Main Menu Item (`rpg-core`) — 🟡 Medium
+### ✅ Main Menu Item (`rpg-core`) — shipped in 1.10.0
 
 A persistent hotbar item that acts as a hub into all major player-facing GUIs. Every player always has it; it cannot be removed, dropped, or moved.
 
@@ -290,7 +290,7 @@ Multiple filters can be active simultaneously — results must satisfy **all** a
 
 ---
 
-### Player Homes + Server Warps (`rpg-admin`) — 🟢 Easy
+### ✅ Player Homes + Server Warps (`rpg-homes`) — shipped in 0.1.0
 Conspicuously absent from the suite. Every RPG server needs these.
 
 - `/sethome [name]`, `/home [name]`, `/delhome [name]`, `/homes` — per-player saved locations, configurable max homes per permission group
@@ -340,7 +340,7 @@ first_kill:
 
 ---
 
-### Boss Bar System (`rpg-core`) — 🟡 Medium
+### ✅ Boss Bar System (`rpg-bossbar`) — shipped in 0.1.0
 No boss bar support exists. Needed by dungeons, world events, and world boss mobs.
 
 **API surface** (`BossBarService` component on the Game object):
@@ -390,7 +390,7 @@ Players break down unwanted RPG items into materials at a salvage station (custo
 
 ---
 
-### Starter Kit System (`rpg-admin`) — 🟢 Easy
+### ✅ Starter Kit System (`rpg-kits`) — shipped in 0.1.0
 New players joining for the first time should receive a configured starting set of items.
 
 - Admin defines kit contents in `config.yml` (list of item ids + amounts)
@@ -400,7 +400,7 @@ New players joining for the first time should receive a configured starting set 
 
 ---
 
-### Item Set Bonuses (`rpg-core`) — 🟡 Medium
+### ✅ Item Set Bonuses (`rpg-core`) — already shipped
 Wearing multiple pieces of the same named set grants additional stat bonuses. Very standard RPG feature.
 
 - Items in a set share a `Set` YAML field (e.g., `Set: mages_robes`)
@@ -439,7 +439,7 @@ Randomly enhanced mob spawns that are rarer, stronger, and drop better loot. Sta
 
 ---
 
-### Extract Smelting → `rpg-smelting` Plugin (`rpg-core` / new `rpg-smelting`) — 🟢 Easy
+### ✅ Extract Smelting → `rpg-smelting` Plugin — shipped in 0.1.0
 Smelting recipe loading (`SmeltingLoader.java`) currently lives in `rpg-core`. It should be its own addon plugin so servers that don't need custom smelting don't load it, and so it can be expanded independently later.
 
 - Create a new blank `rpg-smelting` module (same pattern as `rpg-cooking` / `rpg-alchemy`)
@@ -449,7 +449,7 @@ Smelting recipe loading (`SmeltingLoader.java`) currently lives in `rpg-core`. I
 - Stub out a `config.yml` and `recipes/example.yml` the same way cooking does
 - **Build timed crafting in from the start** — `rpg-smelting` should support a `CraftTime` field on recipes (same model as cooking/alchemy). See [Timed Smelting](todo-improvements.md) in Improvements for the full spec. Don't ship the plugin without it — retrofitting timed crafting later is messier than including it upfront.
 
-### Extract Crafting → `rpg-crafting` Plugin (`rpg-core` / new `rpg-crafting`) — 🟢 Easy
+### ✅ Extract Crafting → `rpg-crafting` Plugin — shipped in 0.1.0
 Same rationale as smelting. `RecipeLoader.java` (shaped/shapeless crafting) currently lives in `rpg-core`.
 
 - Create a new blank `rpg-crafting` module
@@ -459,7 +459,7 @@ Same rationale as smelting. `RecipeLoader.java` (shaped/shapeless crafting) curr
 
 ---
 
-### Sign-Entry Number Input (`rpg-core`) — 🟡 Medium
+### ✅ Sign-Entry Number Input (`rpg-core`) — shipped in 1.8.0
 **Required before:** Auction House, Bazaar, Guild Bank GUI, any other GUI that takes a currency or quantity input from the player.
 
 Needed everywhere a player types a numeric value (currency amount, quantity, price) inside a GUI. Build once as a shared `SignEntryService` in `rpg-core` so every addon can call it — don't re-implement per-plugin.
@@ -474,7 +474,7 @@ Needed everywhere a player types a numeric value (currency amount, quantity, pri
 
 ---
 
-### PlaceholderAPI Support (`rpg-hud` / `rpg-core`) — 🟡 Medium
+### ✅ PlaceholderAPI Support (`rpg-hud`) — shipped in 0.4.1
 Allow PlaceholderAPI placeholders (e.g., `%player_name%`, `%vault_balance%`) anywhere RPGCORE reads a template string — scoreboard lines, tablist header/footer, nametag format, action bar format, etc.
 
 **Integration (two directions):**
@@ -503,7 +503,7 @@ Several future systems need to deliver items or messages to players who are offl
 
 ---
 
-### Resource Pack Auto-Delivery (`rpg-core`) — 🟢 Easy
+### ✅ Resource Pack Auto-Delivery (`rpg-core`) — shipped in 1.5.2
 Server resource packs need to be sent to players on join for custom model data and fonts to work. Currently players must manually apply a resource pack or be sent one through server.properties (which applies to all players with no server-side control).
 
 - Add `resource-pack.url` and `resource-pack.hash` to `rpg-core/config.yml`

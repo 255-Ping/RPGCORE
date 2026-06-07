@@ -17,7 +17,8 @@ import java.util.Locale;
  * </pre>
  *
  * <p>Passive and proc triggers ({@link #ON_HIT}, {@link #ON_HURT}, {@link #ON_JUMP},
- * {@link #PASSIVE}) do NOT auto-apply a mana cost — add {@code mana_cost{}} explicitly if needed.
+ * {@link #ON_LOGIN}, {@link #PASSIVE}) do NOT auto-apply a mana cost — add {@code mana_cost{}}
+ * explicitly if needed.
  */
 public enum PlayerAbilityTrigger {
 
@@ -67,7 +68,14 @@ public enum PlayerAbilityTrigger {
      * The interval (ticks) is controlled by {@code abilities.passive-interval-ticks} in
      * {@code config.yml}; defaults to 20.
      */
-    PASSIVE;
+    PASSIVE,
+
+    /**
+     * Fires once when the player joins the server (PlayerJoinEvent).
+     * Useful for applying persistent login buffs (e.g. guild bonuses, rested XP).
+     * Silently skipped when the caster is a mob (mobs do not log in).
+     */
+    ON_LOGIN;
 
     /** @throws IllegalArgumentException if the string does not match any trigger. */
     public static PlayerAbilityTrigger parse(String s) {
@@ -83,9 +91,11 @@ public enum PlayerAbilityTrigger {
             case "on_kill"            -> ON_KILL;
             case "on_block"           -> ON_BLOCK;
             case "passive"            -> PASSIVE;
+            case "on_login"           -> ON_LOGIN;
             default -> throw new IllegalArgumentException("unknown player ability trigger: '" + s
                     + "'. Valid values: right_click, left_click, shift_right_click, "
-                    + "shift_left_click, on_hit, on_hurt, on_jump, on_attack, on_kill, on_block, passive");
+                    + "shift_left_click, on_hit, on_hurt, on_jump, on_attack, on_kill, on_block, "
+                    + "passive, on_login");
         };
     }
 
@@ -103,6 +113,7 @@ public enum PlayerAbilityTrigger {
             case ON_KILL            -> "On Kill";
             case ON_BLOCK           -> "On Block";
             case PASSIVE            -> "Passive";
+            case ON_LOGIN           -> "On Login";
         };
     }
 

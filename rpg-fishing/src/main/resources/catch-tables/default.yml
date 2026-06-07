@@ -1,0 +1,41 @@
+# Default fishing catch table — plugins/rpg-fishing/catch-tables/default.yml
+#
+# Each entry is rolled independently on every CAUGHT_FISH event.
+# Multiple entries can match in a single catch, so tune chances accordingly.
+#
+# Fields:
+#   item             — RPG item id (from rpg-core items/) OR vanilla material name.
+#                      Prefix with "vanilla:" or "minecraft:" for vanilla materials if ambiguous.
+#   chance           — Roll probability 0.0–100.0 (percent). Rolls are independent per entry.
+#   min / max        — Amount range (inclusive). Defaults to 1 if omitted.
+#   fortune-affected — If true, FISHING_FORTUNE stat multiplies this entry's effective chance.
+#
+# suppress-vanilla: true  → cancels the vanilla item and replaces it with this table's loot.
+# suppress-vanilla: false → adds this table's loot ON TOP of whatever vanilla gives.
+
+suppress-vanilla: true
+
+entries:
+  # ── Common fish ─────────────────────────────────────────────────────────────
+  - { item: cod,            chance: 55.0, min: 1, max: 2, fortune-affected: true  }
+  - { item: salmon,         chance: 28.0, min: 1, max: 1, fortune-affected: true  }
+  - { item: tropical_fish,  chance: 10.0, min: 1, max: 1, fortune-affected: false }
+  - { item: pufferfish,     chance: 6.0,  min: 1, max: 1, fortune-affected: false }
+
+  # ── Junk ────────────────────────────────────────────────────────────────────
+  - { item: string,         chance: 18.0, min: 1, max: 3, fortune-affected: false }
+  - { item: bone,           chance: 12.0, min: 1, max: 1, fortune-affected: false }
+  - { item: rotten_flesh,   chance: 8.0,  min: 1, max: 1, fortune-affected: false }
+  - { item: lily_pad,       chance: 6.0,  min: 1, max: 1, fortune-affected: false }
+  - { item: leather,        chance: 4.0,  min: 1, max: 1, fortune-affected: false }
+
+  # ── Treasure ────────────────────────────────────────────────────────────────
+  # fortune-affected: true on these so a high-FISHING_FORTUNE build can reliably farm them.
+  - { item: nautilus_shell,   chance: 3.5,  min: 1, max: 1, fortune-affected: true  }
+  - { item: name_tag,         chance: 2.0,  min: 1, max: 1, fortune-affected: true  }
+  - { item: saddle,           chance: 1.5,  min: 1, max: 1, fortune-affected: false }
+  - { item: heart_of_the_sea, chance: 0.5,  min: 1, max: 1, fortune-affected: false }
+
+  # ── Example custom RPG item ──────────────────────────────────────────────────
+  # Uncomment and replace "my_rod" with an RPG item id defined in rpg-core's items/ directory.
+  # - { item: my_rod, chance: 0.2, min: 1, max: 1, fortune-affected: false }

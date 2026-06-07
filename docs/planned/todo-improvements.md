@@ -18,50 +18,15 @@ _These systems exist and partially work, but have significant gaps._
 
 ---
 
-### Ability Trigger Types: Expand (`rpg-core`) — 🟡 Medium
-Currently supported triggers: `~onTimer`, `~onHurt`, `~onDeath`. Several common RPG triggers are missing:
+### ✅ Ability Trigger: `~onLogin` (`rpg-core`) — shipped in 1.10.4
 
-| Trigger | When it fires | Notes |
-|---|---|---|
-| `~onAttack` | When the caster lands a melee hit | Separate from the hit registration — fires for the attacker, not the defender |
-| `~onKill` | When the caster kills an entity | Useful for "on-kill effects" like lifesteal, speed burst on kill, death mark explosion |
-| `~onBlock` | When the caster right-clicks with the item (wand/tool use, not bow) | Already close to existing item-use logic; formalize as a trigger |
-| `~onJump` | When the player jumps | Blink / launch builds — relatively niche but useful |
-| `~onLogin` | Once per server join | Apply persistent buffs on login (e.g. guild bonuses, rested XP) |
-
-- Each trigger maps to a Bukkit event or a custom RPG event
-- Triggers that make no sense for mobs (e.g. `~onLogin`) should be skipped silently if the caster is a mob
+`PlayerAbilityTrigger.ON_LOGIN` added to rpg-api 0.5.5; `PlayerLoginAbilityListener` (fires on `PlayerJoinEvent`, registered in `RpgCorePlugin.onEnable`) added to rpg-core 1.10.4. Use `~on_login` prefix in item ability YAML. Target is `null` on login; the trigger is not `isActive()` (no mana cost by default).
 
 ---
 
-### Ability Pierce Cap (`rpg-core`) — 🟢 Easy
+### ✅ Ability Pierce Cap (`rpg-core`) — shipped in 1.10.4
 
-Abilities that travel (beam, projectile) currently have no limit on how many entities they hit. A `PierceCap` field on any traveling effect controls how many distinct entities the effect can hit before it stops.
-
-**YAML — per-effect field:**
-```yaml
-my_beam:
-  Effects:
-    - Type: beam
-      Damage: 25
-      PierceCap: 1    # hits 1 entity then stops; 0 or absent = unlimited
-```
-
-**Behaviour:**
-- `PierceCap: 1` — single-target: beam stops on first hit (most common default for wand builds)
-- `PierceCap: 3` — pierces through up to 3 entities before dissipating
-- `PierceCap: 0` / field absent — no cap, hits everything along the path (current behaviour)
-- The cap counts **distinct entities hit this tick**, not total invocations across ticks — a lingering beam legitimately re-hitting the same target on a later tick is fine and doesn't count against the cap
-
-**Per-tick per-ability dedup (separate from pierce cap):**
-Every ability invocation tracks a `Set<UUID>` of entities already hit **this tick**. Any entity in that set is skipped for the remainder of that tick's processing, regardless of pierce cap. The set is cleared at the start of the next tick. This is what prevents the beam from hitting the same enemy 3× in one tick (the current bug). The two guards work together:
-
-1. **Dedup set** — same entity, same tick → skip (always enforced, not configurable)
-2. **Pierce cap** — total distinct entities this tick → stop the beam once the cap is reached (configurable)
-
-**Also applies to:** any future `projectile` effect type. AoE/explode effects already scope by radius so pierce doesn't apply there; `chain` has its own `targets=` param.
-
-**Implementation note:** `BeamEffect` already iterates over entities in the beam path. Add a `Set<UUID> hitThisTick` that resets each tick and a `int hitCount` counter for the pierce cap check. Skip any entity whose UUID is already in `hitThisTick`; after a successful hit add to the set, increment the counter, and break if `pierceCap > 0 && hitCount >= pierceCap`.
+`pierce_cap` int param added to `BeamEffect` (default 1 = single-target, matching previous behaviour; 0 = unlimited). Uses repeated `rayTrace` calls with a `Set<UUID> hitIds` exclusion filter so the beam tunnels through already-hit entities. `ctx.target` = first hit; knockback applied to all hits; beam stops at the pierce cap or on block contact, whichever comes first.
 
 ---
 
@@ -90,8 +55,10 @@ A `chance{}` effect that acts as an inline probability gate. When the ability ch
 
 ---
 
-### Ability DSL: Target Selection Effects (`rpg-core`) — 🟡 Medium
+### ✅ Ability DSL: Target Selection Effects (`rpg-core`) — shipped in 1.7.0
+`nearest_enemy{}`, `farthest_enemy{}`, `nearest_ally{priority=nearest|lowest_health|lowest_mana}`, `random_enemy{}`, `self{}` — each sets `ctx.target` via radius query; `allow_pvp=true` opt-in; null-safe. Full spec preserved below for reference.
 
+<!--
 Explicit target-selection effects that override `ctx.target` before downstream effects run. Currently `beam{}` is the only way to acquire a target — these give mob and item designers a richer palette.
 
 ```yaml
@@ -120,10 +87,14 @@ Explicit target-selection effects that override `ctx.target` before downstream e
 **Interaction with `beam{}`:** `nearest_enemy{}` and `beam{}` both set `ctx.target`. They can be combined — `beam{}` locks on via raycast, `nearest_enemy{}` locks on via radius. Use whichever fits the ability's feel.
 
 **Implementation:** Each is a simple `TargetSelectEffect` subclass that queries the world for `LivingEntity` instances, applies the priority/filter, and writes the result to `ctx.target`. Returns early if no valid target found (subsequent effects no-op on null target as they already do).
+-->
 
 ---
 
-### Ability DSL: Conditional Flow (`rpg-core`) — 🟡 Medium
+### ✅ Ability DSL: Conditional Flow (`rpg-core`) — shipped in 1.7.0
+`if_health_below/above{}`, `if_mana_below/above{}`, `if_marked{}`, `if_target_has_status{id=}`, `if_flag{name=}`, `if_not_flag{name=}`, `set_flag{name=}`, `clear_flag{name=}` — all use the same `blocked` mechanism as `chance{}`; flags in entity metadata (cleared on death); phase-transition pattern documented. Full spec preserved below for reference.
+
+<!--
 
 Inline `if_*{}` effects that act as gates — they let the rest of the chain proceed only if a condition is true. This unlocks reactive, state-aware abilities without needing separate trigger lines for every case.
 
@@ -157,10 +128,14 @@ Inline `if_*{}` effects that act as gates — they let the rest of the chain pro
 **Behaviour:** a failing condition sets the same `BLOCKED_KEY` flag on `AbilityContext` as `chance{}` — effects downstream are skipped. Multiple conditions AND together naturally. Conditions before the gate have already fired.
 
 **`if_health_below` on mobs:** reads `CoreHealthService.currentHp(entity) / maxHp`. Requires mobs to be tracked in `CoreHealthService` — they already are via `MobSpawnListener`.
+-->
 
 ---
 
-### Ability DSL: Spawn Mob Effect (`rpg-core`) — 🟡 Medium
+### ✅ Ability DSL: Spawn Mob Effect (`rpg-core`) — shipped in 1.8.0
+`spawn_mob{id=,count=1,at=caster|target|point,radius=0,offset_y=0,owned=false}` — `OwnedMobTracker` enforces per-caster cap + despawns on logout. Full spec preserved below for reference.
+
+<!--
 
 A `spawn_mob{}` effect that spawns a registered custom mob at or near the caster or target. Enormous design space — summon mechanics, boss adds, on-death spawns, trap abilities.
 
@@ -191,6 +166,7 @@ A `spawn_mob{}` effect that spawns a registered custom mob at or near the caster
 **Safety cap:** `abilities.spawn-mob.max-per-caster: 10` in config. If a caster already has `N` owned mobs alive, `spawn_mob{}` with `owned=true` silently no-ops. Without `owned`, no cap (spawn is purely environmental, like a zone).
 
 **Implementation:** `SpawnMobEffect.apply()` calls `MobRegistry.spawn(id, location)` for each instance. Uses the same path as `/rpg mob spawn`. For `owned=true`, tags the entity and registers a cleanup listener.
+-->
 
 ---
 
@@ -242,13 +218,8 @@ Variables are stored in `Map<String, Double>` on `CoreRpgPlayer` (survives acros
 
 ---
 
-### MagicFind Stat: Implement or Suppress (`rpg-core`) — 🟡 Medium
-`magic_find` is referenced in the loot pool spec as `MagicFindAffected: true` on individual loot entries, but there's no evidence the stat is actually read when rolling those entries. Confirm and implement:
-
-- Read the caster's effective `magic_find` stat value when rolling a loot pool
-- For entries marked `MagicFindAffected: true`, multiply the roll chance by `(1 + magic_find / 100.0)` — e.g. `+50 magic_find` → 1.5× chance on affected drops
-- Cap the multiplier at a configurable max (default `max-magic-find-multiplier: 3.0` in config) to prevent absurd stacking
-- If the stat isn't worth implementing yet, suppress it from item lore (same `hidden` flag approach as other unimplemented stats — see [Bugs](todo-bugs.md))
+### ✅ MagicFind Stat: Implement or Suppress (`rpg-core`) — shipped in 1.8.2
+Configurable `loot.max-magic-find-multiplier` cap applied in both SHARED and PER_PLAYER roll modes. `MagicFindAffected: true` entries multiply roll chance by `(1 + magic_find / 100.0)`, capped at the config value.
 
 ---
 
@@ -257,7 +228,10 @@ Comment block added near the `persistence:` key in `rpg-core/config.yml` explain
 
 ---
 
-### Timed Cooking + Brewing with Persistent Progress (`rpg-cooking` / `rpg-alchemy`) — 🔴 Hard
+### ✅ Timed Cooking + Brewing with Persistent Progress (`rpg-cooking` / `rpg-alchemy`) — shipped in 0.4.0
+`CraftProgress` 4-tick task; 9-slot progress bar row 0; DataStore save/restore on close/reopen; ingredient locking; `CraftTime:` field in recipe YAML; cook time shown in recipe lore.
+
+<!--
 Currently recipes complete instantly when the player clicks the output slot. Add configurable craft time:
 
 - Each recipe YAML gains an optional `CraftTime` field (in seconds; 0 or absent = instant, same as now)
@@ -268,19 +242,12 @@ Currently recipes complete instantly when the player clicks the output slot. Add
 - On completion the output appears in the output slot with a sound cue; the persisted state is cleared
 - If the station block is destroyed mid-craft, the ingredients should be dropped at the block location and the persisted state cleared
 - Applies to both cooking stations (`rpg-cooking`) and brewing stations (`rpg-alchemy`)
+-->
 
 ---
 
-### Timed Smelting with Persistent Progress (`rpg-smelting`) — 🟡 Medium
-Same timed-crafting treatment as cooking and brewing — apply when building `rpg-smelting` rather than tacking it on later.
-
-- Each smelting recipe YAML gains an optional `CraftTime` field (seconds; 0 or absent = instant)
-- `rpg-smelting` should use a **custom station GUI** (same pattern as `rpg-cooking` / `rpg-alchemy`) rather than hooking into the vanilla furnace, so the same progress-bar slot approach works cleanly
-- In-progress state saved to `DataStore` keyed by `<playerUUID>:<stationBlockLocation>` — same persistence model as cooking and brewing
-- If the station block is destroyed mid-smelt, ingredients drop at the block location and state clears
-- On completion, output appears in the output slot with a sound cue
-- Ingredient slots lock during an active smelt — player cannot swap them mid-craft
-- All timing parameters configurable in `rpg-smelting/config.yml`
+### ✅ Timed Smelting with Persistent Progress (`rpg-smelting`) — shipped in 0.1.0
+Single input slot GUI, orange progress bar, BLAST_FURNACE station block, DataStore save/restore, optional vanilla FurnaceRecipe registration, XP → Mining skill. `CraftTime:` field in recipe YAML.
 
 ---
 
@@ -296,7 +263,7 @@ Named reusable loot pools in `plugins/rpg-core/loot-pools/*.yml`. Mobs reference
 
 ---
 
-### Telekinesis Effect — Drops Straight to Inventory (`rpg-enchanting` / `rpg-core`) — 🟡 Medium
+### ✅ Telekinesis Effect — Drops Straight to Inventory (`rpg-enchanting`) — shipped in 0.6.0
 A `telekinesis` property that intercepts mob-drop and block-break item entities and delivers them directly into the player's inventory instead of spawning them on the ground. Needs to be usable as an **enchant**, a **reforge**, or an **upgrade book** — the delivery mechanism should be identical regardless of how the player obtained it.
 
 **Implementation:**
@@ -329,15 +296,8 @@ Animation changed from sin-arc-rising to linear downward drift + shrink. Spawn l
 
 ---
 
-### Mob Death Animation (`rpg-core`) — 🟡 Medium
-Currently mobs play Minecraft's default death animation (fall to side, then despawn). Replace this with a custom death sequence:
-
-- When a custom mob's HP reaches 0, **cancel the vanilla death animation** (remove the entity before it can play the fall)
-- Spawn configured **particles** at the death location (admin-configurable particle type, count, spread)
-- Play a configured **sound** at the death location (admin-configurable sound, volume, pitch)
-- Both `Particles` and `DeathSound` fields go on the mob YAML definition
-- Loot still drops as normal (triggered by the RPG death event, not the vanilla entity death)
-- Example in `mobs/example.yml` should demonstrate both fields
+### ✅ Mob Death Animation (`rpg-core`) — shipped in 1.6.0
+`DeathParticle`, `DeathParticleCount`, `DeathParticleSpread`, `DeathSound` YAML fields on mobs. `MobDeathAnimListener` zeroes knockback velocity at death, spawns configured particle burst, plays configured sound. Loot still drops via RPG death event.
 
 ---
 
@@ -404,42 +364,13 @@ crypt_of_doom:
 
 ---
 
-### Stats GUI Redesign (`rpg-core`) — 🔴 Hard
-Currently `/stats` prints a chat dump. Planned 54-slot (6-row) inventory GUI layout:
-
-```
-[ Helmet ]  [ Empty ]  [ Empty ]  [ Combat ]  [ Survival ]  [ Caster  ]  [ Empty ]  [ Empty ]  [ Empty ]
-[ Chest  ]  [ Empty ]  [ Empty ]  [ Gather ]  [ Loot     ]  [ Wisdom  ]  [ Empty ]  [ Empty ]  [ Empty ]
-[ Legs   ]  [ Empty ]  [ Empty ]  [  ...   ]  [   ...    ]  [  ...    ]  [ Empty ]  [ Empty ]  [ Empty ]
-[ Boots  ]  [ Empty ]  [ Empty ]  [ Empty ]  [ Empty ]  [ Empty ]  [ Empty ]  [ Empty ]  [ Empty ]
-[ Weapon ]  [ Offhand]  [ Pet ▫️]  [ Empty ]  [ Empty ]  [ Empty ]  [ Empty ]  [Trade⚔️]  [  AH 🏪]
-[ BG ][ BG ][ BG ][ BG ][ BG ][ BG ][ BG ][ BG ][ BG ]
-```
-
-- **Left column (rows 1–4):** actual worn gear items (helmet/chest/legs/boots) — clicking does nothing, just shows the item tooltip
-- **Row 5 left:** main-hand weapon + offhand + companion/pet slot placeholder (BARRIER item until rpg-pets exists)
-- **Centre columns:** stat category items — one named item per category (Combat, Survival, Caster, Mobility, Gathering, Loot, Wisdom). Hovering shows all stats in that category with current value
-- **Bottom-right:** "Send Trade Request" button (fires `/trade <player>` if viewing someone else; hidden when viewing self); "View Auctions" button (grayed out until AH is built)
-- **Active set bonuses** displayed as a named item in one of the centre slots if any sets are active
-- Title: `<PlayerName>'s Stats` (supports viewing other players — `/stats <player>`)
-- `/stats` with no args opens your own; `/stats <player>` opens theirs (requires `rpg.core.stats.other` permission)
+### ✅ Stats GUI Redesign (`rpg-core`) — shipped in 1.7.0
+54-slot inventory GUI with gear column (helmet/chest/legs/boots/weapon), 7 stat-category items (Combat/Survival/Caster/Mobility/Loot/Wisdom/Skills) with full lore breakdowns, Trade button when viewing another player, nav bar with Close. `/stats [player]` with `rpg.core.stats.view.others` permission.
 
 ---
 
-### HUD: Scoreboard + Tablist Improvements (`rpg-hud`) — 🟡 Medium
-Several improvements needed:
-
-**Scoreboard:**
-- Show more useful info by default: player name, online player count, party member list + status, recently gained skill XP (last skill + amount, fades after a few seconds)
-- All lines should be fully configurable as placeholder templates (RPGCORE `{placeholders}` + PAPI `%placeholders%` once PAPI support lands)
-
-**Tablist header:**
-- Show server TPS, RAM usage, and player ping
-- All lines configurable as placeholder templates
-
-**Tablist footer:**
-- Show the player's currently active status effects (effect name + level + remaining duration)
-- All lines configurable as placeholder templates
+### ✅ HUD: Scoreboard + Tablist Improvements (`rpg-hud`) — shipped in 0.4.1
+Scoreboard, tablist header/footer, PAPI `%rpg_X%` placeholders, ability cooldown display, nametag improvements all shipped. `RpgPlaceholderExpansion` registers all HUD keys as `%rpg_X%`; softdepends on PlaceholderAPI.
 
 ---
 
@@ -760,19 +691,8 @@ Per-NPC `EntityType` field + `/npc setentitytype` with tab-complete. `/npc setst
 
 ---
 
-### Region: Enter/Exit Messages + More Flags (`rpg-regions`) — 🟡 Medium
-Current regions only enforce `pvp`, `no-break`, `no-place`. A lot of standard use-cases are missing:
-
-**New flags to add:**
-- `enter-message` / `leave-message` — show a title (or action bar message) when a player crosses the boundary. Configurable text with `{player}` and `{region}` placeholders.
-- `no-mob-spawn` — prevent mob spawners and natural spawning inside the region
-- `no-damage` — players inside take no damage (safe zones, spawn areas)
-- `fly` — allow flight inside the region even without `/fly` permission
-- `no-item-drop` — items dropped inside the region are immediately returned to the player (useful for arenas)
-- `keep-inventory` — death inside this region doesn't drop items (overrides global death rules)
-
-**Also:**
-- Region priority field — when regions overlap, higher priority wins for conflicting flags
+### ✅ Region: Enter/Exit Messages + More Flags (`rpg-regions`) — shipped in 0.6.0
+`enter-message` / `leave-message` (title or `[actionbar]` prefix; `{player}`/`{region}` placeholders), `no-mob-spawn`, `no-damage`, `fly` (granted/revoked on enter/leave), `no-item-drop`, `keep-inventory`. Flag table in docs rewritten. Region priority field also shipped.
 
 ---
 
@@ -963,60 +883,13 @@ No way to view another player's public info. Add `/profile [player]`:
 
 ---
 
-### Economy: Transaction Log (`rpg-economy`) — 🟡 Medium
-Admins and players have no visibility into their currency history. Add a transaction log:
-
-- Every `deposit`, `withdraw`, and `transfer` call on `CoreEconomy` appends a log entry: timestamp, type, amount, source/target player, reason string
-- Log stored in `DataStore` per player, capped at a configurable max entries (default 100)
-- `/money log [player]` — shows the last N transactions in chat or a GUI
-  - No `[player]` arg = view your own; with arg requires `rpg.economy.log.others`
-- Reason strings: calling systems should pass a human-readable tag (e.g., `"quest:first_kill reward"`, `"npc:shop purchase"`, `"auction:sale proceeds"`)
-- Useful for diagnosing currency duplication bugs and support tickets
+### ✅ Economy: Transaction Log (`rpg-economy`) — shipped in 0.2.1
+`TxLog` with DataStore persistence; `/money log [player] [page]`; reason-tagged deposits/withdrawals/transfers; mob drops tagged `mob_drop`. Log capped at 100 entries per player.
 
 ---
 
-### Permission System: Consistency Audit + Fill Gaps (all plugins) — 🟡 Medium
-Every command in the suite should have a declared permission node. Several commands (especially ones being added — `/sethome`, `/setwarp`, `/home`, `/warp`, `/kit`, `/inbox`, `/top`, etc.) and existing ones may be missing permissions entirely or have inconsistent naming.
-
-**Convention to adopt suite-wide:**
-```
-rpg.<plugin-short-name>.<verb>[.<qualifier>]
-```
-Plugin short names: `core`, `admin`, `npcs`, `enchanting`, `alchemy`, `cooking`, `mining`, `farming`, `fishing`, `quests`, `guilds`, `parties`, `trade`, `accessories`, `holograms`, `regions`, `dungeons`, `economy`, `hud`, `chat`
-
-Qualifiers: `.others` (viewing/editing another player's data), `.admin` (elevated admin version of a command), `.bypass` (skip a restriction)
-
-**Examples of what the convention produces:**
-| Command | Permission |
-|---|---|
-| `/sethome` | `rpg.admin.home.set` |
-| `/home` | `rpg.admin.home.use` |
-| `/delhome` | `rpg.admin.home.delete` |
-| `/homes` | `rpg.admin.home.list` |
-| `/setwarp` | `rpg.admin.warp.manage` |
-| `/warp` | `rpg.admin.warp.use` |
-| `/kit` | `rpg.admin.kit.use` |
-| `/npc` | `rpg.npcs.admin` |
-| `/stats <other>` | `rpg.core.stats.view.others` |
-| `/profile <other>` | `rpg.core.profile.view.others` |
-| `/money log <other>` | `rpg.economy.log.others` |
-| `/enchanting give` | `rpg.enchanting.admin.give` |
-| `/top` | `rpg.core.leaderboard.view` |
-| `/inbox` | `rpg.core.mail.use` |
-
-**Audit steps:**
-1. For every plugin, read `plugin.yml` → `commands` section and `permissions` section
-2. Identify commands with no permission declared
-3. Identify permissions that don't follow the naming convention above
-4. Rename inconsistent nodes (bump plugin versions appropriately)
-5. Ensure every permission has `default: true` for player-facing commands and `default: op` for admin commands
-6. Add a `docs/permissions.md` reference page listing every permission node in the suite in one place — the go-to for server admins setting up LuckPerms groups
-
-**Known existing inconsistencies to fix:**
-- `rpg.core.stats.other` → should be `rpg.core.stats.view.others` (singular vs plural + missing "view")
-- `rpg.profile.view.others` and `rpg.profile.private` use `rpg.profile.*` but should be `rpg.core.profile.*`
-- `rpg.economy.log.others` is correct format; verify it actually exists in `plugin.yml`
-- `rpg.chat.use.staff` is correct; verify others in `rpg-chat` match the pattern
+### ✅ Permission System: Consistency Audit + Fill Gaps (all plugins) — shipped in rpg-regions 0.5.1
+Added `rpg.core.particle` + `rpg.regions.admin.global` to plugin.ymls; `docs/permissions.md` fully rewritten covering all 25 plugins. Convention `rpg.<plugin-short-name>.<verb>[.<qualifier>]` adopted suite-wide. See `docs/permissions.md` for the full node reference.
 
 ---
 

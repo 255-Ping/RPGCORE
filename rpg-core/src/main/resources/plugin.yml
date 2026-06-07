@@ -46,6 +46,9 @@ permissions:
   rpg.core.item.give:
     description: Give a custom item to a player
     default: op
+  rpg.core.items.browse:
+    description: Open the Item Browser GUI (/rpg items)
+    default: op
   rpg.core.mob.spawn:
     description: Spawn a custom mob at your location
     default: op

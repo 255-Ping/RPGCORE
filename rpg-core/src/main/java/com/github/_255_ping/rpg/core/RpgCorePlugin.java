@@ -11,6 +11,7 @@ import com.github._255_ping.rpg.core.abilities.PlayerHitAbilityListener;
 import com.github._255_ping.rpg.core.abilities.PlayerHurtAbilityListener;
 import com.github._255_ping.rpg.core.abilities.PlayerJumpAbilityListener;
 import com.github._255_ping.rpg.core.abilities.PlayerKillAbilityListener;
+import com.github._255_ping.rpg.core.abilities.PlayerLoginAbilityListener;
 import com.github._255_ping.rpg.core.abilities.PlayerPassiveAbilityTask;
 import com.github._255_ping.rpg.core.sets.ArmorSetListener;
 import com.github._255_ping.rpg.core.sets.ArmorSetLoader;
@@ -76,6 +77,7 @@ import com.github._255_ping.rpg.core.achievement.AchievementGui;
 import com.github._255_ping.rpg.core.achievement.AchievementLoader;
 import com.github._255_ping.rpg.core.achievement.CoreAchievementService;
 import com.github._255_ping.rpg.core.command.AchievementsCommand;
+import com.github._255_ping.rpg.core.command.ItemBrowserGui;
 import com.github._255_ping.rpg.core.command.MainMenuGui;
 import com.github._255_ping.rpg.core.command.MainMenuListener;
 import com.github._255_ping.rpg.core.command.MenuCommand;
@@ -342,6 +344,8 @@ public final class RpgCorePlugin extends JavaPlugin {
                 new PlayerKillAbilityListener(passiveAbilityFirer, damagerTracker), this);
         getServer().getPluginManager().registerEvents(
                 new PlayerBlockAbilityListener(passiveAbilityFirer), this);
+        getServer().getPluginManager().registerEvents(
+                new PlayerLoginAbilityListener(passiveAbilityFirer), this);
 
         long passiveInterval = getConfig().getLong("abilities.passive-interval-ticks", 20L);
         getServer().getScheduler().runTaskTimer(
@@ -397,7 +401,9 @@ public final class RpgCorePlugin extends JavaPlugin {
                 natInterval, natInterval);
 
         PluginCommand rpg = Objects.requireNonNull(getCommand("rpg"), "command 'rpg' missing from plugin.yml");
-        RpgCommand handler = new RpgCommand(this);
+        ItemBrowserGui itemBrowserGui = new ItemBrowserGui(this);
+        getServer().getPluginManager().registerEvents(itemBrowserGui, this);
+        RpgCommand handler = new RpgCommand(this, itemBrowserGui);
         rpg.setExecutor(handler);
         rpg.setTabCompleter(handler);
         StatsGui statsGui = new StatsGui(this);

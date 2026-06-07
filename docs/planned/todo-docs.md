@@ -24,7 +24,7 @@ _Missing pages, stale content, and inconsistencies. No code required — just wr
 | File | What to write | Difficulty |
 |---|---|---|
 | ~~`docs/core/abilities.md`~~ → created as `docs/content/ability-effects.md` | ✅ Done — full per-effect reference with parameters + context reads/writes + examples | |
-| `docs/core/loot-pools.md` | Loot pool YAML reference, attribution modes, `MagicFindAffected` flag. Write alongside the Loot Pool System feature. | 🟢 Easy |
+| ~~`docs/core/loot-pools.md`~~ → exists as `docs/content/loot-pools.md` | ✅ Done — full loot pool YAML reference, attribution modes, XP rewards, mob references, reload command, examples | |
 
 Everything else in the original stub list now has content. Status headers on `installation.md`, `configuration.md`, `resource-pack.md`, and `core/selection-wand.md` updated to Working. ✅
 
@@ -52,7 +52,7 @@ Added to `enchanting.md`, `status-effects.md`, `content/abilities.md`.
 
 ### Still open
 
-- Add a `docs/core/loot-pools.md` alongside the Loot Pool System feature (item 7 in todo.md).
+- ~~Add a `docs/core/loot-pools.md` alongside the Loot Pool System feature (item 7 in todo.md).~~ ✅ Exists at `docs/content/loot-pools.md`.
 - Cross-link related pages more aggressively (e.g. enchanting ↔ items for `Enchantable: true`; stats ↔ items for stat field names).
 - `docs/permissions.md` and `docs/commands.md` — flesh out further alongside Permission System Consistency Audit (item 18 in todo.md).
 

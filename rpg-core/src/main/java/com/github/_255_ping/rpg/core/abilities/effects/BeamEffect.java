@@ -13,7 +13,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -26,17 +31,24 @@ import java.util.concurrent.CompletableFuture;
  * {@code damage} step for a direct hit, or {@code explode} for AoE. This keeps
  * each effect's responsibility distinct and prevents double-dipping when beam and
  * explode are chained together.
+ *
+ * <p>The {@code pierce_cap} parameter controls how many distinct entities the beam
+ * can hit before stopping (default 1 = single-target). Set to 0 for unlimited piercing.
+ * {@code ctx.target} is always the <em>first</em> entity hit; knockback is applied to all.
  */
 public final class BeamEffect implements AbilityEffect {
 
     private final double range;
     private final double damageMultiplier;
     private final Particle particle;
+    /** Maximum entities to hit. 0 = unlimited; defaults to 1 (single-target). */
+    private final int pierceCap;
 
     public BeamEffect(Map<String, String> params) {
         this.range = AbilityDsl.doubleParam(params, "range", 5);
         this.damageMultiplier = AbilityDsl.doubleParam(params, "damage_multiplier", 1.0);
         this.particle = parseParticle(params.getOrDefault("particle", "crit"));
+        this.pierceCap = AbilityDsl.intParam(params, "pierce_cap", 1);
     }
 
     @Override public String name() { return "beam"; }
@@ -50,25 +62,47 @@ public final class BeamEffect implements AbilityEffect {
         Location eye = caster.getEyeLocation();
         Vector dir = eye.getDirection();
 
-        RayTraceResult result = caster.getWorld().rayTrace(
-                eye, dir, range, FluidCollisionMode.NEVER, true, 0.3,
-                entity -> entity != caster && entity instanceof LivingEntity);
+        // Collect hits by repeating rayTrace with an exclusion set.
+        // Each pass skips already-hit entities so the beam tunnels through them.
+        List<LivingEntity> hits = new ArrayList<>();
+        Set<UUID> hitIds = new HashSet<>();
+        int maxHits = pierceCap > 0 ? pierceCap : Integer.MAX_VALUE;
+        Location end = eye.clone().add(dir.clone().multiply(range));
 
-        Location end;
-        if (result != null && result.getHitEntity() instanceof LivingEntity hit) {
-            ctx.setTarget(hit);
-            end = result.getHitPosition().toLocation(caster.getWorld());
+        while (hits.size() < maxHits) {
+            RayTraceResult result = caster.getWorld().rayTrace(
+                    eye, dir, range, FluidCollisionMode.NEVER, true, 0.3,
+                    entity -> entity != caster && entity instanceof LivingEntity
+                              && !hitIds.contains(entity.getUniqueId()));
+            if (result == null) break;
+            if (result.getHitEntity() instanceof LivingEntity hit) {
+                hits.add(hit);
+                hitIds.add(hit.getUniqueId());
+                end = result.getHitPosition().toLocation(caster.getWorld());
+                // Continue loop — beam may pierce through this entity.
+            } else {
+                // Beam hit a block; stop here.
+                end = result.getHitPosition().toLocation(caster.getWorld());
+                break;
+            }
+        }
+
+        if (!hits.isEmpty()) {
+            ctx.setTarget(hits.get(0));
             ctx.setCarriedDamage(ctx.carriedDamage() * damageMultiplier);
+        }
 
-            // Apply the caster's KNOCKBACK stat to the hit entity (same formula as the melee pipeline).
-            double knockback = 0;
-            try {
-                if (caster instanceof Player ap) {
-                    knockback = RpgServices.player(ap).get(BuiltinStat.KNOCKBACK);
-                } else {
-                    knockback = RpgServices.mobStats().forMob(caster).get(BuiltinStat.KNOCKBACK);
-                }
-            } catch (IllegalStateException ignored) {}
+        // Look up knockback once for the caster, then apply to each hit entity.
+        double knockback = 0;
+        try {
+            if (caster instanceof Player ap) {
+                knockback = RpgServices.player(ap).get(BuiltinStat.KNOCKBACK);
+            } else {
+                knockback = RpgServices.mobStats().forMob(caster).get(BuiltinStat.KNOCKBACK);
+            }
+        } catch (IllegalStateException ignored) {}
+
+        for (LivingEntity hit : hits) {
             if (knockback > 0) {
                 Vector kbDir = hit.getLocation().toVector().subtract(caster.getLocation().toVector());
                 kbDir.setY(0);
@@ -77,11 +111,8 @@ public final class BeamEffect implements AbilityEffect {
                 double strength = knockback / 100.0;
                 hit.setVelocity(kbDir.multiply(strength).setY(Math.min(0.3 + strength * 0.1, 0.5)));
             }
-        } else if (result != null) {
-            end = result.getHitPosition().toLocation(caster.getWorld());
-        } else {
-            end = eye.clone().add(dir.clone().multiply(range));
         }
+
         ctx.setPoint(end);
 
         // Stripe particles along the beam (3 steps per block = dense trail).

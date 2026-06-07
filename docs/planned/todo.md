@@ -51,7 +51,7 @@
 - Ability trigger types expansion — `~on_attack` / `~onAttack`, `~on_kill` / `~onKill`, `~on_block`, `~onJump` added to both player item and mob trigger systems (`rpg-core 1.5.0`, `rpg-api 0.5.0`)
 - Ability DSL: `chance{}` gate — `AbilityContext.blocked` field + `AbilityPipeline` skip check + `ChanceEffect`; 2 showcase items (`rpg-core 1.5.1`, `rpg-api 0.5.1`)
 - Timed cooking + brewing — `CraftProgress` timer (4-tick task), 9-slot progress bar row 0, DataStore persist/restore on close/reopen, ingredient locking, cook time in recipe lore (`rpg-cooking 0.4.0`, `rpg-alchemy 0.4.0`)
-- Damage indicators: sin-arc + linear shrink — replaces linear rise; scale 1→0 via `setTransformation` each tick (`rpg-core 1.5.2`)
+- Damage indicators: float-down + shrink — originally sin-arc in 1.5.2; changed to linear downward drift + shrink in `rpg-core 1.10.3` (config key `rise-blocks` → `drop-blocks`)
 - Resource pack auto-delivery — `resource-pack:` config block + `ResourcePackListener` on join (`rpg-core 1.5.2`)
 - Player homes + warps — `rpg-homes 0.1.0`; DataStore homes + warps.yml; max-homes config; `/home`, `/warp`, `/setwarp`, `/delwarp`, `/warps`
 - Starter kits — `rpg-kits 0.1.0`; one-time + cooldown modes; RPG/vanilla items; `/kit`, `/givenkit`, `/kitreset`; suiteVersion bumped to 20
@@ -70,6 +70,9 @@
 - Sign-entry utility — `SignInputService` in `rpg-api 0.5.2` + `CoreSignInputService` in `rpg-core 1.8.0`; virtual sign editor, 60s timeout, null on cancel/disconnect; `RpgServices.signInput().ask(player, label, callback)`
 - Ability DSL: `spawn_mob{}` — `id=,count=1,at=caster|target|point,radius=0,offset_y=0,owned=false`; `OwnedMobTracker` enforces per-caster cap + despawns on logout; `rpg-core 1.8.0`
 - Boss bar system — `rpg-bossbar 0.1.0`; `BossBar: {Color,Style,Range}` in mob YAML; proximity task shows/hides per player; `PostDamageEvent` updates HP fraction; `RpgServices.bossBar()`; `ancient_golem` boss example added
+- Fishing content slice — `rpg-fishing 0.1.0`; custom catch tables (`catch-tables/*.yml`); `FISHING_FORTUNE` boosts fortune-affected entry chances; `FISHING_SPEED` shortens bobber wait; `FISHING_WISDOM` scales XP; catch message on land; `/fishing reload`; bundled `default.yml` with fish/junk/treasure
+- `~onLogin` trigger + Ability Pierce Cap — `rpg-api 0.5.5`, `rpg-core 1.10.4`; `ON_LOGIN` enum + `PlayerLoginAbilityListener`; `pierce_cap` int param on `beam{}` (default 1 = single-target, 0 = unlimited); repeated-rayTrace exclusion loop; knockback to all hits
+- Item Browser GUI — `rpg-core 1.10.5`; `/rpg items` opens 54-slot paginated GUI; Type filter (cycle BuiltinItemType), Rarity filter (cycle distinct rarities), sign-entry Search; click-to-give ×1 / shift ×64 (requires `rpg.core.item.give`); in-place repopulate (no flicker); `ItemBrowserGui`; permission `rpg.core.items.browse` (default op)
 
 ---
 
@@ -87,7 +90,7 @@
 10. ✅ **Ability DSL: `chance{}` gate** — `chance{percent=N}` sets `ctx.blocked` on a failed roll; `AbilityPipeline` skips all downstream effects; stacking = AND logic; 2 showcase items added (`rpg-core 1.5.1`, `rpg-api 0.5.1`)
 11. ✅ **Timed cooking + brewing** — `CraftProgress` timer, progress bar in row 0, DataStore save/restore on close/reopen, ingredient locking, cook time shown in recipe lore (`rpg-cooking 0.4.0`, `rpg-alchemy 0.4.0`)
 12. ✅ **Mob death animation** — `DeathParticle` / `DeathSound` YAML fields on mobs; `MobDeathAnimListener` zeroes velocity + spawns burst + plays sound (`rpg-core 1.6.0`)
-13. ✅ **Damage indicators: float down + shrink** — sin-arc position + linear scale shrink 1→0; `riseBlocks` config unchanged (`rpg-core 1.5.2`)
+13. ✅ **Damage indicators: float down + shrink** — linear downward drift + shrink; originally sin-arc (1.5.2), revised to float-down in `rpg-core 1.10.3`; config key `rise-blocks` → `drop-blocks`
 14. ✅ **Player homes + warps** — `rpg-homes 0.1.0`; `/home [set|delete|list|<name>]`, `/warp`, `/setwarp`, `/delwarp`, `/warps`; DataStore-backed per-player homes + warps.yml for server warps; configurable max-homes
 15. ✅ **Starter kits** — `rpg-kits 0.1.0`; `/kit`, `/givenkit`, `/kitreset`; one-time + cooldown kits; YAML-driven items (RPG + vanilla); DataStore-backed claim state
 16. ✅ **Resource pack auto-delivery** — `resource-pack:` block in rpg-core config; `ResourcePackListener` fires on join if enabled (`rpg-core 1.5.2`)
@@ -103,7 +106,7 @@
 26. ✅ **Region enter/exit messages + more flags** — `enter-message`, `leave-message`, `no-mob-spawn`, `no-damage`, `fly`, `no-item-drop`, `keep-inventory`. `rpg-regions 0.6.0`
 27. 🟠 ⚫ **Dungeon flesh-out** — entry requirements + loot grants (fix enter bug first)
 28. ✅ **Stats GUI redesign** — 54-slot inventory GUI with gear column + 7 stat categories + Trade button. `rpg-core 1.7.0`
-29. 🔴 🔴 **Achievement system** — player retention + milestone tracking
+29. ✅ **Achievement system** — `CoreAchievementService` (DataStore-backed grant/increment/persist, rewards, GUI notification), `AchievementGui`, `AchievementLoader`; wired in `RpgCorePlugin`; `/achievements [player]`; `MobLootListener` increments `mob_kills` + grants `elite_slayer`; event-based unlocks at all action call sites. `rpg-core 1.7.0`
 30. 🔴 🟡 **Leaderboards** — community engagement
 31. ✅ **Boss bar system** — `rpg-bossbar 0.1.0`; `BossBar:` YAML section on mobs; proximity task shows/hides bar; `PostDamageEvent` updates HP fraction; `RpgServices.bossBar()`
 32. ✅ **Sign-entry utility** — `SignInputService` interface in `rpg-api 0.5.2` + `CoreSignInputService` in `rpg-core 1.8.0`; virtual sign, 60s timeout, null callback on cancel/disconnect; `RpgServices.signInput().ask(player, label, callback)`
@@ -113,17 +116,18 @@
 36. ✅ **MagicFind stat implementation** — configurable `loot.max-magic-find-multiplier` cap applied in both SHARED and PER_PLAYER roll modes (`rpg-core 1.8.2`)
 37. ✅ **Economy transaction log** — `TxLog` with DataStore persistence; `/money log [player] [page]`; reason-tagged deposits/withdrawals/transfers; mob drops tagged `mob_drop` (`rpg-economy 0.2.1`)
 38. ✅ **Item set bonuses** — `ArmorSetListener` / `ArmorSetLoader` / `SetBonus` already in rpg-core
-39. 🟠 🟡 **Fishing content slice**
+39. ✅ **Fishing content slice** — `rpg-fishing 0.1.0`: custom catch tables (`catch-tables/*.yml`), `FISHING_FORTUNE` scales fortune-affected entry chances, `FISHING_SPEED` shortens bobber wait time, `FISHING_WISDOM` scales XP (existing); catch-message on land; `/fishing reload`; bundled `default.yml` table with common fish/junk/treasure
 40. 🟠 🟡 **Quest log GUI + chains + repeatable quests**
 41. 🟠 🔴 **Guild bank + rank GUI**
 42. ✅ **Ability DSL: `spawn_mob{}` effect** — `spawn_mob{id=,count=1,at=caster|target|point,radius=0,offset_y=0,owned=false}`; `owned=true` tags with caster UUID + `OwnedMobTracker` cap; despawns on caster logout; `rpg-core 1.8.0`
 43. 🔴 🔴 **Custom enchantment ability triggers** — ability-fire enchants (on_hit, on_kill, etc.)
 44. 🟠 🔴 **RPG-Farming redesign**
-45. 🔴 🟡 **Elite/champion mob variants**
+45. ✅ **Elite/champion mob variants** — `EliteService.promote()` called from `SpawnerManager` + `NaturalSpawnTask`; PDC tags prefix name + glow + HP/damage/loot multipliers; `damageMultiplier()` in `DamagePipelineListener`; `lootMultiplier()` + `elite_slayer` grant in `MobLootListener`. `rpg-core 1.7.0`
 46. 🟠 🟡 **Mob factions + AI goals** — `Faction:` string tag on mobs; `AiGoals:` list replaces the blunt kind enum with composable targeting rules: `attack_player`, `attack_faction{faction=X}`, `defend_faction{}`, `assist_faction{}`, `flee_from{}`, `call_for_help{}`, `guard_radius{}`, `idle`; faction awareness extends into ability DSL target selection. Full spec in [Improvements](todo-improvements.md)
 47. 🟠 🔴 **Mob AI profiles flesh-out** — `ranged_kiter`, `boss`, `flying`; `swarming` + `pack_hunter` now implementable via faction goals (#46). Full spec in [Improvements](todo-improvements.md)
 48. 🟠 🔴 **Mob patrol waypoints** — admin-defined walk paths for mobs + NPCs
-49. 🔴 🔴 **Ability DSL: Context variables + flags** — Tier 1 (boolean flags: `set_flag{}`, `clear_flag{}`, `if_flag{}`; ship first), Tier 2 (numeric: `increment{}`, `decrement{}`, `if_var_gte{}`); ship Tier 1 first. Full spec in [Improvements](todo-improvements.md)
+49. ✅ **Ability DSL: Context variables — Tier 1 (boolean flags)** — `if_flag{}`, `if_not_flag{}`, `set_flag{}`, `clear_flag{}`; entity PDC-backed (`rpg_flag_<name>`), auto-cleared on death; registered in `ItemAbilityListener`; boss phase-transition pattern in `FlagEffect.java` javadoc. `rpg-core 1.7.0`  
+    🔴 🟡 **Tier 2 still open**: numeric context vars — `increment{}`, `decrement{}`, `if_var_gte{}`
 50. 🔴 ⚫ **World events + world boss**
 51. 🔴 🔴 **Salvaging system** — Salvager block → 54-slot GUI; 36 input slots; live yield preview; Scrap All button; coins by rarity, XP from enchants, chance to recover reforges/upgrades; new `salvaging` skill boosts yield + recovery; full spec in [New Features](todo-features.md)
 52. 🔴 ⚫ **Auction House** (needs sign-entry ✅ + mail first) — reference SurvivalCore `auction/` + `gui/AuctionGui.java`; swap `CoinProvider` → `RpgServices.economy()`

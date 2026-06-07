@@ -4,13 +4,14 @@ main: com.github._255_ping.rpg.fishing.RpgFishingPlugin
 api-version: '26.1.2'
 load: POSTWORLD
 authors: [Ping]
-description: Fishing skill — XP from successful catches.
+description: Fishing skill — custom catch tables, FISHING_SPEED, FISHING_FORTUNE, and XP integration.
 depend: [rpg-core]
 commands:
   fishing:
     description: Fishing admin commands
-    usage: /fishing reload
+    usage: /fishing <reload>
+    permission: rpg.fishing.admin.reload
 permissions:
   rpg.fishing.admin.reload:
-    description: Reload rpg-fishing config
+    description: Reload rpg-fishing config and catch tables
     default: op

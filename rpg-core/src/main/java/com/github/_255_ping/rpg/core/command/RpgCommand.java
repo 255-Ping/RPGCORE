@@ -34,9 +34,11 @@ import java.util.Optional;
 public final class RpgCommand implements CommandExecutor, TabCompleter {
 
     private final RpgCorePlugin plugin;
+    private final ItemBrowserGui itemBrowserGui;
 
-    public RpgCommand(RpgCorePlugin plugin) {
+    public RpgCommand(RpgCorePlugin plugin, ItemBrowserGui itemBrowserGui) {
         this.plugin = plugin;
+        this.itemBrowserGui = itemBrowserGui;
     }
 
     @Override
@@ -52,6 +54,7 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
             case "version" -> handleVersion(sender);
             case "reload", "reloadall" -> handleReload(sender);
             case "item" -> handleItem(sender, args);
+            case "items" -> handleItems(sender);
             case "mob" -> handleMob(sender, args);
             case "block" -> handleBlock(sender, args);
             case "wand" -> handleWand(sender, args);
@@ -573,6 +576,18 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
                 Map.of("id", id, "amount", amount, "player", target.getName())));
     }
 
+    private void handleItems(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(plugin.messages().component("command.player-only"));
+            return;
+        }
+        if (!player.hasPermission(ItemBrowserGui.PERM_BROWSE)) {
+            sender.sendMessage(plugin.messages().component("command.no-permission"));
+            return;
+        }
+        itemBrowserGui.open(player);
+    }
+
     private void handleMob(CommandSender sender, String[] args) {
         if (args.length < 2 || !args[1].equalsIgnoreCase("spawn")) {
             sender.sendMessage(plugin.messages().component("command.usage",
@@ -620,7 +635,7 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             return filtered(args[0], List.of(
                     "help", "version", "reload",
-                    "item", "mob", "block",
+                    "item", "items", "mob", "block",
                     "wand", "loot-chest", "effects", "fix", "particle"));
         }
         String sub = args[0].toLowerCase();
