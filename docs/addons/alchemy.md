@@ -18,6 +18,16 @@ features:
 # Default brew time if a recipe doesn't specify its own
 default-brew-ticks: 200
 
+# Item returned to the player's inventory after drinking a custom potion.
+# Individual potions can override this with a per-potion ReturnItem: field.
+#
+#   none            — give nothing (vanilla glass-bottle return is already suppressed)
+#   glass_bottle    — give one glass bottle (mirrors vanilla behaviour)
+#   <material>      — any vanilla Material name (e.g. GLASS_BOTTLE, BUCKET)
+#   <rpg-item-id>   — a custom item id from rpg-core's items/ folder
+drink-return:
+  item: none
+
 # Skill XP awards
 xp:
   per-brew: 30
@@ -74,20 +84,41 @@ brewing_station:
   - vanilla:brewing_stand 1
 ```
 
-## Output items
+## Potion definitions
 
-Outputs should be `CONSUMABLE`-type items that apply status effects. The `INTELLIGENCE` stat can scale effect duration in the effect definition. See [Items (CONSUMABLE)](../content/items.md#consumable).
+Drinkable potions are defined separately from brew recipes in `plugins/rpg-alchemy/potions/<file>.yml`. Each top-level key is a potion id:
 
 ```yaml
-strength_potion_t1:
-  MinecraftItem: potion
-  Type: CONSUMABLE
-  DisplayName: "&cStrength Potion I"
-  Rarity: "&7&lCOMMON"
-  OnConsume:
-    Effects:
-    - { effect: strength_boost, level: 1, duration: 1200 }
+# potions/example.yml
+strength_potion:
+  DisplayName: "&6Potion of Strength"
+  CustomModelData: 0          # optional — links to a resource-pack model
+  ConsumeOnDrink: true        # if false, drinking does nothing (preview-only item)
+  ReturnItem: none            # optional — overrides the global drink-return.item for this potion only
+                              # "none" = nothing | "glass_bottle" = vanilla bottle | rpg item id | material name
+  Effects:
+    - { Id: strength_boost, Level: 1, DurationSeconds: 60 }
+    - { Id: regen,          Level: 2, DurationSeconds: 30 }
+
+# Potion that gives back a custom empty vial instead of a glass bottle
+premium_elixir:
+  DisplayName: "&bPremium Elixir"
+  ConsumeOnDrink: true
+  ReturnItem: empty_vial      # hands the player this rpg item id after drinking
+  Effects:
+    - { Id: haste, Level: 2, DurationSeconds: 120 }
 ```
+
+### `ReturnItem` resolution
+
+When a potion is consumed, the return item is resolved in this order:
+
+1. **Per-potion `ReturnItem:`** — if present, used as-is (overrides global config)
+2. **Global `drink-return.item`** — the fallback for potions without their own `ReturnItem:`
+3. Resolved against the **RPG item registry** first, then as a **vanilla Material name**
+4. If neither matches, a warning is logged and nothing is given
+
+Any returned items that don't fit the player's inventory are dropped naturally at their feet.
 
 ## Custom status effects
 

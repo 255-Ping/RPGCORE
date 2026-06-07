@@ -8,6 +8,12 @@ _Suite 21 opened with the addition of `rpg-crafting` and `rpg-smelting`. The sui
 
 ## Notable changes
 
+### rpg-alchemy 0.4.1 — Configurable return item after drinking a potion
+
+- New global config key `drink-return.item` in `config.yml`. Accepts `none` (default — glass bottle is already suppressed), `glass_bottle`, any vanilla Material name, or any rpg-core item id.
+- New per-potion `ReturnItem:` field in `potions/*.yml`. When present it overrides the global default for that specific potion. Absent means fall through to global config.
+- Resolution order: RPG item registry → vanilla Material → warning + nothing. Leftover items that don't fit the inventory are dropped naturally.
+
 ### rpg-core 1.10.9 — Cooldown time in ability lore
 
 - `cooldown{ticks=N}` bindings now display the duration in the ability's lore hint: `(Right-click | 5s cd)`. Whole-second values show as `5s`; fractional as `3.5s`. Bindings without a cooldown are unchanged.
