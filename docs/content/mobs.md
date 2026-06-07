@@ -35,13 +35,12 @@ testmob: #mobid
     profile: aggressive          # aggressive | passive | defensive | ranged_kiter | stationary | boss | swarming | pack-hunter | flying
     aggression-range: 16
     attack-range: 2
-    target-priority: nearest     # nearest | lowest-health | highest-threat | random
     leash-range: 32
-    leash-action: return         # return | despawn | teleport
-    retreat-at-health-percent: 0
-    move-speed-multiplier: 1.0
-    flees-from: []
     immune-to-knockback: false
+  DeathParticle: EXPLOSION_LARGE # Bukkit Particle enum name — plays a burst on death
+  DeathParticleCount: 8
+  DeathParticleSpread: 0.4
+  DeathSound: entity.generic.explode  # Bukkit Sound key (optional)
   LootTable:                     # inline; alternatively `LootTable: <id>` references loot-tables/
     attribution: weighted-by-damage   # last-hit | top-damager | split-equal | weighted-by-damage
     roll-mode: per-player        # per-player | shared

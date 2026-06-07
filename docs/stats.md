@@ -41,6 +41,9 @@ The two most common mistakes:
 | `attack_speed` | Attack Speed | yes | Reduces melee swing cooldown |
 | `ferocity` | Ferocity | yes | % chance per hit for an extra strike (can roll multiple). Each 100 ferocity = 1 guaranteed extra hit; remainder = fractional chance. Extra hits deal the same final damage. Melee only. |
 | `lifesteal` | Lifesteal | yes | % of dealt damage healed |
+| `knockback` | Knockback | no | Extra knockback distance applied to hit targets on melee attack |
+| `ammo_usage_reduction` | Ammo Saver | yes | % chance per shot to not consume ammo from the inventory |
+| `projectile_speed` | Projectile Speed | no | Multiplier on initial arrow/projectile velocity (e.g. `1.2` = 20% faster) |
 
 ## Survival
 
@@ -73,6 +76,7 @@ The two most common mistakes:
 | ID | Display | Percent | Description |
 |---|---|---|---|
 | `magic_find` | Magic Find | yes | Multiplies rare-loot chance on flagged drops |
+| `auto_loot` | Auto Loot | no | When > 0, item drops from broken blocks and slain mobs go directly into the player's inventory instead of spawning as entities (used internally by the Telekinesis enchant in `rpg-enchanting`) |
 
 ## Breaking & gathering — universal
 

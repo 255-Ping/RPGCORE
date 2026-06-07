@@ -343,6 +343,14 @@ Passive/proc bindings display as:
 §2Passive: §aLifesteal §8(On Hit)
 ```
 
+**Cooldown in the hint (rpg-core 1.10.9+):** If the binding contains a `cooldown{ticks=N}` effect, the duration is appended to the trigger hint — whole-second values show as `5s`, fractional as `3.5s`:
+
+```
+§5Ability: §dBeam Burst §8(Right-click | §b5s cd§8)
+```
+
+Bindings with no `cooldown{}` are unchanged.
+
 **What shows in lore — two rules:**
 
 1. **Named custom abilities** (defined in `abilities/*.yml` with a `Name:` or `Description:`) always appear — `AbilityLoader` calls `registry.registerMeta()` for each, which overrides the raw ID as the display name.

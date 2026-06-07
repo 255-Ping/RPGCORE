@@ -83,10 +83,14 @@ These effects ship in `plugins/rpg-core/status-effects/example.yml` on first run
 
 | ID | Category | What it does |
 |---|---|---|
-| `poison` | debuff | Deals 2 true damage every 20 ticks; −10% defense while active |
-| `regen` | buff | Heals 3 HP every 20 ticks |
-| `strength_boost` | buff | +20 flat `strength` while active |
-| `slow` | debuff | −20% `speed` while active |
+| `poison` | debuff | Deals 2 damage every 20 ticks (source: `poison`); −10% defense while active |
+| `regen` | buff | Heals 1 HP every 10 ticks |
+| `strength_boost` | buff | +25 flat `strength` while active |
+| `slow` | debuff | −30% `speed` while active |
+| `burning` | debuff | Deals 3 fire damage every 20 ticks (source: `fire`); spawns FLAME particles on apply |
+| `frozen` | debuff | −80% `speed` while active; spawns SNOWFLAKE particles on apply |
+| `silenced` | debuff | Ability listener suppresses all ability casts while this effect is active; no stat mods |
+| `haste` | buff | +50% `mining_speed` while active |
 
 Define your own in `plugins/rpg-core/status-effects/<file>.yml` following the schema below. Addons (e.g., `rpg-alchemy`) can ship their own files alongside.
 
