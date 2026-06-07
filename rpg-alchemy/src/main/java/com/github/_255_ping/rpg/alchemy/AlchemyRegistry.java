@@ -47,6 +47,8 @@ public final class AlchemyRegistry {
             String displayName = s.getString("DisplayName", id);
             int cmd = s.getInt("CustomModelData", 0);
             boolean consume = s.getBoolean("ConsumeOnDrink", true);
+            // null means "use the global config default"; any explicit string overrides per-potion.
+            String returnItem = s.isSet("ReturnItem") ? s.getString("ReturnItem") : null;
             List<PotionDef.EffectSpec> effects = new ArrayList<>();
             List<?> rawEffects = s.getList("Effects");
             if (rawEffects != null) {
@@ -59,7 +61,7 @@ public final class AlchemyRegistry {
                     }
                 }
             }
-            potions.put(id, new PotionDef(id, displayName, cmd, effects, consume));
+            potions.put(id, new PotionDef(id, displayName, cmd, effects, consume, returnItem));
         });
     }
 

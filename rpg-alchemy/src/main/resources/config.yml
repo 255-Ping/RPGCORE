@@ -12,6 +12,18 @@ features:
 # 200 ticks = 10 seconds. Individual recipes can override this value.
 default-brew-ticks: 200
 
+# Item returned to the player's inventory after drinking a custom potion.
+# Applied globally to every potion; individual potions can override this with a
+# per-potion "ReturnItem:" field in their YAML definition.
+#
+# Values:
+#   none            — give nothing (default; vanilla glass-bottle return is already suppressed)
+#   glass_bottle    — give one vanilla glass bottle (mirrors vanilla potion behaviour)
+#   <material>      — any vanilla Material name (e.g. GLASS_BOTTLE, BUCKET, PAPER)
+#   <rpg-item-id>   — the id of a custom item registered in rpg-core's items/ folder
+drink-return:
+  item: none
+
 # Skill XP awards. Scaled by ALCHEMY_WISDOM stat if defined.
 xp:
   per-brew: 30    # XP awarded on successful brew (consuming inputs + producing output)

@@ -9,6 +9,8 @@
 #       - { Id: strength_boost, Level: 1, DurationSeconds: 60 }
 #       - { Id: regen,          Level: 2, DurationSeconds: 30 }
 #     ConsumeOnDrink: true
+#     ReturnItem: none   # optional — overrides global drink-return.item for this potion only.
+#                        # "none" = nothing, "glass_bottle" = vanilla bottle, or any rpg item id.
 strength_potion:
   DisplayName: "&6Potion of Strength"
   CustomModelData: 0

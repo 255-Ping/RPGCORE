@@ -76,9 +76,50 @@ public final class PotionDrinkListener implements Listener {
             if (!held.isEmpty()) {
                 held.setAmount(held.getAmount() - 1);
             }
+
+            // Give back the configured return item (per-potion override → global config default).
+            String returnId = def.returnItem() != null
+                    ? def.returnItem()
+                    : plugin.getConfig().getString("drink-return.item", "none");
+            ItemStack returnStack = resolveReturnItem(returnId);
+            if (returnStack != null) {
+                p.getInventory().addItem(returnStack).forEach(
+                        (idx, leftover) -> p.getWorld().dropItemNaturally(p.getLocation(), leftover));
+            }
         }
 
         long xp = plugin.getConfig().getLong("xp.per-drink", 0);
         if (xp > 0) RpgServices.skills().awardXp(p, BuiltinSkill.ALCHEMY.id(), xp);
+    }
+
+    /**
+     * Resolves a return-item identifier to an {@link ItemStack}, or {@code null} if nothing
+     * should be given. Resolution order:
+     * <ol>
+     *   <li>{@code "none"} / blank → {@code null}</li>
+     *   <li>Registered RPG item id → rendered ItemStack via ItemRegistry</li>
+     *   <li>Vanilla {@link Material} name (case-insensitive) → plain ItemStack</li>
+     * </ol>
+     */
+    private ItemStack resolveReturnItem(String id) {
+        if (id == null || id.isBlank() || id.equalsIgnoreCase("none")) return null;
+
+        // Try RPG item registry first.
+        try {
+            Optional<? extends org.bukkit.inventory.ItemStack> rpg =
+                    RpgServices.items().get(id).map(item -> item.toItemStack());
+            if (rpg.isPresent()) return rpg.get();
+        } catch (IllegalStateException ignored) {
+            // ItemRegistry not loaded — fall through to vanilla check.
+        }
+
+        // Try vanilla Material.
+        try {
+            Material mat = Material.valueOf(id.toUpperCase(java.util.Locale.ROOT));
+            if (mat != Material.AIR) return new ItemStack(mat);
+        } catch (IllegalArgumentException ignored) {}
+
+        plugin.getLogger().warning("drink-return: unknown item id '" + id + "' — nothing returned.");
+        return null;
     }
 }
