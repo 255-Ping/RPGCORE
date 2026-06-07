@@ -105,10 +105,23 @@ public final class EquipmentListener implements Listener {
      * Set the {@code generic.attack_speed} attribute to match the held item's
      * {@code AttackCooldown} field. This controls how fast the charge bar fills.
      * {@code AttackCooldown: 20} = 1 attack/sec, {@code AttackCooldown: 10} = 2/sec, etc.
+     *
+     * <p>Modifiers are scrubbed before setting the base value. Paper 1.21.4 dynamically
+     * re-applies the vanilla material's default ATTACK_SPEED modifier (e.g. -2.4 for swords)
+     * on each equip/unequip cycle even when the modifier was removed from the item meta via
+     * {@code removeAttributeModifier()}. Without the scrub, these modifiers accumulate on
+     * every hotbar switch, driving the effective value to ≤ 0 and permanently freezing the
+     * sword animation (charge never rises). No vanilla potion effects add modifiers to this
+     * attribute, so unconditional clearing is safe.
      */
     private static void applyAttackSpeed(Player player) {
         AttributeInstance attr = player.getAttribute(Attribute.ATTACK_SPEED);
         if (attr == null) return;
+
+        // Purge accumulated modifiers before writing our value.
+        for (AttributeModifier mod : java.util.List.copyOf(attr.getModifiers())) {
+            attr.removeModifier(mod);
+        }
 
         int cooldownTicks = 0;
         try {
