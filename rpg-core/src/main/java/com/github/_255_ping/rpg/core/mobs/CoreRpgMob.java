@@ -37,12 +37,6 @@ public final class CoreRpgMob implements RpgMob {
     private final String customHeadTexture;
     private final List<MobAbilityBinding> bindings;
     private final CoreLootTable lootTable;
-    /**
-     * ID of an externally-defined loot table referenced as a plain string via
-     * {@code LootTable: some_id} in mob YAML. Mutually exclusive with an inline
-     * {@link #lootTable} section — if set, {@code lootTable} will be {@code null}.
-     */
-    private final String lootTableId;
     /** Named loot pool IDs referenced via {@code LootPool:} / {@code LootPools:} in mob YAML. */
     private final List<String> lootPoolIds;
     private final MobAiProfile aiProfile;
@@ -68,7 +62,6 @@ public final class CoreRpgMob implements RpgMob {
                       String customHeadTexture,
                       List<MobAbilityBinding> bindings,
                       CoreLootTable lootTable,
-                      String lootTableId,
                       List<String> lootPoolIds,
                       MobAiProfile aiProfile,
                       long xp,
@@ -93,7 +86,6 @@ public final class CoreRpgMob implements RpgMob {
         this.customHeadTexture = customHeadTexture;
         this.bindings = List.copyOf(bindings);
         this.lootTable = lootTable;
-        this.lootTableId = lootTableId;
         this.lootPoolIds = lootPoolIds == null ? List.of() : List.copyOf(lootPoolIds);
         this.aiProfile = aiProfile == null ? MobAiProfile.DEFAULT : aiProfile;
         this.xp = xp;
@@ -135,8 +127,6 @@ public final class CoreRpgMob implements RpgMob {
 
     public List<MobAbilityBinding> abilityBindings() { return bindings; }
     public CoreLootTable lootTable() { return lootTable; }
-    /** Non-null only when {@code LootTable:} was a string reference rather than an inline section. */
-    public String lootTableId() { return lootTableId; }
     public List<String> lootPoolIds() { return lootPoolIds; }
 
     @Override

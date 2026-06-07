@@ -8,6 +8,14 @@ _Suite 21 opened with the addition of `rpg-crafting` and `rpg-smelting`. The sui
 
 ## Notable changes
 
+### rpg-core 1.10.11 — Loot tables consolidated into loot pools
+
+- The separate `loot-tables/` folder, `LootTableRegistry`, `CoreLootTableRegistry`, and `LootTableLoader` have been removed. There was only one loot system from this point on: **loot pools** (`loot-pools/*.yml`, `LootPoolRegistry`).
+- `LootTable: <id>` (plain-string form in mob YAML) is now **deprecated** — it is still accepted but logs a warning and is treated as an alias for `LootPool: <id>`. Update to `LootPool: <id>` at your convenience.
+- Inline `LootTable:` (block form inside a mob YAML) is unchanged and continues to work as before.
+- `LootChestRegistry` and `/rpg loot-chest define` tab completion now resolve against `lootPools()` instead of the removed `lootTables()`.
+- Docs: `loot-tables.md` replaced with a migration guide; content index updated to point to `loot-pools.md`.
+
 ### rpg-accessories 0.1.1 — Family stacking + in-bag upgrade button
 
 - **Family stacking:** `ACCESSORY` items now support an `Accessory: { Family:, Stacking: }` block. Three stacking modes: `highest` (default — only the best copy of a family counts), `sum` (every copy adds stats), `independent` (sum + each copy fires its own passive ability hooks). Items without a family always stack independently.

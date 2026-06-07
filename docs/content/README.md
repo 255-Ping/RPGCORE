@@ -23,7 +23,7 @@ This section covers everything an admin authors as YAML to add content to the se
 | [Abilities](abilities.md) | `abilities/` | Custom ability sequences (DSL + per-effect params) |
 | [Blocks](blocks.md) | `blocks/` | Custom blocks tagged onto vanilla bases |
 | [Recipes](recipes.md) | `recipes/crafting/`, `recipes/cooking/`, `recipes/brewing/` | Crafting / cooking / brewing recipes |
-| [Loot tables](loot-tables.md) | `loot-tables/` | Drop tables (inlineable in mobs or external) |
+| [Loot pools](loot-pools.md) | `loot-pools/` | Named reusable drop tables (referenced by mobs via `LootPool:`) |
 | [Spawning](spawning.md) | `spawners/`, `natural-spawning/` | Admin spawners + natural spawn rules |
 
 Other content types live in their owning addons:

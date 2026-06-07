@@ -53,10 +53,8 @@ import com.github._255_ping.rpg.core.health.CoreHealthService;
 import com.github._255_ping.rpg.core.health.RegenTask;
 import com.github._255_ping.rpg.core.items.CoreItemRegistry;
 import com.github._255_ping.rpg.core.loot.CoreLootPoolRegistry;
-import com.github._255_ping.rpg.core.loot.CoreLootTableRegistry;
 import com.github._255_ping.rpg.core.loot.LootChestRegistry;
 import com.github._255_ping.rpg.core.loot.LootPoolLoader;
-import com.github._255_ping.rpg.core.loot.LootTableLoader;
 import com.github._255_ping.rpg.core.items.ItemLoader;
 import com.github._255_ping.rpg.core.mobs.CoreMobRegistry;
 import com.github._255_ping.rpg.core.mobs.MobAiTask;
@@ -140,10 +138,8 @@ public final class RpgCorePlugin extends JavaPlugin {
     private NamespacedKey blockItemKey;
     private DamagerTracker damagerTracker;
     private CoreCurrencyRegistry currencyRegistry;
-    private CoreLootTableRegistry lootTableRegistry;
     private CoreLootPoolRegistry lootPoolRegistry;
     private LootPoolLoader lootPoolLoader;
-    private LootTableLoader lootTableLoader;
     private SpawnerManager spawnerManager;
     private DamagePipelineListener damagePipeline;
     private CoreWandService wandService;
@@ -229,7 +225,6 @@ public final class RpgCorePlugin extends JavaPlugin {
         blockRegistry = new CoreBlockRegistry();
         damagerTracker = new DamagerTracker();
         currencyRegistry = new CoreCurrencyRegistry();
-        lootTableRegistry = new CoreLootTableRegistry();
         lootPoolRegistry = new CoreLootPoolRegistry();
 
         RpgServices.setDataStore(dataStore);
@@ -252,7 +247,6 @@ public final class RpgCorePlugin extends JavaPlugin {
         RpgServices.setArmorSets(armorSetRegistry);
         RpgServices.setBlocks(blockRegistry);
         RpgServices.setCurrencies(currencyRegistry);
-        RpgServices.setLootTables(lootTableRegistry);
         RpgServices.setLootPools(lootPoolRegistry);
 
         CoreLootTable.setMagicFindMultiplierCap(getConfig().getDouble("loot.max-magic-find-multiplier", 3.0));
@@ -295,14 +289,6 @@ public final class RpgCorePlugin extends JavaPlugin {
         }
         lootPoolLoader = new LootPoolLoader(lootPoolsDir, lootPoolRegistry, getLogger());
         lootPoolLoader.loadAll();
-
-        File lootTablesDir = new File(getDataFolder(), "loot-tables");
-        if (!lootTablesDir.isDirectory()) lootTablesDir.mkdirs();
-        if (!new File(lootTablesDir, "example.yml").exists()) {
-            saveResource("loot-tables/example.yml", false);
-        }
-        lootTableLoader = new LootTableLoader(lootTablesDir, lootTableRegistry, getLogger());
-        lootTableLoader.loadAll();
 
         mobLoader = new MobLoader(mobsDir, mobRegistry, mobIdKey, healthService, getLogger());
         mobLoader.loadAll();
@@ -522,7 +508,6 @@ public final class RpgCorePlugin extends JavaPlugin {
         statusEffectLoader.loadAll();
         itemLoader.loadAll();
         if (lootPoolLoader != null) lootPoolLoader.loadAll();
-        if (lootTableLoader != null) lootTableLoader.loadAll();
         mobLoader.loadAll();
         abilityLoader.loadAll();
         if (armorSetLoader != null) armorSetLoader.loadAll();

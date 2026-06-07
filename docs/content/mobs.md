@@ -41,7 +41,8 @@ testmob: #mobid
   DeathParticleCount: 8
   DeathParticleSpread: 0.4
   DeathSound: entity.generic.explode  # Bukkit Sound key (optional)
-  LootTable:                     # inline; alternatively `LootTable: <id>` references loot-tables/
+  LootPool: generic_undead       # reference a named pool from loot-pools/ by id
+  LootTable:                     # inline drop table (unique to this mob; coexists with LootPool:)
     attribution: weighted-by-damage   # last-hit | top-damager | split-equal | weighted-by-damage
     roll-mode: per-player        # per-player | shared
     coin-drop: { min: 5, max: 20 }

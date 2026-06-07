@@ -99,8 +99,9 @@ public final class LootChestRegistry implements Listener {
         if (lootedHere.contains(e.getPlayer().getUniqueId())) return;
         if (!(block.getState() instanceof Container container)) return;
 
-        LootTable table = RpgServices.lootTables().get(tableId).orElse(null);
-        if (table == null) return;
+        var poolOpt = RpgServices.lootPools().get(tableId);
+        if (poolOpt.isEmpty()) return;
+        LootTable table = poolOpt.get();
 
         Player p = e.getPlayer();
         Inventory inv = container.getInventory();

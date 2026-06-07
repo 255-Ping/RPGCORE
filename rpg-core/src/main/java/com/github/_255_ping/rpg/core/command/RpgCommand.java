@@ -90,9 +90,9 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
                 return;
             }
             String tableId = args[2];
-            if (RpgServices.lootTables().get(tableId).isEmpty()) {
+            if (RpgServices.lootPools().get(tableId).isEmpty()) {
                 sender.sendMessage(net.kyori.adventure.text.Component.text(
-                        "Unknown loot table: " + tableId));
+                        "Unknown loot pool: " + tableId));
                 return;
             }
             java.util.Optional<com.github._255_ping.rpg.api.wand.WandSelection> sel;
@@ -666,7 +666,7 @@ public final class RpgCommand implements CommandExecutor, TabCompleter {
                 return filtered(args[2], List.of("region", "loot-chest", "dungeon", "spawner", "entrance"));
             }
             if (sub.equals("loot-chest") && args[1].equalsIgnoreCase("define")) {
-                return filtered(args[2], RpgServices.lootTables().all().stream()
+                return filtered(args[2], RpgServices.lootPools().all().stream()
                         .map(com.github._255_ping.rpg.api.loot.LootTable::id).toList());
             }
             if (sub.equals("particle") && List.of("delete", "move").contains(args[1].toLowerCase())) {

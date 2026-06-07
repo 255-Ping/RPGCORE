@@ -149,20 +149,6 @@ public final class MobLoader {
             }
         }
 
-        // LootTable: can be either an inline section or a plain string reference to an
-        // externally-defined table in loot-tables/*.yml.  Detect which case we're in so that
-        // getConfigurationSection() doesn't silently return null and drop the value.
-        String lootTableId = null;
-        CoreLootTable lootTable;
-        if (s.isString("LootTable")) {
-            lootTableId = s.getString("LootTable");
-            lootTable = null;
-        } else {
-            lootTable = parseLootTable(id, s.getConfigurationSection("LootTable"));
-        }
-        MobAiProfile aiProfile = parseAiProfile(s.getConfigurationSection("AI"));
-        long xp = s.getLong("XP", 0);
-
         // LootPool: "id"  or  LootPools: [id1, id2]
         List<String> lootPoolIds = new ArrayList<>();
         String singlePool = s.getString("LootPool");
@@ -174,6 +160,24 @@ public final class MobLoader {
             String trimmed = pid.trim();
             if (!trimmed.isBlank() && !lootPoolIds.contains(trimmed)) lootPoolIds.add(trimmed);
         }
+
+        // LootTable: can be an inline section or a deprecated plain-string pool reference.
+        // Detect which case we're in so getConfigurationSection() doesn't silently swallow the value.
+        CoreLootTable lootTable;
+        if (s.isString("LootTable")) {
+            String poolId = s.getString("LootTable");
+            logger.warning("mob '" + id + "' uses deprecated 'LootTable: " + poolId
+                    + "' — use 'LootPool: " + poolId + "' instead.");
+            if (poolId != null && !poolId.isBlank()) {
+                String trimmed = poolId.trim();
+                if (!lootPoolIds.contains(trimmed)) lootPoolIds.add(trimmed);
+            }
+            lootTable = null;
+        } else {
+            lootTable = parseLootTable(id, s.getConfigurationSection("LootTable"));
+        }
+        MobAiProfile aiProfile = parseAiProfile(s.getConfigurationSection("AI"));
+        long xp = s.getLong("XP", 0);
 
         // Optional death animation
         org.bukkit.Particle deathParticle = null;
@@ -200,7 +204,7 @@ public final class MobLoader {
 
         return new CoreRpgMob(id, displayName, type, health, damage, defense,
                 stats, helmet, chest, legs, boots, hand, off, null, bindings, lootTable,
-                lootTableId, lootPoolIds, aiProfile, xp,
+                lootPoolIds, aiProfile, xp,
                 bossBarDef, eliteDef,
                 deathParticle, deathParticleCount, deathParticleSpread, deathSound,
                 mobIdKey, healthService);
