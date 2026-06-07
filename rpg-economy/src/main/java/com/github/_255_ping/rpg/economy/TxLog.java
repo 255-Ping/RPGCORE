@@ -63,7 +63,7 @@ public final class TxLog {
                     try {
                         Kind kind = Kind.valueOf(String.valueOf(map.get("kind")));
                         BigDecimal amount = new BigDecimal(String.valueOf(map.get("amount")));
-                        String reason = String.valueOf(map.getOrDefault("reason", ""));
+                        String reason = map.containsKey("reason") ? String.valueOf(map.get("reason")) : "";
                         long ts = Long.parseLong(String.valueOf(map.get("ts")));
                         deque.addLast(new Entry(kind, amount, reason, ts));
                     } catch (Exception ignored) {}

@@ -35,10 +35,14 @@ val pluginName = project.name
 tasks.withType<ProcessResources>().configureEach {
     inputs.property("pluginVersion", pluginVersion)
     inputs.property("pluginName", pluginName)
-    // plugin.yml uses ${version}; config.yml uses ${pluginName} and ${version}.
-    // Both share the same expand map — extra keys are ignored by files that don't reference them.
+    // plugin.yml uses ${version}; config.yml may use ${pluginName} and ${version}.
+    // We use a literal filter instead of expand() so that $ signs elsewhere in config.yml
+    // (e.g. in comments like "e.g. $100") don't trigger Groovy's SimpleTemplateEngine.
     filesMatching(listOf("plugin.yml", "config.yml")) {
-        expand(mapOf("version" to pluginVersion, "pluginName" to pluginName))
+        filter { line ->
+            line.replace("\${version}", pluginVersion)
+                .replace("\${pluginName}", pluginName)
+        }
     }
 }
 
