@@ -255,6 +255,10 @@ public final class CoreRpgItem implements RpgItem {
      * itself without duplication.
      */
     private void renderAbilityBinding(ItemAbilityBinding binding, List<Component> lore) {
+        // Scan the whole chain once for a cooldown{ticks=N} invocation so we can
+        // append the time to every ability line rendered from this binding.
+        double cooldownSecs = extractCooldownSeconds(binding.invocations());
+
         for (AbilityInvocation inv : binding.invocations()) {
             String abilityId = inv.effectName();
 
@@ -283,12 +287,37 @@ public final class CoreRpgItem implements RpgItem {
 
             boolean isActive = binding.trigger().isActive();
             String prefix = isActive ? "&5Ability: &d" : "&2Passive: &a";
-            String hint = " &8(" + binding.trigger().loreHint() + ")";
+            String hint = cooldownSecs > 0
+                    ? " &8(" + binding.trigger().loreHint() + " | &b" + formatSeconds(cooldownSecs) + " cd&8)"
+                    : " &8(" + binding.trigger().loreHint() + ")";
             lore.add(noItalic(LEGACY.deserialize(prefix + abilityDisplayName + hint)));
             for (String line : description) {
                 lore.add(noItalic(LEGACY.deserialize("  &7" + line)));
             }
         }
+    }
+
+    /**
+     * Scans a chain for a {@code cooldown{ticks=N}} invocation and returns the
+     * equivalent duration in seconds, or {@code -1} if no cooldown is present.
+     */
+    private static double extractCooldownSeconds(List<AbilityInvocation> invocations) {
+        for (AbilityInvocation inv : invocations) {
+            if ("cooldown".equals(inv.effectName())) {
+                String raw = inv.params().get("ticks");
+                if (raw != null) {
+                    try { return Double.parseDouble(raw) / 20.0; }
+                    catch (NumberFormatException ignored) {}
+                }
+            }
+        }
+        return -1;
+    }
+
+    /** Formats a duration: whole seconds show as {@code "5s"}, fractional as {@code "3.5s"}. */
+    private static String formatSeconds(double secs) {
+        if (secs == Math.floor(secs) && !Double.isInfinite(secs)) return (long) secs + "s";
+        return String.format("%.1fs", secs);
     }
 
     /**
