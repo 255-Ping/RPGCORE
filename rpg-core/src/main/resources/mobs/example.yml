@@ -216,3 +216,65 @@ golem_shard:
   Abilities:
   - "knockback{force=1.2,up=0.3,target=target} ~onHit"
   LootPool: basic_mob_drops
+
+# ── Faction + AI Goals showcase ───────────────────────────────────────────────
+# These three mobs demonstrate the Faction: tag and AiGoals: list system.
+# Goals are evaluated top-to-bottom; the first one that can act wins.
+# "player" is the reserved faction name that matches all players.
+# Spawn a group of all three to see them fight each other:
+#   /rpg mob spawn forest_guard 2
+#   /rpg mob spawn undead_minion 3
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Pattern: guard_radius → attack_faction → assist_faction → attack_player
+# Forest guards protect a 24-block territory around their spawn point and
+# prefer hunting nearby undead. If a fellow guard is already engaged, they
+# rush to assist. Failing all that, they'll attack players who wander too close.
+forest_guard:
+  MinecraftMob: vindicator
+  DisplayName: '&2Forest Guard'
+  Health: 180
+  Damage: 14
+  Armor: 18
+  Faction: guards
+  AiGoals:
+  - guard_radius{radius=24}           # disengage if dragged more than 24 blocks from spawn
+  - attack_faction{faction=undead,range=20}  # hunt undead mobs
+  - assist_faction{faction=guards,radius=16} # join a fellow guard's fight
+  - attack_player{range=14}           # fall back to targeting players
+  Abilities:
+  - "sound{key=entity.vindicator.celebrate,volume=1.0,pitch=0.8} ~onSpawn"
+  LootPool: basic_mob_drops
+
+# Pattern: attack_player → call_for_help → assist_faction
+# The undead minion aggressively targets players. When it takes damage, call_for_help
+# immediately alerts nearby undead to the attacker (event-driven; no tick lag).
+# Any undead without a current target will rush to its aid.
+undead_minion:
+  MinecraftMob: zombie
+  DisplayName: '&8Undead Minion'
+  Health: 120
+  Damage: 10
+  Armor: 8
+  Faction: undead
+  AiGoals:
+  - attack_player{range=16}                    # primary: chase players
+  - call_for_help{faction=undead,radius=20}    # event-driven — alerts allies when hurt
+  - assist_faction{faction=undead,radius=16}   # tick-driven — join any undead that's already fighting
+  LootPool: basic_mob_drops
+
+# Pattern: flee_from → idle
+# The coward rabbit flees from players when its HP drops at or below 40%.
+# Above that threshold flee_from doesn't trigger, so it just idles (passive).
+# Replace MinecraftMob with any mob type to create a fleeing variant.
+cowardly_witch:
+  MinecraftMob: witch
+  DisplayName: '&eCowardly Witch'
+  Health: 100
+  Damage: 5
+  Armor: 4
+  Faction: cowards
+  AiGoals:
+  - flee_from{faction=player,range=18,healthThreshold=40}  # flee players when ≤ 40% HP
+  - idle                                                     # otherwise stand still
+  LootPool: basic_mob_drops

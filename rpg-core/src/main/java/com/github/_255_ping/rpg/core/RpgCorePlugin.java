@@ -61,6 +61,7 @@ import com.github._255_ping.rpg.core.mobs.MobAiTask;
 import com.github._255_ping.rpg.core.spawning.NaturalSpawnLoader;
 import com.github._255_ping.rpg.core.spawning.NaturalSpawnTask;
 import com.github._255_ping.rpg.core.mobs.DamagerTracker;
+import com.github._255_ping.rpg.core.mobs.FactionAlertMap;
 import com.github._255_ping.rpg.core.mobs.MobAbilityEventListener;
 import com.github._255_ping.rpg.core.mobs.MobAbilityTimerTask;
 import com.github._255_ping.rpg.core.mobs.CoreLootTable;
@@ -357,7 +358,8 @@ public final class RpgCorePlugin extends JavaPlugin {
 
         // Make particle manager accessible to RpgCommand.
         this.particleManager = particleManager;
-        getServer().getPluginManager().registerEvents(new MobAbilityEventListener(), this);
+        FactionAlertMap factionAlerts = new FactionAlertMap();
+        getServer().getPluginManager().registerEvents(new MobAbilityEventListener(factionAlerts), this);
         getServer().getPluginManager().registerEvents(new MobDeathAnimListener(mobIdKey), this);
         getServer().getPluginManager().registerEvents(new DeathRulesListener(this), this);
 
@@ -375,7 +377,8 @@ public final class RpgCorePlugin extends JavaPlugin {
 
         long mobAiInterval = Math.max(1, getConfig().getLong("mob-ai.interval-ticks", 10));
         getServer().getScheduler().runTaskTimer(
-                this, new MobAiTask(mobRegistry, mobIdKey), mobAiInterval, mobAiInterval);
+                this, new MobAiTask(mobRegistry, mobIdKey, factionAlerts, healthService),
+                mobAiInterval, mobAiInterval);
 
         File naturalSpawnDir = new File(getDataFolder(), "natural-spawning");
         if (!new File(naturalSpawnDir, "example.yml").exists()) {

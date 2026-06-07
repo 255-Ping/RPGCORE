@@ -177,6 +177,13 @@ public final class MobLoader {
             lootTable = parseLootTable(id, s.getConfigurationSection("LootTable"));
         }
         MobAiProfile aiProfile = parseAiProfile(s.getConfigurationSection("AI"));
+        String faction = s.getString("Faction");
+        List<AiGoalDef> aiGoals = new ArrayList<>();
+        for (Object entry : s.getList("AiGoals", List.of())) {
+            if (!(entry instanceof String spec)) continue;
+            AiGoalDef goal = parseAiGoal(id, spec.trim());
+            if (goal != null) aiGoals.add(goal);
+        }
         long xp = s.getLong("XP", 0);
 
         // Optional death animation
@@ -204,7 +211,7 @@ public final class MobLoader {
 
         return new CoreRpgMob(id, displayName, type, health, damage, defense,
                 stats, helmet, chest, legs, boots, hand, off, null, bindings, lootTable,
-                lootPoolIds, aiProfile, xp,
+                lootPoolIds, aiProfile, faction, aiGoals, xp,
                 bossBarDef, eliteDef,
                 deathParticle, deathParticleCount, deathParticleSpread, deathSound,
                 mobIdKey, healthService);
@@ -269,6 +276,50 @@ public final class MobLoader {
         double leash = s.getDouble("leash-range", 32);
         boolean immune = s.getBoolean("immune-to-knockback", false);
         return new MobAiProfile(kind, aggro, attack, leash, immune);
+    }
+
+    /**
+     * Parse one goal entry from the {@code AiGoals:} list.
+     * Format: {@code goal_name} or {@code goal_name{key=value,...}}.
+     * Returns {@code null} for unknown goal names (with a warning logged).
+     */
+    private AiGoalDef parseAiGoal(String mobId, String spec) {
+        int brace = spec.indexOf('{');
+        String name = (brace < 0 ? spec : spec.substring(0, brace)).trim().toLowerCase(java.util.Locale.ROOT);
+        java.util.Map<String, String> p = new java.util.HashMap<>();
+        if (brace >= 0) {
+            int end = spec.lastIndexOf('}');
+            String inside = (end > brace) ? spec.substring(brace + 1, end) : spec.substring(brace + 1);
+            for (String kv : inside.split(",")) {
+                String[] pair = kv.split("=", 2);
+                if (pair.length == 2) p.put(pair[0].trim(), pair[1].trim());
+            }
+        }
+        return switch (name) {
+            case "attack_player"   -> new AiGoalDef.AttackPlayer();
+            case "attack_faction"  -> new AiGoalDef.AttackFaction(
+                    p.getOrDefault("faction", ""), dbl(p.get("range"), 0));
+            case "defend_faction"  -> new AiGoalDef.DefendFaction(
+                    p.getOrDefault("faction", ""), dbl(p.get("radius"), 20));
+            case "assist_faction"  -> new AiGoalDef.AssistFaction(
+                    p.getOrDefault("faction", ""), dbl(p.get("radius"), 20));
+            case "flee_from"       -> new AiGoalDef.FleeFrom(
+                    p.getOrDefault("faction", ""), dbl(p.get("range"), 16),
+                    dbl(p.get("health_threshold"), 100));
+            case "call_for_help"   -> new AiGoalDef.CallForHelp(
+                    p.getOrDefault("faction", ""), dbl(p.get("radius"), 20));
+            case "guard_radius"    -> new AiGoalDef.GuardRadius(dbl(p.get("radius"), 32));
+            case "idle"            -> new AiGoalDef.Idle();
+            default -> {
+                logger.warning("mob '" + mobId + "' has unknown AiGoal: " + name);
+                yield null;
+            }
+        };
+    }
+
+    private static double dbl(String s, double def) {
+        if (s == null) return def;
+        try { return Double.parseDouble(s); } catch (NumberFormatException e) { return def; }
     }
 
     private static MobAbilityBinding parseAbilityBinding(String spec, int minLevel) {

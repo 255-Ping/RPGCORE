@@ -8,6 +8,18 @@ _Suite 21 opened with the addition of `rpg-crafting` and `rpg-smelting`. The sui
 
 ## Notable changes
 
+### rpg-core 1.10.12 — Mob Factions + AI Goals
+
+- **`Faction:` field on mob YAML.** Any mob can now declare `Faction: <string>` — a plain label that identifies which group it belongs to. `"player"` is reserved and matches all players. No registry needed; factions are purely string comparisons.
+- **`AiGoals:` ordered goal list.** Replaces the single `profile:` kind for mobs that declare it. Goals are evaluated top-to-bottom each AI tick; the first one that acts wins. Mobs without `AiGoals:` continue using `MobAiProfile.Kind` unchanged.
+- **Goals implemented:** `attack_player`, `attack_faction{faction,range}`, `defend_faction{faction,radius}`, `assist_faction{faction,radius}`, `flee_from{faction,range,healthThreshold}`, `call_for_help{faction,radius}`, `guard_radius{radius}`, `idle`.
+- **`call_for_help` is event-driven** — fires immediately on hurt (no tick lag), alerting idle nearby allies without interrupting already-engaged mobs.
+- **`guard_radius` tracks spawn location** in memory on first AI tick; clears target when mob drifts outside the leash radius.
+- **Hysteresis on target switching** — valid targets already within `range × 1.5` are kept to prevent jitter when mobs dance near range boundaries.
+- **`flee_from`** clears the combat target and applies a velocity push away from the nearest threat each tick. Flee only activates at or below `healthThreshold` HP%.
+- **`FactionAlertMap`** — shared `ConcurrentHashMap<victimUUID, attacker>` populated by `MobAbilityEventListener` on every RPG hurt event; stale entries pruned lazily by liveness check and explicitly on mob death.
+- **Three showcase mobs** added to `mobs/example.yml`: `forest_guard` (guards faction — hunts undead, assists allies, guard_radius leash), `undead_minion` (undead faction — attacks players, calls for help), `cowardly_witch` (flees players when ≤40% HP).
+
 ### rpg-core — Remove vanilla XP bar config stub; add status effect examples
 
 - **`vanilla-xp-bar` config key removed.** The setting was never implemented in Java (no `player.setExp()` call existed) — it was documentation-only, making it a misleading stub. The vanilla XP bar is now left untouched so `rpg-enchanting`'s level cost display works correctly. `docs/core/vanilla-suppression.md` updated: XP row in the "Repurposed vanilla bars" table now notes the bar is intentionally unmodified.

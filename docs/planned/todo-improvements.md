@@ -559,7 +559,9 @@ Current: nametags show name + prefix/suffix. Deferred:
 
 ---
 
-### Mob Factions + AI Goals (`rpg-core`) — 🟡 Medium
+### ✅ Mob Factions + AI Goals (`rpg-core`) — shipped in 1.10.12
+
+New `Faction:` string field on mob YAML and `AiGoals:` ordered list replacing the single `profile:` kind for mobs that have it. Goals are evaluated top-to-bottom; first match wins. `FactionAlertMap` records recent hurt events for `defend_faction`; `call_for_help` fires event-driven (immediate alert on hurt). `guard_radius` tracks spawn location in memory, clears target when outside. Mobs without `AiGoals:` continue using the legacy `MobAiProfile.Kind` switch unchanged. Three showcase mobs added to `mobs/example.yml`: `forest_guard` (guards faction, hunts undead, leash), `undead_minion` (undead faction, calls for help), `cowardly_witch` (flees players at ≤40% HP). Original spec preserved below for reference.
 
 Mobs belong to a **faction** (a string tag), and their targeting behaviour is defined by an ordered **goal list** instead of a single profile kind. This replaces the blunt `aggressive / defensive / passive / stationary` enum with fine-grained, composable targeting rules — and unlocks mob-vs-mob conflict, faction alliances, and dungeon faction warfare.
 
@@ -857,19 +859,9 @@ Players in a party have no way to see their teammates' health or status. Options
 
 ---
 
-### Action Bar Cooldown Notification for Wand Abilities (`rpg-core`) — 🟢 Easy
-When a player uses a wand ability that has a `cooldown{}` in its chain, show a brief action bar message so the player knows how long until it's ready again. Currently there's no feedback — the ability just silently fails if it's on cooldown and the player clicks again.
+### ✅ Action Bar Cooldown Notification for Wand Abilities (`rpg-core`) — shipped in 1.10.10
 
-**Desired behaviour:**
-- On a blocked cast (ability fires but `cooldown{}` gate returns early), send an action bar message like: `&cAbility on cooldown — &e3.2s remaining`
-- Only show it when the player tries to cast while on cooldown (not passively every tick)
-- If multiple abilities are on cooldown, show the one the player just tried to cast
-
-**Implementation pointers:**
-- `CooldownEffect` in `rpg-core` is where `cooldown{}` checks remaining time — this is where the action bar message should fire
-- `AbilityContext` carries the caster; cast via `caster.sendActionBar(...)` if it's a `Player`
-- Time remaining: `(cooldownTicks - ticksElapsed) / 20.0` formatted to one decimal place
-- Should respect the `[Sync]` rules — action bar sends are already per-player/client-side, no network concern
+`cooldown{}` now acts as a gate: if the key is still on cooldown when the effect fires, `ctx.setBlocked(true)` is set and the caster receives an action-bar message (`Ability on cooldown — X.Xs remaining` in red/yellow). Remaining time shows as whole seconds when exact (`3s`), one decimal otherwise (`3.5s`). Previously the effect only SET the cooldown and never checked it. See suite-21 changelog for full details.
 
 ---
 

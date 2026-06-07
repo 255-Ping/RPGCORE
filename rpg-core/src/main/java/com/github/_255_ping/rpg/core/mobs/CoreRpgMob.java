@@ -40,6 +40,10 @@ public final class CoreRpgMob implements RpgMob {
     /** Named loot pool IDs referenced via {@code LootPool:} / {@code LootPools:} in mob YAML. */
     private final List<String> lootPoolIds;
     private final MobAiProfile aiProfile;
+    /** Faction tag — nullable. {@code "player"} is a reserved faction name for players. */
+    private final String faction;
+    /** Goal list; empty means use the legacy profile kind instead. */
+    private final List<AiGoalDef> aiGoals;
 
     private final long xp;
     private final NamespacedKey mobIdKey;
@@ -64,6 +68,8 @@ public final class CoreRpgMob implements RpgMob {
                       CoreLootTable lootTable,
                       List<String> lootPoolIds,
                       MobAiProfile aiProfile,
+                      String faction,
+                      List<AiGoalDef> aiGoals,
                       long xp,
                       BossBarDef bossBarDef,
                       EliteDef eliteDef,
@@ -88,6 +94,8 @@ public final class CoreRpgMob implements RpgMob {
         this.lootTable = lootTable;
         this.lootPoolIds = lootPoolIds == null ? List.of() : List.copyOf(lootPoolIds);
         this.aiProfile = aiProfile == null ? MobAiProfile.DEFAULT : aiProfile;
+        this.faction   = faction;
+        this.aiGoals   = aiGoals == null ? List.of() : List.copyOf(aiGoals);
         this.xp = xp;
         this.bossBarDef         = bossBarDef;
         this.eliteDef           = eliteDef;
@@ -99,7 +107,13 @@ public final class CoreRpgMob implements RpgMob {
         this.healthService = healthService;
     }
 
-    public MobAiProfile aiProfile() { return aiProfile; }
+    public MobAiProfile aiProfile()     { return aiProfile; }
+    /** Faction tag for this mob type, or {@code null} if unset. */
+    public String faction()             { return faction; }
+    /** AI goal list; empty means use the legacy profile kind. */
+    public List<AiGoalDef> aiGoals()   { return aiGoals; }
+    /** {@code true} if this mob has a goal list and should bypass the legacy profile. */
+    public boolean hasGoals()           { return !aiGoals.isEmpty(); }
 
     // Death animation accessors — null means no custom effect for that field
     public org.bukkit.Particle deathParticle()   { return deathParticle; }
