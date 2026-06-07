@@ -34,16 +34,26 @@ public final class ItemLoader {
     private final CoreItemRegistry registry;
     private final NamespacedKey itemIdKey;
     private final Logger logger;
+    /**
+     * Path to {@code stat-order.yml} — re-read on every {@link #loadAll()} call so that
+     * {@code /rpg reload} picks up any edits without a server restart.
+     */
+    private final File statOrderFile;
+    private Map<String, List<String>> statOrderByType = new HashMap<>();
 
-    public ItemLoader(File folder, CoreItemRegistry registry, NamespacedKey itemIdKey, Logger logger) {
+    public ItemLoader(File folder, CoreItemRegistry registry, NamespacedKey itemIdKey,
+                      Logger logger, File statOrderFile) {
         this.folder = folder;
         this.registry = registry;
         this.itemIdKey = itemIdKey;
         this.logger = logger;
+        this.statOrderFile = statOrderFile;
     }
 
     public void loadAll() {
         registry.clear();
+        // Reload stat order first — items created below pick it up immediately.
+        statOrderByType = loadStatOrder();
         if (!folder.isDirectory()) return;
         File[] files = folder.listFiles((d, name) -> name.endsWith(".yml"));
         if (files == null) return;
@@ -54,6 +64,16 @@ public final class ItemLoader {
                 logger.warning("Failed to parse items file " + f.getName() + ": " + ex.getMessage());
             }
         }
+    }
+
+    private Map<String, List<String>> loadStatOrder() {
+        if (statOrderFile == null || !statOrderFile.exists()) return new HashMap<>();
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(statOrderFile);
+        Map<String, List<String>> result = new HashMap<>();
+        for (String key : yaml.getKeys(false)) {
+            result.put(key.toLowerCase(Locale.ROOT), yaml.getStringList(key));
+        }
+        return result;
     }
 
     private void loadFile(File file) {
@@ -133,10 +153,12 @@ public final class ItemLoader {
         boolean tradeable   = s.getBoolean("Tradeable", true);
         String setId        = s.getString("SetId");
 
+        List<String> statOrder = statOrderByType.getOrDefault(
+                type != null ? type.id().toLowerCase(Locale.ROOT) : "", List.of());
         return new CoreRpgItem(id, displayName, type, rarity, material, customModelData,
                 stats, triggeredAbilities, lore, consumeEffects,
                 attackCooldown, itemCooldown, ammoType, infiniteAmmo, projectileType,
-                tradeable, setId, itemIdKey);
+                tradeable, setId, itemIdKey, statOrder);
     }
 
     /**

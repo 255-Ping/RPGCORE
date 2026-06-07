@@ -283,7 +283,9 @@ public final class RpgCorePlugin extends JavaPlugin {
         statusEffectLoader = new StatusEffectLoader(statusEffectsDir, statusEffectRegistry, getLogger());
         statusEffectLoader.loadAll();
 
-        itemLoader = new ItemLoader(itemsDir, itemRegistry, itemIdKey, getLogger());
+        File statOrderFile = new File(getDataFolder(), "stat-order.yml");
+        if (!statOrderFile.exists()) saveResource("stat-order.yml", false);
+        itemLoader = new ItemLoader(itemsDir, itemRegistry, itemIdKey, getLogger(), statOrderFile);
         itemLoader.loadAll();
 
         File lootPoolsDir = new File(getDataFolder(), "loot-pools");

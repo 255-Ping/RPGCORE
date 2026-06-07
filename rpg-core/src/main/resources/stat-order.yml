@@ -1,0 +1,73 @@
+# Stat display order per item type
+# Each key is a BuiltinItemType id (lowercase). The list controls which stats
+# appear first in an item's lore. Stats present on the item but NOT listed here
+# are shown after, sorted alphabetically.
+# Edit this file to reorder stats — changes take effect on /rpg reload.
+
+sword:
+  - damage
+  - crit_chance
+  - crit_damage
+  - attack_speed
+  - swing_range
+  - ferocity
+  - strength
+  - defense
+  - max_health
+  - speed
+
+wand:
+  - damage
+  - magic_damage
+  - crit_chance
+  - crit_damage
+  - mana
+  - mana_regen
+  - ability_damage
+  - intelligence
+  - speed
+  - defense
+  - max_health
+
+bow:
+  - damage
+  - crit_chance
+  - crit_damage
+  - attack_speed
+  - ferocity
+  - strength
+  - defense
+  - max_health
+  - speed
+
+crossbow:
+  - damage
+  - crit_chance
+  - crit_damage
+  - attack_speed
+  - ferocity
+  - strength
+  - defense
+  - max_health
+  - speed
+
+armor:
+  - defense
+  - max_health
+  - strength
+  - speed
+  - magic_find
+  - true_defense
+
+accessory:
+  - strength
+  - crit_chance
+  - crit_damage
+  - intelligence
+  - magic_find
+  - speed
+  - defense
+  - max_health
+
+material:
+  - breaking_power

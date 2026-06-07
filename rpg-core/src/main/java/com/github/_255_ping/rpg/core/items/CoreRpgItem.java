@@ -8,9 +8,9 @@ import com.github._255_ping.rpg.api.items.ItemType;
 import com.github._255_ping.rpg.api.sets.SetBonus;
 import com.github._255_ping.rpg.api.items.Rarity;
 import com.github._255_ping.rpg.api.items.RpgItem;
-import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import com.github._255_ping.rpg.api.stats.Stat;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
@@ -50,6 +50,12 @@ public final class CoreRpgItem implements RpgItem {
     private final boolean tradeable;
     private final String setId;
     private final NamespacedKey itemIdKey;
+    /**
+     * Ordered list of stat IDs for lore display. Stats present on this item are shown
+     * in the order they appear here; stats not listed appear after, sorted alphabetically.
+     * Loaded from {@code plugins/rpg-core/stat-order.yml} per item type.
+     */
+    private final List<String> statOrder;
 
     public CoreRpgItem(String id, String displayName, ItemType type, Rarity rarity,
                        Material material, int customModelData,
@@ -57,7 +63,8 @@ public final class CoreRpgItem implements RpgItem {
                        List<String> extraLore, List<ConsumeEffect> consumeEffects,
                        int attackCooldownTicks, int itemCooldownTicks,
                        String ammoType, boolean infiniteAmmo, String projectileType,
-                       boolean tradeable, String setId, NamespacedKey itemIdKey) {
+                       boolean tradeable, String setId, NamespacedKey itemIdKey,
+                       List<String> statOrder) {
         this.id = id;
         this.displayName = displayName;
         this.type = type;
@@ -76,6 +83,7 @@ public final class CoreRpgItem implements RpgItem {
         this.tradeable = tradeable;
         this.setId = setId;
         this.itemIdKey = itemIdKey;
+        this.statOrder = statOrder != null ? List.copyOf(statOrder) : List.of();
     }
 
     @Override public String id() { return id; }
@@ -126,14 +134,30 @@ public final class CoreRpgItem implements RpgItem {
 
         List<Component> lore = new ArrayList<>();
 
-        // Stats: BREAKING_POWER shown first (gathering tools), then all others.
-        List<Map.Entry<Stat, Double>> statEntries = new ArrayList<>(stats.entrySet());
-        statEntries.sort(Comparator.comparingInt(e -> e.getKey() == BuiltinStat.BREAKING_POWER ? 0 : 1));
-        for (Map.Entry<Stat, Double> e : statEntries) {
-            Stat stat = e.getKey();
-            double value = e.getValue();
-            String line = stat.colorCode() + stat.displayName() + ": " + formatValue(value, stat.percent());
-            lore.add(noItalic(LEGACY.deserialize(line)));
+        // Item type label — dark gray, italic (e.g. "Sword", "Armor", "Wand")
+        if (type != null) {
+            lore.add(Component.text(capitalize(type.id()))
+                    .color(NamedTextColor.DARK_GRAY)
+                    .decoration(TextDecoration.ITALIC, true));
+            lore.add(Component.empty());
+        }
+
+        // Stats — ordered by statOrder config; unlisted stats follow alphabetically.
+        if (!stats.isEmpty()) {
+            List<Map.Entry<Stat, Double>> statEntries = new ArrayList<>(stats.entrySet());
+            statEntries.sort(Comparator
+                    .<Map.Entry<Stat, Double>, Integer>comparing(
+                            e -> {
+                                int idx = statOrder.indexOf(e.getKey().id());
+                                return idx < 0 ? Integer.MAX_VALUE : idx;
+                            })
+                    .thenComparing(e -> e.getKey().id()));
+            for (Map.Entry<Stat, Double> e : statEntries) {
+                Stat stat = e.getKey();
+                double value = e.getValue();
+                String line = stat.colorCode() + stat.displayName() + ": " + formatValue(value, stat.percent());
+                lore.add(noItalic(LEGACY.deserialize(line)));
+            }
         }
 
         if (!stats.isEmpty() && !extraLore.isEmpty()) {
@@ -280,6 +304,11 @@ public final class CoreRpgItem implements RpgItem {
 
     private static Component noItalic(Component c) {
         return c.decoration(TextDecoration.ITALIC, false);
+    }
+
+    private static String capitalize(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase(java.util.Locale.ROOT);
     }
 
     private static String formatValue(double v, boolean percent) {
