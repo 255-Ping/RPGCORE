@@ -222,12 +222,22 @@ public final class CoreRpgItem implements RpgItem {
      * Renders a single ability binding into lore lines.
      * Active triggers (click-based) show as "&5Ability: &d[name] &8([trigger hint])".
      * Passive/proc triggers show as "&2Passive: &a[name] &8([trigger hint])".
+     *
+     * <p>An invocation is only rendered when it has <em>explicit</em> metadata registered
+     * via {@link com.github._255_ping.rpg.api.abilities.AbilityRegistry#registerMeta}.
+     * Raw DSL primitives (beam, damage, heal, knockback, …) return their own ID as the
+     * display name and have no description — they are treated as invisible plumbing just
+     * like mana_cost/cooldown, letting the item's manual {@code Lore:} block speak for
+     * itself without duplication.
      */
     private void renderAbilityBinding(ItemAbilityBinding binding, List<Component> lore) {
-        // Each binding may contain multiple invocations (one line in AbilitySequence per invocation).
-        // We show one lore entry per invocation that has a known display name.
         for (AbilityInvocation inv : binding.invocations()) {
             String abilityId = inv.effectName();
+
+            // Hard-skip pipeline mechanics (mana gate, cooldown, delay, vfx) — these are
+            // never standalone abilities worth advertising, even if meta is registered.
+            if (isPlumbingEffect(abilityId)) continue;
+
             String abilityDisplayName;
             List<String> description;
             try {
@@ -238,9 +248,14 @@ public final class CoreRpgItem implements RpgItem {
                 description = List.of();
             }
 
-            // Skip built-in effect primitives (mana_cost, cooldown, particles, sound, delay) —
-            // they're pipeline plumbing, not standalone abilities worth showing in lore.
-            if (isPlumbingEffect(abilityId) && description.isEmpty()) continue;
+            // Skip raw DSL primitives that have no registered display name or description.
+            // AbilityRegistry.abilityDisplayName() returns the raw ID as fallback, so
+            // "displayName equals id" means "no one called registerMeta() for this effect."
+            // Items that describe their abilities in manual Lore: entries rely on this to
+            // avoid duplicate lore lines (e.g. "Ability: beam (Right-click)" after a manual
+            // "Right-click: Solar Beam (30 mana)" line).
+            boolean hasDisplayMeta = !abilityDisplayName.equals(abilityId) || !description.isEmpty();
+            if (!hasDisplayMeta) continue;
 
             boolean isActive = binding.trigger().isActive();
             String prefix = isActive ? "&5Ability: &d" : "&2Passive: &a";
@@ -252,7 +267,10 @@ public final class CoreRpgItem implements RpgItem {
         }
     }
 
-    /** Returns true for low-level pipeline effects that shouldn't appear as standalone lore entries. */
+    /**
+     * Returns true for low-level pipeline effects that are never shown in lore regardless
+     * of registered metadata — they describe the cast mechanics, not the ability itself.
+     */
     private static boolean isPlumbingEffect(String id) {
         return switch (id) {
             case "mana_cost", "cooldown", "delay", "particles", "sound" -> true;

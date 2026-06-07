@@ -1,6 +1,6 @@
 # Built-in Ability Effects — Reference
 
-> **Status:** Working — all effects listed here are implemented and available in `rpg-core 1.7.0`.
+> **Status:** Working — all effects listed here are implemented. Most built-in effects shipped in `rpg-core 1.7.0`; `spawn_mob` added in `1.8.0`. Current core version: `1.10.1`.
 
 Full parameter reference for every built-in effect. All effects accept their parameters via the DSL: `effectName{key=value, key2=value2}`.
 

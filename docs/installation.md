@@ -31,6 +31,7 @@ On first startup, `rpg-core` generates:
 - `plugins/rpg-core/mobs/example.yml` — sample mob
 - `plugins/rpg-core/abilities/example.yml` — sample custom ability
 - `plugins/rpg-core/blocks/example.yml` — sample custom block
+- `plugins/rpg-core/loot-tables/example.yml` — sample shared loot table
 - `plugins/rpg-core/messages.yml` — i18n message keys (English)
 
 Each addon generates its own `plugins/<addon>/config.yml` plus relevant content folders on first run.
@@ -69,5 +70,6 @@ Hard dependencies must be present or the plugin won't load. Soft dependencies ar
 | `rpg-dungeons` | `rpg-core` | `rpg-parties` |
 | `rpg-guilds` | `rpg-core` | `rpg-economy` |
 | `rpg-quests` | `rpg-core` | `rpg-npcs`, `rpg-economy` |
+| `rpg-bossbar` | `rpg-core` | — |
 
 **Recommended install order:** `rpg-core` → `rpg-economy` → `rpg-npcs` → everything else (Paper resolves load order automatically via `depend`/`softdepend`, so manual ordering is only needed if you're troubleshooting missing-service errors on startup).

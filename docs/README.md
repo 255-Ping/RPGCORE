@@ -103,6 +103,7 @@ Each addon is its own jar. Toggle them by adding or removing jars from the `plug
 | `rpg-quests` | Kill/mine/collect/talk objectives, rewards | [Quests](addons/quests.md) |
 | `rpg-trade` | Player-to-player item trade GUI | [Trade](addons/trade.md) |
 | `rpg-admin` | Admin utility commands (fly, god, heal, speed, etc.) | [Admin Utilities](addons/admin.md) |
+| `rpg-bossbar` | Custom boss bar display for entities and events | — |
 
 ### Planned (not yet scaffolded)
 

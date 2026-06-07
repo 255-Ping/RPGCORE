@@ -31,6 +31,8 @@ Every command across every module. Permissions follow `rpg.<module>.<command>[.<
 | `/skill [player]` | `rpg.core.skill` / `rpg.core.skill.other` | true / op | Open skills GUI |
 | `/skill pin <skill>` | `rpg.core.skill.pin` | true | Pin a skill to the vanilla XP bar |
 | `/effects` | `rpg.core.effects` | true | Open active status effects GUI |
+| `/menu` (alias `/m`) | `rpg.core.menu` | true | Open the Main Menu hub GUI (also opened by right-clicking the persistent menu item) |
+| `/achievements [player]` | `rpg.core.achievements` / `rpg.core.achievements.other` | true / op | Open the Achievements GUI |
 
 ## Economy (`rpg-economy`)
 

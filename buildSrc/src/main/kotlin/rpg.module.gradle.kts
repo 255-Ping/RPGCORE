@@ -31,10 +31,14 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 val pluginVersion = version.toString()
+val pluginName = project.name
 tasks.withType<ProcessResources>().configureEach {
     inputs.property("pluginVersion", pluginVersion)
-    filesMatching("plugin.yml") {
-        expand(mapOf("version" to pluginVersion))
+    inputs.property("pluginName", pluginName)
+    // plugin.yml uses ${version}; config.yml uses ${pluginName} and ${version}.
+    // Both share the same expand map — extra keys are ignored by files that don't reference them.
+    filesMatching(listOf("plugin.yml", "config.yml")) {
+        expand(mapOf("version" to pluginVersion, "pluginName" to pluginName))
     }
 }
 

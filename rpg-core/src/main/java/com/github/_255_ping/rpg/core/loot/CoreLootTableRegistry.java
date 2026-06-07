@@ -12,6 +12,10 @@ public final class CoreLootTableRegistry implements LootTableRegistry {
 
     private final ConcurrentMap<String, LootTable> byId = new ConcurrentHashMap<>();
 
+    public void clear() {
+        byId.clear();
+    }
+
     @Override
     public void register(LootTable table) {
         byId.put(table.id(), table);

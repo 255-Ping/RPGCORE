@@ -76,6 +76,16 @@ public final class ItemAbilityListener implements Listener {
                 .toList();
         if (bindings.isEmpty()) return;
 
+        // Silenced debuff — the 'silenced' status effect blocks all active-click ability use.
+        if (RpgServices.statusEffects().active(player).stream()
+                .anyMatch(e -> "silenced".equals(e.effectId()))) {
+            try {
+                RpgServices.actionBar().send(player,
+                        net.kyori.adventure.text.Component.text("§cSilenced!"), 20);
+            } catch (IllegalStateException ignored) {}
+            return;
+        }
+
         // Cancel block-place for weapon-type items so the right-click cast doesn't also place a block.
         if (action == Action.RIGHT_CLICK_BLOCK && isWeaponType(item)) {
             event.setUseInteractedBlock(org.bukkit.event.Event.Result.DENY);

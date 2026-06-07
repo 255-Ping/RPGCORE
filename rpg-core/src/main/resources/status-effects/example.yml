@@ -54,3 +54,49 @@ slow:
   hidden: false
   stat-modifiers:
     speed: { kind: percent, value: -30 }
+
+# ── Catalog additions ──────────────────────────────────────────────────────────
+
+burning:
+  display: "&6🔥 Burning"
+  category: debuff
+  stacking: refresh
+  hidden: false
+  tick:
+    interval-ticks: 20
+    action: damage
+    amount: 3
+    source: fire
+  on-apply:
+    particles:
+      type: FLAME
+      count: 8
+      spread: 0.3
+
+frozen:
+  display: "&b❄ Frozen"
+  category: debuff
+  stacking: refresh
+  hidden: false
+  stat-modifiers:
+    speed: { kind: percent, value: -80 }
+  on-apply:
+    particles:
+      type: SNOWFLAKE
+      count: 10
+      spread: 0.3
+
+# Silenced has no stat mods — the ability listener enforces it in code.
+silenced:
+  display: "&8Silenced"
+  category: debuff
+  stacking: refresh
+  hidden: false
+
+haste:
+  display: "&eHaste"
+  category: buff
+  stacking: take-max
+  hidden: false
+  stat-modifiers:
+    mining_speed: { kind: percent, value: 50 }

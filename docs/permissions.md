@@ -35,6 +35,14 @@ For the full command list, see [commands.md](commands.md).
 | `rpg.core.skill.other` | op | View another player's skill levels |
 | `rpg.core.effects` | true | View own active status effects |
 | `rpg.core.effects.other` | op | View another player's effects |
+| `rpg.core.menu` | true | Open the Main Menu hub GUI (`/menu` or right-click menu item) |
+| `rpg.core.achievements` | true | View own achievements (`/achievements`) |
+| `rpg.core.achievements.other` | op | View another player's achievements |
+| `rpg.core.ability.cast` | op | Debug-cast an ability (`/rpg ability cast <id>`) |
+| `rpg.core.skill.set` | op | Set a player's skill level or XP (`/rpg skill set`) |
+| `rpg.core.skill.pin` | true | Pin a skill to the vanilla XP bar |
+| `rpg.core.status.apply` | op | Apply a status effect to a player |
+| `rpg.core.status.clear` | op | Clear status effects from a player |
 
 ## Admin (`rpg-admin`)
 

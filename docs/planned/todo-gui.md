@@ -63,7 +63,7 @@ These replace or supplement existing command interfaces. All are in `docs/planne
 | Hologram Editor GUI (`/holograms`) | `rpg-holograms` | Commands work; GUI editor deferred | 🟡 Medium |
 | Display Entity Editor GUI (`/de edit`) | `rpg-holograms` | Not built yet — DEE-style physical editor + fine-detail GUI | 🔴 Hard |
 | NPC Editor GUI (`/npc`) | `rpg-npcs` | All commands work; GUI editor deferred | 🔴 Hard |
-| Achievements GUI (`/achievements`) | `rpg-core` | Not built yet — needed alongside achievement system | 🟡 Medium |
+| ✅ Achievements GUI (`/achievements`) | `rpg-core` | **Done** — `AchievementGui` in coreVersion 1.10.0. Locked = GRAY_DYE, unlocked = LIME_DYE. | ✅ Done |
 | Leaderboard GUI (`/top`) | `rpg-core` | Not built yet — needed alongside leaderboard feature | 🟡 Medium |
 | Inbox / Mail GUI (`/inbox`) | `rpg-core` | Not built yet — needed alongside mail system | 🟡 Medium |
 

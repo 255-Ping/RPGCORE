@@ -767,10 +767,8 @@ Currently mobs (and NPCs) stand still when no player is nearby. A patrol behavio
 
 ---
 
-### Loot Tables: External File Reference (`rpg-core`) — 🟢 Easy
-Current: inline loot tables on mob YAML work. External `LootTable: <id>` references parsed but never rolled — only inline tables produce drops. Missing:
-- `LootTableRegistry` lookup by id when rolling mob drops
-- Coin drops wired to economy deposit on kill
+### ✅ Loot Tables: External File Reference (`rpg-core`) — shipped in 1.10.2
+`LootTable: <id>` string references now work end-to-end. `LootTableLoader` loads `plugins/rpg-core/loot-tables/*.yml` before mob loading; `MobLoader` detects string vs section for `LootTable:`; `MobLootListener` resolves the registry and rolls the referenced table (including its vanilla XP and combat XP contributions). `example.yml` resource shipped with `forest_common` sample table. Coin drops via economy deposit were already wired through `depositCurrency`.
 
 ---
 
@@ -1078,17 +1076,7 @@ External non-suite plugins (third-party shops, job plugins, etc.) that expect a 
 
 ---
 
-### Status Effects: Catalog + New Built-in Types (`rpg-core`) — 🟢 Easy
-The `apply_status` effect is used in several example abilities, but there's no documented catalog of what built-in status IDs exist and what their parameters mean. Also several common RPG statuses are missing.
-
-**Needed:**
-- Write a reference table (inline in `config.yml` comments or `docs/core/status-effects.md`) listing every built-in status: id, description, `Level` meaning, `DurationTicks` behavior
-- New built-in statuses to add:
-  - `burning` — sets entity on fire for duration ticks (maps to Bukkit `setFireTicks`)
-  - `frozen` — applies high-amplifier Slowness + Mining Fatigue; blue particle burst on apply
-  - `marked` — damage amplification debuff (used by `mark` ability effect above); ring particles on target
-  - `silenced` — prevents ability use for duration (add a silenced-status check at the top of `ItemAbilityListener` before the ability fires; no `AbilityService` class exists — the right-click dispatch lives in `ItemAbilityListener`)
-  - `haste` — positive buff: increased mining speed (Haste potion effect)
-  - `shield_buff` — absorbed damage indicator (visual only — used internally by `shield` effect)
+### ✅ Status Effects: Catalog + New Built-in Types (`rpg-core`) — shipped in 1.10.2
+Added `burning` (fire tick damage, FLAME particles on apply), `frozen` (-80% speed debuff, SNOWFLAKE particles on apply), `silenced` (blocks active ability use — enforced in `ItemAbilityListener` with §cSilenced! action bar feedback), and `haste` (+50% mining_speed per level) to `status-effects/example.yml`. All four load via the existing `StatusEffectLoader` YAML pipeline. `marked` and `shield_buff` are left to the ability-effect code paths that create them directly.
 
 ---

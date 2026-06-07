@@ -41,9 +41,12 @@ Every `Abilities:` entry is a **binding**. A binding has a trigger (when it fire
 | `"~left_click ..."` | Left-click |
 | `"~shift_right_click ..."` | Sneak + right-click |
 | `"~shift_left_click ..."` | Sneak + left-click |
-| `"~on_hit ..."` | Player deals damage (melee or projectile) |
-| `"~on_hurt ..."` | Player receives damage |
+| `"~on_hit ..."` | Player deals damage (melee or projectile, after pipeline confirms hit) |
+| `"~on_hurt ..."` | Player receives damage (any source) |
 | `"~on_jump ..."` | Player jumps |
+| `"~on_attack ..."` | Player initiates an attack — fires before the damage pipeline, even if cancelled |
+| `"~on_kill ..."` | Player kills an RPG mob |
+| `"~on_block ..."` | Player successfully blocks with a shield; attacker is `ctx.target` |
 | `"~passive ..."` | Ticking — every `abilities.passive-interval-ticks` while held/worn |
 
 Passive and proc triggers do not auto-apply mana cost. Add `mana_cost{amount=N}` at the start of the sequence if you want passive procs to cost mana.

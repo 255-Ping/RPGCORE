@@ -149,7 +149,17 @@ public final class MobLoader {
             }
         }
 
-        CoreLootTable lootTable = parseLootTable(id, s.getConfigurationSection("LootTable"));
+        // LootTable: can be either an inline section or a plain string reference to an
+        // externally-defined table in loot-tables/*.yml.  Detect which case we're in so that
+        // getConfigurationSection() doesn't silently return null and drop the value.
+        String lootTableId = null;
+        CoreLootTable lootTable;
+        if (s.isString("LootTable")) {
+            lootTableId = s.getString("LootTable");
+            lootTable = null;
+        } else {
+            lootTable = parseLootTable(id, s.getConfigurationSection("LootTable"));
+        }
         MobAiProfile aiProfile = parseAiProfile(s.getConfigurationSection("AI"));
         long xp = s.getLong("XP", 0);
 
@@ -190,7 +200,7 @@ public final class MobLoader {
 
         return new CoreRpgMob(id, displayName, type, health, damage, defense,
                 stats, helmet, chest, legs, boots, hand, off, null, bindings, lootTable,
-                lootPoolIds, aiProfile, xp,
+                lootTableId, lootPoolIds, aiProfile, xp,
                 bossBarDef, eliteDef,
                 deathParticle, deathParticleCount, deathParticleSpread, deathSound,
                 mobIdKey, healthService);

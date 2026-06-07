@@ -160,6 +160,7 @@ voidblade:
 | `mana_cost` | Deducts mana; aborts chain if insufficient |
 | `cooldown` | Starts a soft cooldown for this ability |
 | `chance` | Probability gate — skips rest of chain on a failed roll |
+| `spawn_mob` | Spawns one or more registered mobs at caster / target / beam point |
 | **Target selection** | |
 | `nearest_enemy` | Sets `ctx.target` to nearest hostile within range |
 | `farthest_enemy` | Sets `ctx.target` to farthest hostile within range |
@@ -342,7 +343,15 @@ Passive/proc bindings display as:
 §2Passive: §aLifesteal §8(On Hit)
 ```
 
-Pipeline-only effects (`mana_cost`, `cooldown`, `particles`, `sound`, `delay`) are hidden from lore unless they have a `Description:` in their ability YAML.
+**What shows in lore — two rules:**
+
+1. **Named custom abilities** (defined in `abilities/*.yml` with a `Name:` or `Description:`) always appear — `AbilityLoader` calls `registry.registerMeta()` for each, which overrides the raw ID as the display name.
+
+2. **Raw DSL effect primitives** (`beam`, `damage`, `heal`, `explode`, `knockback`, etc.) do **not** appear — they have no registered display name, so `abilityDisplayName(id)` returns the raw effect ID and the renderer skips them. Use the item's manual `Lore:` entries to describe what the ability does when you build abilities from raw DSL chains.
+
+**Pipeline mechanics** (`mana_cost`, `cooldown`, `delay`, `particles`, `sound`) are **always** hidden regardless of any registered metadata.
+
+**To make a raw effect show in lore** — call `RpgServices.abilities().registerMeta("beam", "Solar Beam", List.of("..."))` in your addon's `onEnable`. Once registered, the display name overrides the raw ID and it appears normally.
 
 ---
 
