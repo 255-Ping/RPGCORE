@@ -5,6 +5,11 @@
 persistence:
   # Storage backend: yaml (flat-file, default) | mysql (recommended for multi-server)
   # If 'mysql' fails to connect, rpg-core falls back to YAML with a warning.
+  #
+  # NOTE: rpg-core writes a separate file — plugins/rpg-core/backend.yml — on each startup.
+  # That file is internal migration bookkeeping used to detect backend switches between runs.
+  # Do NOT edit backend.yml manually. The only file you need to touch is this one (config.yml).
+  # See docs/core/persistence.md for the full explanation.
   backend: yaml
   mysql:
     host: 127.0.0.1
@@ -178,10 +183,13 @@ resource-pack:
   required: false    # true = kick players who decline
 
 # Floating damage indicators (TextDisplay entities above the hit mob).
+# Numbers spawn just above the victim's head and drift downward while shrinking.
 damage-indicators:
   enabled: true
-  duration-ticks: 30       # total life of the indicator (30 = 1.5 seconds)
-  rise-blocks: 1.5         # how far the number floats upward before fading
+  duration-ticks: 30       # total life of the indicator in ticks (30 = 1.5 seconds)
+  drop-blocks: 1.5         # how far the number drifts downward over its lifetime
+  start-scale: 1.0         # initial text size (1.0 = normal)
+  min-scale: 0.0           # final text size at the end of the animation (0.0 = invisible)
 
 # Mob health bar shown in the mob's display name after each hit.
 mob-health-bar:

@@ -43,7 +43,7 @@ public final class RpgChatPlugin extends JavaPlugin implements CommandExecutor, 
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         String name = command.getName().toLowerCase();
         if (name.equals("chat")) {
-            if (args.length == 1) return filter(args[0], List.of("global", "party", "guild", "reload"));
+            if (args.length == 1) return filter(args[0], List.of("global", "party", "guild", "staff", "reload"));
         }
         if (name.equals("msg") || name.equals("tell") || name.equals("w") || name.equals("whisper")) {
             if (args.length == 1) return filterPlayers(args[0]);
@@ -103,7 +103,7 @@ public final class RpgChatPlugin extends JavaPlugin implements CommandExecutor, 
             return true;
         }
         String channel = args[0].toLowerCase();
-        if (!java.util.Set.of("global", "party", "guild").contains(channel)) {
+        if (!java.util.Set.of("global", "party", "guild", "staff").contains(channel)) {
             p.sendMessage(LEGACY.deserialize("&cUnknown channel: " + channel)); return true;
         }
         String perm = "rpg.chat.use." + channel;

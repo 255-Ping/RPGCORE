@@ -1,12 +1,15 @@
 package com.github._255_ping.rpg.core.abilities.effects;
 
+import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.abilities.AbilityContext;
 import com.github._255_ping.rpg.api.abilities.AbilityDsl;
 import com.github._255_ping.rpg.api.abilities.AbilityEffect;
+import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
@@ -56,6 +59,24 @@ public final class BeamEffect implements AbilityEffect {
             ctx.setTarget(hit);
             end = result.getHitPosition().toLocation(caster.getWorld());
             ctx.setCarriedDamage(ctx.carriedDamage() * damageMultiplier);
+
+            // Apply the caster's KNOCKBACK stat to the hit entity (same formula as the melee pipeline).
+            double knockback = 0;
+            try {
+                if (caster instanceof Player ap) {
+                    knockback = RpgServices.player(ap).get(BuiltinStat.KNOCKBACK);
+                } else {
+                    knockback = RpgServices.mobStats().forMob(caster).get(BuiltinStat.KNOCKBACK);
+                }
+            } catch (IllegalStateException ignored) {}
+            if (knockback > 0) {
+                Vector kbDir = hit.getLocation().toVector().subtract(caster.getLocation().toVector());
+                kbDir.setY(0);
+                if (kbDir.lengthSquared() < 0.001) kbDir = new Vector(1, 0, 0);
+                kbDir.normalize();
+                double strength = knockback / 100.0;
+                hit.setVelocity(kbDir.multiply(strength).setY(Math.min(0.3 + strength * 0.1, 0.5)));
+            }
         } else if (result != null) {
             end = result.getHitPosition().toLocation(caster.getWorld());
         } else {

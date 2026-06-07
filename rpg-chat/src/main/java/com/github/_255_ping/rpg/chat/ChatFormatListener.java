@@ -94,6 +94,16 @@ public final class ChatFormatListener implements Listener {
                 } catch (IllegalStateException ignored) {}
                 yield out;
             }
+            case "staff" -> {
+                // Only players who hold the rpg.chat.use.staff permission can see staff messages.
+                Set<Audience> out = new HashSet<>();
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    if (p.hasPermission("rpg.chat.use.staff")) out.add(p);
+                }
+                // Always include sender so they see their own message even if perm is lost mid-session.
+                out.add(sender);
+                yield out;
+            }
             default -> null;  // global = use default broadcast
         };
     }

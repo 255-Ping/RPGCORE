@@ -216,12 +216,12 @@ When `suiteVersion` bumps:
 | Module | Property | Current |
 |---|---|---|
 | rpg-api | `apiVersion` | 0.5.4 |
-| rpg-core | `coreVersion` | 1.10.2 |
+| rpg-core | `coreVersion` | 1.10.3 |
 | rpg-mining | `miningVersion` | 0.2.3 |
 | rpg-combat | `combatVersion` | 0.2.0 |
 | rpg-economy | `economyVersion` | 0.2.1 |
 | rpg-hud | `hudVersion` | 0.4.1 |
-| rpg-chat | `chatVersion` | 0.1.0 |
+| rpg-chat | `chatVersion` | 0.1.1 |
 | rpg-accessories | `accessoriesVersion` | 0.1.0 |
 | rpg-holograms | `hologramsVersion` | 0.0.3 |
 | rpg-parties | `partiesVersion` | 0.2.0 |

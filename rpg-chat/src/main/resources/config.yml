@@ -25,8 +25,10 @@ clearchat-lines: 100
 # Toggle at runtime with /mutechat (requires rpg.chat.mute permission).
 mutechat-default: false   # false = chat open by default; true = chat muted until an admin enables it
 
-# Channel prefixes prepended to the formatted chat line when using party/guild chat.
+# Channel prefixes prepended to the formatted chat line when using party/guild/staff chat.
 # Empty string = no prefix (players won't see which channel a message is from).
 channel-prefix-global: ""              # global chat has no prefix by default
 channel-prefix-party: "&8[&dParty&8] "  # example: "[Party] Steve: hello"
 channel-prefix-guild: "&8[&aGuild&8] "  # example: "[Guild] Steve: hello"
+# Staff channel — only players with rpg.chat.use.staff can send or receive these messages.
+channel-prefix-staff: "&8[&cStaff&8] " # example: "[Staff] Steve: muting player X"

@@ -65,8 +65,10 @@ Every ability invocation tracks a `Set<UUID>` of entities already hit **this tic
 
 ---
 
-### Ability DSL: Random Chance Gate (`rpg-core`) — 🟢 Easy
+### ✅ Ability DSL: Random Chance Gate (`rpg-core`) — already shipped
+`ChanceEffect` exists, is registered as `"chance"` in `registerBuiltins()`, and uses `ctx.setBlocked(true)` when the roll fails. Verified complete during session audit.
 
+<!--
 A `chance{}` effect that acts as an inline probability gate. When the ability chain reaches it, a random roll is made — if it fails the rest of the chain is silently skipped.
 
 ```yaml
@@ -84,6 +86,7 @@ A `chance{}` effect that acts as an inline probability gate. When the ability ch
 - No `seed` — each invocation rolls independently
 
 **Implementation:** `ChanceEffect` sets a `boolean ChanceEffect.BLOCKED_KEY` flag on the `AbilityContext` if the roll fails. Subsequent effects check this flag at the start of `apply()` and no-op if set. The flag is cleared after the full chain finishes (reset in the chain runner, not by individual effects). This is cleaner than throwing an exception or returning an enum — context already has a carried-state bag.
+-->
 
 ---
 
@@ -249,14 +252,8 @@ Variables are stored in `Map<String, Double>` on `CoreRpgPlayer` (survives acros
 
 ---
 
-### Consolidate `backend.yml` + `config.yml` Persistence Setting (`rpg-core`) — 🟢 Easy
-**Why there are two files — document this clearly:**
-- `config.yml → persistence.backend` is the **admin's desired setting** (what the server owner configured).
-- `backend.yml` is a **runtime state file written by `BackendMigrator`** at startup. It records which backend was actually active last session so the migrator can detect a YAML↔MySQL switch and auto-migrate data before anything reads it.
-
-They intentionally serve different purposes and must stay separate. The risk of merging them is that if `config.yml` were both the setting AND the last-active record, a partial migration crash would corrupt the desired setting.
-
-**Action:** Add a comment block near the `persistence:` section in `config.yml` explaining this, and add a similar comment at the top of `backend.yml` when it is first generated. Also document it in `docs/core/persistence.md` so admins don't think it's a bug or duplicate.
+### ✅ Consolidate `backend.yml` + `config.yml` Persistence Setting (`rpg-core`) — shipped in 1.10.3
+Comment block added near the `persistence:` key in `rpg-core/config.yml` explaining that `backend.yml` is internal `BackendMigrator` bookkeeping and must not be edited manually. `docs/core/persistence.md` already contained the full explanation. No code change — docs/config-comment only.
 
 ---
 
@@ -327,14 +324,8 @@ telekinesis:
 
 ---
 
-### Damage Indicators: Float Down + Shrink (`rpg-holograms`) — 🟢 Easy
-Current behaviour: damage numbers appear and stay in place until their duration expires.
-
-New behaviour:
-- Numbers **float downward** (not upward) over their lifetime
-- Numbers **scale down** (shrink) continuously as they age via `TextDisplay` transformation
-- When they reach minimum scale (configurable `min-scale` in config), they are removed immediately rather than waiting for `duration-ticks`
-- All motion/scale parameters should be configurable: `float-speed`, `start-scale`, `min-scale`, `duration-ticks`
+### ✅ Damage Indicators: Float Down + Shrink (`rpg-core`) — shipped in 1.10.3
+Animation changed from sin-arc-rising to linear downward drift + shrink. Spawn location raised to `victim.getHeight() + 0.3` so the drift starts above the mob head. New config keys under `damage-indicators`: `drop-blocks` (replaces `rise-blocks`), `start-scale`, `min-scale`. `DamageIndicatorListener.java` updated; `rpg-core/config.yml` updated.
 
 ---
 
@@ -452,17 +443,10 @@ Several improvements needed:
 
 ---
 
-### Knockback on All Weapons + Wands (`rpg-core` / `rpg-combat`) — 🟢 Easy
-Knockback is missing or broken across multiple item types. Confirmed issues:
-
-- **Beam wand** — `BeamEffect` deals damage but applies no knockback to the hit entity. The `KNOCKBACK` stat on the held item is never read in the beam path. Needs an explicit knockback velocity application after the damage call in `BeamEffect`, scaled the same way melee does it (stat value / 100 = strength).
-- **Arrows** — arrow hits deal damage but no knockback is applied through the RPG pipeline.
-- **Example items** — all example swords, bows, and wands in the default YAML files are missing a `Knockback:` stat entry entirely, so there's nothing to apply even where the code path exists.
-
-**Fix checklist:**
-1. Wire `KNOCKBACK` stat application into `BeamEffect` (after damage, repel target away from caster)
-2. Wire `KNOCKBACK` into the arrow/bow hit path
-3. Add `Knockback: 50` (or appropriate value) to every example sword, bow, crossbow, and wand in `items/example.yml` so knockback is demonstrated out of the box
+### ✅ Knockback on All Weapons + Wands (`rpg-core`) — shipped in 1.10.3
+- **BeamEffect**: wired `KNOCKBACK` stat after target is set — reads caster stat via `RpgServices.player()` / `RpgServices.mobStats()`, applies repel velocity identical to the melee pipeline (`knockback / 100.0` strength, Y-clamped to max 0.5).
+- **Arrows/melee**: already wired in `DamagePipelineListener.onDamage` (both projectile shooter and melee attacker paths). No gap remained.
+- **Example items**: added `knockback:` stat to 9 weapons that were missing it (`phantom_blade`, `vampiric_dagger`, `blink_dagger`, `soul_siphon`, `frost_lance`, `chain_lightning_wand`, `dual_cast_wand`, `thunderstrike_wand`, `executioner_blade`). All combat weapons now have the stat.
 
 ---
 
@@ -633,10 +617,8 @@ Current: cube-around-player only. Deferred:
 
 ---
 
-### Chat: Staff Channel + Custom Channels (`rpg-chat`) — 🟢 Easy
-Current: global / party / guild channels work. Deferred:
-- Staff channel (`/chat staff`, requires `rpg.chat.use.staff`)
-- Admin-defined custom channels in `config.yml`
+### ✅ Chat: Staff Channel (`rpg-chat`) — shipped in 0.1.1
+`/chat staff` channel added. Requires `rpg.chat.use.staff` permission to send and receive. `ChatFormatListener.pickRecipients` filters to all online players holding that permission (sender always included). Tab-complete lists `staff` alongside `global/party/guild`. Config key `channel-prefix-staff` added with default `"&8[&cStaff&8] "`. Custom admin-defined channels deferred to a later slice.
 
 ---
 
@@ -1049,30 +1031,13 @@ Currently only two test files exist: `QuestObjectiveTest.java` and `DamageMathTe
 
 ---
 
-### Vanilla Suppression Remaining Flags (`rpg-core`) — 🟢 Easy
-Audit `VanillaSuppressionListener.java` — these flags are accepted in `config.yml` but likely have no event handler wired yet:
-
-| Flag | Config key | Likely missing handler |
-|---|---|---|
-| Villager trading | `villager-trading` | `VillagerAcquireTradeEvent` + `VillagerReplenishTradeEvent` + `InventoryOpenEvent` for villager GUIs |
-| Beacons | `beacons` | `BeaconEffectEvent` |
-| Pillager patrols | `pillager-patrols` | `EntitySpawnEvent` filtering `PILLAGER` patrol spawns |
-| Block explosion damage | `block-explosion-damage` | `EntityDamageByBlockEvent` for explosion sources |
-| Durability | `durability` | `PlayerItemDamageEvent` |
-| Death drops | `death-drops` | `PlayerDeathEvent` item drop handling (separate from the custom death-rules system — this is the vanilla drop specifically) |
-
-Verify each against the actual `VanillaSuppressionListener.java` event listener list and add any confirmed-missing handlers.
+### ✅ Vanilla Suppression Remaining Flags (`rpg-core`) — already shipped
+All 6 flags verified wired during session audit: `villager-trading` (PlayerInteractEntityEvent), `beacons` (BeaconEffectEvent), `pillager-patrols` (PATROL SpawnReason in EntitySpawnEvent), `block-explosion-damage` (EntityExplodeEvent + BlockExplodeEvent), `durability` (DurabilityListener.java), `death-drops` (PlayerDeathEvent). No gaps remaining.
 
 ---
 
-### Economy: Vault Provider Bridge (`rpg-economy`) — 🟢 Easy
-External non-suite plugins (third-party shops, job plugins, etc.) that expect a Vault `Economy` service can't interact with `rpg-economy`. Missing:
-
-- Add Vault as a `softDepend` in `rpg-economy/plugin.yml`
-- On enable, if Vault is present, register a `net.milkbowl.vault.economy.Economy` provider via `getServer().getServicesManager().register(Economy.class, new VaultEconomyAdapter(coreEconomy), this, ServicePriority.Normal)`
-- `VaultEconomyAdapter` wraps `CoreEconomy` — implement `has()`, `getBalance()`, `withdrawPlayer()`, `depositPlayer()`, `format()` using `RpgServices.economy()`
-- Methods Vault doesn't support (multi-world, banks) can return `false` / throw `UnsupportedOperationException`
-- This is one-way compatibility: Vault plugins can read/write rpg-economy balances; rpg-economy doesn't need to depend on Vault at compile time beyond the soft-dep
+### ✅ Economy: Vault Provider Bridge (`rpg-economy`) — shipped in 0.2.0
+Vault provider registered on enable; `VaultEconomyAdapter` wraps `CoreEconomy`. Noted in suite 21 changelog.
 
 ---
 

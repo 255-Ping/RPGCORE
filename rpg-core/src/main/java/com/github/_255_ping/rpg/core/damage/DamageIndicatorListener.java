@@ -24,9 +24,10 @@ import java.util.concurrent.ThreadLocalRandom;
  * Visible to all nearby players. Animates via server-side teleport + scale update
  * each tick (avoids TextDisplay client interpolation packet-timing issues entirely).
  *
- * <p><b>Animation:</b> the indicator follows a sine-arc — it rises to {@code rise-blocks}
- * at the midpoint and drifts back down to the start height by the end. Scale shrinks
- * linearly from 1.0 → 0.0 over the full duration so it fades out as it rises.
+ * <p><b>Animation:</b> the indicator spawns just above the victim's head and drifts
+ * <em>downward</em> by {@code drop-blocks} over the full duration, while shrinking
+ * from {@code start-scale} → {@code min-scale}. All values are configurable under
+ * {@code damage-indicators} in rpg-core's config.yml.
  */
 public final class DamageIndicatorListener implements Listener {
 
@@ -51,30 +52,33 @@ public final class DamageIndicatorListener implements Listener {
                 ? String.valueOf((long) damage)
                 : String.format("%.1f", damage);
 
+        // Spawn just above the victim's head so the downward drift stays visible.
         Location startLoc = victim.getLocation().add(
                 ThreadLocalRandom.current().nextDouble(-0.4, 0.4),
-                victim.getHeight() * 0.9,
+                victim.getHeight() + 0.3,
                 ThreadLocalRandom.current().nextDouble(-0.4, 0.4));
 
         Component label = Component.text(text, isCrit ? NamedTextColor.GOLD : NamedTextColor.RED)
                 .decoration(TextDecoration.BOLD, isCrit);
 
         int    durationTicks = plugin.getConfig().getInt("damage-indicators.duration-ticks", 30);
-        double riseBlocks    = plugin.getConfig().getDouble("damage-indicators.rise-blocks", 1.5);
+        double dropBlocks    = plugin.getConfig().getDouble("damage-indicators.drop-blocks", 1.5);
+        float  startScale    = (float) plugin.getConfig().getDouble("damage-indicators.start-scale", 1.0);
+        float  minScale      = (float) plugin.getConfig().getDouble("damage-indicators.min-scale", 0.0);
 
         TextDisplay td = (TextDisplay) victim.getWorld().spawnEntity(startLoc, EntityType.TEXT_DISPLAY);
         td.text(label);
         td.setBillboard(Display.Billboard.CENTER);
         td.setDefaultBackground(false);
         td.setShadowed(true);
-        // Set initial scale to 1.0 explicitly so the first tick update is clean
+        // Set initial scale explicitly so the first tick update is clean.
         td.setTransformation(new Transformation(
                 new Vector3f(), new Quaternionf(),
-                new Vector3f(1f, 1f, 1f), new Quaternionf()));
+                new Vector3f(startScale, startScale, startScale), new Quaternionf()));
 
         // Animate by teleporting each tick (avoids client-side interpolation start-state issue).
-        // Y follows sin(t·π): rises to riseBlocks at t=0.5, returns to 0 at t=1.
-        // Scale shrinks linearly 1→0 so the number fades as it arcs.
+        // Y drifts downward by dropBlocks over the full duration (linear: 0 → -dropBlocks).
+        // Scale lerps from startScale → minScale so the number shrinks as it falls.
         plugin.getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
             int ticks = 0;
 
@@ -87,10 +91,10 @@ public final class DamageIndicatorListener implements Listener {
                 float t = (float) ticks / durationTicks;
                 ticks++;
 
-                double yOffset = riseBlocks * Math.sin(t * Math.PI);
+                double yOffset = -dropBlocks * t;
                 td.teleport(startLoc.clone().add(0, yOffset, 0));
 
-                float scale = 1.0f - t;
+                float scale = startScale - (startScale - minScale) * t;
                 td.setTransformation(new Transformation(
                         new Vector3f(), new Quaternionf(),
                         new Vector3f(scale, scale, scale), new Quaternionf()));
