@@ -8,6 +8,18 @@ _Suite 21 opened with the addition of `rpg-crafting` and `rpg-smelting`. The sui
 
 ## Notable changes
 
+### rpg-parties 0.4.0 — Party GUI
+
+- **`/party` (no args)** now opens a 54-slot inventory GUI instead of showing a text usage hint.
+- **In-party layout:** Party Info at slot 4 (member count, party ID), Invite button at slot 8, up to 21 member cards in rows 2–4, Leave/Disband at slot 53, Close at slot 49.
+- **Member cards:** PLAYER_HEAD skulls via `SkullMeta.setOwningPlayer`; name shows `[Owner]`/`[Mod]`/`[Member]` prefix in colour + online/offline status + HP percentage.
+- **Invite flow:** click Invite → inventory closes → one-tick scheduler delay → sign-entry for player name → invite sent → GUI reopens. A `pendingInvite` guard prevents `InventoryCloseEvent` from tearing down GUI state during the sign-entry sequence.
+- **Promote / Demote:** left-click a member card (owner only) — toggles mod ↔ member with a chat confirmation.
+- **Kick:** right-click a member card (owner or mod, online non-owner) → confirmation overlay at slots 20/22/24 replaces all GUI content.
+- **Leave / Disband:** slot 53 shows Leave (non-owner) or Disband (owner); both trigger the same confirmation overlay before acting.
+- **No-party mode:** single Create Party button at slot 22; clicking calls `PartyManager.create`.
+- `onQuit` handler cleans all per-player state (`openInvs`, `slotToMember`, `pendingConfirm`, `pendingInvite`) to prevent memory leaks on disconnect.
+
 ### rpg-core 1.10.14 — Player Profile Command
 
 - **`/profile [player]`** — opens a 54-slot profile GUI. No argument = your own profile; with argument = another player's (requires `rpg.profile.view.others`).
@@ -159,6 +171,24 @@ _Suite 21 opened with the addition of `rpg-crafting` and `rpg-smelting`. The sui
 ### rpg-regions 0.6.0 — New flags + enter/exit messages
 
 - New flags: `enter-message`, `leave-message` (title or `[actionbar]` prefix; `{player}`/`{region}` placeholders), `no-mob-spawn`, `no-damage`, `fly`, `no-item-drop`, `keep-inventory`.
+
+### rpg-alchemy 0.3.2 / rpg-cooking 0.3.1 / rpg-enchanting 0.4.1 — GUI station overhaul
+
+All three station GUIs were expanded from 36/45 → 54 slots and given a consistent layout pass.
+
+**rpg-alchemy 0.3.2 (Brewing station):**
+- Ingredient slots moved to row 1, centred (slots 12–14), matching cooking station
+- Recipe tiles start at row 2 (slot 18); 27 recipes per page (rows 2–4)
+- Pagination: PREV at slot 45 / Close at 49 / NEXT at 53
+
+**rpg-cooking 0.3.1 (Cooking station):**
+- Ingredient slots shifted to slots 12–14 (row 1, centred) — identical position to brewing
+- Recipe tiles start at slot 18 (row 2); 27 per page
+- Same PREV / Close / NEXT pagination nav as brewing
+
+**rpg-enchanting 0.4.1 (Enchanting table):**
+- ENCHANTING mode: per-player page state; PREV at 45 / page indicator at 47 / Close at 49 / NEXT at 53; `refreshEnchanting` is page-aware; `tryApplyEnchant` uses page offset to resolve the correct enchant
+- ANVIL mode: Close button added at slot 49 (no pagination needed)
 
 ### rpg-enchanting 0.6.0 — Telekinesis
 

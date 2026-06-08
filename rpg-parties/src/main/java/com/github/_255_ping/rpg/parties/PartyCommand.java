@@ -19,19 +19,25 @@ public final class PartyCommand implements CommandExecutor, TabCompleter {
     private static final List<String> SUBS = List.of(
             "create", "invite", "accept", "kick", "promote", "demote", "leave", "disband", "list", "reload");
 
-
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
     private final PartyManager manager;
     private final RpgPartiesPlugin plugin;
+    /** Null until the GUI is wired in (avoids hard dependency). */
+    private final PartyGui partyGui;
 
     public PartyCommand(PartyManager manager) {
-        this(manager, null);
+        this(manager, null, null);
     }
 
     public PartyCommand(PartyManager manager, RpgPartiesPlugin plugin) {
-        this.manager = manager;
-        this.plugin = plugin;
+        this(manager, plugin, null);
+    }
+
+    public PartyCommand(PartyManager manager, RpgPartiesPlugin plugin, PartyGui partyGui) {
+        this.manager  = manager;
+        this.plugin   = plugin;
+        this.partyGui = partyGui;
     }
 
     @Override
@@ -49,7 +55,11 @@ public final class PartyCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(msg("&cPlayers only.")); return true;
         }
         if (args.length == 0) {
-            p.sendMessage(msg("&7Usage: &e/party <create|invite|accept|kick|promote|demote|leave|disband|list>"));
+            if (partyGui != null) {
+                partyGui.open(p);
+            } else {
+                p.sendMessage(msg("&7Usage: &e/party <create|invite|accept|kick|promote|demote|leave|disband|list>"));
+            }
             return true;
         }
         String sub = args[0].toLowerCase();

@@ -25,23 +25,22 @@ Every inventory GUI must have a navigation row along the bottom (row 6, slots 45
 
 ## Redesigns — Existing GUIs
 
-### Brewing Station GUI Redesign (`rpg-alchemy`) — 🟡 Medium
-Current layout puts ingredients inline with recipes which gets cluttered. New layout:
-- **Ingredient slots** move to the **top middle** of the GUI (row 1, centred)
-- **Recipes** start at the **far left of row 2** and fill left-to-right, row by row
-- **Pagination** — if recipes exceed one page, add Previous / Next buttons (bottom corners or bottom centre). Page indicator in the middle of the bottom row.
-- Same ingredient-slot position as the cooking station redesign below (consistent across both stations)
+### ✅ Brewing Station GUI Redesign (`rpg-alchemy`) — shipped in 0.3.2
+- **Ingredient slots** moved to row 1, centred (slots 12–14), matching cooking station
+- **Recipe tiles** start at row 2 (slot 18); 27 recipes per page (rows 2–4)
+- **GUI expanded** from 36 → 54 slots; nav bar in row 5
+- **Pagination** — PREV at slot 45 / Close at 49 / NEXT at 53; page-aware refresh + tryCook
 
-### Cooking Station GUI Redesign (`rpg-cooking`) — 🟡 Medium
-Current ingredient slots need to move one slot to the left. New layout:
-- **Ingredient slots** shifted one column to the left from their current position
-- **Ingredient slot position** should match the brewing station (both stations feel consistent)
-- **Pagination** — if recipes exceed one page, add Previous / Next buttons. Same style as brewing.
+### ✅ Cooking Station GUI Redesign (`rpg-cooking`) — shipped in 0.3.1
+- **Ingredient slots** shifted to slots 12–14 (row 1, centred) — matches brewing station
+- **Recipe tiles** start at slot 18 (row 2); 27 recipes per page (rows 2–4)
+- **GUI expanded** from 36 → 54 slots; nav bar in row 5
+- **Pagination** — PREV at slot 45 / Close at 49 / NEXT at 53; same style as brewing
 
-### Enchanting Table GUI: Pagination (`rpg-enchanting`) — 🟢 Easy
-The enchant-selection screen (ENCHANTING mode in `StationGui`) currently shows all applicable enchants as a fixed grid. If an item has many applicable enchants the grid fills and there's no overflow. Add:
-- **Pagination** — Previous / Next buttons when enchants exceed one page (14 slots per page matching the current grid size)
-- Page indicator in a fixed slot
+### ✅ Enchanting Table GUI: Pagination (`rpg-enchanting`) — shipped in 0.4.1
+- **GUI expanded** from 45 → 54 slots; nav bar added to both ENCHANTING and ANVIL modes
+- **ENCHANTING pagination** — per-player page state; PREV at slot 45 / page indicator at 47 / Close at 49 / NEXT at 53; `refreshEnchanting` page-aware; `tryApplyEnchant` uses page offset to resolve correct enchant
+- **ANVIL** — Close button added at slot 49 (no pagination needed)
 
 ---
 
@@ -56,7 +55,7 @@ These replace or supplement existing command interfaces. All are in `docs/planne
 | GUI | Plugin | Current state | Difficulty |
 |---|---|---|---|
 | ✅ Main Menu GUI (menu item right-click) | `rpg-core` | **Done** — `MainMenuGui`, `MainMenuListener`, `MenuCommand` in coreVersion 1.10.0. Configurability pass still pending (see below). | ✅ Done |
-| Party GUI (`/party`) | `rpg-parties` | All commands work; no GUI | 🟡 Medium |
+| ✅ Party GUI (`/party`) | `rpg-parties` | **Done** — `PartyGui` in partiesVersion 0.4.0. 54-slot GUI: member cards with PLAYER_HEAD skulls, role colours, online/offline status, HP%; sign-entry invite flow; promote/demote on left-click; kick/leave/disband with confirmation overlay. | ✅ Done |
 | Guild GUI (`/guild`) | `rpg-guilds` | All commands work; no GUI | 🔴 Hard |
 | Quest log GUI (`/quests`) | `rpg-quests` | Chat-list only | 🔴 Hard |
 | Admin Spawner GUI (`/spawner`) | `rpg-core` | Fields set via `/spawner set`; GUI planned | 🟡 Medium |
@@ -258,11 +257,13 @@ Levels without any reward still show the level number and XP required. Levels wi
 
 ---
 
-### Party GUI (`/party`) — 🟡 Medium
-- Member list with roles, online/offline status, combat status
-- Invite: chat-entry for player name → invite sent → target sees clickable accept/deny in chat
-- Kick / Leave: confirmation dialog
-- Promote / Demote: click role indicator
+### ✅ Party GUI (`/party`) — shipped in 0.4.0
+- 54-slot GUI: Party Info header (slot 4), Invite button (slot 8), 21 member card slots across rows 2–4 (PLAYER_HEAD skulls with role colour, online/offline, HP%)
+- Invite via sign-entry (one-tick delay + pendingInvite guard so GUI reopens cleanly after sign)
+- Left-click member card (owner only): promote ↔ demote toggle
+- Right-click member card (owner/mod, online non-owner): confirmation overlay → kick
+- Slot 53: Leave (member/mod) or Disband (owner), both with confirmation overlay
+- No-party mode: Create Party button at slot 22
 
 ### Guild GUI (`/guild`) — 🔴 Hard
 - Tabs: Members, Info, Bank (when bank is built), Settings (officer+)
