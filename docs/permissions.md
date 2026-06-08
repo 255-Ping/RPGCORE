@@ -1,6 +1,6 @@
 # Master permission reference
 
-> **Status:** Working (synced with plugin.ymls as of suite 21)
+> **Status:** Working (synced with plugin.ymls as of suite 21 — updated with core 1.10.14/1.10.18)
 
 Permission nodes follow `rpg.<module>.<verb>[.<qualifier>]`. Self-use defaults to true; admin/op nodes default to op.
 
@@ -39,8 +39,13 @@ For the full command list, see [commands.md](commands.md).
 | `rpg.core.effects.other` | op | View another player's effects |
 | `rpg.core.menu` | true | Open the Main Menu hub GUI (`/menu` or right-click menu item) |
 | `rpg.core.achievements` | true | View own achievements (`/achievements`) |
-| `rpg.core.achievements.other` | op | View another player's achievements |
+| `rpg.core.achievements.others` | op | View another player's achievements |
 | `rpg.core.ability.cast` | op | Debug-cast an ability (`/rpg ability cast <id>`) |
+| `rpg.profile.view` | true | View own profile (`/profile`) |
+| `rpg.profile.view.others` | op | View another player's profile |
+| `rpg.adventure.view` | true | Open the Adventure hub GUI (`/adventure`) |
+| `rpg.social.view` | true | Open the Social hub GUI (`/social`) |
+| `rpg.settings.view` | true | Open the player Settings GUI (`/settings`) |
 | `rpg.core.skill.set` | op | Set a player's skill level or XP (`/rpg skill set`) |
 | `rpg.core.skill.pin` | true | Pin a skill to the vanilla XP bar |
 | `rpg.core.status.apply` | op | Apply a status effect to a player |

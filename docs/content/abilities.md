@@ -33,6 +33,7 @@ Every entry in an item's `Abilities:` list can be bound to a specific **trigger*
 | `on_attack` | `~on_attack ` | Player initiates an attack — fires before the damage pipeline, even if the hit is later cancelled |
 | `on_kill` | `~on_kill ` | Player kills an RPG mob |
 | `on_block` | `~on_block ` | Player is hit while holding a shield (`isBlocking()`); attacker is `ctx.target` |
+| `on_login` | `~on_login ` | Fires once when the player joins the server (via `PlayerJoinEvent`). No mana cost is applied by default. Useful for login buffs, stat refreshes, or conditional checks. |
 | `passive` | `~passive ` | Ticking — fires every `abilities.passive-interval-ticks` while item is held/equipped |
 
 **Active vs passive:**

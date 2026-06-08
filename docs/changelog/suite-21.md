@@ -103,6 +103,45 @@ _Suite 21 opened with the addition of `rpg-crafting` and `rpg-smelting`. The sui
 - `cooldown{}` now acts as a **gate**: if the ability key is on cooldown when the effect fires, the chain is blocked (`ctx.setBlocked(true)`) and the caster sees an action-bar message — `Ability on cooldown — X.Xs remaining` (red + yellow, proper Adventure Component). Previously the effect only SET the cooldown and never checked it.
 - Remaining time is formatted as a whole number when it falls on an exact second (`3s`) and with one decimal otherwise (`3.5s`).
 
+### rpg-holograms 0.0.5 — Animated holograms, `info`/`set` subcommands, `line list` op
+
+- **`Animated: true` + `FrameInterval: N`** YAML fields on hologram definitions. When `Animated: true`, all entries in `Lines` become **animation frames**: a single `TextDisplay` entity cycles through them at the configured tick interval. A single global 1-tick `BukkitTask` drives all animated holograms via per-hologram `frameTicks`/`frameIndices` maps — no per-hologram task overhead.
+- **`/holograms info <id>`** subcommand: prints id, world + coordinates, animated status, frame interval, line/frame count, and all line content.
+- **`/holograms line list <id>`** op: lists all lines with `[index]` prefix.
+- **`/holograms set <id> animated <true|false>`**: toggle animation on/off and respawn the hologram.
+- **`/holograms set <id> frameinterval <ticks>`**: adjust frame rate without respawn.
+- **Tab completions** updated: `info` and `set` now appear in subcommand completions; `set` arg-3 completes with property names (`animated`, `frameinterval`); `set animated` arg-4 completes with `true`/`false`.
+- `config.yml`: `animation-interval: 20` default added.
+
+### rpg-cooking 0.4.1 — Dedicated output slot + offline timer advancement
+
+- **Output slot** (GUI slot 16): a PDC-tagged gray-dye placeholder occupies the slot until the craft completes. The player must click the slot to collect the finished item.
+- **Auto-collect on close**: if the output slot holds a finished item when the GUI closes, it is automatically moved to the player's inventory.
+- **New craft blocked**: clicking a recipe tile is rejected if the output slot already holds a finished item; `cook.collect-output` message sent.
+- **Offline advancement**: `timestamp_ms` (real epoch ms) saved alongside `elapsed_ticks` on GUI close. On reopen, `offlineTicks = (now - savedMs) / 50` is added to elapsed — cooking continues while the player is offline or the server is restarted.
+- **Arrow** (slot 15): orange-dye decorative indicator between ingredients and output.
+- New message key `cook.collect-output` in `messages.yml`.
+
+### rpg-alchemy 0.4.2 — Dedicated output slot + offline timer advancement
+
+- Same pattern as rpg-cooking 0.4.1: output slot at GUI slot 16, arrow at slot 15 (purple dye), offline `timestamp_ms` advancement, auto-collect on close, new-brew blocked while slot occupied.
+- New message key `brew.collect-output` in `messages.yml`.
+
+### rpg-smelting 0.1.1 — Dedicated output slot + offline timer advancement
+
+- Same pattern: output slot at GUI slot 15, arrow at slot 14 (orange dye), offline `timestamp_ms` advancement, auto-collect on close, new-smelt blocked while slot occupied.
+- DataStore record now includes `timestamp_ms` alongside `recipe_id` and `elapsed_ticks`.
+- New message key `smelt.collect-output` in `messages.yml`.
+
+### rpg-core 1.10.18 — Admin Spawner GUI (`/spawner edit`)
+
+- **`SpawnerGui`** — new 54-slot inventory GUI for editing all spawner fields. Opened via `/spawner edit <id>` (requires `rpg.spawners.admin.edit`).
+- **Slot layout**: slot 4 SPAWNER title (id + mob), slot 10 max-alive (COMPARATOR), slot 12 cooldown-ticks (CLOCK), slot 13 spawn-radius (COMPASS), slot 16 continuous toggle (LIME/GRAY_DYE), slot 21 min-level (LIME_DYE), slot 23 max-level (RED_DYE), slot 24 location read-only (GRASS_BLOCK), slot 49 close (BARRIER).
+- **Numeric fields**: click opens a sign-entry prompt via `SignInputService`; validated against min/max bounds; saved immediately via `SpawnerManager.saveOne`.
+- **Continuous toggle**: click flips the boolean and updates the item in-place; no sign entry needed.
+- **`/spawner set <id> <field> <value>`** command also documented (was previously undocumented): direct CLI editing of the same fields without opening the GUI.
+- Tab completion: `edit` added to subcommand list; spawner IDs complete for `edit`.
+
 ### rpg-holograms 0.0.4 — Tab completions for `/holograms`
 
 - All `/holograms` subcommands now offer tab completions.

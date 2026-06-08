@@ -1,6 +1,6 @@
 # Built-in Ability Effects — Reference
 
-> **Status:** Working — all effects listed here are implemented. Most built-in effects shipped in `rpg-core 1.7.0`; `spawn_mob` added in `1.8.0`. Current core version: `1.10.9`.
+> **Status:** Working — all effects listed here are implemented. Most built-in effects shipped in `rpg-core 1.7.0`; `spawn_mob` added in `1.8.0`; numeric variable effects (`set_var`, `increment`, etc.) added in `1.10.13`. Current core version: `1.10.18`.
 
 Full parameter reference for every built-in effect. All effects accept their parameters via the DSL: `effectName{key=value, key2=value2}`.
 
@@ -490,6 +490,82 @@ Sets or clears a named boolean flag on the caster. These are side-effecting and 
 | `name` | _(required)_ | Flag name to set or clear |
 
 _(See `if_flag` example above.)_
+
+---
+
+## Numeric variables
+
+_Added in rpg-core 1.10.13._ Numeric variables are stored as doubles on the entity (`rpg_var_<name>` in PDC). They auto-clear on entity death / player logout. Available for both mob and item abilities.
+
+### set_var
+
+Sets a named variable to an exact value.
+
+| Param | Default | Description |
+|---|---|---|
+| `name` | _(required)_ | Variable name (any string) |
+| `value` | _(required)_ | Value to set (double) |
+
+```yaml
+- "set_var{name=combo_count, value=0}"
+```
+
+---
+
+### increment
+
+Adds `amount` to a variable, clamping to `max` if specified.
+
+| Param | Default | Description |
+|---|---|---|
+| `name` | _(required)_ | Variable name |
+| `amount` | `1` | Amount to add |
+| `max` | _(none)_ | Upper clamp |
+
+```yaml
+- "~on_hit increment{name=combo_count, max=5}"
+```
+
+---
+
+### decrement
+
+Subtracts `amount` from a variable, clamping to `min`.
+
+| Param | Default | Description |
+|---|---|---|
+| `name` | _(required)_ | Variable name |
+| `amount` | `1` | Amount to subtract |
+| `min` | `0` | Lower clamp |
+
+---
+
+### reset
+
+Sets a variable to `0`.
+
+| Param | Default | Description |
+|---|---|---|
+| `name` | _(required)_ | Variable name |
+
+---
+
+### if_var_gte / if_var_lte / if_var_eq
+
+Gate effects: continue the chain only if the variable meets the condition. Use the same `ctx.isBlocked()` mechanism as `chance{}` and `if_health_*`.
+
+| Param | Default | Description |
+|---|---|---|
+| `name` | _(required)_ | Variable name |
+| `value` | _(required)_ | Threshold (double) |
+
+`if_var_eq` uses an epsilon of 1e-9 for float safety.
+
+```yaml
+# 3-hit combo: every 3rd hit fires a power strike
+- "~on_hit increment{name=hits}"
+- "~on_hit if_var_gte{name=hits, value=3} reset{name=hits} aoe{radius=4.0, damage=40.0}"
+```
 
 ---
 

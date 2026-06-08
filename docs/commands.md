@@ -1,6 +1,6 @@
 # Master command reference
 
-> **Status:** Working (synced with plugin.ymls as of suite 21)
+> **Status:** Working (synced with plugin.ymls as of suite 21 — updated with holograms 0.0.5, core 1.10.18)
 
 Every command across every module. Permissions follow `rpg.<module>.<command>[.<sub>]`. Self-use commands default to true; admin commands default to op; moderation commands declared per-command.
 
@@ -34,7 +34,11 @@ Every command across every module. Permissions follow `rpg.<module>.<command>[.<
 | `/skill pin <skill>` | `rpg.core.skill.pin` | true | Pin a skill to the vanilla XP bar |
 | `/effects` | `rpg.core.effects` | true | Open active status effects GUI |
 | `/menu` (alias `/m`) | `rpg.core.menu` | true | Open the Main Menu hub GUI (also opened by right-clicking the persistent menu item) |
-| `/achievements [player]` | `rpg.core.achievements` / `rpg.core.achievements.other` | true / op | Open the Achievements GUI |
+| `/achievements [player]` | `rpg.core.achievements` / `rpg.core.achievements.others` | true / op | Open the Achievements GUI |
+| `/profile [player]` | `rpg.profile.view` / `rpg.profile.view.others` | true / op | Open 54-slot profile GUI (skill levels, balance, recent achievements, stats link) |
+| `/adventure` (alias `/adv`) | `rpg.adventure.view` | true | Open the Adventure hub GUI (quests, economy, achievements) |
+| `/social` | `rpg.social.view` | true | Open the Social hub GUI (friends, party, guild, mail) |
+| `/settings` (aliases `/preferences`, `/prefs`) | `rpg.settings.view` | true | Open the player Settings GUI |
 
 ## Economy (`rpg-economy`)
 
@@ -113,8 +117,7 @@ Every command across every module. Permissions follow `rpg.<module>.<command>[.<
 
 | Command | Permission | Default | Description |
 |---|---|---|---|
-| `/region create <id>` | `rpg.regions.admin.create` | op | Create region from selection |
-| `/region edit <id>` | `rpg.regions.admin.edit` | op | Open region editor GUI |
+| `/region define <id>` | `rpg.regions.admin.define` | op | Define a region from current wand selection |
 | `/region delete <id>` | `rpg.regions.admin.delete` | op | Delete region |
 | `/region list` | `rpg.regions.admin.list` | op | List regions |
 | `/region flag <id> <flag> <value>` | `rpg.regions.admin.flag` | op | Set a region flag |
@@ -124,25 +127,26 @@ Every command across every module. Permissions follow `rpg.<module>.<command>[.<
 
 | Command | Permission | Default | Description |
 |---|---|---|---|
-| `/dungeon create <id>` | `rpg.dungeons.admin.create` | op | Begin dungeon authoring |
-| `/dungeon save <id>` | `rpg.dungeons.admin.save` | op | Capture dungeon volume |
-| `/dungeon edit <id>` | `rpg.dungeons.admin.edit` | op | Open dungeon editor GUI |
+| `/dungeon create <id>` | `rpg.dungeons.admin.create` | op | Register a new dungeon template |
 | `/dungeon delete <id>` | `rpg.dungeons.admin.delete` | op | Delete a dungeon template |
-| `/dungeon list` | `rpg.dungeons.list` | true | List available dungeons |
-| `/dungeon join <id>` | `rpg.dungeons.join` | true | Enter (solo or with party) |
-| `/dungeon leave` | `rpg.dungeons.leave` | true | Exit current dungeon |
-| `/dungeon admin abort <instance>` | `rpg.dungeons.admin.abort` | op | Force-end a running instance |
+| `/dungeon list` | `rpg.dungeons.admin.list` | op | List registered dungeons |
+| `/dungeon setentrance <id>` | `rpg.dungeons.admin.set` | op | Set dungeon entrance at current location |
+| `/dungeon setexit <id>` | `rpg.dungeons.admin.set` | op | Set dungeon exit at current location |
+| `/dungeon setspawn <id>` | `rpg.dungeons.admin.set` | op | Set player spawn inside the dungeon |
+| `/dungeon enter <id>` | `rpg.dungeons.use.enter` | true | Enter a dungeon (solo or with party) |
+| `/dungeon leave` | `rpg.dungeons.use.leave` | true | Exit current dungeon |
+| `/dungeon reload` | `rpg.dungeons.admin.reload` | op | Reload dungeon YAMLs |
 
 ## Spawners (`rpg-core`)
 
 | Command | Permission | Default | Description |
 |---|---|---|---|
-| `/spawner create <mobId>` | `rpg.spawners.admin.create` | op | Create a spawner at your location |
-| `/spawner edit <id>` | `rpg.spawners.admin.edit` | op | Open spawner editor GUI |
-| `/spawner delete <id>` | `rpg.spawners.admin.delete` | op | Delete |
-| `/spawner list [near\|world]` | `rpg.spawners.admin.list` | op | List |
-| `/spawner tp <id>` | `rpg.spawners.admin.tp` | op | Teleport to spawner |
-| `/spawner show` | `rpg.spawners.admin.show` | op | Toggle particle markers on nearby spawners |
+| `/spawner create <id> <mobId>` | `rpg.spawners.admin.create` | op | Create a spawner at your location |
+| `/spawner edit <id>` | `rpg.spawners.admin.edit` | op | Open 54-slot GUI editor for all spawner fields |
+| `/spawner set <id> <field> <value>` | `rpg.spawners.admin.edit` | op | Set a spawner field directly (`max-alive`, `cooldown-ticks`, `spawn-radius`, `continuous`, `min-level`, `max-level`) |
+| `/spawner delete <id>` | `rpg.spawners.admin.delete` | op | Delete a spawner |
+| `/spawner list` | `rpg.spawners.admin.list` | op | List all spawners |
+| `/spawner tp <id>` | `rpg.spawners.admin.tp` | op | Teleport to a spawner |
 
 ## Accessories (`rpg-accessories`)
 
@@ -168,23 +172,39 @@ Admin commands only — the station blocks open GUIs on right-click without a co
 
 | Command | Permission | Default | Description |
 |---|---|---|---|
-| `/npc create <id>` | `rpg.npcs.admin.create` | op | Create NPC at your location |
+| `/npc create <id> [name]` | `rpg.npcs.admin.create` | op | Create NPC at your location |
 | `/npc delete <id>` | `rpg.npcs.admin.delete` | op | Delete an NPC |
 | `/npc move <id>` | `rpg.npcs.admin.move` | op | Move NPC to your location |
 | `/npc list` | `rpg.npcs.admin.list` | op | List all NPCs |
+| `/npc info <id>` | `rpg.npcs.admin.list` | op | Show all settings for an NPC |
 | `/npc reload` | `rpg.npcs.admin.reload` | op | Reload NPC YAMLs |
-| `/npc setbehavior <id> <type>` | `rpg.npcs.admin.setbehavior` | op | Change NPC behavior type (`dialogue`/`shop`/`quest`/`banker`) |
+| `/npc setbehavior <id> <dialogue\|shop\|quest\|banker>` | `rpg.npcs.admin.setbehavior` | op | Change NPC behavior type |
+| `/npc setentitytype <id> <type>` | `rpg.npcs.admin.setentitytype` | op | Change the vanilla EntityType |
+| `/npc setstyle <id> <entity\|player>` | `rpg.npcs.admin.setstyle` | op | Switch body style |
+| `/npc setskin <id> <playerName>` | `rpg.npcs.admin.setskin` | op | Apply player skin (fetched from Mojang) |
+| `/npc setlook <id> <true\|false>` | `rpg.npcs.admin.setlook` | op | Toggle look-at-player behavior |
+| `/npc dialogue <id> <add\|set\|remove\|clear\|list> [args]` | `rpg.npcs.admin.dialogue` | op | Edit dialogue lines in-game |
+| `/npc shop <id> <add\|remove\|list\|clear> [args]` | `rpg.npcs.admin.shop` | op | Edit shop entries in-game |
 
 ## Holograms (`rpg-holograms`)
 
+Alias: `/holo` works for all subcommands.
+
 | Command | Permission | Default | Description |
 |---|---|---|---|
-| `/hologram create <id>` | `rpg.holograms.admin.create` | op | Create at your location |
-| `/hologram edit <id>` | `rpg.holograms.admin.edit` | op | Edit GUI |
-| `/hologram addline <id> <text>` | `rpg.holograms.admin.edit` | op | Add a line |
-| `/hologram delete <id>` | `rpg.holograms.admin.delete` | op | Delete |
-| `/hologram list [near\|world]` | `rpg.holograms.admin.list` | op | List holograms |
-| `/hologram tp <id>` | `rpg.holograms.admin.tp` | op | TP to hologram |
+| `/holograms create <id> <text>` | `rpg.holograms.admin.create` | op | Create at your location with initial text |
+| `/holograms delete <id>` | `rpg.holograms.admin.delete` | op | Delete |
+| `/holograms list` | `rpg.holograms.admin.list` | op | List all holograms |
+| `/holograms info <id>` | `rpg.holograms.admin.edit` | op | Print all properties of a hologram |
+| `/holograms tp <id>` | `rpg.holograms.admin.tp` | op | TP to hologram |
+| `/holograms move <id>` | `rpg.holograms.admin.move` | op | Move hologram to your location |
+| `/holograms line add <id> <text>` | `rpg.holograms.admin.edit` | op | Append a line (or animation frame) |
+| `/holograms line set <id> <index> <text>` | `rpg.holograms.admin.edit` | op | Replace a specific line |
+| `/holograms line remove <id> <index>` | `rpg.holograms.admin.edit` | op | Remove a line by index |
+| `/holograms line list <id>` | `rpg.holograms.admin.edit` | op | List all lines with their index numbers |
+| `/holograms set <id> animated <true\|false>` | `rpg.holograms.admin.edit` | op | Enable/disable frame animation |
+| `/holograms set <id> frameinterval <ticks>` | `rpg.holograms.admin.edit` | op | Ticks between animation frame advances |
+| `/holograms reload` | `rpg.holograms.admin.reload` | op | Reload all hologram YAMLs |
 
 ## Quests (`rpg-quests`)
 

@@ -2,7 +2,7 @@
 
 # Smelting (`rpg-smelting`)
 
-> **Status:** Shipped — timed smelting station with progress bar + optional vanilla furnace recipe registration.
+> **Status:** Shipped — timed smelting station with progress bar, dedicated output slot, offline timer advancement, and optional vanilla furnace recipe registration.
 
 `rpg-smelting` provides a custom block station that opens a GUI-driven smelting workflow, mirroring the cooking and alchemy station pattern. It also optionally registers vanilla `FurnaceRecipe` entries so the same items smelt in a regular furnace.
 
@@ -37,18 +37,22 @@ Item IDs can be custom RPG item IDs or vanilla `Material` names (e.g. `IRON_ORE`
 
 ```
 Row 0: [progress bar — orange panes + furnace info item]
-Row 1: [bg] [bg] [bg] [bg] [INPUT] [bg] [bg] [bg] [bg]
+Row 1: [bg] [bg] [bg] [bg] [INPUT] [→ arrow] [output slot] [bg] [bg]
 Row 2–4: recipe tiles (27 per page)
 Row 5: ← PREV | bg | bg | bg | ✖ CLOSE | bg | bg | bg | NEXT →
 ```
+
+- **Input** (slot 13): the ingredient slot.
+- **Arrow** (slot 14): orange dye, decorative.
+- **Output slot** (slot 15): holds a placeholder until smelting completes. Click to collect. Starting a new smelt is blocked while it holds a finished item (`smelt.collect-output` message). Auto-collected when closing the GUI.
 
 ### Timed smelting
 
 When `SmeltTicks > 0`:
 1. Clicking a recipe tile consumes the input immediately.
 2. Orange panes in row 0 fill left-to-right over the smelt duration.
-3. Closing mid-smelt saves state to DataStore; reopening any smelting station resumes.
-4. On completion: output delivered, Mining XP awarded, furnace crackle sound played.
+3. Closing mid-smelt saves state (including `timestamp_ms`) to DataStore. Reopening resumes — **offline advancement** computes elapsed time from wall-clock time so smelting continues while offline.
+4. On completion: output placed in the output slot, Mining XP awarded, furnace crackle sound played.
 
 ### Instant smelting
 
@@ -86,4 +90,4 @@ xp:
 
 ## Storage
 
-In-progress smelt state is stored in the `smelting_craft` DataStore repository, keyed by player UUID. The record holds `recipe_id` and `elapsed_ticks`. On reconnect / reopen, the saved state is restored automatically.
+In-progress smelt state is stored in the `smelting_craft` DataStore repository, keyed by player UUID. The record holds `recipe_id`, `elapsed_ticks`, and `timestamp_ms` (real epoch milliseconds captured at GUI close). On reconnect / reopen, elapsed wall-clock time is converted to ticks and added to `elapsed_ticks` before restoring state — so the smelt advances correctly even while the player was offline.

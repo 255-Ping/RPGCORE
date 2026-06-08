@@ -2,7 +2,7 @@
 
 # Alchemy (`rpg-alchemy`)
 
-> **Status:** Working — Station right-click dispatch, timed brewing with progress bar + DataStore persistence, recipe matching, and XP all implemented. All vanilla brewing-stand mechanics are cancelled.
+> **Status:** Working — Station right-click dispatch, timed brewing with progress bar + DataStore persistence, dedicated output slot, offline timer advancement, recipe matching, and XP all implemented. All vanilla brewing-stand mechanics are cancelled.
 
 Custom potion-style brewing at a brewing station block. Vanilla brewing stand recipes are fully replaced; admins define every recipe.
 
@@ -64,10 +64,22 @@ When `BrewTicks` is greater than 0 on a recipe, clicking it starts a **timed bre
 1. Ingredients are consumed immediately.
 2. A 9-slot progress bar fills row 0 — purple/gray glass panes plus a brewing stand icon showing the recipe name and seconds remaining.
 3. Ingredient slots show locked display copies (visual only).
-4. Closing the GUI mid-brew saves progress to DataStore; reopening any brewing station resumes.
-5. On completion the `BLOCK_BREWING_STAND_BREW` sound plays and the output is delivered.
+4. Closing the GUI mid-brew saves progress and a `timestamp_ms` (real epoch milliseconds) to DataStore. Reopening resumes — including **offline advancement**: elapsed time is computed from wall-clock time so brewing continues while offline.
+5. On completion the `BLOCK_BREWING_STAND_BREW` sound plays and the output is placed in the **output slot** (see layout below). The player must click to collect. Auto-collected when closing the GUI.
 
 `BrewTicks: 0` (or omitting) = instant brew.
+
+## GUI layout
+
+```
+Row 0: [progress bar — purple/gray panes + brewing stand icon]
+Row 1: [bg] [bg] [bg] [ingredient 12] [ingredient 13] [ingredient 14] [→ arrow] [output slot] [bg]
+Row 2–4: recipe tiles (27 per page)
+Row 5: ← PREV | bg | bg | bg | ✖ CLOSE | bg | bg | bg | NEXT →
+```
+
+- **Output slot** (slot 16): holds a placeholder until brew completes. Starting a new brew is blocked while it holds a finished item (`brew.collect-output` message).
+- **Arrow** (slot 15): purple dye, decorative.
 
 ## Station block
 

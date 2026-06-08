@@ -2,7 +2,7 @@
 
 # Cooking (`rpg-cooking`)
 
-> **Status:** Working — Station right-click dispatch, timed crafting with progress bar + DataStore persistence, recipe matching, and XP all implemented.
+> **Status:** Working — Station right-click dispatch, timed crafting with progress bar + DataStore persistence, dedicated output slot, offline timer advancement, recipe matching, and XP all implemented.
 
 Custom food / consumable crafting at a cooking station block. All vanilla furnace recipes are cancelled; admins define every recipe.
 
@@ -51,10 +51,22 @@ When `CookTicks` is greater than 0 on a recipe, clicking it starts a **timed cra
 1. Ingredients are consumed immediately (can't be taken back).
 2. A 9-slot progress bar fills row 0 of the GUI — lime/gray glass panes plus a clock item showing the recipe name and seconds remaining.
 3. The ingredient slots show locked copies of what was consumed (visual only).
-4. If the player closes the GUI mid-craft, progress is saved to the DataStore. Reopening any cooking station resumes from where it left off.
-5. On completion a chime plays and the output is delivered to the player's inventory (overflow drops at their feet).
+4. If the player closes the GUI mid-craft, progress and a `timestamp_ms` (real epoch milliseconds) are saved to the DataStore. Reopening any cooking station resumes — including **offline advancement**: elapsed time since closing is computed from wall-clock time, so cooking continues while the player is offline.
+5. On completion a chime plays and the output is placed in the **output slot** (see layout below). The player must click it to collect. If the player closes the GUI with a finished item in the output slot, it is auto-collected to their inventory first.
 
-`CookTicks: 0` (or omitting the field) means instant — output delivered immediately on click, the same as before.
+`CookTicks: 0` (or omitting the field) means instant — output delivered immediately on click.
+
+## GUI layout
+
+```
+Row 0: [progress bar — lime/gray panes + clock item]
+Row 1: [bg] [bg] [bg] [ingredient 12] [ingredient 13] [ingredient 14] [→ arrow] [output slot] [bg]
+Row 2–4: recipe tiles (27 per page)
+Row 5: ← PREV | bg | bg | bg | ✖ CLOSE | bg | bg | bg | NEXT →
+```
+
+- **Output slot** (slot 16): holds a gray-dye placeholder until the craft completes. Click to collect. Starting a new recipe is blocked while the output slot contains a finished item — collect it first (`cook.collect-output` message).
+- **Arrow** (slot 15): orange dye, decorative indicator between ingredients and output.
 
 ## Station block
 

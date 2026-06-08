@@ -2,7 +2,7 @@
 
 # NPCs (`rpg-npcs`)
 
-> **Status:** v0.2.0 — shipped. Entity-based clickable NPCs with four behaviors (dialogue / shop / quest / banker). Entity style is per-NPC: `ENTITY` (any vanilla mob type, default VILLAGER) or `PLAYER` (fake player with skin). Invulnerability enforced by `NpcProtectionListener` — damage and mob targeting are cancelled at `HIGHEST` priority; death respawns the NPC after one tick. Fake players are spawned via NMS and are NOT shown in the tab list.
+> **Status:** v0.6.1 — shipped. Entity-based clickable NPCs with four behaviors (dialogue / shop / quest / banker). Full in-game editing (dialogue, shop, entity type, style, skin, look-at toggle). Entity style is per-NPC: `ENTITY` (any vanilla mob type, default VILLAGER) or `PLAYER` (fake player with skin). Invulnerability enforced by `NpcProtectionListener` — damage and mob targeting are cancelled at `HIGHEST` priority; death respawns the NPC after one tick. Fake players are spawned via NMS and are NOT shown in the tab list.
 
 Custom NPCs for shops, dialogue, quest hand-off, and banking.
 
@@ -125,10 +125,17 @@ banker:
 | `/npc delete <id>` | `rpg.npcs.admin.delete` |
 | `/npc move <id>` | `rpg.npcs.admin.move` |
 | `/npc list` | `rpg.npcs.admin.list` |
+| `/npc info <id>` | `rpg.npcs.admin.list` |
 | `/npc reload` | `rpg.npcs.admin.reload` |
-| `/npc setbehavior <id> <dialogue\|shop\|quest\|banker> [args]` | `rpg.npcs.admin.setbehavior` |
+| `/npc setbehavior <id> <dialogue\|shop\|quest\|banker>` | `rpg.npcs.admin.setbehavior` |
+| `/npc setentitytype <id> <EntityType>` | `rpg.npcs.admin.setentitytype` |
+| `/npc setstyle <id> <entity\|player>` | `rpg.npcs.admin.setstyle` |
+| `/npc setskin <id> <playerName>` | `rpg.npcs.admin.setskin` |
+| `/npc setlook <id> <true\|false>` | `rpg.npcs.admin.setlook` |
+| `/npc dialogue <id> <add\|set\|remove\|clear\|list> [args]` | `rpg.npcs.admin.dialogue` |
+| `/npc shop <id> <add\|remove\|list\|clear> [args]` | `rpg.npcs.admin.shop` |
 
-`/npc create` places the NPC at the admin's current location with default DIALOGUE behavior. Edit `npcs/all.yml` to set `EntityStyle: player` and add a `Skin` section.
+`/npc create` places the NPC at the admin's current location with default DIALOGUE behavior. Use `/npc setstyle` and `/npc setskin` to configure player-style NPCs without editing YAML directly.
 
 GUI editor (`/npc edit`) is deferred to the GUI overhaul pass.
 
