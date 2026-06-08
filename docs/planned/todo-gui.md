@@ -68,7 +68,7 @@ These replace or supplement existing command interfaces. All are in `docs/planne
 | Inventory Crafting-Slot Nav Buttons | `rpg-core` | New — replaces main menu item with 5 phantom buttons in player inventory crafting grid | 🟡 Medium |
 | Social GUI (`/social`) | `rpg-core` | New — hub for Friends / Party / Guild / Mail | 🟡 Medium |
 | Friends GUI | `rpg-core` | New — full GUI-based friends system; commands may be added alongside | 🔴 Hard |
-| Adventure GUI | `rpg-core` | New — hub for Quests / Economy / Achievements | 🟢 Easy |
+| ✅ Adventure GUI | `rpg-core` | **Done** — `AdventureGui` + `AdventureCommand` in `rpg-core 1.10.16`. Slot 12 Quests (placeholder), slot 13 Economy (live → WalletGui), slot 14 Achievements (live → AchievementGui). `/adventure` command + `rpg.adventure.view` permission. | ✅ Done |
 | Settings GUI | `rpg-core` | New — player-facing settings toggles | 🟡 Medium |
 | Crafting Station GUI | `rpg-crafting` | New — custom 3×3 GUI at a plugin block; multi-item slots; quick-craft sidebar | 🔴 Hard |
 
@@ -460,29 +460,20 @@ Mirrors the existing [Hologram Editor GUI](#hologram-editor-gui-holograms----med
 
 ## Existing GUI Refinements
 
-### Stats GUI — Polish Pass (`rpg-core`) — 🟢 Easy
+### ~~Stats GUI — Polish Pass (`rpg-core`)~~ ✅ Done in `rpg-core 1.10.16`
 
-**Changes needed:**
-
-1. **Stat icons show descriptions** — every stat icon's lore should include a plain-English description of what that stat does (e.g. `"&7Reduces incoming physical damage."`). Descriptions should come from `StatDef` or a map in `StatsGui` so they're easy to maintain.
-
-2. **Remove Auction House button** — any placeholder Auction House shortcut currently in the Stats GUI should be removed; it belongs in the Profile GUI instead (see Profile GUI changes below).
-
-3. **Remove Trade button** — the Trade shortcut should live only on the Profile GUI (already there). Remove the duplicate from the Stats GUI so the action is unambiguous.
+1. Added `STAT_DESC` map in `StatsGui` — every stat entry in category lore now shows a grey description line below its value.
+2. Removed the Auction House placeholder (moved to Profile GUI).
+3. Removed the Trade button (trade shortcut lives only in Profile GUI).
 
 ---
 
-### Profile GUI — Polish Pass (`rpg-core`) — 🟢 Easy
+### ~~Profile GUI — Polish Pass (`rpg-core`)~~ ✅ Done in `rpg-core 1.10.16`
 
-**Changes needed:**
-
-1. **Balance icon uses config currency format** — currently uses `String.format("%,.0f")`. Should read the currency symbol/format from the economy config (e.g. `economy.currency-symbol`, `economy.currency-format`) so the display matches what's configured server-side. Fall back to the current format if the economy service isn't loaded.
-
-2. **Skill average level icon** — add a new icon (e.g. `EXPERIENCE_BOTTLE`, slot TBD based on layout) that shows the player's average skill level across all skills. Name: `"&bAverage Skill Level"`. Lore: each skill on its own lore line (`&7<Skill>: &f<level>`), final line `"&7Average: &e<avg>"` (one decimal place).
-
-3. **Auction House shortcut button** — add a placeholder button (e.g. `GOLD_BLOCK`, labeled `"&6Auction House"`) in an available slot. Lore: `"&8[Coming Soon]"` until the auction house is built; when built, clicking opens the Auction House GUI. This replaces the button being removed from the Stats GUI.
-
-4. **Trade button stays here only** — confirm the trade shortcut is only in Profile GUI (when viewing another player). Remove it from Stats GUI.
+1. Balance now formats via `Currency.format()` from the primary `CurrencyRegistry` entry — falls back to `$N,NNN` if economy not loaded.
+2. Skill average icon (`EXPERIENCE_BOTTLE`) added at slot 7 — shows average level with per-skill breakdown in lore.
+3. Auction House placeholder (`GOLD_BLOCK`) added at slot 42 — "Coming soon." until AH is built.
+4. Trade button confirmed as Profile GUI only (Stats GUI no longer has it).
 
 ---
 
@@ -611,9 +602,9 @@ A new player social feature. All friend management is done through this GUI (no 
 
 ---
 
-## Adventure GUI (`rpg-core`) — 🟢 Easy
+## ~~Adventure GUI (`rpg-core`)~~ ✅ Done in `rpg-core 1.10.16`
 
-Top-level hub opened from the inventory crafting bottom-right button or from Main Menu slot 21. Contains quick-access to Quests, Economy, and Achievements.
+Top-level hub opened via `/adventure` (or from the inventory crafting bottom-right button once nav buttons are built). Contains quick-access to Quests, Economy, and Achievements.
 
 **Layout (54 slots):**
 
