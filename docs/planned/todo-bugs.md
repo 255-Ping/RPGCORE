@@ -6,6 +6,45 @@ _These are broken in live testing. Fix these before working on new features._
 
 ---
 
+### Armor Piece Stats Not Applying (`rpg-core`) — 🟡 Medium
+
+**Symptoms (confirmed in testing with the `recruit_set`):**
+
+- Set bonus stats (from `Bonuses: 1/2/3/4`) **do** apply correctly.
+- Individual armor piece `Stats:` blocks (e.g. `defense: 5`, `max_health: 10` on the helmet) do **not** apply — equipping a full set gives only the set-bonus stats, none of the per-piece stats.
+
+**Suspected root causes:**
+
+1. `EquipmentListener` (or equivalent) may not be reading per-piece `Stats:` from armor items at all, or is only reading them for weapons/tools.
+2. The stat-recalc triggered on equip may be running before the item is fully in the slot, so the scan misses it.
+
+**Reproduce:** Give yourself the four `recruit_set` pieces and equip all four. Check stats — only the 4-piece set bonus values should appear, not the sum of per-piece stats.
+
+---
+
+### Item/Set Detection Is Flaky — Gear Changes Sometimes Missed (`rpg-core`) — 🟡 Medium
+
+**Symptom:** Equipping or unequipping armor doesn't always trigger a stat recalc. Set detection (counting how many set pieces are worn) similarly lags or misses events. Observed on:
+- Quick inventory swaps
+- Dragging items in the inventory rather than clicking-to-equip
+- Dying and respawning with armor
+
+**Two approaches to fix — pick one or combine:**
+
+1. **Better event coverage** — audit which Bukkit events currently drive stat recalcs. Missing candidates:
+   - `PlayerArmorStandManipulateEvent`
+   - `EntityPickupItemEvent` (picking up armor directly)
+   - `InventoryClickEvent` with `SlotType.ARMOR`
+   - `InventoryDragEvent` landing in armor slots
+   - `PlayerRespawnEvent` (gear restored after death)
+   - `PlayerItemHeldEvent` doesn't cover armor slots — make sure it isn't the only hook
+
+2. **Periodic resync** — run a repeating task (e.g. every 40–60 ticks) that recalculates every online player's stats from their current equipment. Acts as a safety net for any missed events. Should be cheap if the recalc only diffs against the cached values and skips unchanged players.
+
+Recommended: do both — fix events for correctness, add periodic resync (60-tick interval, config-toggleable) as a safety net.
+
+---
+
 ### ~~Dungeon Enter Does Nothing (`rpg-dungeons`)~~ ✅ Fixed in `rpg-dungeons 0.0.3`
 
 `TemplatePaster.run()` lacked exception handling around `dst.setBlockData()`. In Paper 1.21.4, block writes to freshly-generated void-world chunks can throw (unloaded-chunk state). The exception escaped the `while` loop, was swallowed by Bukkit's repeating-task runner, and the task retried the same `(x, y, z)` coordinate on every tick forever — `onDone` was never called, player stuck at "Preparing dungeon...". Fixed by wrapping per-block ops in `try/finally { advance(); }` (failed blocks are skipped) and `onDone.accept()` in a try-catch (callback failures now log at SEVERE).
