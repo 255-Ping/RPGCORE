@@ -32,10 +32,6 @@ commands:
     description: View your achievements
     aliases: [ach, achievement]
     usage: /achievements [player]
-  menu:
-    description: Open the RPGCORE main menu
-    aliases: [m]
-    usage: /menu
   profile:
     description: View your profile or another player's profile
     usage: /profile [player]
@@ -43,6 +39,13 @@ commands:
     description: Open the Adventure hub (quests, economy, achievements)
     aliases: [adv]
     usage: /adventure
+  social:
+    description: Open the Social hub (friends, party, guild, mail)
+    usage: /social
+  settings:
+    description: Open your player settings
+    aliases: [preferences, prefs]
+    usage: /settings
 permissions:
   rpg.core.version:
     description: View loaded modules and versions
@@ -95,8 +98,11 @@ permissions:
   rpg.core.fix:
     description: Clear stuck movement-speed debuffs and resync stats for self or another player
     default: op
-  rpg.core.menu:
-    description: Open the main menu
+  rpg.social.view:
+    description: Open the Social hub GUI
+    default: true
+  rpg.settings.view:
+    description: Open the player Settings GUI
     default: true
   rpg.core.achievements:
     description: View your own achievements

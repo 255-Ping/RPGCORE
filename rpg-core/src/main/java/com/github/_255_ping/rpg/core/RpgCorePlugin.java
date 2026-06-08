@@ -78,13 +78,15 @@ import com.github._255_ping.rpg.core.achievement.CoreAchievementService;
 import com.github._255_ping.rpg.core.command.AchievementsCommand;
 import com.github._255_ping.rpg.core.command.AdventureCommand;
 import com.github._255_ping.rpg.core.command.AdventureGui;
+import com.github._255_ping.rpg.core.command.CraftingNavListener;
 import com.github._255_ping.rpg.core.command.ItemBrowserGui;
-import com.github._255_ping.rpg.core.command.MainMenuGui;
 import com.github._255_ping.rpg.core.command.ProfileCommand;
 import com.github._255_ping.rpg.core.command.ProfileGui;
-import com.github._255_ping.rpg.core.command.MainMenuListener;
-import com.github._255_ping.rpg.core.command.MenuCommand;
+import com.github._255_ping.rpg.core.command.SettingsCommand;
+import com.github._255_ping.rpg.core.command.SettingsGui;
 import com.github._255_ping.rpg.core.command.SkillsGui;
+import com.github._255_ping.rpg.core.command.SocialCommand;
+import com.github._255_ping.rpg.core.command.SocialGui;
 import com.github._255_ping.rpg.core.command.WalletGui;
 import com.github._255_ping.rpg.core.mobs.EliteService;
 import com.github._255_ping.rpg.core.mobs.OwnedMobTracker;
@@ -94,6 +96,7 @@ import com.github._255_ping.rpg.core.player.CoreManaService;
 import com.github._255_ping.rpg.core.player.CorePlayerLookup;
 import com.github._255_ping.rpg.core.player.EquipmentListener;
 import com.github._255_ping.rpg.core.player.PlayerLifecycleListener;
+import com.github._255_ping.rpg.core.player.PlayerPreferencesService;
 import com.github._255_ping.rpg.core.player.ResourcePackListener;
 import com.github._255_ping.rpg.core.scheduler.CoreSchedulerService;
 import com.github._255_ping.rpg.core.skills.CoreSkillRegistry;
@@ -313,8 +316,9 @@ public final class RpgCorePlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new VanillaSuppressionListener(this), this);
         getServer().getPluginManager().registerEvents(new DurabilityListener(getConfig()), this);
         getServer().getPluginManager().registerEvents(new BowListener(this), this);
+        PlayerPreferencesService preferencesService = new PlayerPreferencesService();
         getServer().getPluginManager().registerEvents(
-                new PlayerLifecycleListener(this, playerLookup, healthService, skillsService), this);
+                new PlayerLifecycleListener(this, playerLookup, healthService, skillsService, preferencesService), this);
         damagePipeline = new DamagePipelineListener(this, healthService);
         getServer().getPluginManager().registerEvents(damagePipeline, this);
         getServer().getPluginManager().registerEvents(new DamageIndicatorListener(this), this);
@@ -445,7 +449,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         achCmd.setExecutor(achCommand);
         achCmd.setTabCompleter(achCommand);
 
-        // Main menu item + hub GUI (#59)
+        // Navigation GUIs — all opened from crafting-slot nav buttons or slash commands
         SkillsGui skillsGui = new SkillsGui(this);
         getServer().getPluginManager().registerEvents(skillsGui, this);
         WalletGui walletGui = new WalletGui(this);
@@ -453,25 +457,16 @@ public final class RpgCorePlugin extends JavaPlugin {
         AdventureGui adventureGui = new AdventureGui(this, walletGui, achievementGui);
         getServer().getPluginManager().registerEvents(adventureGui, this);
         Objects.requireNonNull(getCommand("adventure")).setExecutor(new AdventureCommand(adventureGui));
-        MainMenuGui mainMenuGui = new MainMenuGui(this, statsGui, skillsGui, achievementGui, walletGui);
-        getServer().getPluginManager().registerEvents(mainMenuGui, this);
-        {
-            boolean mmEnabled  = getConfig().getBoolean("main-menu.enabled", true);
-            int     mmSlot     = getConfig().getInt("main-menu.slot", 8);
-            String  mmMat      = getConfig().getString("main-menu.material", "COMPASS");
-            String  mmName     = getConfig().getString("main-menu.name", "&6✦ Menu &6✦");
-            org.bukkit.Material mmMaterial;
-            try { mmMaterial = org.bukkit.Material.valueOf(mmMat.toUpperCase(java.util.Locale.ROOT)); }
-            catch (IllegalArgumentException ex) {
-                getLogger().warning("main-menu.material '" + mmMat + "' is not a valid Material; falling back to COMPASS.");
-                mmMaterial = org.bukkit.Material.COMPASS;
-            }
-            NamespacedKey mmKey = new NamespacedKey(this, "rpg_main_menu");
-            MainMenuListener mainMenuListener = new MainMenuListener(
-                    this, mainMenuGui, mmKey, mmEnabled, mmSlot, mmMaterial, mmName);
-            getServer().getPluginManager().registerEvents(mainMenuListener, this);
-            Objects.requireNonNull(getCommand("menu")).setExecutor(new MenuCommand(mainMenuGui));
-        }
+        SocialGui socialGui = new SocialGui(this);
+        getServer().getPluginManager().registerEvents(socialGui, this);
+        Objects.requireNonNull(getCommand("social")).setExecutor(new SocialCommand(socialGui));
+        SettingsGui settingsGui = new SettingsGui(preferencesService);
+        getServer().getPluginManager().registerEvents(settingsGui, this);
+        Objects.requireNonNull(getCommand("settings")).setExecutor(new SettingsCommand(settingsGui));
+        // Crafting-slot nav buttons — places phantom buttons in the survival crafting grid
+        CraftingNavListener craftingNav = new CraftingNavListener(
+                this, profileGui, skillsGui, socialGui, adventureGui, settingsGui);
+        getServer().getPluginManager().registerEvents(craftingNav, this);
 
         wandService = new CoreWandService();
         wandListener = new WandListener(this, wandService);

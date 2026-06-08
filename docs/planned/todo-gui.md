@@ -54,7 +54,7 @@ These replace or supplement existing command interfaces. All are in `docs/planne
 
 | GUI | Plugin | Current state | Difficulty |
 |---|---|---|---|
-| ✅ Main Menu GUI (menu item right-click) | `rpg-core` | **Done** — `MainMenuGui`, `MainMenuListener`, `MenuCommand` in coreVersion 1.10.0. **Pending redesign** — main menu item being removed; navigation replaced by inventory crafting-slot buttons; see redesign spec below. | 🟡 Needs update |
+| ✅ Main Menu GUI (menu item right-click) | `rpg-core` | **Removed in 1.10.17** — `MainMenuGui`, `MainMenuListener`, `MenuCommand` deleted. Navigation fully replaced by Inventory Crafting-Slot Nav Buttons. | ✅ Done |
 | ✅ Party GUI (`/party`) | `rpg-parties` | **Done** — `PartyGui` in partiesVersion 0.4.0. 54-slot GUI: member cards with PLAYER_HEAD skulls, role colours, online/offline status, HP%; sign-entry invite flow; promote/demote on left-click; kick/leave/disband with confirmation overlay. | ✅ Done |
 | Guild GUI (`/guild`) | `rpg-guilds` | All commands work; no GUI | 🔴 Hard |
 | Quest log GUI (`/quests`) | `rpg-quests` | Chat-list only | 🔴 Hard |
@@ -65,11 +65,11 @@ These replace or supplement existing command interfaces. All are in `docs/planne
 | ✅ Achievements GUI (`/achievements`) | `rpg-core` | **Done** — `AchievementGui` in coreVersion 1.10.0. Locked = GRAY_DYE, unlocked = LIME_DYE. | ✅ Done |
 | Leaderboard GUI (`/top`) | `rpg-core` | Not built yet — needed alongside leaderboard feature | 🟡 Medium |
 | Inbox / Mail GUI (`/inbox`) | `rpg-core` | Not built yet — needed alongside mail system | 🟡 Medium |
-| Inventory Crafting-Slot Nav Buttons | `rpg-core` | New — replaces main menu item with 5 phantom buttons in player inventory crafting grid | 🟡 Medium |
-| Social GUI (`/social`) | `rpg-core` | New — hub for Friends / Party / Guild / Mail | 🟡 Medium |
+| ✅ Inventory Crafting-Slot Nav Buttons | `rpg-core` | **Done in 1.10.17** — `CraftingNavListener` places 5 phantom PDC-tagged buttons in the player's 2×2 crafting grid (slots 0–4). Buttons open: Settings (slot 0), Profile (slot 1), Skills (slot 2), Social (slot 3), Adventure (slot 4). Saved crafting items restored on close. | ✅ Done |
+| ✅ Social GUI (`/social`) | `rpg-core` | **Done in 1.10.17** — `SocialGui` + `SocialCommand`. 54-slot hub: Friends (placeholder), Party (live → `/party`), Guild (placeholder), Mail (placeholder). Permission `rpg.social.view`. | ✅ Done |
 | Friends GUI | `rpg-core` | New — full GUI-based friends system; commands may be added alongside | 🔴 Hard |
 | ✅ Adventure GUI | `rpg-core` | **Done** — `AdventureGui` + `AdventureCommand` in `rpg-core 1.10.16`. Slot 12 Quests (placeholder), slot 13 Economy (live → WalletGui), slot 14 Achievements (live → AchievementGui). `/adventure` command + `rpg.adventure.view` permission. | ✅ Done |
-| Settings GUI | `rpg-core` | New — player-facing settings toggles | 🟡 Medium |
+| ✅ Settings GUI | `rpg-core` | **Done in 1.10.17** — `SettingsGui` + `SettingsCommand` + `PlayerPreferencesService`. 4 toggles: Party HUD, Sound Effects, Damage Numbers, Show on Leaderboard. Prefs persisted via `PlayerLifecycleListener` on quit. Permission `rpg.settings.view`. | ✅ Done |
 | Crafting Station GUI | `rpg-crafting` | New — custom 3×3 GUI at a plugin block; multi-item slots; quick-craft sidebar | 🔴 Hard |
 
 ### Main Menu GUI (`rpg-core`) — 🟡 Medium
@@ -504,7 +504,7 @@ The main menu **item** (the compass/trigger item in the player's hotbar) is bein
 
 ---
 
-## Inventory Crafting-Slot Nav Buttons (`rpg-core`) — 🟡 Medium
+## ~~Inventory Crafting-Slot Nav Buttons (`rpg-core`)~~ ✅ Done in `rpg-core 1.10.17`
 
 Replaces the old main menu item. The player's 2×2 crafting grid (accessible from their survival inventory screen) is populated with 5 phantom GUI-shortcut buttons. These are **not real items** — they are placed into the view server-side via `InventoryOpenEvent` (or a scheduled task one tick after open) and removed before `InventoryCloseEvent` propagates, so they never end up in the player's actual inventory or the crafting result slot.
 
@@ -538,7 +538,7 @@ Replaces the old main menu item. The player's 2×2 crafting grid (accessible fro
 
 ---
 
-## Social GUI (`rpg-core`) — 🟡 Medium
+## ~~Social GUI (`rpg-core`)~~ ✅ Done in `rpg-core 1.10.17`
 
 Top-level hub opened from the inventory crafting bottom-left button or from Main Menu slot 14. Contains quick-access buttons to Friends, Party, Guild, and Mail. No Back button (top-level); Close at slot 49.
 
@@ -629,7 +629,7 @@ As features are built, swap grayed-out placeholders for live buttons.
 
 ---
 
-## Settings GUI (`rpg-core`) — 🟡 Medium
+## ~~Settings GUI (`rpg-core`)~~ ✅ Done in `rpg-core 1.10.17`
 
 Top-level player preferences screen. Opened from the crafting output slot button or from Main Menu slot 22. Contains toggles and settings for player-facing plugin options. **Not** admin settings — these are personal preferences visible and adjustable by each player.
 

@@ -6,6 +6,7 @@ import com.github._255_ping.rpg.api.player.RpgPlayer;
 import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import com.github._255_ping.rpg.api.stats.Stat;
 import com.github._255_ping.rpg.core.health.CoreHealthService;
+import com.github._255_ping.rpg.core.player.PlayerPreferencesService;
 import com.github._255_ping.rpg.core.skills.CoreSkillsService;
 import com.github._255_ping.rpg.core.skills.PlayerSkillState;
 import org.bukkit.configuration.ConfigurationSection;
@@ -45,13 +46,16 @@ public final class PlayerLifecycleListener implements Listener {
     private final CorePlayerLookup lookup;
     private final CoreHealthService health;
     private final CoreSkillsService skills;
+    private final PlayerPreferencesService preferences;
 
     public PlayerLifecycleListener(JavaPlugin plugin, CorePlayerLookup lookup,
-                                   CoreHealthService health, CoreSkillsService skills) {
-        this.plugin = plugin;
-        this.lookup = lookup;
-        this.health = health;
-        this.skills = skills;
+                                   CoreHealthService health, CoreSkillsService skills,
+                                   PlayerPreferencesService preferences) {
+        this.plugin       = plugin;
+        this.lookup       = lookup;
+        this.health       = health;
+        this.skills       = skills;
+        this.preferences  = preferences;
     }
 
     @EventHandler
@@ -93,6 +97,11 @@ public final class PlayerLifecycleListener implements Listener {
                 }
                 if (!loaded.isEmpty()) rp.setBonusStats(loaded);
             }
+            Object prefsRaw = data.get("preferences");
+            if (prefsRaw instanceof Map<?, ?> prefsMap) {
+                preferences.put(player.getUniqueId(),
+                        PlayerPreferencesService.PlayerPreferences.fromMap(prefsMap));
+            }
         }
 
         rp.setMana(mana);
@@ -116,11 +125,13 @@ public final class PlayerLifecycleListener implements Listener {
             crp.bonusStats().forEach((s, v) -> bonusMap.put(s.id(), v));
             if (!bonusMap.isEmpty()) data.put("bonus-stats", bonusMap);
         }
+        data.put("preferences", preferences.get(player.getUniqueId()).toMap());
         RpgServices.dataStore().repository(REPO_NAME).save(player.getUniqueId().toString(), data);
 
         lookup.remove(player);
         health.removeEntity(player);
         skills.remove(player.getUniqueId());
+        preferences.remove(player.getUniqueId());
     }
 
     private void applyBaseStats(CoreRpgPlayer rp) {
