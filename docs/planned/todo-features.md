@@ -6,6 +6,38 @@ _Full features or systems that don't exist at all yet._
 
 ---
 
+### Friends System (`rpg-core`) — 🔴 Hard
+
+A persistent social graph between players. All management is done through the Friends GUI (see `todo-gui.md`). Chat commands (`/friend add <name>`, `/friend remove <name>`, `/friend list`, `/friend accept <name>`) are optional convenience aliases.
+
+**Data model (per player, saved in `PlayerState`):**
+- `List<UUID> friends` — confirmed friends.
+- `List<FriendRequest> incomingRequests` — pending incoming requests (sender UUID + timestamp).
+- `List<UUID> outgoingRequests` — pending outgoing requests (to avoid duplicate sends).
+
+`FriendRequest` is a simple DTO: `{ senderUuid, senderName, sentAt (game time) }`. Requests expire after a configurable `friends.request-expiry-game-hours` (default 48 game-hours).
+
+**Config keys (in rpg-core `config.yml`):**
+```yaml
+friends:
+  enabled: true
+  max-friends: 50
+  request-expiry-game-hours: 48
+  allow-teleport: false       # whether the Friends GUI shows a Teleport button
+  notify-on-login: true       # send a chat message listing which friends are online on join
+```
+
+**Events / hooks:**
+- On player join: send `notify-on-login` message if any friends are online.
+- On friend request sent: deliver a chat notification to the target if they are online; store in `incomingRequests` regardless.
+- On accept: add to both players' `friends` lists; remove from request queues; notify both.
+- On remove: remove from both players' `friends` lists; no notification.
+- Request expiry: prune stale requests in `PlayerState.Load()` and lazily on next GUI open.
+
+**Persistence:** add `friends`, `incomingRequests`, `outgoingRequests` fields to `SaveData`. Follow the properties-not-fields rule. Wire into `ResetAllData()`.
+
+---
+
 ### Salvaging System (`rpg-salvaging`) — 🔴 Hard
 
 Players feed unwanted items into a **Salvager block** to recover coins, XP levels, and occasionally the reforges/upgrades that were applied to those items. Yield scales with item rarity and the player's Salvaging skill level.

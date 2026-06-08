@@ -54,7 +54,7 @@ These replace or supplement existing command interfaces. All are in `docs/planne
 
 | GUI | Plugin | Current state | Difficulty |
 |---|---|---|---|
-| ✅ Main Menu GUI (menu item right-click) | `rpg-core` | **Done** — `MainMenuGui`, `MainMenuListener`, `MenuCommand` in coreVersion 1.10.0. Configurability pass still pending (see below). | ✅ Done |
+| ✅ Main Menu GUI (menu item right-click) | `rpg-core` | **Done** — `MainMenuGui`, `MainMenuListener`, `MenuCommand` in coreVersion 1.10.0. **Pending redesign** — main menu item being removed; navigation replaced by inventory crafting-slot buttons; see redesign spec below. | 🟡 Needs update |
 | ✅ Party GUI (`/party`) | `rpg-parties` | **Done** — `PartyGui` in partiesVersion 0.4.0. 54-slot GUI: member cards with PLAYER_HEAD skulls, role colours, online/offline status, HP%; sign-entry invite flow; promote/demote on left-click; kick/leave/disband with confirmation overlay. | ✅ Done |
 | Guild GUI (`/guild`) | `rpg-guilds` | All commands work; no GUI | 🔴 Hard |
 | Quest log GUI (`/quests`) | `rpg-quests` | Chat-list only | 🔴 Hard |
@@ -65,6 +65,12 @@ These replace or supplement existing command interfaces. All are in `docs/planne
 | ✅ Achievements GUI (`/achievements`) | `rpg-core` | **Done** — `AchievementGui` in coreVersion 1.10.0. Locked = GRAY_DYE, unlocked = LIME_DYE. | ✅ Done |
 | Leaderboard GUI (`/top`) | `rpg-core` | Not built yet — needed alongside leaderboard feature | 🟡 Medium |
 | Inbox / Mail GUI (`/inbox`) | `rpg-core` | Not built yet — needed alongside mail system | 🟡 Medium |
+| Inventory Crafting-Slot Nav Buttons | `rpg-core` | New — replaces main menu item with 5 phantom buttons in player inventory crafting grid | 🟡 Medium |
+| Social GUI (`/social`) | `rpg-core` | New — hub for Friends / Party / Guild / Mail | 🟡 Medium |
+| Friends GUI | `rpg-core` | New — full GUI-based friends system; commands may be added alongside | 🔴 Hard |
+| Adventure GUI | `rpg-core` | New — hub for Quests / Economy / Achievements | 🟢 Easy |
+| Settings GUI | `rpg-core` | New — player-facing settings toggles | 🟡 Medium |
+| Crafting Station GUI | `rpg-crafting` | New — custom 3×3 GUI at a plugin block; multi-item slots; quick-craft sidebar | 🔴 Hard |
 
 ### Main Menu GUI (`rpg-core`) — 🟡 Medium
 
@@ -449,5 +455,305 @@ Mirrors the existing [Hologram Editor GUI](#hologram-editor-gui-holograms----med
 - Every change applies to the live entity **immediately** on confirm — admin sees the effect in-world without closing the GUI
 - The GUI is not a separate mode — the physical editor items are still in the hotbar while the GUI is open on a chest (player can close GUI to get back to click-mode, or click Done from the GUI navigation)
 - Closing the GUI via ESC does **not** exit editor mode — the player still holds their editor items. Only `/de done` or the Done button exits.
+
+---
+
+## Existing GUI Refinements
+
+### Stats GUI — Polish Pass (`rpg-core`) — 🟢 Easy
+
+**Changes needed:**
+
+1. **Stat icons show descriptions** — every stat icon's lore should include a plain-English description of what that stat does (e.g. `"&7Reduces incoming physical damage."`). Descriptions should come from `StatDef` or a map in `StatsGui` so they're easy to maintain.
+
+2. **Remove Auction House button** — any placeholder Auction House shortcut currently in the Stats GUI should be removed; it belongs in the Profile GUI instead (see Profile GUI changes below).
+
+3. **Remove Trade button** — the Trade shortcut should live only on the Profile GUI (already there). Remove the duplicate from the Stats GUI so the action is unambiguous.
+
+---
+
+### Profile GUI — Polish Pass (`rpg-core`) — 🟢 Easy
+
+**Changes needed:**
+
+1. **Balance icon uses config currency format** — currently uses `String.format("%,.0f")`. Should read the currency symbol/format from the economy config (e.g. `economy.currency-symbol`, `economy.currency-format`) so the display matches what's configured server-side. Fall back to the current format if the economy service isn't loaded.
+
+2. **Skill average level icon** — add a new icon (e.g. `EXPERIENCE_BOTTLE`, slot TBD based on layout) that shows the player's average skill level across all skills. Name: `"&bAverage Skill Level"`. Lore: each skill on its own lore line (`&7<Skill>: &f<level>`), final line `"&7Average: &e<avg>"` (one decimal place).
+
+3. **Auction House shortcut button** — add a placeholder button (e.g. `GOLD_BLOCK`, labeled `"&6Auction House"`) in an available slot. Lore: `"&8[Coming Soon]"` until the auction house is built; when built, clicking opens the Auction House GUI. This replaces the button being removed from the Stats GUI.
+
+4. **Trade button stays here only** — confirm the trade shortcut is only in Profile GUI (when viewing another player). Remove it from Stats GUI.
+
+---
+
+### Main Menu GUI — Redesign (`rpg-core`) — 🟡 Medium
+
+The main menu **item** (the compass/trigger item in the player's hotbar) is being removed entirely. Navigation is replaced by the Inventory Crafting-Slot Buttons (see below). The Main Menu GUI itself is retained as an optional overview screen but its layout and buttons need updating.
+
+**Changes to the existing `MainMenuGui`:**
+
+1. **Profile button at slot 4** (top center, row 1) — `PLAYER_HEAD` skull of the viewer; label `"&e⚑ Profile"`. Replaces the decorative title item. Clicking opens the viewer's own Profile GUI (nested, Back → Main Menu).
+
+2. **Remove Stats button** — slot 10 previously opened Stats/Profile. Remove it (replace with decorative glass or leave empty). Stats are now accessed via the Profile GUI.
+
+3. **Updated button table:**
+
+| Slot | Icon | Label | Opens | Notes |
+|---|---|---|---|---|
+| 4 | PLAYER_HEAD (viewer) | `⚑ Profile` | Profile GUI | Replaces old decorative title item |
+| 11 | DIAMOND_SWORD | `✦ Skills` | Skills GUI | Unchanged |
+| 13 | DIAMOND | `🏆 Achievements` | Achievements GUI | Fully live (was grayed out) |
+| 14 | SHIELD | `🛡 Social` | Social GUI | Replaces old Party button; Social GUI contains party + guild + friends + mail |
+| 19 | NETHER_STAR | `✦ Waypoints` | Waypoints GUI | Grayed out placeholder until Waypoints ships |
+| 21 | EMERALD | `💰 Adventure` | Adventure GUI | Replaces old Economy button; Adventure GUI contains quests + economy + achievements |
+| 22 | CHEST | `⚙ Settings` | Settings GUI | Replaces old Vault placeholder |
+| 20 | PAPER | `✉ Mail` | Inbox GUI | Unchanged; shows unread count if > 0 |
+
+4. **How the Main Menu is now accessed** — it is no longer triggered by a hotbar item. It may be linked from the Profile GUI or Social GUI as a back-navigation target, or kept as a `/menu` command fallback.
+
+---
+
+## Inventory Crafting-Slot Nav Buttons (`rpg-core`) — 🟡 Medium
+
+Replaces the old main menu item. The player's 2×2 crafting grid (accessible from their survival inventory screen) is populated with 5 phantom GUI-shortcut buttons. These are **not real items** — they are placed into the view server-side via `InventoryOpenEvent` (or a scheduled task one tick after open) and removed before `InventoryCloseEvent` propagates, so they never end up in the player's actual inventory or the crafting result slot.
+
+**Slot assignment (Bukkit `InventoryView` slot indices for `InventoryType.CRAFTING`):**
+
+| Crafting grid position | Bukkit slot | Opens |
+|---|---|---|
+| Top-left | 1 | Profile GUI |
+| Top-right | 2 | Skills GUI |
+| Bottom-left | 3 | Social GUI |
+| Bottom-right | 4 | Adventure GUI |
+| Output slot | 0 | Settings GUI |
+
+**Button items:**
+
+| Slot | Material | Display name | Lore |
+|---|---|---|---|
+| 1 (Profile) | PLAYER_HEAD (viewer skull) | `&e⚑ Profile` | `&7View your stats, skills, and profile` |
+| 2 (Skills) | DIAMOND_SWORD | `&a✦ Skills` | `&7View your skill levels and progress` |
+| 3 (Social) | IRON_SWORD | `&b⚑ Social` | `&7Friends, party, guild, and mail` |
+| 4 (Adventure) | WRITABLE_BOOK | `&6📜 Adventure` | `&7Quests, economy, and achievements` |
+| 0 (Settings) | COMPARATOR | `&7⚙ Settings` | `&7Adjust your player settings` |
+
+**Implementation notes:**
+- Listen on `InventoryOpenEvent` where `event.getInventory().getType() == InventoryType.CRAFTING`.
+- Place button items into slots 0–4 of the view one tick later (use `runTask`) so the client's inventory is fully open.
+- Listen on `InventoryClickEvent` — if the slot is one of the 5 button slots, cancel the event and open the target GUI.
+- Listen on `InventoryCloseEvent` — remove the 5 button items before close so the crafting inventory stays clean (no phantom items persisting to the real `PlayerInventory`).
+- If the player has a real item in one of the crafting slots before opening, restore it after close. Track per-player "saved crafting contents" in a `Map<UUID, ItemStack[]>`.
+- All 5 buttons must have `HIDE_ATTRIBUTES` and `HIDE_ADDITIONAL_TOOLTIP` ItemFlags.
+
+---
+
+## Social GUI (`rpg-core`) — 🟡 Medium
+
+Top-level hub opened from the inventory crafting bottom-left button or from Main Menu slot 14. Contains quick-access buttons to Friends, Party, Guild, and Mail. No Back button (top-level); Close at slot 49.
+
+**Layout (54 slots):**
+
+```
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Title ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+[ Glass ] [ Glass ] [Friends] [ Glass ] [ Party ] [ Glass ] [ Guild ] [ Glass ] [ Glass ]
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [  Mail ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Close ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+```
+
+| Slot | Material | Label | Opens |
+|---|---|---|---|
+| 4 | NETHER_STAR | `&b✦ Social` | — (decorative title) |
+| 11 | SKELETON_SKULL | `&e👥 Friends` | Friends GUI |
+| 13 | IRON_SWORD | `&a⚑ Party` | Party GUI (existing `PartyGui`) |
+| 15 | SHIELD | `&6🛡 Guild` | Guild GUI (grayed out until built) |
+| 22 | PAPER | `&e✉ Mail` | Inbox GUI (grayed out until built) |
+| 49 | BARRIER | `&c❌ Close` | Closes GUI |
+
+All unbuilt buttons use the standard grayed-out placeholder style (`GRAY_DYE`, `&7<Label>`, lore `&8[Not yet available]`).
+
+---
+
+## Friends GUI (`rpg-core`) — 🔴 Hard
+
+A new player social feature. All friend management is done through this GUI (no chat commands required, though `/friend add <name>` etc. may be provided as aliases).
+
+**Concepts:**
+- A player can have up to a config-defined number of friends (default 50, configurable via `friends.max-friends`).
+- Friend requests are sent by name; the recipient gets a notification and can accept/deny.
+- Friends list shows online/offline status, last-seen time for offline players.
+
+**Friends GUI layout (54 slots):**
+
+```
+[ Glass ] [ Glass ] [ Glass ] [AddFrnd] [ Title ] [PndgReq] [ Glass ] [ Glass ] [ Glass ]
+[  F1   ] [  F2   ] [  F3   ] [  F4   ] [  F5   ] [  F6   ] [  F7   ] [  F8   ] [  F9  ]
+[  F10  ] [  F11  ] [  F12  ] [  F13  ] [  F14  ] [  F15  ] [  F16  ] [  F17  ] [  F18 ]
+[  F19  ] [  F20  ] [  F21  ] [  F22  ] [  F23  ] [  F24  ] [  F25  ] [  F26  ] [  F27 ]
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+[ PREV  ] [ Glass ] [ Glass ] [ Glass ] [ Close ] [ Glass ] [ Glass ] [ Glass ] [ NEXT  ]
+```
+
+- **Title** (slot 4): `NETHER_STAR`, `&e👥 Friends (&f<count>&e)`.
+- **Add Friend** (slot 3): `LIME_DYE`, `&a➕ Add Friend`. Click → pendingInvite guard → closeInventory → runTask → `signInput().ask("Friend name:")` → send request → reopen GUI.
+- **Pending Requests** (slot 5): `YELLOW_DYE`, `&eⓘ Pending Requests (&f<count>&e)`. Click → opens Pending Requests sub-GUI.
+- **Friend slots** (slots 9–35, 27 per page): PLAYER_HEAD with SkullMeta. Name: `&e<playerName>` (green if online, gray if offline). Lore: `&7Status: &aOnline / &7Last seen: &f<time-ago>`. Left-click: opens Friend Actions sub-GUI (Visit / Trade / Message / Remove).
+- **Pagination**: PREV at slot 45, NEXT at slot 53, Close at slot 49.
+
+**Pending Requests sub-GUI (nested, Back → Friends):**
+- Shows incoming requests as PLAYER_HEAD items. Left-click = Accept, Right-click = Deny. Confirmation overlay on accept.
+
+**Friend Actions sub-GUI (nested, Back → Friends):**
+- Slot 20: `ENDER_PEARL` `&eTeleport` (if online; grayed out if offline or `friends.allow-teleport: false`)
+- Slot 22: `GOLD_INGOT` `&6Trade` — sends a trade request (same as `/trade <name>`)
+- Slot 24: `BARRIER` `&cRemove Friend` — confirmation overlay before removing
+
+---
+
+## Adventure GUI (`rpg-core`) — 🟢 Easy
+
+Top-level hub opened from the inventory crafting bottom-right button or from Main Menu slot 21. Contains quick-access to Quests, Economy, and Achievements.
+
+**Layout (54 slots):**
+
+```
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Title ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+[ Glass ] [ Glass ] [ Glass ] [Quests ] [Economy] [Achieve] [ Glass ] [ Glass ] [ Glass ]
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Close ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+```
+
+| Slot | Material | Label | Opens |
+|---|---|---|---|
+| 4 | WRITABLE_BOOK | `&6📜 Adventure` | — (decorative title) |
+| 12 | WRITABLE_BOOK | `&e📜 Quests` | Quest Log GUI (grayed out until built) |
+| 13 | EMERALD | `&a💰 Economy` | Economy / wallet summary GUI |
+| 14 | DIAMOND | `&b🏆 Achievements` | Achievements GUI (existing `AchievementGui`) |
+| 49 | BARRIER | `&c❌ Close` | Closes GUI |
+
+As features are built, swap grayed-out placeholders for live buttons.
+
+---
+
+## Settings GUI (`rpg-core`) — 🟡 Medium
+
+Top-level player preferences screen. Opened from the crafting output slot button or from Main Menu slot 22. Contains toggles and settings for player-facing plugin options. **Not** admin settings — these are personal preferences visible and adjustable by each player.
+
+**Layout (54 slots):**
+
+```
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Title ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+[ Glass ] [HudTgl ] [SndTgl ] [MsgTgl ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+...
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Close ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+```
+
+Each setting is a toggle or cycle item. Current value always shown in the item name or lore. Clicking applies the change immediately (no save button needed — changes persist via existing player data save).
+
+**Initial settings to expose:**
+
+| Slot | Material | Setting | Type | Options |
+|---|---|---|---|---|
+| 10 | GOLDEN_APPLE | `Party HUD` | Toggle | On / Off — controls the action-bar HP display from rpg-parties |
+| 11 | NOTE_BLOCK | `Sound Effects` | Toggle | On / Off — mutes RPG ability/UI sounds for this player |
+| 12 | PAPER | `Damage Numbers` | Toggle | On / Off — shows/hides floating damage hologram numbers |
+| 13 | COMPASS | `Show on Leaderboard` | Toggle | Visible / Hidden — opt out of public leaderboards |
+
+Expand with more player-facing settings as they become available. Each new setting needs a corresponding per-player field in `PlayerState` (or config file) with save/load wired in.
+
+**Bottom bar:** Close at slot 49, all others glass.
+
+---
+
+## Station GUI Improvements — Offline Timers + Output Slot (`rpg-alchemy`, `rpg-cooking`, `rpg-smelting`) — 🟡 Medium
+
+All three crafting stations (brewing, cooking, smelting) need two shared improvements:
+
+### 1. Timers run while GUI is closed
+
+Currently processing timers may pause or reset when the player closes the GUI. Timers must run on **game time** (`GameTimeSeconds`), not session time. When the player opens the GUI after being away, it should show how much time has elapsed and reflect completed items.
+
+- Store the timer start timestamp as a `long` game-time snapshot in the station's persistent data (PDC on the block entity, or in a plugin data map keyed by block location).
+- On GUI open: compute elapsed time = `currentGameTime − savedStartTime`; advance processing state accordingly (may have completed multiple batches while away).
+- If multiple queued items finish while the player is away, all should be ready in the output slot (or queue up if the output slot only holds one stack at a time).
+
+### 2. Output slot — items go there, not directly to inventory
+
+Add a dedicated **output slot** to each station GUI. When processing completes, the result goes into the output slot rather than auto-depositing into the player's inventory. The player manually clicks to collect it.
+
+- If the output slot is occupied and a new result is ready, the station pauses until the player collects (display a "Output full — collect your item!" indicator in the GUI).
+- The output slot should be visually distinct from input slots (border panes around it, or placed in a separate area of the GUI).
+
+### 3. Pagination — confirm consistent with enchanting standard
+
+Confirm that all three GUIs use the same pagination style as `rpg-enchanting`'s `StationGui`: PREV at slot 45, page indicator at slot 47, Close at slot 49, NEXT at slot 53. If `rpg-smelting` doesn't have pagination yet, add it using the same pattern.
+
+---
+
+## Crafting Station GUI (`rpg-crafting`) — 🔴 Hard
+
+Replace the current `rpg-crafting` command-based interface with a full GUI at a custom plugin block.
+
+### Custom Block
+
+A new plugin block (`crafting_table` or similar ID in `blocks/`) that opens the Crafting Station GUI on right-click. Placed by admins via `/rpg item give crafting_table_block` (or similar). Uses the existing `BlockInteractListener` dispatch.
+
+### GUI Layout (54 slots)
+
+```
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [Quick1 ] [Quick2 ] [Quick3 ]
+[ Glass ] [ In1   ] [ In2   ] [ In3   ] [ Glass ] [Output ] [Quick4 ] [Quick5 ] [Quick6 ]
+[ Glass ] [ In4   ] [ In5   ] [ In6   ] [ Glass ] [ Glass ] [Quick7 ] [Quick8 ] [Quick9 ]
+[ Glass ] [ In7   ] [ In8   ] [ In9   ] [ Glass ] [ Glass ] [Quick10] [Quick11] [Quick12]
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+[ Glass ] [ Glass ] [ Glass ] [ Glass ] [ Close ] [ Glass ] [ Glass ] [ Glass ] [ Glass ]
+```
+
+- **Slots 10, 11, 12, 19, 20, 21, 28, 29, 30** — 3×3 crafting input grid.
+- **Slot 23** — Output slot. Shows the crafted result (grayed-out GRAY_DYE if no valid recipe). Click to collect the result (removes inputs, gives output).
+- **Slots 15, 16, 17, 24, 25, 26, 33, 34, 35, 42, 43, 44** — Quick-Craft sidebar (12 slots, see below).
+- **Slot 49** — Close.
+
+### Multi-Item Slots
+
+A recipe can require more than 1 item per grid slot (e.g. 64 dirt in every slot). The input slot tooltip shows the required quantity. If the slot contains fewer than required, it renders the item in red (or with a `&c` lore indicator `"&cNeed <N>, have <M>"`). The output slot only activates when all slot requirements are met.
+
+Recipe YAML shape addition:
+```yaml
+my_recipe:
+  Type: SHAPED
+  Grid:
+    - "DDD"
+    - "DDD"
+    - "DDD"
+  Ingredients:
+    D:
+      item: dirt
+      amount: 64       # <-- new field; defaults to 1 if omitted
+  Result:
+    item: mega_dirt
+    amount: 1
+```
+
+### Quick-Craft Sidebar
+
+The 12 right-hand slots are auto-populated on GUI open (and refreshed after each craft) with items the player **can currently craft** given their inventory contents.
+
+- Scan all registered recipes; for each recipe where the player has sufficient materials, add it to the list.
+- Show up to 12 results. If more than 12 are available, add PREV/NEXT buttons at slots 33/35 to page through them (or add a scroll mechanic using shift-click).
+- Each Quick-Craft slot: material = the recipe's output item; name = `"&a<output name> &7(×<amount>)"`. Lore: ingredient list (`"&7- <amount>× <ingredient name>"`), then `"&eClick to craft"`.
+- **Clicking a Quick-Craft slot:** validates the player still has materials (re-check), removes the ingredients from their inventory, gives the output. Does **not** place anything in the 3×3 grid — it is a direct "one-click craft" action.
+- Quick-Craft slots update every time the player's inventory changes while the GUI is open (listen on `InventoryClickEvent` in the player's own inventory while the station GUI is open, and refresh after each action).
+
+### Implementation Notes
+
+- The 3×3 grid is manual (the player arranges items themselves for shaped recipes, or just fills slots for shapeless).
+- When the grid contents change, re-evaluate all recipes in the registry and update the output slot.
+- For shaped recipes, only exact grid arrangement triggers a match (same as vanilla). Shapeless recipes match regardless of arrangement.
+- A `CraftingStationGui` class in `rpg-crafting` handles all of this. The existing `CraftingManager` / recipe registry remains unchanged — the GUI consults it.
 
 ---
