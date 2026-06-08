@@ -26,6 +26,7 @@ import com.github._255_ping.rpg.core.blocks.CoreBlockRegistry;
 import com.github._255_ping.rpg.core.station.CoreStationService;
 import com.github._255_ping.rpg.core.command.EffectsCommand;
 import com.github._255_ping.rpg.core.command.SpawnerCommand;
+import com.github._255_ping.rpg.core.command.SpawnerGui;
 import com.github._255_ping.rpg.core.spawners.SpawnerManager;
 import com.github._255_ping.rpg.core.command.RpgCommand;
 import com.github._255_ping.rpg.core.command.SkillCommand;
@@ -426,7 +427,9 @@ public final class RpgCorePlugin extends JavaPlugin {
         new EliteService(this);   // registers itself as the static singleton
         damagePipeline.setMobKeys(mobIdKey, spawnerManager.mobLevelKey());
         MobAbilityRuntime.setMobLevelKey(spawnerManager.mobLevelKey());
-        SpawnerCommand spawnerCommand = new SpawnerCommand(this, spawnerManager);
+        SpawnerGui spawnerGui = new SpawnerGui(this, spawnerManager);
+        getServer().getPluginManager().registerEvents(spawnerGui, this);
+        SpawnerCommand spawnerCommand = new SpawnerCommand(this, spawnerManager, spawnerGui);
         var spawnerCmd = Objects.requireNonNull(getCommand("spawner"));
         spawnerCmd.setExecutor(spawnerCommand);
         spawnerCmd.setTabCompleter(spawnerCommand);

@@ -11,6 +11,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,6 +23,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
@@ -35,53 +37,50 @@ import java.util.UUID;
  * Brewing GUI — 54-slot layout (6 rows):
  * <pre>
  *   Row 0 (0–8):   background / progress bar (when a timed brew is active)
- *   Row 1 (9–17):  ingredient slots centred at 12, 13, 14; rest background
+ *   Row 1 (9–17):  ingredient slots at 12, 13, 14 | arrow at 15 | output slot at 16 | rest background
  *   Rows 2–4 (18–44): recipe tiles (27 per page)
  *   Row 5 (45–53): nav bar  ← PREV (45) | bg | bg | bg | ❌ Close (49) | bg | bg | bg | NEXT → (53)
  * </pre>
  *
- * <p>When {@code BrewTicks > 0} on a recipe, clicking it starts a timed brew:
- * ingredients are consumed immediately, a progress bar fills row 0, and the
- * output is delivered on completion. If the player closes the GUI mid-brew the
- * state is saved to DataStore and restored the next time they open any brewing
- * station.
+ * <p>When {@code BrewTicks > 0} on a recipe, clicking it starts a timed brew.
+ * Output lands in the dedicated output slot (16) on completion; closing the GUI
+ * auto-collects any pending output.
  *
- * <p><b>Per-player isolation</b>: every call to {@link #open} creates a brand-new
- * {@link Inventory} object for that specific player.
+ * <p>A {@code timestamp_ms} is saved with the craft state so offline time is
+ * accounted for when the player reopens the station.
  */
 public final class BrewingGui implements Listener {
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
-    // Ingredient slots: row 1, centred (matches cooking station layout)
     private static final int[] INPUT_SLOTS    = {12, 13, 14};
-    // Recipe tiles fill rows 2–4
+    private static final int ARROW_SLOT       = 15;
+    private static final int OUTPUT_SLOT      = 16;
     private static final int RECIPE_START     = 18;
-    private static final int RECIPES_PER_PAGE = 27; // rows 2–4
-    // Nav bar
-    private static final int NAV_PREV  = 45;
-    private static final int NAV_CLOSE = GuiConfig.CLOSE_SLOT; // 49
-    private static final int NAV_NEXT  = 53;
-    // Progress bar: slot 4 = info item (BREWING_STAND); slots 0–3 and 5–8 = 8 fill panes
-    private static final int   PROGRESS_INFO_SLOT = 4;
+    private static final int RECIPES_PER_PAGE = 27;
+    private static final int NAV_PREV         = 45;
+    private static final int NAV_CLOSE        = GuiConfig.CLOSE_SLOT; // 49
+    private static final int NAV_NEXT         = 53;
+    private static final int   PROGRESS_INFO_SLOT  = 4;
     private static final int[] PROGRESS_FILL_SLOTS = {0, 1, 2, 3, 5, 6, 7, 8};
-    // DataStore repository name for in-progress brewing crafts
-    private static final String REPO = "brewing_craft";
-    // Task fires every 4 ticks — close enough to a tick-accurate timer while being efficient
-    private static final int TASK_INTERVAL_TICKS = 4;
+    private static final String REPO               = "brewing_craft";
+    private static final int TASK_INTERVAL_TICKS   = 4;
 
     private final RpgAlchemyPlugin plugin;
     private final AlchemyRegistry  registry;
     private final PotionItemFactory potionItems;
-    private final Map<UUID, Boolean>       open         = new HashMap<>();
-    private final Map<UUID, Integer>       page         = new HashMap<>();
-    private final Map<UUID, BrewProgress>  activeBrews  = new HashMap<>();
-    private final Map<UUID, BukkitTask>    brewTasks    = new HashMap<>();
+    private final NamespacedKey    outputPlaceholderKey;
+
+    private final Map<UUID, Boolean>      open        = new HashMap<>();
+    private final Map<UUID, Integer>      page        = new HashMap<>();
+    private final Map<UUID, BrewProgress> activeBrews = new HashMap<>();
+    private final Map<UUID, BukkitTask>   brewTasks   = new HashMap<>();
 
     public BrewingGui(RpgAlchemyPlugin plugin, AlchemyRegistry registry, PotionItemFactory potionItems) {
-        this.plugin      = plugin;
-        this.registry    = registry;
-        this.potionItems = potionItems;
+        this.plugin               = plugin;
+        this.registry             = registry;
+        this.potionItems          = potionItems;
+        this.outputPlaceholderKey = new NamespacedKey(plugin, "brewing_output_placeholder");
     }
 
     // -------------------------------------------------------------------------
@@ -97,21 +96,47 @@ public final class BrewingGui implements Listener {
         open.put(player.getUniqueId(), true);
         page.put(player.getUniqueId(), 0);
 
-        // Restore any saved brew progress from a previous session
+        inv.setItem(ARROW_SLOT, buildArrowItem());
+        inv.setItem(OUTPUT_SLOT, buildOutputPlaceholder());
+
         Optional<Map<String, Object>> saved = getRepo().get(player.getUniqueId().toString());
         if (saved.isPresent()) {
             Map<String, Object> data = saved.get();
             String recipeId  = (String) data.get("recipe_id");
             int    elapsed   = data.get("elapsed_ticks") instanceof Number n ? n.intValue() : 0;
+            long   savedMs   = data.get("timestamp_ms")  instanceof Number n ? n.longValue() : 0L;
             BrewRecipeDef r  = registry.recipe(recipeId).orElse(null);
+
             if (r != null && r.brewTicks() > 0) {
-                BrewProgress bp = new BrewProgress(recipeId, elapsed, r.brewTicks());
-                activeBrews.put(player.getUniqueId(), bp);
-                showLockedIngredients(inv, r);
-                updateProgressBar(inv, bp);
-                startBrewTask(player, inv);
+                if (savedMs > 0) {
+                    long offlineMs    = System.currentTimeMillis() - savedMs;
+                    int  offlineTicks = (int) Math.min(offlineMs / 50L, (long) Integer.MAX_VALUE);
+                    elapsed           = Math.min(elapsed + offlineTicks, r.brewTicks());
+                }
+
+                if (elapsed >= r.brewTicks()) {
+                    // Completed offline
+                    getRepo().delete(player.getUniqueId().toString());
+                    ItemStack output = buildOutput(r.output());
+                    if (output != null) {
+                        inv.setItem(OUTPUT_SLOT, output);
+                        long xp = plugin.getConfig().getLong("xp.per-brew", 30);
+                        if (xp > 0) RpgServices.skills().awardXp(player, BuiltinSkill.ALCHEMY.id(), xp);
+                        player.sendMessage(plugin.messages().get("brew.success",
+                                Map.of("item", r.output().itemId())));
+                    } else {
+                        plugin.getLogger().warning("Brew craft completed offline for " + player.getName()
+                                + " but output '" + r.output().itemId() + "' could not be built.");
+                    }
+                    for (int slot : INPUT_SLOTS) inv.setItem(slot, null);
+                } else {
+                    BrewProgress bp = new BrewProgress(recipeId, elapsed, r.brewTicks());
+                    activeBrews.put(player.getUniqueId(), bp);
+                    showLockedIngredients(inv, r);
+                    updateProgressBar(inv, bp);
+                    startBrewTask(player, inv);
+                }
             } else {
-                // Recipe no longer exists or became instant — discard saved state
                 getRepo().delete(player.getUniqueId().toString());
                 plugin.getLogger().warning("Discarded saved brewing craft for " + player.getName()
                         + ": recipe '" + recipeId + "' missing or no longer timed.");
@@ -131,26 +156,29 @@ public final class BrewingGui implements Listener {
         if (open.remove(p.getUniqueId()) == null) return;
         page.remove(p.getUniqueId());
 
+        // Auto-collect any pending output
+        ItemStack pendingOutput = e.getInventory().getItem(OUTPUT_SLOT);
+        if (pendingOutput != null && !pendingOutput.getType().isAir() && !isOutputPlaceholder(pendingOutput)) {
+            HashMap<Integer, ItemStack> overflow = p.getInventory().addItem(pendingOutput.clone());
+            for (ItemStack drop : overflow.values()) p.getWorld().dropItemNaturally(p.getLocation(), drop);
+        }
+
         BrewProgress bp = activeBrews.remove(p.getUniqueId());
         BukkitTask task = brewTasks.remove(p.getUniqueId());
         if (task != null) task.cancel();
 
         if (bp != null) {
-            // Save progress so it can be resumed next time the player opens a station
             Map<String, Object> data = new java.util.HashMap<>();
             data.put("recipe_id",     bp.recipeId);
             data.put("elapsed_ticks", bp.elapsedTicks);
+            data.put("timestamp_ms",  System.currentTimeMillis());
             getRepo().save(p.getUniqueId().toString(), data);
-            // Ingredients were consumed at brew start — do NOT return them
         } else {
-            // No active brew: return whatever the player left in the input slots
             for (int slot : INPUT_SLOTS) {
                 ItemStack stack = e.getInventory().getItem(slot);
                 if (stack != null && !stack.getType().isAir()) {
                     HashMap<Integer, ItemStack> overflow = p.getInventory().addItem(stack);
-                    for (ItemStack drop : overflow.values()) {
-                        p.getWorld().dropItemNaturally(p.getLocation(), drop);
-                    }
+                    for (ItemStack drop : overflow.values()) p.getWorld().dropItemNaturally(p.getLocation(), drop);
                 }
             }
         }
@@ -168,13 +196,9 @@ public final class BrewingGui implements Listener {
         int topSize = e.getView().getTopInventory().getSize();
         Inventory top = e.getView().getTopInventory();
 
-        // Bottom inventory: shift-click routes to first free input slot (locked during brew)
         if (raw >= topSize) {
             if (!e.isShiftClick()) return;
-            if (activeBrews.containsKey(p.getUniqueId())) {
-                e.setCancelled(true);
-                return; // input slots locked while brewing
-            }
+            if (activeBrews.containsKey(p.getUniqueId())) { e.setCancelled(true); return; }
             ItemStack clicked = e.getCurrentItem();
             if (clicked == null || clicked.getType().isAir()) return;
             e.setCancelled(true);
@@ -190,7 +214,6 @@ public final class BrewingGui implements Listener {
             return;
         }
 
-        // Nav bar (row 5): close, prev, next — block all other nav-bar slots
         if (raw >= 45) {
             e.setCancelled(true);
             if (RpgServices.guiConfig().isCloseButton(top.getItem(raw))) {
@@ -206,27 +229,32 @@ public final class BrewingGui implements Listener {
             return;
         }
 
-        // Progress bar (row 0) — always locked
-        if (raw <= 8) {
-            e.setCancelled(true);
-            return;
-        }
+        if (raw <= 8) { e.setCancelled(true); return; }
 
-        // Input slots — allow interaction unless brew is active
         if (isInputSlot(raw)) {
-            if (activeBrews.containsKey(p.getUniqueId())) {
-                e.setCancelled(true);
-                return;
-            }
+            if (activeBrews.containsKey(p.getUniqueId())) { e.setCancelled(true); return; }
             plugin.getServer().getScheduler().runTask(plugin, () -> refreshRecipes(top, p));
             return;
         }
 
-        // Recipe tile click
+        // Output slot — click to collect
+        if (raw == OUTPUT_SLOT) {
+            e.setCancelled(true);
+            ItemStack item = top.getItem(OUTPUT_SLOT);
+            if (item != null && !item.getType().isAir() && !isOutputPlaceholder(item)) {
+                top.setItem(OUTPUT_SLOT, buildOutputPlaceholder());
+                HashMap<Integer, ItemStack> overflow = p.getInventory().addItem(item.clone());
+                for (ItemStack drop : overflow.values()) p.getWorld().dropItemNaturally(p.getLocation(), drop);
+            }
+            return;
+        }
+
         if (raw >= RECIPE_START && raw < RECIPE_START + RECIPES_PER_PAGE) {
             e.setCancelled(true);
-            if (activeBrews.containsKey(p.getUniqueId())) {
-                // A brew is already running — ignore the click silently
+            if (activeBrews.containsKey(p.getUniqueId())) return;
+            ItemStack pendingOutput = top.getItem(OUTPUT_SLOT);
+            if (pendingOutput != null && !pendingOutput.getType().isAir() && !isOutputPlaceholder(pendingOutput)) {
+                p.sendMessage(plugin.messages().get("brew.collect-output"));
                 return;
             }
             int pg  = page.getOrDefault(p.getUniqueId(), 0);
@@ -235,7 +263,6 @@ public final class BrewingGui implements Listener {
             return;
         }
 
-        // Everything else in the top inventory is locked
         e.setCancelled(true);
     }
 
@@ -260,7 +287,6 @@ public final class BrewingGui implements Listener {
         }
 
         if (r.brewTicks() <= 0) {
-            // Instant brew — deliver output immediately
             consume(inv, r.inputs());
             ItemStack output = buildOutput(r.output());
             if (output == null) { p.sendMessage(plugin.messages().get("brew.unknown-recipe")); return; }
@@ -271,15 +297,10 @@ public final class BrewingGui implements Listener {
             p.sendMessage(plugin.messages().get("brew.success", Map.of("item", r.output().itemId())));
             refreshRecipes(inv, p);
         } else {
-            // Timed brew — consume ingredients, show progress bar, start timer
             startBrew(p, inv, r);
         }
     }
 
-    /**
-     * Consumes ingredients, locks the input display, and starts the brew timer.
-     * Ingredients are consumed upfront so the player can't pick them back up.
-     */
     private void startBrew(Player p, Inventory inv, BrewRecipeDef r) {
         consume(inv, r.inputs());
         showLockedIngredients(inv, r);
@@ -295,11 +316,6 @@ public final class BrewingGui implements Listener {
         startBrewTask(p, inv);
     }
 
-    /**
-     * Starts the repeating timer task for the active brew. Safe to call when
-     * restoring a saved brew on GUI open — activeBrews must already have an
-     * entry for the player before calling this.
-     */
     private void startBrewTask(Player p, Inventory inv) {
         UUID uuid = p.getUniqueId();
         BukkitTask old = brewTasks.remove(uuid);
@@ -307,10 +323,7 @@ public final class BrewingGui implements Listener {
 
         BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
             BrewProgress bp = activeBrews.get(uuid);
-            if (bp == null) {
-                brewTasks.remove(uuid);
-                return;
-            }
+            if (bp == null) { brewTasks.remove(uuid); return; }
             bp.elapsedTicks = Math.min(bp.elapsedTicks + TASK_INTERVAL_TICKS, bp.totalTicks);
             updateProgressBar(inv, bp);
             if (bp.isDone()) completeBrew(p, inv, bp);
@@ -319,10 +332,6 @@ public final class BrewingGui implements Listener {
         brewTasks.put(uuid, task);
     }
 
-    /**
-     * Called when the brew timer reaches its target. Delivers the output item,
-     * awards XP, plays a completion sound, and restores the GUI to idle state.
-     */
     private void completeBrew(Player p, Inventory inv, BrewProgress bp) {
         UUID uuid = p.getUniqueId();
 
@@ -331,12 +340,10 @@ public final class BrewingGui implements Listener {
         activeBrews.remove(uuid);
         getRepo().delete(uuid.toString());
 
-        // Restore row 0 to background and clear locked ingredient display
         GuiConfig gui = RpgServices.guiConfig();
         for (int i = 0; i <= 8; i++) inv.setItem(i, gui.backgroundItem());
         for (int slot : INPUT_SLOTS) inv.setItem(slot, null);
 
-        // Look up recipe (may have been removed by admin during the brew)
         BrewRecipeDef r = registry.recipe(bp.recipeId).orElse(null);
         if (r == null) {
             plugin.getLogger().warning("Brew completed for " + p.getName()
@@ -345,17 +352,21 @@ public final class BrewingGui implements Listener {
             return;
         }
 
-        // Deliver output
         ItemStack output = buildOutput(r.output());
         if (output == null) {
             p.sendMessage(plugin.messages().get("brew.unknown-recipe"));
             refreshRecipes(inv, p);
             return;
         }
-        HashMap<Integer, ItemStack> overflow = p.getInventory().addItem(output);
-        for (ItemStack drop : overflow.values()) p.getWorld().dropItemNaturally(p.getLocation(), drop);
 
-        // XP and feedback
+        ItemStack existing = inv.getItem(OUTPUT_SLOT);
+        if (existing == null || existing.getType().isAir() || isOutputPlaceholder(existing)) {
+            inv.setItem(OUTPUT_SLOT, output);
+        } else {
+            HashMap<Integer, ItemStack> overflow = p.getInventory().addItem(output);
+            for (ItemStack drop : overflow.values()) p.getWorld().dropItemNaturally(p.getLocation(), drop);
+        }
+
         long xp = plugin.getConfig().getLong("xp.per-brew", 30);
         if (xp > 0) RpgServices.skills().awardXp(p, BuiltinSkill.ALCHEMY.id(), xp);
         p.playSound(p.getLocation(), Sound.BLOCK_BREWING_STAND_BREW, 1.0f, 1.0f);
@@ -368,7 +379,6 @@ public final class BrewingGui implements Listener {
     // Progress bar rendering
     // -------------------------------------------------------------------------
 
-    /** Renders the 9-slot progress bar in row 0. Slot 4 = info item; 0–3 and 5–8 = fill panes. */
     private static void updateProgressBar(Inventory inv, BrewProgress bp) {
         int secsRemaining = Math.max(0, (bp.totalTicks - bp.elapsedTicks + 19) / 20);
         int fillCount = bp.totalTicks > 0
@@ -407,7 +417,6 @@ public final class BrewingGui implements Listener {
         return stack;
     }
 
-    /** Places locked ingredient display items in the input slots (visual only — already consumed). */
     private void showLockedIngredients(Inventory inv, BrewRecipeDef r) {
         for (int slot : INPUT_SLOTS) inv.setItem(slot, null);
         for (int i = 0; i < r.inputs().size() && i < INPUT_SLOTS.length; i++) {
@@ -420,10 +429,6 @@ public final class BrewingGui implements Listener {
     // Recipe list rendering
     // -------------------------------------------------------------------------
 
-    /**
-     * Refreshes rows 2–4 (recipe tiles) and the nav bar. Does not touch row 0
-     * (progress bar) or the input slots, so it is safe to call during a brew.
-     */
     private void refreshRecipes(Inventory inv, Player p) {
         List<BrewRecipeDef> recipes = new java.util.ArrayList<>(registry.allRecipes());
         int totalPages = Math.max(1, (recipes.size() + RECIPES_PER_PAGE - 1) / RECIPES_PER_PAGE);
@@ -579,9 +584,45 @@ public final class BrewingGui implements Listener {
         return stack.getType().getKey().getKey();
     }
 
-    private static ItemStack paneItem() {
-        return RpgServices.guiConfig().backgroundItem();
+    private ItemStack buildArrowItem() {
+        ItemStack item = new ItemStack(Material.PURPLE_DYE);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.displayName(Component.text("→").color(NamedTextColor.LIGHT_PURPLE)
+                    .decoration(TextDecoration.ITALIC, false));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+            item.setItemMeta(meta);
+        }
+        return item;
     }
+
+    private ItemStack buildOutputPlaceholder() {
+        ItemStack item = new ItemStack(Material.GRAY_DYE);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.displayName(Component.text("Output Slot")
+                    .color(NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false));
+            meta.lore(List.of(
+                    Component.text("Completed brews appear here.")
+                            .color(NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false),
+                    Component.text("Click to collect.")
+                            .color(NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false)
+            ));
+            meta.getPersistentDataContainer().set(outputPlaceholderKey, PersistentDataType.BYTE, (byte) 1);
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+
+    private boolean isOutputPlaceholder(ItemStack stack) {
+        if (stack == null || stack.getType().isAir()) return true;
+        ItemMeta meta = stack.getItemMeta();
+        if (meta == null) return false;
+        return meta.getPersistentDataContainer().has(outputPlaceholderKey, PersistentDataType.BYTE);
+    }
+
+    private static ItemStack paneItem() { return RpgServices.guiConfig().backgroundItem(); }
 
     private DataStore.Repository getRepo() {
         return RpgServices.dataStore().repository(REPO);
@@ -591,7 +632,6 @@ public final class BrewingGui implements Listener {
     // Inner types
     // -------------------------------------------------------------------------
 
-    /** Mutable in-progress brew state for a single player. */
     private static final class BrewProgress {
         final String recipeId;
         final int    totalTicks;

@@ -4,3 +4,4 @@ cook:
   missing-ingredients: "&cMissing ingredients."
   requires-level: "&eRequires Cooking level {level}."
   unknown-output: "&cRecipe output is unknown."
+  collect-output: "&eCollect your finished item from the output slot first."

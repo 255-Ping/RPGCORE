@@ -4,3 +4,4 @@ brew:
   missing-ingredients: "&cMissing ingredients."
   requires-level: "&eRequires Alchemy level {level}."
   unknown-recipe: "&cRecipe output is unknown."
+  collect-output: "&eCollect your finished brew from the output slot first."

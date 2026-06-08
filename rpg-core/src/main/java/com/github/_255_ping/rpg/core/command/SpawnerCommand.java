@@ -26,24 +26,27 @@ public final class SpawnerCommand implements CommandExecutor, TabCompleter {
 
     private final RpgCorePlugin plugin;
     private final SpawnerManager manager;
+    private final SpawnerGui gui;
 
-    public SpawnerCommand(RpgCorePlugin plugin, SpawnerManager manager) {
-        this.plugin = plugin;
-        this.manager = manager;
+    public SpawnerCommand(RpgCorePlugin plugin, SpawnerManager manager, SpawnerGui gui) {
+        this.plugin   = plugin;
+        this.manager  = manager;
+        this.gui      = gui;
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(msg("&7Usage: &e/spawner <create|delete|list|tp|set>"));
+            sender.sendMessage(msg("&7Usage: &e/spawner <create|delete|list|tp|set|edit>"));
             return true;
         }
         switch (args[0].toLowerCase(Locale.ROOT)) {
             case "create" -> handleCreate(sender, args);
             case "delete" -> handleDelete(sender, args);
-            case "list" -> handleList(sender);
-            case "tp" -> handleTp(sender, args);
-            case "set" -> handleSet(sender, args);
+            case "list"   -> handleList(sender);
+            case "tp"     -> handleTp(sender, args);
+            case "set"    -> handleSet(sender, args);
+            case "edit"   -> handleEdit(sender, args);
             default -> sender.sendMessage(msg("&cUnknown subcommand: " + args[0]));
         }
         return true;
@@ -144,11 +147,26 @@ public final class SpawnerCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(msg("&aSet &e" + def.id() + "." + field + " &7= &f" + value));
     }
 
+    private void handleEdit(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("rpg.spawners.admin.edit")) {
+            sender.sendMessage(msg("&cNo permission.")); return;
+        }
+        if (!(sender instanceof Player p)) {
+            sender.sendMessage(plugin.messages().component("command.player-only")); return;
+        }
+        if (args.length < 2) {
+            sender.sendMessage(msg("&7Usage: &e/spawner edit <id>")); return;
+        }
+        Optional<SpawnerDef> opt = manager.get(args[1]);
+        if (opt.isEmpty()) { sender.sendMessage(msg("&cNo spawner with id &7" + args[1])); return; }
+        gui.open(p, opt.get());
+    }
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (args.length == 1) return filter(args[0], List.of("create", "delete", "list", "tp", "set"));
+        if (args.length == 1) return filter(args[0], List.of("create", "delete", "list", "tp", "set", "edit"));
         String sub = args[0].toLowerCase(Locale.ROOT);
-        if (args.length == 2 && List.of("delete", "tp", "set").contains(sub)) {
+        if (args.length == 2 && List.of("delete", "tp", "set", "edit").contains(sub)) {
             return filterSpawners(args[1]);
         }
         if (sub.equals("create") && args.length == 3) {

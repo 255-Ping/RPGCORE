@@ -415,12 +415,12 @@ Current: XP per catch + FISHING_WISDOM scaling only. Missing:
 
 ---
 
-### Accessories: Tier Upgrades + Family Stacking + Bag Upgrade Button (`rpg-accessories`) — 🟡 Medium
-Current: bag opens, only ACCESSORY items allowed, stats aggregate, persistence works. Missing:
+### Accessories: Tier Upgrades + Family Stacking (`rpg-accessories`) — 🟡 Medium
+Current: bag opens, only ACCESSORY items allowed, stats aggregate, persistence works, in-bag upgrade button ✅ done in 0.1.1. Missing:
 
 1. **Tier upgrades** — expand bag slot count when player upgrades the bag tier
 2. **Family-based stacking rules** — e.g., two rings stack, three of the same family don't
-3. **In-bag upgrade button** — bottom row of the accessory bag GUI should have a dedicated upgrade button so players can upgrade the bag tier without typing a command. Show current tier, cost to upgrade, and disable the button if the player can't afford it or is at max tier.
+3. ✅ **In-bag upgrade button** — Done in `rpg-accessories 0.1.1`. Dedicated upgrade button in the bottom row of the accessory bag GUI; shows current tier, cost to upgrade, disabled if player can't afford or is at max tier.
 
 ---
 
@@ -446,11 +446,11 @@ Current: `/quest list` prints to chat. Planned 54-slot inventory GUI:
 
 ---
 
-### Holograms: Tab Completions + Full TextDisplay Control + GUI (`rpg-holograms`) — 🟡 Medium
-Current: `/holograms create|delete|list|tp|move|line` commands and persistence work. Three things missing:
+### Holograms: Full TextDisplay Control + GUI (`rpg-holograms`) — 🟡 Medium
+Current: all commands + persistence work; tab completions ✅ done in 0.0.5 (see below); animated frames ✅ done in 0.0.5. Two things still missing:
 
-#### 1. Tab completions — 🟢 Easy
-Every argument of every `/holograms` subcommand should tab-complete:
+#### ~~1. Tab completions~~ — ✅ Done in 0.0.5
+All `/holograms` arguments tab-complete: subcommands, hologram IDs, `line` ops (`add set remove list`), `set` property names (`animated frameinterval`), boolean values. `info` and `set` subcommands added alongside tab completion.
 
 | Argument position | Completions |
 |---|---|
@@ -704,12 +704,8 @@ Per-NPC `EntityType` field + `/npc setentitytype` with tab-complete. `/npc setst
 
 ---
 
-### Animated Holograms (`rpg-holograms`) — 🟡 Medium
-Static holograms only cycle when edited. Add support for cycling text:
-
-- Optional `Animated: true` + `FrameInterval: 20` on a hologram definition
-- Multiple entries under `Lines` become animation frames — the displayed text cycles through them at `FrameInterval` ticks
-- Useful for animated signs, status displays, countdown timers
+### ✅ Animated Holograms (`rpg-holograms`) — shipped in 0.0.5
+Optional `Animated: true` + `FrameInterval: 20` on a hologram definition. Multiple entries under `Lines` become animation frames — a single global 1-tick `BukkitTask` cycles through them at `FrameInterval` ticks per hologram using per-hologram tick counters (`frameTicks` / `frameIndices` maps). Uses a single `TextDisplay` entity whose `.text()` is updated each frame (vs. multi-entity stacked layout for static holograms). Toggle via `/holograms set <id> animated true|false`; adjust interval via `/holograms set <id> frameinterval <N>`.
 
 ---
 

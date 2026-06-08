@@ -281,10 +281,8 @@ Levels without any reward still show the level number and XP required. Levels wi
 - Available / Active / Completed tabs
 - Click quest → detail view: objectives with progress bars, rewards, accept / abandon button
 
-### Admin Spawner GUI (`/spawner`) — 🟡 Medium
-- All spawner fields shown as named items (max-alive, cooldown, radius, continuous)
-- Click field → sign-entry (numeric) or chat-entry (string ID)
-- Changes saved on close
+### ✅ Admin Spawner GUI (`/spawner`) — Done in `rpg-core 1.10.18`
+54-slot GUI opened via `/spawner edit <id>`. Fields: max-alive (COMPARATOR), cooldown-ticks (CLOCK), spawn-radius (COMPASS), continuous (LIME/GRAY_DYE toggle), min-level (LIME_DYE), max-level (RED_DYE), location read-only (GRASS_BLOCK). Numeric fields use sign-entry via `SignInputService`; continuous toggles on click; all changes saved immediately via `SpawnerManager.saveOne`. Permission: `rpg.spawners.admin.edit`.
 
 ### Hologram Editor GUI (`/holograms`) — 🟡 Medium
 Opened via `/holograms edit <id>`. Two-tab layout within the same 54-slot inventory:
@@ -660,28 +658,17 @@ Expand with more player-facing settings as they become available. Each new setti
 
 ---
 
-## Station GUI Improvements — Offline Timers + Output Slot (`rpg-alchemy`, `rpg-cooking`, `rpg-smelting`) — 🟡 Medium
+## ~~Station GUI Improvements — Offline Timers + Output Slot (`rpg-alchemy`, `rpg-cooking`, `rpg-smelting`)~~ ✅ Done in cooking 0.4.1 / alchemy 0.4.2 / smelting 0.1.1
 
-All three crafting stations (brewing, cooking, smelting) need two shared improvements:
+All three crafting stations now have:
 
-### 1. Timers run while GUI is closed
+1. **Offline timer advancement** — `timestamp_ms` (real epoch ms) saved to DataStore on GUI close alongside `elapsed_ticks`. On reopen: `offlineTicks = (now - savedMs) / 50` added to elapsed; if ≥ totalTicks, output is delivered immediately with XP awarded and DataStore cleared.
+2. **Dedicated output slot** — cooking/alchemy slot 16 (arrow at 15), smelting slot 15 (arrow at 14). PDC-tagged placeholder item (GRAY_DYE + `{plugin}_output_placeholder` NamespacedKey) holds the slot until craft completes. Click to collect; auto-collected on GUI close. New craft blocked if slot is occupied (`{cook|brew|smelt}.collect-output` message sent).
 
-Currently processing timers may pause or reset when the player closes the GUI. Timers must run on **game time** (`GameTimeSeconds`), not session time. When the player opens the GUI after being away, it should show how much time has elapsed and reflect completed items.
-
-- Store the timer start timestamp as a `long` game-time snapshot in the station's persistent data (PDC on the block entity, or in a plugin data map keyed by block location).
-- On GUI open: compute elapsed time = `currentGameTime − savedStartTime`; advance processing state accordingly (may have completed multiple batches while away).
-- If multiple queued items finish while the player is away, all should be ready in the output slot (or queue up if the output slot only holds one stack at a time).
-
-### 2. Output slot — items go there, not directly to inventory
-
-Add a dedicated **output slot** to each station GUI. When processing completes, the result goes into the output slot rather than auto-depositing into the player's inventory. The player manually clicks to collect it.
-
-- If the output slot is occupied and a new result is ready, the station pauses until the player collects (display a "Output full — collect your item!" indicator in the GUI).
-- The output slot should be visually distinct from input slots (border panes around it, or placed in a separate area of the GUI).
-
-### 3. Pagination — confirm consistent with enchanting standard
-
-Confirm that all three GUIs use the same pagination style as `rpg-enchanting`'s `StationGui`: PREV at slot 45, page indicator at slot 47, Close at slot 49, NEXT at slot 53. If `rpg-smelting` doesn't have pagination yet, add it using the same pattern.
+Slot layout:
+- **Cooking** (`CookingGui`): ingredients 12–14, arrow 15, output 16
+- **Alchemy** (`BrewingGui`): ingredients 12–14, arrow 15, output 16
+- **Smelting** (`SmeltingGui`): input 13, arrow 14, output 15
 
 ---
 

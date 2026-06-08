@@ -11,6 +11,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,6 +23,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
@@ -34,75 +36,98 @@ import java.util.UUID;
  * Smelting GUI — 54-slot layout (6 rows):
  * <pre>
  *   Row 0 (0–8):   background / progress bar (when a timed smelt is active)
- *   Row 1 (9–17):  single input slot at centre (13); rest background
+ *   Row 1 (9–17):  single input slot at 13 | arrow at 14 | output slot at 15 | rest background
  *   Rows 2–4 (18–44): recipe tiles (27 per page)
  *   Row 5 (45–53): nav bar — ← PREV (45) | ... | ❌ Close (49) | ... | NEXT → (53)
  * </pre>
  *
- * <p>When {@code SmeltTicks > 0} on a recipe, clicking it starts a timed smelt:
- * the input item is consumed immediately, a progress bar fills row 0, and the
- * output is delivered on completion. Closing mid-smelt saves state to DataStore;
- * reopening any smelting station restores it.
+ * <p>Output lands in the dedicated output slot (15) on completion; closing the GUI
+ * auto-collects any pending output. A {@code timestamp_ms} is saved with the craft
+ * state for offline-time advancement on the next open.
  */
 public final class SmeltingGui implements Listener {
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
-    // Single input slot in the centre of row 1
     private static final int INPUT_SLOT            = 13;
-    // Recipe tile area
+    private static final int ARROW_SLOT            = 14;
+    private static final int OUTPUT_SLOT           = 15;
     private static final int RECIPE_START          = 18;
     private static final int RECIPES_PER_PAGE      = 27;
-    // Nav slots
     private static final int NAV_PREV              = 45;
     private static final int NAV_CLOSE             = GuiConfig.CLOSE_SLOT; // 49
     private static final int NAV_NEXT              = 53;
-    // Progress bar: slot 4 = furnace info item; 0-3 and 5-8 = 8 fill panes
     private static final int   PROGRESS_INFO_SLOT  = 4;
     private static final int[] PROGRESS_FILL_SLOTS = {0, 1, 2, 3, 5, 6, 7, 8};
-    // DataStore key
     private static final String REPO               = "smelting_craft";
-    // Timer fires every 4 ticks
     private static final int TASK_INTERVAL_TICKS   = 4;
 
     private final RpgSmeltingPlugin plugin;
     private final SmeltingRegistry  registry;
-    private final Map<UUID, Boolean>       open         = new HashMap<>();
-    private final Map<UUID, Integer>       page         = new HashMap<>();
-    private final Map<UUID, SmeltProgress> activeSmelt  = new HashMap<>();
-    private final Map<UUID, BukkitTask>    smeltTasks   = new HashMap<>();
+    private final NamespacedKey     outputPlaceholderKey;
+
+    private final Map<UUID, Boolean>       open        = new HashMap<>();
+    private final Map<UUID, Integer>       page        = new HashMap<>();
+    private final Map<UUID, SmeltProgress> activeSmelt = new HashMap<>();
+    private final Map<UUID, BukkitTask>    smeltTasks  = new HashMap<>();
 
     public SmeltingGui(RpgSmeltingPlugin plugin, SmeltingRegistry registry) {
-        this.plugin   = plugin;
-        this.registry = registry;
+        this.plugin               = plugin;
+        this.registry             = registry;
+        this.outputPlaceholderKey = new NamespacedKey(plugin, "smelting_output_placeholder");
     }
 
     // ── Open / close ──────────────────────────────────────────────────────
 
     public void open(Player p) {
         Inventory inv = Bukkit.createInventory(p, 54,
-                Component.text("Smelting Station")
-                        .color(NamedTextColor.GOLD)
-                        .decorate(TextDecoration.BOLD));
+                Component.text("Smelting Station").color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD));
         GuiConfig gui = RpgServices.guiConfig();
         gui.fillAll(inv);
 
         open.put(p.getUniqueId(), true);
         page.put(p.getUniqueId(), 0);
 
-        // Restore any saved smelt progress
+        inv.setItem(ARROW_SLOT, buildArrowItem());
+        inv.setItem(OUTPUT_SLOT, buildOutputPlaceholder());
+
         Optional<Map<String, Object>> saved = getRepo().get(p.getUniqueId().toString());
         if (saved.isPresent()) {
-            Map<String, Object> data = saved.get();
-            String recipeId = (String) data.get("recipe_id");
-            int    elapsed  = data.get("elapsed_ticks") instanceof Number n ? n.intValue() : 0;
-            SmeltRecipeDef r = registry.get(recipeId).orElse(null);
+            Map<String, Object> data    = saved.get();
+            String recipeId             = (String) data.get("recipe_id");
+            int    elapsed              = data.get("elapsed_ticks") instanceof Number n ? n.intValue() : 0;
+            long   savedMs              = data.get("timestamp_ms")  instanceof Number n ? n.longValue() : 0L;
+            SmeltRecipeDef r            = registry.get(recipeId).orElse(null);
+
             if (r != null && r.smeltTicks() > 0) {
-                SmeltProgress sp = new SmeltProgress(recipeId, elapsed, r.smeltTicks());
-                activeSmelt.put(p.getUniqueId(), sp);
-                showLockedInput(inv, r);
-                updateProgressBar(inv, sp);
-                startSmeltTask(p, inv);
+                if (savedMs > 0) {
+                    long offlineMs    = System.currentTimeMillis() - savedMs;
+                    int  offlineTicks = (int) Math.min(offlineMs / 50L, (long) Integer.MAX_VALUE);
+                    elapsed           = Math.min(elapsed + offlineTicks, r.smeltTicks());
+                }
+
+                if (elapsed >= r.smeltTicks()) {
+                    // Completed offline
+                    getRepo().delete(p.getUniqueId().toString());
+                    ItemStack output = buildOutput(r.output());
+                    if (output != null) {
+                        inv.setItem(OUTPUT_SLOT, output);
+                        long xp = plugin.getConfig().getLong("xp.per-smelt", 20);
+                        if (xp > 0) RpgServices.skills().awardXp(p, BuiltinSkill.MINING.id(), xp);
+                        p.sendMessage(plugin.messages().get("smelt.success",
+                                Map.of("item", r.output().itemId())));
+                    } else {
+                        plugin.getLogger().warning("Smelt craft completed offline for " + p.getName()
+                                + " but output '" + r.output().itemId() + "' could not be built.");
+                    }
+                    inv.setItem(INPUT_SLOT, null);
+                } else {
+                    SmeltProgress sp = new SmeltProgress(recipeId, elapsed, r.smeltTicks());
+                    activeSmelt.put(p.getUniqueId(), sp);
+                    showLockedInput(inv, r);
+                    updateProgressBar(inv, sp);
+                    startSmeltTask(p, inv);
+                }
             } else {
                 getRepo().delete(p.getUniqueId().toString());
                 inv.setItem(INPUT_SLOT, null);
@@ -121,24 +146,28 @@ public final class SmeltingGui implements Listener {
         if (open.remove(p.getUniqueId()) == null) return;
         page.remove(p.getUniqueId());
 
+        // Auto-collect any pending output
+        ItemStack pendingOutput = e.getInventory().getItem(OUTPUT_SLOT);
+        if (pendingOutput != null && !pendingOutput.getType().isAir() && !isOutputPlaceholder(pendingOutput)) {
+            HashMap<Integer, ItemStack> overflow = p.getInventory().addItem(pendingOutput.clone());
+            for (ItemStack drop : overflow.values()) p.getWorld().dropItemNaturally(p.getLocation(), drop);
+        }
+
         SmeltProgress sp = activeSmelt.remove(p.getUniqueId());
         BukkitTask task  = smeltTasks.remove(p.getUniqueId());
         if (task != null) task.cancel();
 
         if (sp != null) {
-            // Save progress; ingredients consumed at craft start, do NOT return them
             Map<String, Object> data = new java.util.HashMap<>();
             data.put("recipe_id",     sp.recipeId);
             data.put("elapsed_ticks", sp.elapsedTicks);
+            data.put("timestamp_ms",  System.currentTimeMillis());
             getRepo().save(p.getUniqueId().toString(), data);
         } else {
-            // Return any item the player left in the input slot
             ItemStack stack = e.getInventory().getItem(INPUT_SLOT);
             if (stack != null && !stack.getType().isAir()) {
                 HashMap<Integer, ItemStack> overflow = p.getInventory().addItem(stack);
-                for (ItemStack drop : overflow.values()) {
-                    p.getWorld().dropItemNaturally(p.getLocation(), drop);
-                }
+                for (ItemStack drop : overflow.values()) p.getWorld().dropItemNaturally(p.getLocation(), drop);
             }
         }
     }
@@ -153,7 +182,6 @@ public final class SmeltingGui implements Listener {
         int topSize = e.getView().getTopInventory().getSize();
         Inventory top = e.getView().getTopInventory();
 
-        // Bottom inventory: shift-click into the single input slot
         if (raw >= topSize) {
             if (!e.isShiftClick()) return;
             if (activeSmelt.containsKey(p.getUniqueId())) { e.setCancelled(true); return; }
@@ -169,7 +197,6 @@ public final class SmeltingGui implements Listener {
             return;
         }
 
-        // Nav bar
         if (raw >= 45) {
             e.setCancelled(true);
             if (RpgServices.guiConfig().isCloseButton(top.getItem(raw))) {
@@ -185,20 +212,34 @@ public final class SmeltingGui implements Listener {
             return;
         }
 
-        // Progress bar row — always locked
         if (raw <= 8) { e.setCancelled(true); return; }
 
-        // Input slot
         if (raw == INPUT_SLOT) {
             if (activeSmelt.containsKey(p.getUniqueId())) { e.setCancelled(true); return; }
             plugin.getServer().getScheduler().runTask(plugin, () -> refresh(top, p));
             return;
         }
 
-        // Recipe tiles
+        // Output slot — click to collect
+        if (raw == OUTPUT_SLOT) {
+            e.setCancelled(true);
+            ItemStack item = top.getItem(OUTPUT_SLOT);
+            if (item != null && !item.getType().isAir() && !isOutputPlaceholder(item)) {
+                top.setItem(OUTPUT_SLOT, buildOutputPlaceholder());
+                HashMap<Integer, ItemStack> overflow = p.getInventory().addItem(item.clone());
+                for (ItemStack drop : overflow.values()) p.getWorld().dropItemNaturally(p.getLocation(), drop);
+            }
+            return;
+        }
+
         if (raw >= RECIPE_START && raw < RECIPE_START + RECIPES_PER_PAGE) {
             e.setCancelled(true);
-            if (activeSmelt.containsKey(p.getUniqueId())) return; // already smelting
+            if (activeSmelt.containsKey(p.getUniqueId())) return;
+            ItemStack pendingOutput = top.getItem(OUTPUT_SLOT);
+            if (pendingOutput != null && !pendingOutput.getType().isAir() && !isOutputPlaceholder(pendingOutput)) {
+                p.sendMessage(plugin.messages().get("smelt.collect-output"));
+                return;
+            }
             int pg  = page.getOrDefault(p.getUniqueId(), 0);
             int idx = pg * RECIPES_PER_PAGE + (raw - RECIPE_START);
             trySmelt(p, top, idx);
@@ -216,7 +257,7 @@ public final class SmeltingGui implements Listener {
         if (idx >= recipes.size()) return;
         SmeltRecipeDef r = recipes.get(idx);
 
-        int level = RpgServices.skills().level(p, BuiltinSkill.MINING.id()); // smelting uses mining skill
+        int level = RpgServices.skills().level(p, BuiltinSkill.MINING.id());
         if (level < r.requiredLevel()) {
             p.sendMessage(plugin.messages().get("smelt.requires-level", Map.of("level", r.requiredLevel())));
             return;
@@ -227,7 +268,6 @@ public final class SmeltingGui implements Listener {
         }
 
         if (r.smeltTicks() <= 0) {
-            // Instant smelt
             consumeInput(inv, r.input());
             ItemStack output = buildOutput(r.output());
             if (output == null) { p.sendMessage(plugin.messages().get("smelt.unknown-output")); return; }
@@ -299,8 +339,14 @@ public final class SmeltingGui implements Listener {
             refresh(inv, p);
             return;
         }
-        HashMap<Integer, ItemStack> overflow = p.getInventory().addItem(output);
-        for (ItemStack drop : overflow.values()) p.getWorld().dropItemNaturally(p.getLocation(), drop);
+
+        ItemStack existing = inv.getItem(OUTPUT_SLOT);
+        if (existing == null || existing.getType().isAir() || isOutputPlaceholder(existing)) {
+            inv.setItem(OUTPUT_SLOT, output);
+        } else {
+            HashMap<Integer, ItemStack> overflow = p.getInventory().addItem(output);
+            for (ItemStack drop : overflow.values()) p.getWorld().dropItemNaturally(p.getLocation(), drop);
+        }
 
         long xp = plugin.getConfig().getLong("xp.per-smelt", 20);
         if (xp > 0) RpgServices.skills().awardXp(p, BuiltinSkill.MINING.id(), xp);
@@ -473,9 +519,45 @@ public final class SmeltingGui implements Listener {
         return stack.getType().getKey().getKey();
     }
 
-    private static ItemStack paneItem() {
-        return RpgServices.guiConfig().backgroundItem();
+    private ItemStack buildArrowItem() {
+        ItemStack item = new ItemStack(Material.ORANGE_DYE);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.displayName(Component.text("→").color(NamedTextColor.GOLD)
+                    .decoration(TextDecoration.ITALIC, false));
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+            item.setItemMeta(meta);
+        }
+        return item;
     }
+
+    private ItemStack buildOutputPlaceholder() {
+        ItemStack item = new ItemStack(Material.GRAY_DYE);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.displayName(Component.text("Output Slot")
+                    .color(NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false));
+            meta.lore(List.of(
+                    Component.text("Completed smelts appear here.")
+                            .color(NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false),
+                    Component.text("Click to collect.")
+                            .color(NamedTextColor.DARK_GRAY).decoration(TextDecoration.ITALIC, false)
+            ));
+            meta.getPersistentDataContainer().set(outputPlaceholderKey, PersistentDataType.BYTE, (byte) 1);
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+
+    private boolean isOutputPlaceholder(ItemStack stack) {
+        if (stack == null || stack.getType().isAir()) return true;
+        ItemMeta meta = stack.getItemMeta();
+        if (meta == null) return false;
+        return meta.getPersistentDataContainer().has(outputPlaceholderKey, PersistentDataType.BYTE);
+    }
+
+    private static ItemStack paneItem() { return RpgServices.guiConfig().backgroundItem(); }
 
     private DataStore.Repository getRepo() {
         return RpgServices.dataStore().repository(REPO);

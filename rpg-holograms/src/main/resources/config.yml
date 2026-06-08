@@ -27,4 +27,5 @@ damage-indicators:
 # Admin holograms (TextDisplay-based; one entity per line).
 # These are static holograms placed in-world with /hologram commands (not yet fully implemented).
 hologram:
-  line-spacing: 0.3              # vertical block gap between lines of a multi-line hologram
+  line-spacing: 0.3              # vertical block gap between lines of a static multi-line hologram
+  animation-interval: 20         # default ticks between frame advances for animated holograms (20 = 1 sec)

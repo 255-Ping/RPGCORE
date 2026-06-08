@@ -4,3 +4,4 @@ smelt:
   missing-ingredients: "&cMissing ingredient!"
   requires-level: "&cRequires Smelting level &e{level}&c."
   unknown-output: "&cOutput item not found — contact an admin."
+  collect-output: "&eCollect your finished item from the output slot first."
