@@ -8,6 +8,22 @@ _Suite 21 opened with the addition of `rpg-crafting` and `rpg-smelting`. The sui
 
 ## Notable changes
 
+### rpg-core 1.10.14 — Player Profile Command
+
+- **`/profile [player]`** — opens a 54-slot profile GUI. No argument = your own profile; with argument = another player's (requires `rpg.profile.view.others`).
+- **GUI layout:** player skull (with party membership), 8 skill levels (Combat / Mining / Foraging / Fishing / Farming / Cooking / Alchemy / Enchanting), balance (if rpg-economy is loaded), 3 most-recently-unlocked achievements (definition order), a "View Stats →" button that drills into StatsGui with a Back callback, and a "Trade →" button when viewing another player.
+- Economy, achievement, and party sections degrade gracefully (show "unavailable") if those services aren't loaded.
+- **New permissions:** `rpg.profile.view` (default: true), `rpg.profile.view.others` (default: op).
+
+### rpg-parties 0.3.0 — Party HP Action-Bar HUD
+
+- Each online party member with at least one other online teammate now receives a repeating action-bar showing teammates' current HP percentages: `❤ Alice 85%  |  ❤ Bob 23%`.
+- Color coding: **green** > 70%, **yellow** 30–70%, **red** < 30%.
+- Controlled by two new config keys in rpg-parties `config.yml`:
+  - `party-hud.enabled: true` — toggle the HUD on/off.
+  - `party-hud.interval-ticks: 20` — refresh rate (20 ticks = 1 second).
+- Solo members (party of 1) see nothing; the action bar is only sent when there is at least one other online teammate to display.
+
 ### rpg-core 1.10.13 — Ability DSL: Numeric Variables (Tier 2)
 
 - **7 new numeric-variable ability effects**, stored as doubles in entity PDC under `rpg_var_<name>`. Auto-cleared on entity removal (death / logout). Available for both mob and item abilities.

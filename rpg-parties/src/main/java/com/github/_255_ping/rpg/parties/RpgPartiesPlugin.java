@@ -43,6 +43,11 @@ public final class RpgPartiesPlugin extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getScheduler().runTaskTimer(this, manager::cleanExpiredInvites, 200L, 200L);
 
+        if (getConfig().getBoolean("party-hud.enabled", true)) {
+            long interval = getConfig().getLong("party-hud.interval-ticks", 20L);
+            getServer().getScheduler().runTaskTimer(this, new PartyHudTask(manager), interval, interval);
+        }
+
         getLogger().info("rpg-parties v" + getPluginMeta().getVersion() + " enabled.");
     }
 

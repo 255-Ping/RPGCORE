@@ -38,3 +38,12 @@ xp-sharing:
   #   "amount / party_size"  — split the XP evenly (earner + others each get 1/N)
   #   "amount * 0.5"         — each other member gets 50% of the original award (no split)
   split-formula: "amount / party_size"
+
+# ── Party HP HUD ───────────────────────────────────────────────────────────────
+party-hud:
+  # true = show teammates' HP percentages in each member's action bar
+  enabled: true
+
+  # How often to refresh the display (in ticks; 20 ticks = 1 second).
+  # Lower = smoother, higher = fewer packets. 20 is a good default.
+  interval-ticks: 20   # range: 1–100

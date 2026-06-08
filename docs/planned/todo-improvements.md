@@ -848,12 +848,9 @@ floating_chest:
 
 ---
 
-### Party: HP/Status Display (`rpg-parties`) — 🟡 Medium
-Players in a party have no way to see their teammates' health or status. Options:
+### ✅ Party: HP/Status Display (`rpg-parties`) — shipped in 0.3.0
 
-- Boss bars (one per party member, shown to all other members) — simple but uses up boss bar slots fast
-- Action bar or scoreboard sidebar section showing compact party HP (preferred)
-- Configurable on/off in party settings; don't force it on everyone
+`PartyHudTask` repeating task sends each online member an action-bar listing all other online party members' HP percentages (`❤ Alice 85%  |  ❤ Bob 23%`). Color: green > 70%, yellow 30–70%, red < 30%. Solo members (only one online) see nothing. Configurable via `party-hud.enabled` and `party-hud.interval-ticks` in rpg-parties `config.yml`.
 
 ---
 
@@ -863,20 +860,9 @@ Players in a party have no way to see their teammates' health or status. Options
 
 ---
 
-### Player Profile Command (`rpg-core`) — 🟡 Medium
-No way to view another player's public info. Add `/profile [player]`:
+### ✅ Player Profile Command (`rpg-core`) — shipped in 1.10.14
 
-- No args = your own profile; with a player name = their profile (requires `rpg.profile.view.others`)
-- **GUI layout (27 or 54 slots):**
-  - Player head item (top-left) with name, guild tag, party status in lore
-  - Top skill levels shown as named items (e.g., "⚔ Combat Lv.12", "⛏ Mining Lv.8")
-  - Most valuable equipped gear slot items (display only)
-  - Balance shown on a gold coin item
-  - Recent achievements (last 3 unlocked) shown as named items
-  - "Send Trade Request" button if viewing another player
-- Target player must be online to view their profile (or show a last-known snapshot if offline data is cached)
-- Players can opt out of public profiles via `rpg.profile.private` permission — their profile shows "This player's profile is private."
-- Tab-complete for the player argument lists online player names
+`/profile [player]` opens a 54-slot `ProfileGui`. No argument = own profile; with a name = another player's (requires `rpg.profile.view.others`). Layout: player skull with party membership, 8 skill levels (Combat/Mining/Foraging/Fishing/Farming/Cooking/Alchemy/Enchanting), balance (degrades if rpg-economy absent), 3 most-recently-unlocked achievements (degrades if service absent), "View Stats →" button (drills to StatsGui with Back callback), "Trade →" button (other-player view only). Permissions: `rpg.profile.view` (default true), `rpg.profile.view.others` (default op). Tab-complete lists online players.
 
 ---
 

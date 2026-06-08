@@ -36,6 +36,9 @@ commands:
     description: Open the RPGCORE main menu
     aliases: [m]
     usage: /menu
+  profile:
+    description: View your profile or another player's profile
+    usage: /profile [player]
 permissions:
   rpg.core.version:
     description: View loaded modules and versions
@@ -96,6 +99,12 @@ permissions:
     default: true
   rpg.core.achievements.others:
     description: View another player's achievements
+    default: op
+  rpg.profile.view:
+    description: View your own profile
+    default: true
+  rpg.profile.view.others:
+    description: View another player's profile
     default: op
   rpg.spawners.admin.create:
     description: Create a spawner

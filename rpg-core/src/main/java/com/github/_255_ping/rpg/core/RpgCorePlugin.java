@@ -78,6 +78,8 @@ import com.github._255_ping.rpg.core.achievement.CoreAchievementService;
 import com.github._255_ping.rpg.core.command.AchievementsCommand;
 import com.github._255_ping.rpg.core.command.ItemBrowserGui;
 import com.github._255_ping.rpg.core.command.MainMenuGui;
+import com.github._255_ping.rpg.core.command.ProfileCommand;
+import com.github._255_ping.rpg.core.command.ProfileGui;
 import com.github._255_ping.rpg.core.command.MainMenuListener;
 import com.github._255_ping.rpg.core.command.MenuCommand;
 import com.github._255_ping.rpg.core.command.SkillsGui;
@@ -405,6 +407,12 @@ public final class RpgCorePlugin extends JavaPlugin {
         statsCmd.setTabCompleter(statsCommand);
         Objects.requireNonNull(getCommand("skill")).setExecutor(new SkillCommand(this));
         Objects.requireNonNull(getCommand("effects")).setExecutor(new EffectsCommand(this));
+        ProfileGui profileGui = new ProfileGui(this, statsGui);
+        getServer().getPluginManager().registerEvents(profileGui, this);
+        var profileCmd = Objects.requireNonNull(getCommand("profile"), "command 'profile' missing from plugin.yml");
+        ProfileCommand profileCommand = new ProfileCommand(profileGui);
+        profileCmd.setExecutor(profileCommand);
+        profileCmd.setTabCompleter(profileCommand);
 
         spawnerManager = new SpawnerManager(this, healthService);
         spawnerManager.loadAll();
