@@ -247,8 +247,11 @@ public final class QuestManager {
         return true;
     }
 
-    /** Format a cooldown in seconds as a human-readable string (e.g. "1d 3h", "45m", "30s"). */
-    private static String formatCooldown(long seconds) {
+    /**
+     * Format a cooldown in seconds as a human-readable string (e.g. "1d 3h", "45m", "30s").
+     * Package-private so unit tests can exercise it directly.
+     */
+    static String formatCooldown(long seconds) {
         if (seconds <= 0) return "0s";
         long days    = seconds / 86400;
         long hours   = (seconds % 86400) / 3600;

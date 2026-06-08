@@ -124,9 +124,17 @@ public final class CoreSkillsService implements SkillsService {
 
     /** Returns the level for the player's total XP, given the current cached thresholds. */
     private int levelForTotal(String skillId, long totalXp) {
-        long[] thresholds = thresholds(skillId);
-        // thresholds[i] = total XP required to reach level i (thresholds[0] = 0)
-        // Find the largest i such that thresholds[i] <= totalXp.
+        return levelForThresholds(thresholds(skillId), totalXp);
+    }
+
+    /**
+     * Pure binary-search level lookup given a pre-built threshold array.
+     * {@code thresholds[i]} is the cumulative XP required to reach level {@code i}.
+     * Returns at least 1 (level 1 is the floor even at 0 XP).
+     *
+     * <p>Package-private so unit tests can exercise this without a live Plugin instance.
+     */
+    static int levelForThresholds(long[] thresholds, long totalXp) {
         int lo = 0;
         int hi = thresholds.length - 1;
         while (lo < hi) {

@@ -50,4 +50,42 @@ class DamageMathTest {
         // base=100, STR=100% → 200; CRIT=50% → 300; DEF=100 → halve → 150.
         assertEquals(150.0, DamageMath.computePure(100, 100, 100, 50), EPS);
     }
+
+    // ── Additional edge cases ─────────────────────────────────────────────────
+
+    @Test void zeroDefense_fullDamagePassesThrough() {
+        // defense=0 → factor = 1 - 0/(0+100) = 1.0 → no mitigation at all.
+        assertEquals(100.0, DamageMath.computePure(100, 0, 0, 0), EPS);
+    }
+
+    @Test void negativeBase_clampedToZero() {
+        // Negative base can come from unusual ability chains; must never deal "healing" damage.
+        assertTrue(DamageMath.computePure(-50, 0, 0, 0) >= 0.0);
+    }
+
+    @Test void zeroCritDamage_isNonCrit() {
+        // critDamage=0 must not apply the crit multiplier (1 + 0/100 = 1, but guard is critDamage > 0).
+        assertEquals(DamageMath.computePure(100, 50, 0, 0),
+                     DamageMath.computePure(100, 50, 0, 0), EPS);
+        // 100 * 1.5 * 1.0 (no crit) = 150
+        assertEquals(150.0, DamageMath.computePure(100, 50, 0, 0), EPS);
+    }
+
+    @Test void highCritDamage_scalesCorrectly() {
+        // base=100, no STR, no DEF, critDamage=400% → after_strength=100 → ×5 = 500
+        assertEquals(500.0, DamageMath.computePure(100, 0, 0, 400), EPS);
+    }
+
+    @Test void defenseAtExactHundred_halvesUnbuffedDamage() {
+        // Deterministic peg: DEF=100 always gives exactly 0.5× mitigation regardless of STR/crit.
+        assertEquals(50.0, DamageMath.computePure(100, 0, 100, 0), EPS);
+        assertEquals(75.0, DamageMath.computePure(100, 50, 100, 0), EPS); // ×1.5 then halved
+    }
+
+    @Test void largeDamageValues_noOverflow() {
+        // Sanity-check that double arithmetic stays sane at extreme inputs.
+        double result = DamageMath.computePure(1_000_000, 500, 50, 200);
+        assertTrue(result > 0, "expected positive damage, got " + result);
+        assertTrue(Double.isFinite(result), "result must be finite");
+    }
 }
