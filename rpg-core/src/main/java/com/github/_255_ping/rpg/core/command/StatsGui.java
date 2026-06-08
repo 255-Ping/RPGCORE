@@ -38,15 +38,12 @@ import java.util.UUID;
  * Row 1: [Chest  ] [bg][bg] [Mobility ] [Loot    ] [Wisdom ] [bg][bg][bg]
  * Row 2: [Legs   ] [bg][bg] [Skills   ] [bg      ] [bg     ] [bg][bg][bg]
  * Row 3: [Boots  ] [bg][bg] [bg       ] [bg      ] [bg     ] [bg][bg][bg]
- * Row 4: [Weapon ] [Off][Pet][bg      ] [bg      ] [bg     ] [bg][Trade][AH]
+ * Row 4: [Weapon ] [Off][Pet][bg      ] [bg      ] [bg     ] [bg][bg   ][bg]
  * Row 5: [nav bar — Close at centre]
  * </pre>
  *
  * <p>Gear slots show the target player's actual equipped items (read-only — all clicks cancelled).
  * Category items list every non-zero stat in that category in their lore.
- *
- * <p>Trade button (row 4 col 7): visible only when the viewer is not the target; executes
- * {@code /trade <targetName>} for the viewing player.
  *
  * <p>All clicks inside the GUI are cancelled. The inventory is purely informational.
  */
@@ -71,10 +68,6 @@ public final class StatsGui implements Listener {
     private static final int SLOT_LOOT      = 13;
     private static final int SLOT_WISDOM    = 14;
     private static final int SLOT_SKILLS    = 21;  // gathering / mining / foraging / farming / fishing / enchanting
-
-    // Right side row 4
-    private static final int SLOT_TRADE     = 43;
-    private static final int SLOT_AH        = 44;
 
     // Stat groups shown in each category slot
     private static final Map<Integer, String[]> SLOT_GROUPS = Map.of(
@@ -101,6 +94,51 @@ public final class StatsGui implements Listener {
 
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
     private static final Component GUI_TITLE_SUFFIX = LEGACY.deserialize("&r&7's Stats");
+
+    /** One-line description for each stat, shown as a grey tooltip line in the lore. */
+    private static final Map<String, String> STAT_DESC = Map.ofEntries(
+            Map.entry("damage",              "Raw damage dealt with weapons."),
+            Map.entry("strength",            "Increases melee damage."),
+            Map.entry("crit_chance",         "Chance to deal a critical hit."),
+            Map.entry("crit_damage",         "Bonus damage multiplier on critical hits."),
+            Map.entry("ability_damage",      "Increases damage dealt by abilities."),
+            Map.entry("attack_speed",        "Bonus attack speed over base."),
+            Map.entry("ferocity",            "Chance to strike twice instantly."),
+            Map.entry("lifesteal",           "% of damage dealt restored as health."),
+            Map.entry("knockback",           "Knocks enemies further on hit."),
+            Map.entry("ammo_usage_reduction","Chance to not consume ammo on each shot."),
+            Map.entry("projectile_speed",    "Increases arrow and projectile velocity."),
+            Map.entry("auto_loot",           "Automatically picks up drops in range."),
+            Map.entry("max_health",          "Maximum health points."),
+            Map.entry("health_regen",        "Health restored per second out of combat."),
+            Map.entry("vitality",            "% increase to effective max health."),
+            Map.entry("defense",             "Reduces incoming physical damage."),
+            Map.entry("true_defense",        "Reduces all damage, including magic."),
+            Map.entry("max_mana",            "Maximum mana pool size."),
+            Map.entry("mana_regen",          "Mana restored per second."),
+            Map.entry("intelligence",        "Boosts ability damage and mana pool."),
+            Map.entry("cooldown_reduction",  "% reduction to ability cooldown durations."),
+            Map.entry("speed",               "Movement speed bonus over base."),
+            Map.entry("swing_range",         "Extra melee reach beyond the default 3 blocks."),
+            Map.entry("magic_find",          "Increases chance of rare loot drops."),
+            Map.entry("breaking_power",      "Required tier to break custom blocks."),
+            Map.entry("mining_speed",        "Speed bonus when mining custom blocks."),
+            Map.entry("mining_fortune",      "Bonus resources from custom mining."),
+            Map.entry("foraging_speed",      "Speed bonus when chopping custom logs."),
+            Map.entry("foraging_fortune",    "Bonus wood from custom foraging."),
+            Map.entry("farming_fortune",     "Bonus crops from custom farming blocks."),
+            Map.entry("fishing_speed",       "Faster fishing timers."),
+            Map.entry("fishing_fortune",     "Bonus fish and treasure from fishing."),
+            Map.entry("sea_creature_chance", "Chance to hook a sea creature while fishing."),
+            Map.entry("combat_wisdom",       "% bonus Combat XP per kill."),
+            Map.entry("mining_wisdom",       "% bonus Mining XP per block broken."),
+            Map.entry("foraging_wisdom",     "% bonus Foraging XP per log."),
+            Map.entry("farming_wisdom",      "% bonus Farming XP per crop."),
+            Map.entry("fishing_wisdom",      "% bonus Fishing XP per catch."),
+            Map.entry("cooking_wisdom",      "% bonus Cooking XP per recipe."),
+            Map.entry("alchemy_wisdom",      "% bonus Alchemy XP per potion."),
+            Map.entry("enchanting_wisdom",   "% bonus Enchanting XP per enchant.")
+    );
 
     // ── State tracking ─────────────────────────────────────────────────────────
 
@@ -163,14 +201,6 @@ public final class StatsGui implements Listener {
             inv.setItem(slot, item);
         }
 
-        // ── Trade / AH buttons ─────────────────────────────────────────────
-        if (!viewer.getUniqueId().equals(target.getUniqueId())) {
-            inv.setItem(SLOT_TRADE, makeButton(Material.IRON_SWORD, "&6⚔ Trade",
-                    List.of("&7Click to send a trade request", "&7to &e" + target.getName() + "&7.")));
-        }
-        inv.setItem(SLOT_AH, makeButton(Material.EMERALD, "&8Auction House",
-                List.of("&8Coming soon.")));
-
         // ── Background + nav bar ───────────────────────────────────────────
         RpgServices.guiConfig().fillBackground(inv);
         if (onBack != null) {
@@ -213,17 +243,7 @@ public final class StatsGui implements Listener {
             return;
         }
 
-        int slot = event.getRawSlot();
-
-        // Trade button
-        if (slot == SLOT_TRADE) {
-            UUID targetId = openViews.get(viewerId);
-            Player target = Bukkit.getPlayer(targetId);
-            if (target != null && !viewerId.equals(targetId)) {
-                viewer.closeInventory();
-                viewer.performCommand("trade " + target.getName());
-            }
-        }
+        // No clickable action slots on this read-only screen.
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -279,6 +299,11 @@ public final class StatsGui implements Listener {
                 lore.add(LEGACY.deserialize(
                         "  " + s.colorCode() + s.displayName() + " &7: &f" + formatVal(se.getValue(), s.percent())
                 ).decoration(TextDecoration.ITALIC, false));
+                String desc = STAT_DESC.get(s.id());
+                if (desc != null) {
+                    lore.add(LEGACY.deserialize("    &8" + desc)
+                            .decoration(TextDecoration.ITALIC, false));
+                }
             }
         }
         meta.lore(lore);

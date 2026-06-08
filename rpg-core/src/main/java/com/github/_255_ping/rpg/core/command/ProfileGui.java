@@ -33,11 +33,11 @@ import java.util.UUID;
  *
  * <h3>Layout</h3>
  * <pre>
- * Row 0: [Head(0)]  [bg] [Combat(2)] [Mining(3)] [Foraging(4)] [Fishing(5)] [bg] [bg] [Balance(8)]
+ * Row 0: [Head(0)]  [bg] [Combat(2)] [Mining(3)] [Foraging(4)] [Fishing(5)] [bg] [SkillAvg(7)] [Balance(8)]
  * Row 1: [bg]       [bg] [Farming(11)] [Cooking(12)] [Alchemy(13)] [Enchanting(14)] [bg] [bg] [bg]
  * Row 2: [bg]       [bg] [Ach1(20)] [Ach2(21)] [Ach3(22)] [bg] [bg] [bg] [bg]
  * Row 3: [bg only — visual separator]
- * Row 4: [bg] ...   [Stats(43)] [Trade(44) — shown when viewing another player]
+ * Row 4: [bg] ...   [AH(42)] [Stats(43)] [Trade(44) — shown when viewing another player]
  * Row 5: [nav bar — Close at slot 49]
  * </pre>
  *
@@ -64,7 +64,10 @@ public final class ProfileGui implements Listener {
     private static final int SLOT_ACH_1     = 20;
     private static final int SLOT_ACH_2     = 21;
     private static final int SLOT_ACH_3     = 22;
+    // Row 0 – skill average (slot between fishing and balance, both bg previously)
+    private static final int SLOT_SKILL_AVG = 7;
     // Row 4 – action buttons
+    private static final int SLOT_AH        = 42;
     private static final int SLOT_STATS     = 43;
     private static final int SLOT_TRADE     = 44;
 
@@ -107,6 +110,9 @@ public final class ProfileGui implements Listener {
         inv.setItem(SLOT_ALCHEMY,    buildSkillItem("alchemy",    target, Material.BLAZE_POWDER,     "&d⚗ Alchemy"));
         inv.setItem(SLOT_ENCHANTING, buildSkillItem("enchanting", target, Material.ENCHANTING_TABLE, "&3✦ Enchanting"));
 
+        // ── Skill average (slot 7) ────────────────────────────────────────
+        inv.setItem(SLOT_SKILL_AVG, buildSkillAverageItem(target));
+
         // ── Balance (slot 8) ───────────────────────────────────────────────
         inv.setItem(SLOT_BALANCE, buildBalanceItem(target));
 
@@ -121,6 +127,8 @@ public final class ProfileGui implements Listener {
         }
 
         // ── Action buttons (row 4) ─────────────────────────────────────────
+        inv.setItem(SLOT_AH, makeButton(Material.GOLD_BLOCK, "&8🏪 Auction House",
+                List.of("&8Coming soon.")));
         inv.setItem(SLOT_STATS, makeButton(Material.BOOK, "&e📊 View Stats",
                 List.of("&7Open the detailed stat breakdown", "&7for &e" + target.getName() + "&7.")));
         if (!viewer.getUniqueId().equals(target.getUniqueId())) {
@@ -238,6 +246,36 @@ public final class ProfileGui implements Listener {
         return item;
     }
 
+    /** Shows the average skill level across all 8 skills with per-skill breakdown in lore. */
+    private static ItemStack buildSkillAverageItem(Player target) {
+        String[] skillIds   = {"combat","mining","foraging","fishing","farming","cooking","alchemy","enchanting"};
+        String[] skillLabels = {"⚔ Combat","⛏ Mining","🌲 Foraging","🎣 Fishing","🌾 Farming","🍳 Cooking","⚗ Alchemy","✦ Enchanting"};
+
+        int total = 0;
+        int[] levels = new int[skillIds.length];
+        for (int i = 0; i < skillIds.length; i++) {
+            try {
+                levels[i] = RpgServices.skills().level(target, skillIds[i]);
+            } catch (IllegalStateException ignored) {}
+            total += levels[i];
+        }
+        int avg = total / skillIds.length;
+
+        ItemStack item = new ItemStack(Material.EXPERIENCE_BOTTLE);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(LEGACY.deserialize("&a✦ Skill Average &7(Lv. &f" + avg + "&7)")
+                .decoration(TextDecoration.ITALIC, false));
+        List<Component> lore = new ArrayList<>();
+        for (int i = 0; i < skillIds.length; i++) {
+            lore.add(LEGACY.deserialize("&7" + skillLabels[i] + ": &f" + levels[i])
+                    .decoration(TextDecoration.ITALIC, false));
+        }
+        meta.lore(lore);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+        item.setItemMeta(meta);
+        return item;
+    }
+
     private static ItemStack buildBalanceItem(Player target) {
         ItemStack item = new ItemStack(Material.GOLD_INGOT);
         ItemMeta meta = item.getItemMeta();
@@ -245,8 +283,10 @@ public final class ProfileGui implements Listener {
         List<Component> lore = new ArrayList<>();
         try {
             BigDecimal balance = RpgServices.economy().balance(target);
-            String formatted = String.format("%,.0f", balance.doubleValue());
-            lore.add(LEGACY.deserialize("&f$" + formatted).decoration(TextDecoration.ITALIC, false));
+            String formatted = RpgServices.currencies().primary()
+                    .map(c -> c.format(balance))
+                    .orElseGet(() -> "$" + String.format("%,.0f", balance.doubleValue()));
+            lore.add(LEGACY.deserialize("&f" + formatted).decoration(TextDecoration.ITALIC, false));
         } catch (IllegalStateException ignored) {
             lore.add(LEGACY.deserialize("&8Economy not available").decoration(TextDecoration.ITALIC, false));
         }

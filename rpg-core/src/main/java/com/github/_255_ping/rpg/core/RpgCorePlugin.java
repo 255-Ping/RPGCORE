@@ -76,6 +76,8 @@ import com.github._255_ping.rpg.core.achievement.AchievementGui;
 import com.github._255_ping.rpg.core.achievement.AchievementLoader;
 import com.github._255_ping.rpg.core.achievement.CoreAchievementService;
 import com.github._255_ping.rpg.core.command.AchievementsCommand;
+import com.github._255_ping.rpg.core.command.AdventureCommand;
+import com.github._255_ping.rpg.core.command.AdventureGui;
 import com.github._255_ping.rpg.core.command.ItemBrowserGui;
 import com.github._255_ping.rpg.core.command.MainMenuGui;
 import com.github._255_ping.rpg.core.command.ProfileCommand;
@@ -448,6 +450,9 @@ public final class RpgCorePlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(skillsGui, this);
         WalletGui walletGui = new WalletGui(this);
         getServer().getPluginManager().registerEvents(walletGui, this);
+        AdventureGui adventureGui = new AdventureGui(this, walletGui, achievementGui);
+        getServer().getPluginManager().registerEvents(adventureGui, this);
+        Objects.requireNonNull(getCommand("adventure")).setExecutor(new AdventureCommand(adventureGui));
         MainMenuGui mainMenuGui = new MainMenuGui(this, statsGui, skillsGui, achievementGui, walletGui);
         getServer().getPluginManager().registerEvents(mainMenuGui, this);
         {

@@ -39,6 +39,10 @@ commands:
   profile:
     description: View your profile or another player's profile
     usage: /profile [player]
+  adventure:
+    description: Open the Adventure hub (quests, economy, achievements)
+    aliases: [adv]
+    usage: /adventure
 permissions:
   rpg.core.version:
     description: View loaded modules and versions
@@ -100,6 +104,9 @@ permissions:
   rpg.core.achievements.others:
     description: View another player's achievements
     default: op
+  rpg.adventure.view:
+    description: Open the Adventure hub GUI
+    default: true
   rpg.profile.view:
     description: View your own profile
     default: true
