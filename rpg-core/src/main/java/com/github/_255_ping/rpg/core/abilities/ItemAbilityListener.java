@@ -2,6 +2,7 @@ package com.github._255_ping.rpg.core.abilities;
 
 import com.github._255_ping.rpg.api.RpgServices;
 import com.github._255_ping.rpg.api.abilities.AbilityContext;
+import com.github._255_ping.rpg.api.abilities.AbilityInvocation;
 import com.github._255_ping.rpg.api.abilities.AbilityPipeline;
 import com.github._255_ping.rpg.api.abilities.ItemAbilityBinding;
 import com.github._255_ping.rpg.api.abilities.PlayerAbilityTrigger;
@@ -10,6 +11,8 @@ import com.github._255_ping.rpg.api.items.RpgItem;
 import com.github._255_ping.rpg.api.stats.BuiltinStat;
 import com.github._255_ping.rpg.core.RpgCorePlugin;
 import com.github._255_ping.rpg.core.abilities.effects.ManaCostEffect;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -107,6 +110,9 @@ public final class ItemAbilityListener implements Listener {
 
         double baseDamage = RpgServices.player(player).get(BuiltinStat.DAMAGE);
         for (ItemAbilityBinding binding : bindings) {
+            // Pre-check: if any cooldown{} in this chain is active, skip without consuming mana.
+            // Without this, mana_cost{} runs before cooldown{} detects the block, wasting mana.
+            if (isOnAbilityCooldown(player, binding)) continue;
             AbilityContext ctx = new AbilityContext(player, baseDamage);
             ctx.setPoint(player.getEyeLocation());
             AbilityPipeline pipeline = new AbilityPipeline(binding.invocations());
@@ -121,6 +127,31 @@ public final class ItemAbilityListener implements Listener {
                 return ctx;
             });
         }
+    }
+
+    /**
+     * Returns true if the binding contains a {@code cooldown{}} effect whose key is currently
+     * on cooldown for {@code player}, and sends the remaining-time action-bar message.
+     *
+     * <p>This pre-check runs before the ability pipeline starts so that {@code mana_cost{}}
+     * effects earlier in the chain are never charged when the ability is blocked by cooldown.
+     */
+    private static boolean isOnAbilityCooldown(Player player, ItemAbilityBinding binding) {
+        for (AbilityInvocation inv : binding.invocations()) {
+            if (!"cooldown".equals(inv.effectName())) continue;
+            String cdKey = "cooldown:" + inv.params().getOrDefault("key", "ability");
+            if (!RpgServices.cooldowns().isOnCooldown(player.getUniqueId(), cdKey)) continue;
+            long remaining = RpgServices.cooldowns().remainingTicks(player.getUniqueId(), cdKey);
+            double secs = remaining / 20.0;
+            String timeStr = secs == Math.floor(secs)
+                    ? (int) secs + "s"
+                    : String.format("%.1fs", secs);
+            player.sendActionBar(
+                    Component.text("Ability on cooldown — ", NamedTextColor.RED)
+                            .append(Component.text(timeStr + " remaining", NamedTextColor.YELLOW)));
+            return true;
+        }
+        return false;
     }
 
     private static boolean isWeaponType(RpgItem item) {

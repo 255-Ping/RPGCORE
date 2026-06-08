@@ -14,10 +14,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -52,7 +55,29 @@ public final class EquipmentListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onArmorChange(PlayerArmorChangeEvent e) {
-        recalc(e.getPlayer());
+        // Defer one tick — Paper fires this event before the armor slot is updated in some versions,
+        // so reading the inventory immediately would see stale contents. Matches ArmorSetListener.
+        plugin.getServer().getScheduler().runTask(plugin, () -> recalc(e.getPlayer()));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onRespawn(PlayerRespawnEvent e) {
+        // Armor is restored on respawn; recalc one tick after so the inventory is populated.
+        plugin.getServer().getScheduler().runTask(plugin, () -> recalc(e.getPlayer()));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onInventoryDrag(InventoryDragEvent e) {
+        // Catches armour dragged directly into equipment slots (not covered by InventoryClickEvent).
+        if (!(e.getWhoClicked() instanceof Player p)) return;
+        plugin.getServer().getScheduler().runTask(plugin, () -> recalc(p));
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPickup(EntityPickupItemEvent e) {
+        // Auto-equip on item pickup can put armour into equipment slots without a click event.
+        if (!(e.getEntity() instanceof Player p)) return;
+        plugin.getServer().getScheduler().runTask(plugin, () -> recalc(p));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -85,6 +110,17 @@ public final class EquipmentListener implements Listener {
      */
     public void resync(Player player) {
         recalc(player);
+    }
+
+    /**
+     * Starts a repeating task that resyncs every online player's stats every
+     * {@code intervalTicks} ticks. Acts as a safety net for any missed equipment-change
+     * events (inventory edge cases, plugin interactions, etc.).
+     */
+    public void startResyncTask(JavaPlugin plugin, long intervalTicks) {
+        plugin.getServer().getScheduler().runTaskTimer(plugin,
+                () -> plugin.getServer().getOnlinePlayers().forEach(this::recalc),
+                intervalTicks, intervalTicks);
     }
 
     private void recalc(Player player) {

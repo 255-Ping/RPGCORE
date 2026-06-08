@@ -6,52 +6,21 @@ _These are broken in live testing. Fix these before working on new features._
 
 ---
 
-### Abilities Drain Mana When On Cooldown (`rpg-core`) — 🟢 Easy
+### ~~Abilities Drain Mana When On Cooldown (`rpg-core`)~~ ✅ Fixed in `rpg-core 1.10.15`
 
-**Symptom:** Triggering an ability that is currently on cooldown still deducts mana from the player. The ability doesn't fire (cooldown is correctly blocking execution), but the mana cost is charged anyway.
-
-**Expected:** If the cooldown gate blocks the ability, no mana should be consumed — the check order should be `cooldown → mana → execute`, not `mana → cooldown → execute`.
-
-**Fix:** In the ability trigger/dispatch path, move the cooldown check to run **before** the mana deduction. Only deduct mana if the cooldown check passes. Look for where `PlayerState` (or equivalent) deducts mana relative to where `CooldownService` / the per-ability cooldown map is checked.
+Added `isOnAbilityCooldown()` pre-check in `ItemAbilityListener` that scans each binding for `cooldown{}` invocations before the pipeline starts. If any cooldown key is active the action-bar message is shown and the binding is skipped entirely — no mana is consumed. Root cause: example chains use `mana_cost{} cooldown{} …` ordering, so mana was deducted before the cooldown gate could block.
 
 ---
 
-### Armor Piece Stats Not Applying (`rpg-core`) — 🟡 Medium
+### ~~Armor Piece Stats Not Applying (`rpg-core`)~~ ✅ Fixed in `rpg-core 1.10.15`
 
-**Symptoms (confirmed in testing with the `recruit_set`):**
-
-- Set bonus stats (from `Bonuses: 1/2/3/4`) **do** apply correctly.
-- Individual armor piece `Stats:` blocks (e.g. `defense: 5`, `max_health: 10` on the helmet) do **not** apply — equipping a full set gives only the set-bonus stats, none of the per-piece stats.
-
-**Suspected root causes:**
-
-1. `EquipmentListener` (or equivalent) may not be reading per-piece `Stats:` from armor items at all, or is only reading them for weapons/tools.
-2. The stat-recalc triggered on equip may be running before the item is fully in the slot, so the scan misses it.
-
-**Reproduce:** Give yourself the four `recruit_set` pieces and equip all four. Check stats — only the 4-piece set bonus values should appear, not the sum of per-piece stats.
+Root cause: `EquipmentListener.onArmorChange` called `recalc()` immediately at MONITOR priority, but Paper fires `PlayerArmorChangeEvent` before the armor slot is updated — so `collectEquipmentStats()` read empty slots. Fixed by deferring `onArmorChange` one tick (matching `ArmorSetListener`'s pattern). Also added `PlayerRespawnEvent`, `InventoryDragEvent`, and `EntityPickupItemEvent` handlers for previously uncovered equip paths, plus a 60-tick periodic resync safety net via `startResyncTask()`.
 
 ---
 
-### Item/Set Detection Is Flaky — Gear Changes Sometimes Missed (`rpg-core`) — 🟡 Medium
+### ~~Item/Set Detection Is Flaky — Gear Changes Sometimes Missed (`rpg-core`)~~ ✅ Fixed in `rpg-core 1.10.15`
 
-**Symptom:** Equipping or unequipping armor doesn't always trigger a stat recalc. Set detection (counting how many set pieces are worn) similarly lags or misses events. Observed on:
-- Quick inventory swaps
-- Dragging items in the inventory rather than clicking-to-equip
-- Dying and respawning with armor
-
-**Two approaches to fix — pick one or combine:**
-
-1. **Better event coverage** — audit which Bukkit events currently drive stat recalcs. Missing candidates:
-   - `PlayerArmorStandManipulateEvent`
-   - `EntityPickupItemEvent` (picking up armor directly)
-   - `InventoryClickEvent` with `SlotType.ARMOR`
-   - `InventoryDragEvent` landing in armor slots
-   - `PlayerRespawnEvent` (gear restored after death)
-   - `PlayerItemHeldEvent` doesn't cover armor slots — make sure it isn't the only hook
-
-2. **Periodic resync** — run a repeating task (e.g. every 40–60 ticks) that recalculates every online player's stats from their current equipment. Acts as a safety net for any missed events. Should be cheap if the recalc only diffs against the cached values and skips unchanged players.
-
-Recommended: do both — fix events for correctness, add periodic resync (60-tick interval, config-toggleable) as a safety net.
+Same root fix as above: `onArmorChange` timing corrected + three new event handlers (`PlayerRespawnEvent`, `InventoryDragEvent`, `EntityPickupItemEvent`) + 60-tick periodic `startResyncTask` that resyncs every online player as a catch-all safety net.
 
 ---
 

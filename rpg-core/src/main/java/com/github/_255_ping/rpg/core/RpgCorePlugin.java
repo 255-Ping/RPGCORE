@@ -320,6 +320,7 @@ public final class RpgCorePlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ConsumableItemListener(itemIdKey), this);
         equipmentListener = new EquipmentListener(this, healthService);
         getServer().getPluginManager().registerEvents(equipmentListener, this);
+        equipmentListener.startResyncTask(this, 60L); // resync all players every 3 s as a safety net
         getServer().getPluginManager().registerEvents(
                 new ItemAbilityListener(this, abilityRegistry), this);
         getServer().getPluginManager().registerEvents(armorSetListener, this);
