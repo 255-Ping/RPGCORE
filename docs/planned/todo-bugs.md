@@ -6,6 +6,16 @@ _These are broken in live testing. Fix these before working on new features._
 
 ---
 
+### Abilities Drain Mana When On Cooldown (`rpg-core`) — 🟢 Easy
+
+**Symptom:** Triggering an ability that is currently on cooldown still deducts mana from the player. The ability doesn't fire (cooldown is correctly blocking execution), but the mana cost is charged anyway.
+
+**Expected:** If the cooldown gate blocks the ability, no mana should be consumed — the check order should be `cooldown → mana → execute`, not `mana → cooldown → execute`.
+
+**Fix:** In the ability trigger/dispatch path, move the cooldown check to run **before** the mana deduction. Only deduct mana if the cooldown check passes. Look for where `PlayerState` (or equivalent) deducts mana relative to where `CooldownService` / the per-ability cooldown map is checked.
+
+---
+
 ### Armor Piece Stats Not Applying (`rpg-core`) — 🟡 Medium
 
 **Symptoms (confirmed in testing with the `recruit_set`):**
