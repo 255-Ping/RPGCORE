@@ -14,6 +14,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -108,6 +109,11 @@ public final class CraftingNavListener implements Listener {
             crafting.setItem(2, buildSkillsButton());
             crafting.setItem(3, buildSocialButton());
             crafting.setItem(4, buildAdventureButton());
+
+            // Force-sync the crafting grid to the client.  Without this the server
+            // changes the slot state but never sends the update packet, so the player
+            // never sees the buttons appear.
+            player.updateInventory();
         });
     }
 
@@ -162,9 +168,13 @@ public final class CraftingNavListener implements Listener {
     // ── Close handler ──────────────────────────────────────────────────────────
 
     /**
-     * Cleans up phantom nav buttons.  When Bukkit closes a CRAFTING inventory it returns the
-     * crafting-grid items to the player's main inventory — our buttons end up there.
-     * We scan and remove them, then restore any items the player had originally.
+     * Cleans up phantom nav buttons. We null out the nav-button slots directly in the crafting
+     * inventory before the close event finishes — Bukkit returns crafting items to the player's
+     * main inventory only AFTER all close-event handlers run, so nulling here means the buttons
+     * are never returned and never land in the player's real inventory.
+     *
+     * <p>Original items (saved on open) are restored to the crafting slots so Bukkit can return
+     * those back to the player correctly in the unlikely case they had items there.
      */
     @EventHandler(priority = EventPriority.LOWEST)
     public void onInventoryClose(InventoryCloseEvent event) {
@@ -175,21 +185,31 @@ public final class CraftingNavListener implements Listener {
         ItemStack[] saved = savedCrafting.remove(id);
         if (saved == null) return; // wasn't a managed session
 
-        // Remove any nav buttons that Bukkit returned to the player's main inventory
-        var playerInv = player.getInventory();
-        for (int i = 0; i < playerInv.getSize(); i++) {
-            ItemStack item = playerInv.getItem(i);
+        Inventory crafting = event.getInventory();
+
+        // Clear nav buttons directly from the crafting slots.  Bukkit hasn't moved them to the
+        // player's main inventory yet at this point, so nulling here prevents them from landing
+        // there at all.
+        for (int i = 0; i < 5; i++) {
+            ItemStack item = crafting.getItem(i);
             if (item != null && isNavButton(item)) {
-                playerInv.setItem(i, null);
+                crafting.setItem(i, null);
             }
         }
 
-        // Return items that were originally in those crafting slots (almost always empty)
-        for (ItemStack s : saved) {
-            if (s != null && !s.getType().isAir()) {
-                playerInv.addItem(s); // falls to floor if full
+        // Restore whatever was originally in those crafting slots (almost always all null).
+        // Bukkit will then return these back to the player's main inventory as normal.
+        for (int i = 0; i < 5; i++) {
+            if (saved[i] != null && !saved[i].getType().isAir()) {
+                crafting.setItem(i, saved[i]);
             }
         }
+    }
+
+    /** Drain the savedCrafting map when a player disconnects to prevent memory leaks. */
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        savedCrafting.remove(event.getPlayer().getUniqueId());
     }
 
     // ── Button builders ────────────────────────────────────────────────────────
