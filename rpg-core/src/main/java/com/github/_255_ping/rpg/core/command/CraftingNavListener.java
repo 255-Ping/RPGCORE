@@ -1,6 +1,5 @@
 package com.github._255_ping.rpg.core.command;
 
-import com.github._255_ping.rpg.core.achievement.AchievementGui;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -12,7 +11,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
@@ -29,38 +27,41 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Places five phantom navigation buttons in the player's 2×2 crafting grid + output slot whenever
- * they open their survival inventory. These are not real items — they are set into the crafting
- * inventory server-side and cleared on close so they never persist in the player's real inventory.
+ * Places five phantom navigation buttons in the player's 2×2 crafting grid + output slot
+ * whenever they open their survival inventory (E key). The buttons are not real items — they
+ * are set into the crafting inventory server-side and cleared on close so they never persist.
  *
- * <h3>Slot assignment (InventoryType.CRAFTING slots)</h3>
+ * <h3>Why InventoryOpenEvent isn't used</h3>
+ * <p>When a player presses E, the client opens the inventory locally without sending an open
+ * packet to the server. Bukkit's {@code InventoryOpenEvent} with {@code InventoryType.CRAFTING}
+ * therefore never fires for the E-key open. Instead, a 2-tick repeating task polls
+ * {@code getOpenInventory().getTopInventory()} for all online players and initialises buttons
+ * on the first tick it sees a CRAFTING-type top inventory for a session that hasn't been
+ * set up yet.
+ *
+ * <h3>Slot assignment (InventoryType.CRAFTING)</h3>
  * <pre>
- *   Slot 0: output  → Settings GUI
+ *   Slot 0: output slot → Settings GUI
  *   Slot 1: top-left    → Profile GUI
  *   Slot 2: top-right   → Skills GUI
  *   Slot 3: bottom-left → Social GUI
  *   Slot 4: bottom-right→ Adventure GUI
  * </pre>
- *
- * <p>If the player already has items in those crafting slots (unusual but possible), they are
- * saved in {@code savedCrafting} and returned directly to the player's main inventory on close.
  */
 public final class CraftingNavListener implements Listener {
 
-    /** PDC key stamped on every nav-button item so we can identify them after close. */
     private static final String NAV_KEY = "rpg_nav_btn";
 
-    private final JavaPlugin   plugin;
+    private final JavaPlugin    plugin;
     private final NamespacedKey navKey;
 
-    // GUIs opened by each slot
-    private final ProfileGui   profileGui;
-    private final SkillsGui    skillsGui;
-    private final SocialGui    socialGui;
-    private final AdventureGui adventureGui;
-    private final SettingsGui  settingsGui;
+    private final ProfileGui    profileGui;
+    private final SkillsGui     skillsGui;
+    private final SocialGui     socialGui;
+    private final AdventureGui  adventureGui;
+    private final SettingsGui   settingsGui;
 
-    /** Crafting-slot backups per player (null entries = slot was empty). */
+    /** Original crafting-slot contents saved per player session. Null entries = slot was empty. */
     private final Map<UUID, ItemStack[]> savedCrafting = new HashMap<>();
 
     public CraftingNavListener(JavaPlugin plugin,
@@ -76,45 +77,56 @@ public final class CraftingNavListener implements Listener {
         this.socialGui    = socialGui;
         this.adventureGui = adventureGui;
         this.settingsGui  = settingsGui;
+
+        // Poll every 2 ticks to detect when a player opens their crafting inventory (E key).
+        // InventoryOpenEvent does not fire for E-key opens — the client handles it locally.
+        plugin.getServer().getScheduler().runTaskTimer(plugin, this::tick, 0L, 2L);
     }
 
-    // ── Inventory open ─────────────────────────────────────────────────────────
+    // ── Per-tick detection ─────────────────────────────────────────────────────
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onInventoryOpen(InventoryOpenEvent event) {
-        if (!(event.getPlayer() instanceof Player player)) return;
-        if (event.getInventory().getType() != InventoryType.CRAFTING) return;
+    private void tick() {
+        for (Player p : plugin.getServer().getOnlinePlayers()) {
+            Inventory top = p.getOpenInventory().getTopInventory();
+            UUID id = p.getUniqueId();
 
-        UUID id = player.getUniqueId();
-        Inventory crafting = event.getInventory();
-
-        // One-tick defer — inventory is fully open on the next tick.
-        plugin.getServer().getScheduler().runTask(plugin, () -> {
-            if (!player.isOnline()) return;
-            if (player.getOpenInventory().getTopInventory().getType() != InventoryType.CRAFTING) return;
-
-            // Save whatever was in the crafting slots (usually all null)
-            ItemStack[] saved = new ItemStack[5];
-            for (int i = 0; i < 5; i++) {
-                ItemStack existing = crafting.getItem(i);
-                if (existing != null && !existing.getType().isAir()) {
-                    saved[i] = existing.clone();
+            if (top.getType() == InventoryType.CRAFTING) {
+                if (!savedCrafting.containsKey(id)) {
+                    placeButtons(p, top);
                 }
+            } else if (savedCrafting.containsKey(id)) {
+                // Inventory changed away from crafting without firing InventoryCloseEvent
+                // (e.g. another plugin force-opened a GUI) — clean up the stale session.
+                savedCrafting.remove(id);
             }
-            savedCrafting.put(id, saved);
+        }
+    }
 
-            // Place nav buttons
-            crafting.setItem(0, buildSettingsButton());
-            crafting.setItem(1, buildProfileButton(player));
-            crafting.setItem(2, buildSkillsButton());
-            crafting.setItem(3, buildSocialButton());
-            crafting.setItem(4, buildAdventureButton());
+    private void placeButtons(Player player, Inventory crafting) {
+        UUID id = player.getUniqueId();
 
-            // Force-sync the crafting grid to the client.  Without this the server
-            // changes the slot state but never sends the update packet, so the player
-            // never sees the buttons appear.
-            player.updateInventory();
-        });
+        // Save whatever was originally in the crafting slots (almost always all null).
+        ItemStack[] saved = new ItemStack[5];
+        for (int i = 0; i < 5; i++) {
+            ItemStack existing = crafting.getItem(i);
+            if (existing != null && !existing.getType().isAir() && !isNavButton(existing)) {
+                saved[i] = existing.clone();
+            }
+        }
+        savedCrafting.put(id, saved);
+
+        // Set input slots first (1-4), then output slot (0) last.
+        // Setting inputs can trigger a server-side recipe check that would clear slot 0;
+        // setting slot 0 last ensures our button isn't overwritten by a null result.
+        crafting.setItem(1, buildProfileButton(player));
+        crafting.setItem(2, buildSkillsButton());
+        crafting.setItem(3, buildSocialButton());
+        crafting.setItem(4, buildAdventureButton());
+        crafting.setItem(0, buildSettingsButton());
+
+        // Force the client to sync — setItem alone updates server state but may not
+        // send the slot-update packet needed for the client to render the changes.
+        player.updateInventory();
     }
 
     // ── Click handler ──────────────────────────────────────────────────────────
@@ -123,7 +135,6 @@ public final class CraftingNavListener implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
         if (event.getView().getType() != InventoryType.CRAFTING) return;
-        // Only handle clicks in the crafting top inventory (slots 0-4)
         if (event.getClickedInventory() == null) return;
         if (event.getClickedInventory().getType() != InventoryType.CRAFTING) return;
 
@@ -136,30 +147,25 @@ public final class CraftingNavListener implements Listener {
         event.setCancelled(true);
 
         switch (slot) {
-            case 0 -> {                          // Settings
+            case 0 -> {
                 player.closeInventory();
-                plugin.getServer().getScheduler().runTask(plugin,
-                        () -> settingsGui.open(player));
+                plugin.getServer().getScheduler().runTask(plugin, () -> settingsGui.open(player));
             }
-            case 1 -> {                          // Profile
+            case 1 -> {
                 player.closeInventory();
-                plugin.getServer().getScheduler().runTask(plugin,
-                        () -> profileGui.open(player, player));
+                plugin.getServer().getScheduler().runTask(plugin, () -> profileGui.open(player, player));
             }
-            case 2 -> {                          // Skills
+            case 2 -> {
                 player.closeInventory();
-                plugin.getServer().getScheduler().runTask(plugin,
-                        () -> skillsGui.open(player, player));
+                plugin.getServer().getScheduler().runTask(plugin, () -> skillsGui.open(player, player));
             }
-            case 3 -> {                          // Social
+            case 3 -> {
                 player.closeInventory();
-                plugin.getServer().getScheduler().runTask(plugin,
-                        () -> socialGui.open(player));
+                plugin.getServer().getScheduler().runTask(plugin, () -> socialGui.open(player));
             }
-            case 4 -> {                          // Adventure
+            case 4 -> {
                 player.closeInventory();
-                plugin.getServer().getScheduler().runTask(plugin,
-                        () -> adventureGui.open(player));
+                plugin.getServer().getScheduler().runTask(plugin, () -> adventureGui.open(player));
             }
             default -> { }
         }
@@ -168,13 +174,9 @@ public final class CraftingNavListener implements Listener {
     // ── Close handler ──────────────────────────────────────────────────────────
 
     /**
-     * Cleans up phantom nav buttons. We null out the nav-button slots directly in the crafting
-     * inventory before the close event finishes — Bukkit returns crafting items to the player's
-     * main inventory only AFTER all close-event handlers run, so nulling here means the buttons
-     * are never returned and never land in the player's real inventory.
-     *
-     * <p>Original items (saved on open) are restored to the crafting slots so Bukkit can return
-     * those back to the player correctly in the unlikely case they had items there.
+     * Clears nav buttons directly from the crafting slots before Bukkit can return them to the
+     * player's main inventory. Bukkit moves crafting items to the player inventory only AFTER all
+     * close-event handlers run, so nulling the slots here prevents the buttons from landing there.
      */
     @EventHandler(priority = EventPriority.LOWEST)
     public void onInventoryClose(InventoryCloseEvent event) {
@@ -183,13 +185,11 @@ public final class CraftingNavListener implements Listener {
 
         UUID id = player.getUniqueId();
         ItemStack[] saved = savedCrafting.remove(id);
-        if (saved == null) return; // wasn't a managed session
+        if (saved == null) return;
 
         Inventory crafting = event.getInventory();
 
-        // Clear nav buttons directly from the crafting slots.  Bukkit hasn't moved them to the
-        // player's main inventory yet at this point, so nulling here prevents them from landing
-        // there at all.
+        // Remove nav buttons before Bukkit returns crafting items to the player.
         for (int i = 0; i < 5; i++) {
             ItemStack item = crafting.getItem(i);
             if (item != null && isNavButton(item)) {
@@ -197,8 +197,7 @@ public final class CraftingNavListener implements Listener {
             }
         }
 
-        // Restore whatever was originally in those crafting slots (almost always all null).
-        // Bukkit will then return these back to the player's main inventory as normal.
+        // Restore any items the player had originally (almost always nothing).
         for (int i = 0; i < 5; i++) {
             if (saved[i] != null && !saved[i].getType().isAir()) {
                 crafting.setItem(i, saved[i]);
@@ -206,7 +205,6 @@ public final class CraftingNavListener implements Listener {
         }
     }
 
-    /** Drain the savedCrafting map when a player disconnects to prevent memory leaks. */
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         savedCrafting.remove(event.getPlayer().getUniqueId());
